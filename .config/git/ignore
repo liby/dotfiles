@@ -1,0 +1,21 @@
+# Global gitignore
+
+# General
+log
+*.log
+
+# JetBrains
+.idea
+
+# macOS
+.DS_Store
+
+# Node.js
+node_modules
+npm-debug.log
+
+# Visual Studio Code
+.vscode
+
+# Windows
+Thumbs.db

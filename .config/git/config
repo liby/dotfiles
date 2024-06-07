@@ -1,0 +1,69 @@
+[user]
+  email = 38807139+liby@users.noreply.github.com
+  name = Bryan Lee
+
+[alias]
+  ca = commit --amend --no-edit
+  cm = commit -m
+  co = checkout
+  sc = switch --create
+  st = status
+  pf = push --force
+  pr = pull --rebase
+
+  ### diff ###
+  dh = diff HEAD
+  # dc = diff --cache
+  # ds = diff --staged
+  dc= "!git dh | pbcopy"
+  ds = "!f() { git dh > /tmp/git_diff_head_$(date +\"%Y%m%d_%H%M_%S\").diff; }; f"
+
+  ### log ###
+  lg = log --graph --abbrev-commit --date=short --boundary --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %Cblue[%cn]%Creset'
+
+  ### rebase ###
+  rb = rebase
+  rbc = rebase --continue
+  rbs = rebase --skip
+
+  ### tag ###
+  lasttag = describe --tags --abbrev=0
+
+[branch]
+  autosetuprebase = always
+
+[core]
+  autocrlf = input
+  editor = vim
+  quotepath = false
+
+[diff]
+  external = difft
+  tool = difftastic
+
+[difftool]
+  prompt = false
+
+[difftool "difftastic"]
+  cmd = difft "$LOCAL" "$REMOTE"
+
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  process = git-lfs filter-process
+  smudge = git-lfs smudge -- %f
+  required = true
+
+[includeIf "gitdir:~/Code/GitHab/"]
+  path = github.config
+
+[includeIf "gitdir:~/Code/GitLab/"]
+  path = gitlab.config
+
+[pager]
+  difftool = true
+
+[pull]
+  rebase = true
+
+[push]
+  autoSetupRemote = true
