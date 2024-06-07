@@ -52,7 +52,7 @@
   smudge = git-lfs smudge -- %f
   required = true
 
-[includeIf "gitdir:~/Code/GitHab/"]
+[includeIf "gitdir:~/Code/GitHub/"]
   path = github.config
 
 [includeIf "gitdir:~/Code/GitLab/"]
