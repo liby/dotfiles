@@ -13,13 +13,12 @@
 
   ### diff ###
   dh = diff HEAD
-  # dc = diff --cache
-  # ds = diff --staged
   dc= "!git dh | pbcopy"
   ds = "!f() { git dh > /tmp/git_diff_head_$(date +\"%Y%m%d_%H%M_%S\").diff; }; f"
 
   ### log ###
   lg = log --graph --abbrev-commit --date=short --boundary --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %Cblue[%cn]%Creset'
+  dl = "-c diff.external=difft log -p --ext-diff"
 
   ### rebase ###
   rb = rebase
@@ -27,7 +26,7 @@
   rbs = rebase --skip
 
   ### tag ###
-  lasttag = describe --tags --abbrev=0
+  lt = describe --tags --abbrev=0
 
 [branch]
   autosetuprebase = always
