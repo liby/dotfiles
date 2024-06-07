@@ -20,6 +20,8 @@ This repository contains a series of configuration files and scripts used to set
 - SSH configuration, such as: [_.ssh/config_](https://github.com/liby/dotfiles/blob/main/.ssh/config)
 - Terminal configuration, such as: [_.config/starship_](https://github.com/liby/dotfiles/tree/main/.config/starship)
 
+These files are managed using a Git Bare Repo. This method allows me to keep my $HOME directory clean while using Git to manage my configuration files. If you’re interested in the rationale behind this and want to learn more about managing dotfiles with a Git Bare Repo, feel free to read [a document](https://note.itswhat.me/#/page/%E4%BD%BF%E7%94%A8%20git%20bare%20repo%20%E6%9D%A5%E7%AE%A1%E7%90%86%20dotfiles) (only Chinese) I previously wrote on this topic.
+
 ## Installation Instructions
 
 ### 1. Clone the repository

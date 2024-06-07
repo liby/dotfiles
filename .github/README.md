@@ -20,6 +20,8 @@
 - 开发环境的初始化脚本：[_.config/scripts/macos-bootstrap.zsh_](https://github.com/liby/dotfiles/blob/main/.config/scripts/macos-bootstrap.zsh)
 - 终端配置，如：[_.config/starship_](https://github.com/liby/dotfiles/tree/main/.config/starship)
 
+这些文件是通过 Git Bare Repo 来管理的，这种方法使我能在保持 `$HOME` 目录整洁的同时又能使用 Git 来管理配置文件。如果你对这其中的缘由感兴趣，又想了解使用 Git Bare Repo 管理 dotfiles 的更多信息，欢迎阅读我之前写的一篇[分享文档](https://note.itswhat.me/#/page/%E4%BD%BF%E7%94%A8%20git%20bare%20repo%20%E6%9D%A5%E7%AE%A1%E7%90%86%20dotfiles)。
+
 ## 安装说明
 
 ### 1. 克隆仓库
