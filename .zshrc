@@ -31,7 +31,7 @@ source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 ## https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/github/README.md#homebrew-installation-note
 ## Add a check avoiding duplicated fpath
 if (( ! $FPATH[(I)${__BRYAN_HOMEBREW_ZSH_COMPLETION}] && $+commands[brew] )) &>/dev/null; then
-    fpath+=${__BRYAN_HOMEBREW_ZSH_COMPLETION}
+  fpath+=${__BRYAN_HOMEBREW_ZSH_COMPLETION}
 fi
 ## https://github.com/zsh-users/zsh-completions
 [[ -d ${__BRYAN_ZSH_COMPLETION_SRC} ]] && fpath+=${__BRYAN_ZSH_COMPLETION_SRC}
@@ -77,7 +77,7 @@ path=(
 # https://github.com/jessfraz/dotfiles/blob/master/.bashrc#L113C1-L130C1
 # Start the gpg-agent if not already running
 if ! pgrep -x -u "${USER}" gpg-agent >/dev/null 2>&1; then
-    gpg-connect-agent /bye >/dev/null 2>&1
+  gpg-connect-agent /bye >/dev/null 2>&1
 fi
 # Update the TTY for gpg-agent to use the current terminal
 gpg-connect-agent updatestartuptty /bye >/dev/null
@@ -87,9 +87,9 @@ export GPG_TTY=$(tty)
 unset SSH_AGENT_PID
 # Check if the SSH_AUTH_SOCK needs to be set to gpg-agent's socket
 if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
-    if [[ -z "$SSH_AUTH_SOCK" || "$SSH_AUTH_SOCK" == *"apple.launchd"* ]]; then
-        export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
-    fi
+  if [[ -z "$SSH_AUTH_SOCK" || "$SSH_AUTH_SOCK" == *"apple.launchd"* ]]; then
+    export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+  fi
 fi
 
 # Alias Set
