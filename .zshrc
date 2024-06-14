@@ -25,6 +25,8 @@ __BRYAN_ZSH_COMPLETION_SRC="${HOME}/.zsh/plugins/zsh-completions/src"
 source $HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 
+source $HOME/.cargo/env
+
 # ZSH completions
 ## For homebrew, is must be added before oh-my-zsh is called.
 ## https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh
@@ -49,6 +51,8 @@ export N_PREFIX="$HOME/.n"
 # Set NPM Global Path
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 export PNPM_HOME="$HOME/Library/pnpm"
+[[ $(command -v chromium) ]] && export PUPPETEER_EXECUTABLE_PATH=$(command -v chromium)
+export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 export RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
 export RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
 export STARSHIP_CACHE="$HOME/.config/starship/cache"
@@ -56,8 +60,6 @@ export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 export UPDATE_ZSH_DAYS=7
 # This speed up zsh-autosuggetions by a lot
 export ZSH_AUTOSUGGEST_USE_ASYNC='true'
-export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-[[ $(command -v chromium) ]] && export PUPPETEER_EXECUTABLE_PATH=$(command -v chromium)
 
 typeset -aU path
 path=(
@@ -103,7 +105,7 @@ alias ll='la --long --git'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
 alias python='python3'
 alias pip='python -m pip'
-alias pinentry='pinentry-mac'
+# alias pinentry='pinentry-mac'
 
 # path alias
 # usage: cd ~xxx
