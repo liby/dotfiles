@@ -230,14 +230,14 @@ setup_gitconfig() {
   # Check if GPG key exists and export it
   local gpg_key_id=$(gpg --card-status | grep 'sec' | awk '{print $2}' | cut -d'/' -f2)
   if [[ -n "$gpg_key_id" ]]; then
-    local gpg_pub_key_file="$ssh_dir/$gpg_key_id.pub"
+    local gpg_ssh_pub_key_file="$ssh_dir/$gpg_key_id.pub"
 
     echo "Exporting GPG key $gpg_key_id as SSH key..."
-    gpg --export-ssh-key "$gpg_key_id" > "$gpg_pub_key_file"
-    echo "GPG key exported successfully."
+    gpg --export-ssh-key "$gpg_key_id" > "$gpg_ssh_pub_key_file"
+    echo "GPG SSH Public key exported successfully."
 
     git config --file "$github_config" user.signingkey "$gpg_key_id"
-    git config --file "$gitlab_config" user.signingkey "$gpg_pub_key_file"
+    git config --file "$gitlab_config" user.signingkey "$gpg_ssh_pub_key_file"
   else
     echo "No GPG key found. Please ensure a GPG key is available."
   fi
@@ -423,7 +423,7 @@ display_todo_list() {
   echo "> Do not forget to run these things:                       "
   echo "                                                           "
   echo "- NPM login                                                "
-  echo "- Setup .npmrc                                             " 
+  echo "- Setup .npmrc                                             "
   echo "- Setup iTerm2                                             "
   echo "- Setup launchd for notes                                  "
   echo "- Install Bob,                                             "
