@@ -22,8 +22,6 @@ cask "iterm2"
 cask "itsycal"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
-# Open-source screen recorder built with web technology
-cask "kap"
 # Open-source keystroke visualiser
 cask "keycastr"
 # Node version management
