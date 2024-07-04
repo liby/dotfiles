@@ -3,13 +3,13 @@
   name = Bryan Lee
 
 [alias]
-  ca = commit --amend --no-edit
+  ca = commit -a --amend --no-edit
   cm = commit -m
   co = checkout
+  pf = push --force
   sc = switch --create
   st = status
-  pf = push --force
-  pr = pull --rebase
+  undo = reset --hard HEAD
 
   ### diff ###
   dh = diff HEAD
