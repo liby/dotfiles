@@ -291,55 +291,48 @@ install_nodejs() {
   echo "==========================================================="
   echo "              Setting up NodeJS Environment                "
   echo "-----------------------------------------------------------"
-
-  if command -v n > /dev/null; then
-    echo "tj/n is already installed, skipping..."
-    return
+  if command -v proto > /dev/null; then
+    echo "proto is already installed, skipping..."
+  else
+    echo "Installing proto..."
+    curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --no-profile --yes
   fi
-
-  export N_PREFIX="$HOME/.n"
-  curl -fsSL https://raw.githubusercontent.com/tj/n/master/bin/n | bash -s lts
-
-  # Set NPM Global Path
-  export NPM_CONFIG_PREFIX="$HOME/.npm-global"
-  # Create .npm-global folder if not exists
-  [[ ! -d "$NPM_CONFIG_PREFIX" ]] && mkdir -p $NPM_CONFIG_PREFIX
 
   echo "-----------------------------------------------------------"
   echo "                * Installing Node.js LTS...                "
   echo "-----------------------------------------------------------"
-
-  n lts
-
+  proto install node
   echo "-----------------------------------------------------------"
   echo -n "                   * Node.js Version:                   "
-
-  node -v
-
+  proto run node -- --version
   echo "-----------------------------------------------------------"
+
+  echo "                * Installing pnpm...                       "
+  echo "-----------------------------------------------------------"
+  proto install pnpm
+  echo -n "                   * pnpm Version:                      "
+  proto run pnpm -- --version
+  echo "-----------------------------------------------------------"
+
+  # Set NPM Global Path (if you still want to use npm for global packages)
+  export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+  # Create .npm-global folder if not exists
+  [[ ! -d "$NPM_CONFIG_PREFIX" ]] && mkdir -p $NPM_CONFIG_PREFIX
 
   __npm_global_pkgs=(
     @upimg/cli
     0x
-    # clinic
     npm-why
-    # serve
-    # vercel
   )
 
   echo "-----------------------------------------------------------"
   echo "                * npm install global packages:             "
   echo "                                                           "
-
-  for __npm_pkg ($__npm_global_pkgs); do
+  for __npm_pkg in "${__npm_global_pkgs[@]}"; do
     echo "  - ${__npm_pkg}"
+    proto run npm -- install -g ${__npm_pkg}
   done
-
   echo "-----------------------------------------------------------"
-
-  for __npm_pkg ($__npm_global_pkgs); do
-    npm i -g ${__npm_pkg}
-  done
 }
 
 install_rust() {

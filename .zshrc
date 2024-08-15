@@ -45,12 +45,12 @@ export GPG_PATH=$(find $HOMEBREW_PREFIX -maxdepth 1 -type d -name "gnupg*" 2>/de
 export HOMEBREW_NO_AUTO_UPDATE=1
 # You may need to manually set your language environment
 export LC_ALL="en_US.UTF-8"
-export N_PREFIX="$HOME/.n"
 # Create .npm-global folder if not exists
 [[ ! -d "$HOME/.npm-global" ]] && mkdir -p $HOME/.npm-global
 # Set NPM Global Path
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 export PNPM_HOME="$HOME/Library/pnpm"
+export PROTO_HOME="$HOME/.proto"
 [[ $(command -v chromium) ]] && export PUPPETEER_EXECUTABLE_PATH=$(command -v chromium)
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 export RUSTUP_DIST_SERVER="https://rsproxy.cn"
@@ -63,7 +63,8 @@ export ZSH_AUTOSUGGEST_USE_ASYNC='true'
 
 typeset -aU path
 path=(
-  "$N_PREFIX/bin"
+  "$PROTO_HOME/shims"
+  "$PROTO_HOME/bin"
   "$NPM_CONFIG_PREFIX/bin"
   "$PNPM_HOME"
   "./node_modules/.bin"
@@ -99,7 +100,7 @@ fi
 alias ipcn="curl myip.ipip.net"
 alias ip="curl ip.sb"
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-alias ls='eza --reverse --sort=modified --group-directories-first' 
+alias ls='eza --reverse --sort=modified --group-directories-first'
 alias la='ls --all'
 alias ll='la --long --git'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'

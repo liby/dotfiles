@@ -24,8 +24,6 @@ cask "itsycal"
 brew "jq"
 # Open-source keystroke visualiser
 cask "keycastr"
-# Node version management
-brew "n"
 # Control your tools with a few keystrokes
 cask "raycast"
 # The minimal, blazing-fast, and infinitely customizable prompt for any shell
