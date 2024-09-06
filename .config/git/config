@@ -32,6 +32,7 @@
   autosetuprebase = always
 
 [core]
+  attributesFile = ~/.config/git/attributes
   autocrlf = input
   editor = vim
   quotepath = false
@@ -51,6 +52,11 @@
   clean = git-lfs clean -- %f
   process = git-lfs filter-process
   smudge = git-lfs smudge -- %f
+  required = true
+
+[filter "prototools"]
+  clean = sed -e '/^node = /d' -e '/^pnpm = /d'
+  smudge = cat
   required = true
 
 [includeIf "gitdir:~/Code/GitHub/"]
