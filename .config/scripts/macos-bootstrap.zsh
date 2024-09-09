@@ -204,8 +204,6 @@ setup_gitconfig() {
   echo "-----------------------------------------------------------"
 
   local git_config_dir="$HOME/.config/git"
-  local github_example_config="$git_config_dir/github.example.config"
-  local gitlab_example_config="$git_config_dir/gitlab.example.config"
   local github_config="$git_config_dir/github.config"
   local gitlab_config="$git_config_dir/gitlab.config"
   local ssh_dir="$HOME/.ssh"
@@ -213,9 +211,10 @@ setup_gitconfig() {
   # Ensure the .ssh directory exists
   [ ! -d "$ssh_dir" ] && mkdir -p "$ssh_dir"
 
-  # Copy example configs if the actual configs do not exist
-  [ ! -f "$github_config" ] && cp "$github_example_config" "$github_config"
-  [ ! -f "$gitlab_config" ] && cp "$gitlab_example_config" "$gitlab_config"
+  if [ ! -f "$github_config" ] || [ ! -f "$gitlab_config" ]; then
+    echo "Error: github.config or gitlab.config file does not exist."
+    return 1
+  fi
 
   # Decode email and name
   local encoded_email="Ym95dWFuLmxpQHJpZ2h0Y2FwaXRhbC5jb20="
