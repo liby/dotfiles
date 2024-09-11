@@ -77,6 +77,11 @@ path=(
   $path[@]
 )
 
+HOMEBREW_RUBY_PATH=$(brew --prefix ruby 2>/dev/null)/bin
+if [[ -d "$HOMEBREW_RUBY_PATH" ]]; then
+  path=("$HOMEBREW_RUBY_PATH" $path[@])
+fi
+
 # https://github.com/jessfraz/dotfiles/blob/master/.bashrc#L113C1-L130C1
 # Start the gpg-agent if not already running
 if ! pgrep -x -u "${USER}" gpg-agent >/dev/null 2>&1; then
@@ -106,7 +111,7 @@ alias ll='la --long --git'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
 alias python='python3'
 alias pip='python -m pip'
-# alias pinentry='pinentry-mac'
+alias c='cursor'
 
 # path alias
 # usage: cd ~xxx
