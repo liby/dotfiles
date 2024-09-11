@@ -101,17 +101,17 @@ if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
 fi
 
 # Alias Set
-# ip & ipcn
-alias ipcn="curl myip.ipip.net"
-alias ip="curl ip.sb"
+alias c='cursor'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-alias ls='eza --reverse --sort=modified --group-directories-first'
+# ip & ipcn
+alias ip="curl ip.sb"
+alias ipcn="curl myip.ipip.net"
 alias la='ls --all'
 alias ll='la --long --git'
+alias ls='eza --reverse --sort=modified --group-directories-first'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
-alias python='python3'
 alias pip='python -m pip'
-alias c='cursor'
+alias python='python3'
 
 # path alias
 # usage: cd ~xxx
@@ -155,10 +155,6 @@ dlm() {
   echo "${green}Done!${reset}"
 }
 
-# GitHub Copilot CLI
-if (( $+commands[github-copilot-cli] )) &>/dev/null; then
-  eval "$(github-copilot-cli alias -- "$0")"
-fi
 
 # This speeds up pasting w/ autosuggest
 # https://github.com/zsh-users/zsh-autosuggestions/issues/238
@@ -179,9 +175,10 @@ ZSH_AUTOSUGGEST_MANUAL_REBIND=""
 
 eval "$(zoxide init zsh)"
 eval "$(starship init zsh)"
-if (( $+commands[rbenv] )); then
-  eval "$(rbenv init - zsh)"
-fi
-if (( $+commands[direnv] )); then
+if (( $+commands[direnv] )) &>/dev/null; then
   eval "$(direnv hook zsh)"
+fi
+# GitHub Copilot CLI
+if (( $+commands[github-copilot-cli] )) &>/dev/null; then
+  eval "$(github-copilot-cli alias -- "$0")"
 fi
