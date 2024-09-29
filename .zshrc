@@ -124,37 +124,74 @@ hash -d code="$HOME/Code"
 hash -d applications="/Applications"
 hash -d application="/Applications"
 
-# Git Delete Local Merged
 dlm() {
-  red=$(tput setaf 1)
-  blue=$(tput setaf 4)
-  green=$(tput setaf 2)
-  reset=$(tput sgr0)
+  local red=$'\e[1;31m'
+  local green=$'\e[1;32m'
+  local yellow=$'\e[1;33m'
+  local blue=$'\e[1;34m'
+  local reset=$'\e[0m'
 
-  branches=($(git branch --merged | grep -vE '^\*|master|main|develop'))
+  echo "${blue}Fetching latest changes and identifying branches...${reset}"
+
+  local max_retries=3
+  local retry_count=0
+  local fetch_success=false
+
+  while (( retry_count < max_retries )) && ! $fetch_success; do
+    if git fetch --quiet --all && git remote prune origin; then
+      fetch_success=true
+    else
+      ((retry_count++))
+      echo "${yellow}Fetch failed. Retrying... (Attempt $retry_count of $max_retries)${reset}"
+      sleep 2
+    fi
+  done
+
+  if ! $fetch_success; then
+    echo "${red}Failed to fetch after $max_retries attempts. Please check your network connection and try again.${reset}"
+    return 1
+  fi
+
+  local remote_branches=$(git ls-remote --heads origin | awk '{print $2}' | sed 's|refs/heads/||')
+
+  local branches=($(git for-each-ref --format '%(refname:short)' refs/heads |
+    grep -vE '^(master|main|develop)$' |
+    while read -r branch; do
+      if ! echo "$remote_branches" | grep -q "^$branch$"; then
+        echo "$branch"
+      fi
+    done))
 
   if (( ${#branches[@]} == 0 )); then
-    printf "${green}\nNo merged branches to delete!${reset}\n"
+    echo "${green}No local branches to delete.${reset}"
     return
   fi
 
-  echo ""
+  echo "\n${yellow}The following local branches are not present in remote:${reset}"
   printf "%s\n" "${branches[@]}"
-  echo ""
 
-  printf "\n${blue}Delete merged branches locally? Press [Enter] to continue...${reset}"
-  read _
+  echo "\n${blue}Do you want to delete these branches? [Y/n]${reset}"
+  read -q response || return
 
-  echo ""
-  echo "Safely deleting merged local branches..."
+  echo
+
+  local deleted=0
+  local failed=0
 
   for branch in "${branches[@]}"; do
-    git branch -d "$branch"
+    if git branch -d "$branch" &>/dev/null; then
+      echo "${green}Deleted: $branch${reset}"
+      ((deleted++))
+    else
+      echo "${red}Failed to delete: $branch${reset}"
+      ((failed++))
+    fi
   done
 
-  echo "${green}Done!${reset}"
+  echo "\n${green}Operation complete.${reset}"
+  echo "Branches deleted: ${deleted}"
+  [[ $failed -gt 0 ]] && echo "${red}Branches failed to delete: ${failed}${reset}"
 }
-
 
 # This speeds up pasting w/ autosuggest
 # https://github.com/zsh-users/zsh-autosuggestions/issues/238
