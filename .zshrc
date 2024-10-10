@@ -106,6 +106,7 @@ alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 # ip & ipcn
 alias ip="curl ip.sb"
 alias ipcn="curl myip.ipip.net"
+alias ka='caffeinate -is'
 alias la='ls --all'
 alias ll='la --long --git'
 alias ls='eza --reverse --sort=modified --group-directories-first'
