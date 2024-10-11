@@ -8,10 +8,10 @@ brew "difftastic"
 brew "eza"
 # Git extension for versioning large files
 brew "git-lfs"
+# Blazing 💥 fast terminal-ui for git written in rust 🦀
+brew "gitui"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
-# Text interface for Git repositories
-brew "tig"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
 # Uninstall unwanted apps
@@ -24,8 +24,6 @@ cask "cursor"
 cask "google-chrome"
 # Switch and track your input sources with ease
 cask "input-source-pro"
-# Free and open-source media player
-cask "iterm2"
 # Menu bar calendar
 cask "itsycal"
 # Open-source keystroke visualiser
@@ -34,3 +32,5 @@ cask "keycastr"
 cask "raycast"
 # The minimal, blazing-fast, and infinitely customizable prompt for any shell
 cask "starship"
+# The Mac terminal for the 21st century
+cask "warp"
