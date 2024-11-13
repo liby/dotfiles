@@ -101,7 +101,7 @@ if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
 fi
 
 # Alias Set
-alias c='cursor'
+alias c='code'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 # ip & ipcn
 alias ip="curl ip.sb"

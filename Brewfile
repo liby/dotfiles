@@ -18,8 +18,6 @@ brew "zoxide"
 cask "appcleaner"
 # Free and open-source web browser
 cask "chromium"
-# The AI Code Editor
-cask "cursor"
 # Web browser
 cask "google-chrome"
 # Switch and track your input sources with ease
@@ -32,5 +30,7 @@ cask "keycastr"
 cask "raycast"
 # The minimal, blazing-fast, and infinitely customizable prompt for any shell
 cask "starship"
+# Code faster with AI
+cask "visual-studio-code"
 # The Mac terminal for the 21st century
 cask "warp"
