@@ -7,18 +7,19 @@
   cm = commit -m
   co = checkout
   pf = push --force
+  pr ="!f() { git fetch -fu ${2:-origin} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f"
   sc = switch --create
   st = status
   undo = reset --hard HEAD
 
   ### diff ###
-  dh = diff HEAD
   dc= "!git dh | pbcopy"
+  dh = diff HEAD
+  dl = "-c diff.external=difft log -p --ext-diff"
   ds = "!f() { git dh > /tmp/git_diff_head_$(date +\"%Y%m%d_%H%M_%S\").diff; }; f"
 
   ### log ###
   lg = log --graph --abbrev-commit --date=short --boundary --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %Cblue[%cn]%Creset'
-  dl = "-c diff.external=difft log -p --ext-diff"
 
   ### rebase ###
   rb = rebase
