@@ -216,15 +216,24 @@ setup_gitconfig() {
     return 1
   fi
 
-  # Decode email and name
-  local encoded_email="Ym95dWFuLmxpQHJpZ2h0Y2FwaXRhbC5jb20="
-  local decoded_email=$(echo -n "$encoded_email" | base64 --decode)
-  local encoded_name="Qm95dWFuIExp"
-  local decoded_name=$(echo -n "$encoded_name" | base64 --decode)
+  local credentials_file="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/.user-credentials"
 
-  # Set GitLab user email and name
-  git config --file "$gitlab_config" user.email "$decoded_email"
-  git config --file "$gitlab_config" user.name "$decoded_name"
+  if [[ ! -f "$credentials_file" ]]; then
+    echo "User credentials file not found. Please create $credentials_file with the following format:"
+    echo "GITLAB_EMAIL='your.email@company.com'"
+    echo "GITLAB_NAME='Your Name'"
+    return 1
+  fi
+
+  source "$credentials_file"
+
+  if [[ -z "$GITLAB_EMAIL" || -z "$GITLAB_NAME" ]]; then
+    echo "Invalid credentials file format. Please check $credentials_file"
+    return 1
+  fi
+
+  git config --file "$gitlab_config" user.email "$GITLAB_EMAIL"
+  git config --file "$gitlab_config" user.name "$GITLAB_NAME"
 
   # Check if GPG key exists and export it
   local gpg_key_id=$(gpg --card-status | grep 'sec' | awk '{print $2}' | cut -d'/' -f2)
