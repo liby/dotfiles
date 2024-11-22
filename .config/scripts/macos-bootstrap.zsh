@@ -75,7 +75,7 @@ install_homebrew() {
 }
 
 install_brew_packages() {
-  # Only install required packages for setting up enviroments
+  # Only install required packages for setting up environments
   # Later we will call brew bundle
   __pkg_to_be_installed=(
     curl
@@ -115,7 +115,7 @@ brew_bundle() {
 
 setup_ohmyzsh() {
   echo "==========================================================="
-  echo "                      Shells Enviroment                    "
+  echo "                      Shells Environment                   "
   echo "-----------------------------------------------------------"
   echo "                   * Installing Oh My Zsh...               "
   echo "-----------------------------------------------------------"
@@ -288,7 +288,7 @@ restore_dotfiles() {
 
 install_nodejs() {
   echo "==========================================================="
-  echo "              Setting up NodeJS Environment                "
+  echo "              Setting up Node.js Environment                "
   echo "-----------------------------------------------------------"
   if command -v proto > /dev/null; then
     echo "proto is already installed, skipping..."
@@ -416,15 +416,8 @@ display_todo_list() {
   echo "                                                           "
   echo "- NPM login                                                "
   echo "- Setup .npmrc                                             "
-  echo "- Setup iTerm2                                             "
+  echo "- Setup iTerm2 or Warp                                     "
   echo "- Setup launchd for notes                                  "
-  echo "- Install Bob,                                             "
-  echo "          Slack,                                           "
-  echo "          WeChat,                                          "
-  echo "          Telegram,                                        "
-  echo "          The Unarchiver,                                  "
-  echo "          Hidden Bar                                       "
-  echo "  from the Apple Store                                     "
   echo "- Create a case-sensitive volume on macOS                  "
   echo "- https://www.v2ex.com/t/813229?p=1#r_11048555             "
   echo "                                                           "
