@@ -199,11 +199,27 @@ pasteinit() {
 pastefinish() {
   zle -N self-insert $OLD_SELF_INSERT
 }
+
 zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
-# Autosuggestions configuration
-# https://github.com/zsh-users/zsh-autosuggestions/issues/351
+setup_editor_links() {
+  local cursor_path="$HOME/Library/Application Support/Cursor/User"
+  local editor_settings_path="$HOME/.config/editor"
+
+  [[ ! -d "$(dirname "$cursor_path")" ]] && return
+
+  mkdir -p "$cursor_path" "$editor_settings_path"
+
+  for file in "settings.json" "keybindings.json"; do
+    if [[ -f "$cursor_path/$file" && ! -L "$cursor_path/$file" ]]; then
+      mv "$cursor_path/$file" "$cursor_path/$file.backup"
+    fi
+    ln -sf "$editor_settings_path/$file" "$cursor_path/$file"
+  done
+}
+
+# Autosuggestions configuration# https://github.com/zsh-users/zsh-autosuggestions/issues/351
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste accept-line)
 ZSH_AUTOSUGGEST_MANUAL_REBIND=""
 
@@ -212,8 +228,9 @@ source $HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 source $HOME/.cargo/env
 
-# Initialize tools
+# Initialize tools and configurations
 eval "$(zoxide init zsh)"
 eval "$(starship init zsh)"
+(( $+commands[cursor] )) && setup_editor_links &>/dev/null
 (( $+commands[direnv] )) && eval "$(direnv hook zsh)"
 (( $+commands[github-copilot-cli] )) && eval "$(github-copilot-cli alias -- "$0")"
