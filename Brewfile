@@ -17,6 +17,8 @@ brew "git"
 brew "git-lfs"
 # Blazing 💥 fast terminal-ui for git written in rust 🦀
 brew "gitui"
+# GNU Pretty Good Privacy (PGP) package
+brew "gnupg"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Mac App Store command-line interface
@@ -45,6 +47,8 @@ cask "raycast"
 cask "starship"
 # The Mac terminal for the 21st century
 cask "warp"
+# UNIX shell (command interpreter)
+brew "zsh"
 
 mas "Bob", id: 1630034110
 mas "Hidden Bar", id: 1452453066
