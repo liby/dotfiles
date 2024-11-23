@@ -1,12 +1,13 @@
 #!/bin/zsh
 
-# curl -o /tmp/macos-bootstrap.zsh https://raw.githubusercontent.com/liby/dotfiles/main/.config/scripts/macos-bootstrap.zsh && chmod +x /tmp/macos-bootstrap.zsh && /tmp/macos-bootstrap.zsh
-# This script is heavily inspired by [SukkaW](https://github.com/SukkaW/dotfiles/blob/master/_install/macos.zsh)
-
 if [[ "$OSTYPE" != "darwin"* ]]; then
   echo "No macOS detected!"
   exit 1
 fi
+
+is_apple_silicon() {
+  [[ "$(/usr/bin/uname -m)" == "arm64" ]]
+}
 
 start() {
   clear
@@ -25,99 +26,40 @@ start() {
   echo "                                                           "
   echo "==========================================================="
   echo "                      !! ATTENTION !!                      "
-  echo "        YOU ARE SETTING UP: Bryan Environment (macOS)      "
+  echo "       YOU ARE SETTING UP: Bryan Environment (macOS)       "
   echo "==========================================================="
   echo "                                                           "
   echo "          * The setup will begin in 3 seconds...           "
 
   sleep 3
 
-  echo "                Times up! Here we start!                   "
+  echo "                 Times up! Here we start!                  "
   echo "-----------------------------------------------------------"
 
   cd $HOME
 }
 
-is_apple_silicon() {
-  [[ "$(/usr/bin/uname -m)" == "arm64" ]]
-}
+restore_dotfiles() {
+  echo "==========================================================="
+  echo "         Restore Bryan’s dotfiles from GitHub.com          "
+  echo "-----------------------------------------------------------"
 
-setup_brew() {
-  # It will export env variable: HOMEBREW_PREFIX, HOMEBREW_CELLAR, HOMEBREW_REPOSITORY, HOMEBREW_SHELLENV_PREFIX
-  # It will add path: $PATH, $MANPATH, $INFOPATH
-  if is_apple_silicon; then
-      eval "$(/opt/homebrew/bin/brew shellenv)"
+  if [[ -d "$HOME/.dotfiles" ]]; then
+    echo "Dotfiles already restored, skipping..."
   else
-      eval "$(/usr/local/bin/brew shellenv)"
+    git clone --bare https://github.com/liby/dotfiles.git $HOME/.dotfiles
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME config --local status.showUntrackedFiles no
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout --force
   fi
-}
 
-install_homebrew() {
-  echo "==========================================================="
-  echo "                     Install Homebrew                      "
-  echo "-----------------------------------------------------------"
-
-  if [ ! -x "$(command -v brew)" ]; then
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-    setup_brew
-
-    if ! ([[ -e "$HOME/.zprofile" ]] && grep -q "brew shellenv" "$HOME/.zprofile"); then
-        echo "eval \"\$(${HOMEBREW_PREFIX}/bin/brew shellenv)\"" >> "${HOME}/.zprofile"
-        echo "typeset -U path" >> "${HOME}/.zprofile"
-    fi
-
-    brew analytics off && brew update
-    echo "Homebrew installed."
-  else
-    echo "Homebrew already installed. Skipping..."
-  fi
-}
-
-install_brew_packages() {
-  # Only install required packages for setting up environments
-  # Later we will call brew bundle
-  __pkg_to_be_installed=(
-    curl
-    git
-    gnupg
-    pinentry-mac
-    zsh
-  )
-
-  echo "==========================================================="
-  echo "                * Install following packages:              "
-  echo "                                                           "
-
-  for __pkg ($__pkg_to_be_installed); do
-    echo "  - ${__pkg}"
-  done
-
-  echo "-----------------------------------------------------------"
-
-  brew update
-
-  for __pkg in $__pkg_to_be_installed; do
-    if brew list --formula | grep -q "^${__pkg}\$"; then
-      echo "${__pkg} is already installed, skipping..."
-    else
-      brew install ${__pkg} || true
-    fi
-  done
-}
-
-brew_bundle() {
-  echo "==========================================================="
-  echo "          * Restore bundles from Homebrew                  "
-  echo "-----------------------------------------------------------"
-  brew bundle
+  git --git-dir=$HOME/.dotfiles --work-tree=$HOME remote set-url origin git@github.com:liby/dotfiles.git
 }
 
 setup_ohmyzsh() {
   echo "==========================================================="
-  echo "                      Shells Environment                   "
+  echo "                     Shells Environment                    "
   echo "-----------------------------------------------------------"
-  echo "                   * Installing Oh My Zsh...               "
+  echo "                  * Installing Oh My Zsh...                "
   echo "-----------------------------------------------------------"
 
   if [[ -d "$HOME/.oh-my-zsh" ]]; then
@@ -128,11 +70,11 @@ setup_ohmyzsh() {
   fi
 
   echo "-----------------------------------------------------------"
-  echo "          * Installing ZSH Custom Plugins & Themes:        "
+  echo "        * Installing ZSH Custom Plugins & Themes...        "
   echo "                                                           "
-  echo "  - zsh-autosuggestions                                    "
-  echo "  - zsh-completions                                        "
-  echo "  - fast-syntax-highlighting                               "
+  echo "                - zsh-autosuggestions                      "
+  echo "                - zsh-completions                          "
+  echo "                - fast-syntax-highlighting                 "
   echo "                                                           "
   echo "-----------------------------------------------------------"
 
@@ -154,7 +96,7 @@ setup_ohmyzsh() {
 
 setup_gpg_agent() {
   echo "==========================================================="
-  echo "                * Setting up GPG Agent                     "
+  echo "                  Setting up GPG Agent...                  "
   echo "-----------------------------------------------------------"
 
   if [[ ! -d "$HOME/.gnupg" ]]; then
@@ -200,7 +142,7 @@ setup_gpg_agent() {
 
 setup_gitconfig() {
   echo "==========================================================="
-  echo "                     Setting up Gitconfig                  "
+  echo "                 Setting up git config...                  "
   echo "-----------------------------------------------------------"
 
   local git_config_dir="$HOME/.config/git"
@@ -216,6 +158,7 @@ setup_gitconfig() {
     return 1
   fi
 
+  # Set GitLab user email and name
   local credentials_file="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/.user-credentials"
 
   if [[ ! -f "$credentials_file" ]]; then
@@ -255,7 +198,7 @@ setup_gitconfig() {
 
 format_gitconfig_files() {
   echo "==========================================================="
-  echo "                    Format Gitconfig Files                 "
+  echo "                  Format git config files                  "
   echo "-----------------------------------------------------------"
 
   local git_config_dir="$HOME/.config/git"
@@ -274,88 +217,6 @@ format_gitconfig_files() {
   fi
 }
 
-restore_dotfiles() {
-  echo "-----------------------------------------------------------"
-  echo "         * Restore Bryan’s dotfiles from GitHub.com        "
-  echo "-----------------------------------------------------------"
-
-  if [[ -d "$HOME/.dotfiles" ]]; then
-    echo "Dotfiles already restored, skipping..."
-  else
-    git clone --bare https://github.com/liby/dotfiles.git $HOME/.dotfiles
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME config --local status.showUntrackedFiles no
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout --force
-
-    setup_gpg_agent
-    setup_gitconfig
-    format_gitconfig_files
-    brew_bundle
-  fi
-
-  git --git-dir=$HOME/.dotfiles --work-tree=$HOME remote set-url origin git@github.com:liby/dotfiles.git
-}
-
-install_nodejs() {
-  echo "==========================================================="
-  echo "              Setting up Node.js Environment                "
-  echo "-----------------------------------------------------------"
-  if command -v proto > /dev/null; then
-    echo "proto is already installed, skipping..."
-  else
-    echo "Installing proto..."
-    curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --no-profile --yes
-  fi
-
-  echo "-----------------------------------------------------------"
-  echo "                * Installing Node.js LTS...                "
-  echo "-----------------------------------------------------------"
-  proto install node
-  echo "-----------------------------------------------------------"
-  echo -n "                   * Node.js Version:                   "
-  proto run node -- --version
-  echo "-----------------------------------------------------------"
-
-  echo "                * Installing pnpm...                       "
-  echo "-----------------------------------------------------------"
-  proto install pnpm
-  echo -n "                   * pnpm Version:                      "
-  proto run pnpm -- --version
-  echo "-----------------------------------------------------------"
-
-  # Set NPM Global Path (if you still want to use npm for global packages)
-  export NPM_CONFIG_PREFIX="$HOME/.npm-global"
-  # Create .npm-global folder if not exists
-  [[ ! -d "$NPM_CONFIG_PREFIX" ]] && mkdir -p $NPM_CONFIG_PREFIX
-
-  __npm_global_pkgs=(
-    @upimg/cli
-    0x
-    npm-why
-  )
-
-  echo "-----------------------------------------------------------"
-  echo "                * npm install global packages:             "
-  echo "                                                           "
-  for __npm_pkg in "${__npm_global_pkgs[@]}"; do
-    echo "  - ${__npm_pkg}"
-    proto run npm -- install -g ${__npm_pkg}
-  done
-  echo "-----------------------------------------------------------"
-}
-
-install_rust() {
-  echo "==========================================================="
-  echo "                   Install Rust                            "
-  echo "-----------------------------------------------------------"
-
-
-  if command -v rustc > /dev/null; then
-    echo "Rust is already installed, skipping..."
-  else
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  fi
-}
-
 install_font() {
   echo "==========================================================="
   echo "                 Install Inconsolata LGC                   "
@@ -366,7 +227,7 @@ install_font() {
   local target_dir="$HOME/Library/Fonts"
 
   if ls "${target_dir}"/*InconsolataLGCNerdFontMono* 1> /dev/null 2>&1; then
-    echo "Fonts with 'InconsolataLGCNerdFontMono' already installed, skipping download and installation..."
+    echo "Fonts with 'Inconsolata LGC Nerd Font Mono' already installed, skipping download and installation..."
     return
   fi
 
@@ -396,9 +257,140 @@ install_font() {
   echo "Installation complete and cleanup done."
 }
 
+setup_brew_env() {
+  # It will export env variable: HOMEBREW_PREFIX, HOMEBREW_CELLAR, HOMEBREW_REPOSITORY, HOMEBREW_SHELLENV_PREFIX
+  # It will add path: $PATH, $MANPATH, $INFOPATH
+  if is_apple_silicon; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+}
+
+install_homebrew() {
+  echo "==========================================================="
+  echo "                     Install Homebrew                      "
+  echo "-----------------------------------------------------------"
+
+  if [ -x "$(command -v brew)" ]; then
+    echo "Homebrew already installed, updating..."
+    brew update || {
+      echo "Failed to update Homebrew"
+      return 1
+    }
+    return 0
+  fi
+
+  echo "Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
+    echo "Failed to install Homebrew"
+    return 1
+  }
+
+
+  setup_brew_env || return 1
+
+  local zprofile="$HOME/.zprofile"
+  if ! ([[ -e "$zprofile" ]] && grep -q "brew shellenv" "$zprofile"); then
+    echo "eval \"\$(${HOMEBREW_PREFIX}/bin/brew shellenv)\"" >> "$zprofile"
+    echo "typeset -U path" >> "$zprofile"
+  fi
+
+  brew analytics off && brew update || {
+    echo "Failed to configure Homebrew"
+    return 1
+  }
+
+  echo "Homebrew installed successfully."
+}
+
+install_homebrew_packages() {
+  echo "==========================================================="
+  echo "           Installing packages from Brewfile...            "
+  echo "-----------------------------------------------------------"
+
+  local brewfile="$HOME/Brewfile"
+
+  if [[ ! -f "$brewfile" ]]; then
+    echo "No Brewfile found at $brewfile"
+    echo "Skipping package installation"
+    return 0
+  fi
+
+  if brew bundle --file="$brewfile"; then
+    echo "Successfully installed all packages from Brewfile"
+    return 0
+  else
+    echo "Warning: Some packages failed to install from Brewfile"
+    echo "You may want to run 'brew bundle' manually later"
+    return 1
+  fi
+}
+
+install_nodejs() {
+  echo "==========================================================="
+  echo "              Setting up Node.js Environment               "
+  echo "-----------------------------------------------------------"
+  if command -v proto > /dev/null; then
+    echo "proto is already installed, skipping..."
+  else
+    echo "Installing proto..."
+    curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --no-profile --yes
+  fi
+
+  echo "-----------------------------------------------------------"
+  echo "                * Installing Node.js LTS...                "
+  echo "-----------------------------------------------------------"
+  proto install node
+  echo "-----------------------------------------------------------"
+  echo -n "                   * Node.js Version:                   "
+  proto run node -- --version
+  echo "-----------------------------------------------------------"
+
+  echo "                    * Installing pnpm...                   "
+  echo "-----------------------------------------------------------"
+  proto install pnpm
+  echo -n "                    * pnpm Version:                     "
+  proto run pnpm -- --version
+  echo "-----------------------------------------------------------"
+
+  # Set NPM Global Path (if you still want to use npm for global packages)
+  export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+  # Create .npm-global folder if not exists
+  [[ ! -d "$NPM_CONFIG_PREFIX" ]] && mkdir -p $NPM_CONFIG_PREFIX
+
+  __npm_global_pkgs=(
+    @upimg/cli
+    0x
+    npm-why
+  )
+
+  echo "-----------------------------------------------------------"
+  echo "              * npm install global packages:               "
+  echo "                                                           "
+  for __npm_pkg in "${__npm_global_pkgs[@]}"; do
+    echo "  - ${__npm_pkg}"
+    proto run npm -- install -g ${__npm_pkg}
+  done
+  echo "-----------------------------------------------------------"
+}
+
+install_rust() {
+  echo "==========================================================="
+  echo "                      Install Rust                         "
+  echo "-----------------------------------------------------------"
+
+
+  if command -v rustc > /dev/null; then
+    echo "Rust is already installed, skipping..."
+  else
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  fi
+}
+
 reload_zshrc() {
   echo "==========================================================="
-  echo "                  Reload Bryan env zshrc                   "
+  echo "                   Reload Bryan env zshrc                  "
   echo "-----------------------------------------------------------"
 
   if [[ ! -f "$HOME/.zshrc" ]]; then
@@ -418,17 +410,18 @@ reload_zshrc() {
 
 display_todo_list() {
   echo "==========================================================="
-  echo "Done!                                                      "
+  echo "                           Done!                           "
+  echo "             Bryan Environment Setup finished!             "
+  echo "==========================================================="
   echo "                                                           "
-  echo "> Bryan Environment Setup finished!                        "
-  echo "> Do not forget to run these things:                       "
+  echo "  Do not forget to run these things:                       "
   echo "                                                           "
-  echo "- NPM login                                                "
-  echo "- Setup .npmrc                                             "
-  echo "- Setup iTerm2 or Warp                                     "
-  echo "- Setup launchd for notes                                  "
-  echo "- Create a case-sensitive volume on macOS                  "
-  echo "- https://www.v2ex.com/t/813229?p=1#r_11048555             "
+  echo "    - NPM login                                            "
+  echo "    - Setup .npmrc                                         "
+  echo "    - Setup iTerm2 or Warp                                 "
+  echo "    - Setup launchd for notes                              "
+  echo "    - Create a case-sensitive volume                       "
+  echo "    - https://www.v2ex.com/t/813229?p=1#r_11048555         "
   echo "                                                           "
   echo "==========================================================="
 }
@@ -439,12 +432,15 @@ finish() {
 }
 
 start
-install_homebrew
-install_brew_packages
-setup_ohmyzsh
 restore_dotfiles
+setup_ohmyzsh
+setup_gpg_agent
+setup_gitconfig
+format_gitconfig_files
+install_font
+install_homebrew
+install_homebrew_packages
 install_nodejs
 install_rust
-install_font
 reload_zshrc
 finish
