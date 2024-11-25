@@ -75,27 +75,8 @@ fi
 typeset -aU path
 path=($path_dirs $path[@])
 
-# GPG and SSH configuration
-## https://github.com/jessfraz/dotfiles/blob/master/.bashrc#L113C1-L130C1
-## Start the gpg-agent if not already running
-if ! pgrep -x -u "${USER}" gpg-agent >/dev/null 2>&1; then
-  gpg-connect-agent /bye >/dev/null 2>&1
-fi
-## Update the TTY for gpg-agent to use the current terminal
-gpg-connect-agent updatestartuptty /bye >/dev/null
-## Use the current terminal for GPG to avoid "Inappropriate ioctl for device" error
-export GPG_TTY=$(tty)
-## Set SSH to use gpg-agent
-unset SSH_AGENT_PID
-## Check if the SSH_AUTH_SOCK needs to be set to gpg-agent's socket
-if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
-  if [[ -z "$SSH_AUTH_SOCK" || "$SSH_AUTH_SOCK" == *"apple.launchd"* ]]; then
-    export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
-  fi
-fi
-
 # Alias Set
-alias c='code'
+alias c='cursor'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 ## ip & ipcn
 alias ip="curl ip.sb"
@@ -219,6 +200,44 @@ setup_editor_links() {
   done
 }
 
+setup_gpg_ssh() {
+  ## https://github.com/jessfraz/dotfiles/blob/master/.bashrc#L113C1-L130C1
+  ## Start the gpg-agent if not already running
+  if ! pgrep -x -u "${USER}" gpg-agent >/dev/null 2>&1; then
+    if ! gpg-connect-agent /bye >/dev/null 2>&1; then
+      echo "Failed to start gpg-agent" >&2
+      return 1
+    fi
+  fi
+
+  ## Update the TTY for gpg-agent
+  if ! gpg-connect-agent updatestartuptty /bye >/dev/null; then
+    echo "Failed to update GPG TTY" >&2
+    return 1
+  fi
+
+  ## Use the current terminal for GPG to avoid "Inappropriate ioctl for device" error
+  export GPG_TTY=$(tty)
+
+  ## Set SSH to use gpg-agent
+  unset SSH_AGENT_PID
+
+  ## Check if the SSH_AUTH_SOCK needs to be set to gpg-agent's socket
+  if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
+    if [[ -z "$SSH_AUTH_SOCK" || "$SSH_AUTH_SOCK" == *"apple.launchd"* ]]; then
+      local socket_path="$(gpgconf --list-dirs agent-ssh-socket)"
+      if [[ -S "$socket_path" ]]; then
+        export SSH_AUTH_SOCK="$socket_path"
+      else
+        echo "GPG SSH socket not found" >&2
+        return 1
+      fi
+    fi
+  fi
+
+  return 0
+}
+
 # Autosuggestions configuration# https://github.com/zsh-users/zsh-autosuggestions/issues/351
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste accept-line)
 ZSH_AUTOSUGGEST_MANUAL_REBIND=""
@@ -232,5 +251,5 @@ source $HOME/.cargo/env
 eval "$(zoxide init zsh)"
 eval "$(starship init zsh)"
 (( $+commands[cursor] )) && setup_editor_links &>/dev/null
+(( $+commands[gpg-connect-agent] )) && setup_gpg_ssh &>/dev/null
 (( $+commands[direnv] )) && eval "$(direnv hook zsh)"
-(( $+commands[github-copilot-cli] )) && eval "$(github-copilot-cli alias -- "$0")"
