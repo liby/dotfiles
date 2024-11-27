@@ -36,7 +36,9 @@ for dir in $dirs_to_create; do
 done
 
 # Environment variables
-export GPG_PATH=$(find $HOMEBREW_PREFIX -maxdepth 1 -type d -name "gnupg*" 2>/dev/null | head -n 1)
+if [[ -z "$GPG_PATH" ]]; then
+  export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
+fi
 export HOMEBREW_NO_AUTO_UPDATE=1
 export LC_ALL="en_US.UTF-8"
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
@@ -63,6 +65,7 @@ local -a path_dirs=(
   "$HOME/.cargo/bin"
   "$HOME/.local/bin"
   "$GPG_PATH/bin"
+  "$GPG_PATH/libexec"
   "/usr/local/opt/icu4c/bin"
   "/usr/local/opt/icu4c/sbin"
 )
