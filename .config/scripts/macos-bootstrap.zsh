@@ -317,14 +317,30 @@ install_homebrew_packages() {
     return 0
   fi
 
+  # Save current locale setting
+  local current_locale=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null || echo "en_CN")
+
+    # Store brew bundle exit status
+  local brew_bundle_status
+
+  # Temporarily set locale to en_US for mas-cli compatibility
+  # Reference: https://github.com/mas-cli/mas/blob/main/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L22
+  defaults write NSGlobalDomain AppleLocale "en_US"
+
+  # Run brew bundle
   if brew bundle --file="$brewfile"; then
     echo "Successfully installed all packages from Brewfile"
-    return 0
+    brew_bundle_status=0
   else
     echo "Warning: Some packages failed to install from Brewfile"
     echo "You may want to run 'brew bundle' manually later"
-    return 1
+    brew_bundle_status=1
   fi
+
+  # Restore original locale setting
+  defaults write NSGlobalDomain AppleLocale "$current_locale"
+
+  return $brew_bundle_status
 }
 
 install_nodejs() {
