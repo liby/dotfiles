@@ -56,7 +56,7 @@
   required = true
 
 [filter "prototools"]
-  clean = sed -E '/^(bun|node|pnpm|proto|yarn) = /d'
+  clean = sed -E '/^(bun|deno|node|pnpm|proto|yarn) = /d'
   smudge = cat
   required = true
 
