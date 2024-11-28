@@ -56,8 +56,8 @@ export ZSH_AUTOSUGGEST_USE_ASYNC='true'
 
 # PATH configuration
 local -a path_dirs=(
-  "$PROTO_HOME/shims"
-  "$PROTO_HOME/bin"
+  # "$PROTO_HOME/shims"
+  # "$PROTO_HOME/bin"
   "$NPM_CONFIG_PREFIX/bin"
   "$PNPM_HOME"
   "./node_modules/.bin"
