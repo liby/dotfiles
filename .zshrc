@@ -251,8 +251,9 @@ source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 source $HOME/.cargo/env
 
 # Initialize tools and configurations
-eval "$(zoxide init zsh)"
-eval "$(starship init zsh)"
 (( $+commands[cursor] )) && setup_editor_links &>/dev/null
 (( $+commands[gpg-connect-agent] )) && setup_gpg_ssh &>/dev/null
 (( $+commands[direnv] )) && eval "$(direnv hook zsh)"
+(( $+commands[proto] )) && eval "$(proto activate zsh)"
+eval "$(starship init zsh)"
+eval "$(zoxide init zsh)"
