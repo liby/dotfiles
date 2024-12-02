@@ -318,14 +318,14 @@ install_homebrew_packages() {
   fi
 
   # Save current locale setting
-  local current_locale=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null || echo "en_CN")
+  local current_locale=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null || echo en_CN)
 
-    # Store brew bundle exit status
+  # Store brew bundle exit status
   local brew_bundle_status
 
   # Temporarily set locale to en_US for mas-cli compatibility
   # Reference: https://github.com/mas-cli/mas/blob/main/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L22
-  defaults write NSGlobalDomain AppleLocale "en_US"
+  defaults write NSGlobalDomain AppleLocale -string en_US
 
   # Run brew bundle
   if brew bundle --file="$brewfile"; then
@@ -338,7 +338,7 @@ install_homebrew_packages() {
   fi
 
   # Restore original locale setting
-  defaults write NSGlobalDomain AppleLocale "$current_locale"
+  defaults write NSGlobalDomain AppleLocale -string "$current_locale"
 
   return $brew_bundle_status
 }
