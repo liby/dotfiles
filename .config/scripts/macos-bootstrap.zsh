@@ -217,6 +217,72 @@ format_gitconfig_files() {
   fi
 }
 
+setup_case_sensitive_volume() {
+  echo "==========================================================="
+  echo "          Setting up case-sensitive APFS volume            "
+  echo "-----------------------------------------------------------"
+
+  # Find APFS container
+  local container_id=$(diskutil list | grep "APFS Container Scheme" | awk '{print $NF}')
+  if [[ -z "$container_id" ]]; then
+    echo "Error: No APFS container found"
+    return 1
+  fi
+
+  # Create mount point
+  mkdir -p "$HOME/Code"
+
+  # Check if already mounted
+  if mount | grep -q "/Users/.*/Code"; then
+    echo "Code volume is already mounted"
+    return 0
+  fi
+
+  # Check if Code volume exists
+  if diskutil apfs list | grep -q "Name:.*Code.*Case-sensitive"; then
+    echo "Code volume exists, proceeding to mount"
+  else
+    echo "Creating case-sensitive Code volume..."
+    sudo diskutil apfs addVolume "$container_id" APFS "Code" -case-sensitive || return 1
+    echo "Volume created successfully"
+    sleep 2
+  fi
+
+  # Get Code volume ID
+  local volume_id=$(diskutil apfs list | grep -B 3 "Name:.*Code.*Case-sensitive" | grep "Volume disk" | awk '{print $3}')
+  if [[ -z "$volume_id" ]]; then
+    echo "Error: Code volume ID not found"
+    return 1
+  fi
+
+  # Mount volume
+  echo "Mounting Code volume..."
+  sudo diskutil mount -mountPoint "$HOME/Code" "$volume_id" || return 1
+
+  # Verify mount and case sensitivity
+  echo "Verifying mount and case sensitivity..."
+  if mount | grep -q "/Users/.*/Code"; then
+    (
+      cd "$HOME/Code" || return 1
+      local test_file="test_case_sensitive_$(date +%s)"
+      local test_file_upper="TEST_CASE_SENSITIVE_$(date +%s)"
+      touch "$test_file" "$test_file_upper"
+      if [[ -f "$test_file" && -f "$test_file_upper" ]]; then
+        echo "Verification successful: Volume mounted and case-sensitive"
+        rm "$test_file" "$test_file_upper"
+      else
+        echo "Warning: Case sensitivity test failed"
+        return 1
+      fi
+    )
+  else
+    echo "Error: Volume mount verification failed"
+    return 1
+  fi
+
+  echo "Case-sensitive volume setup completed successfully"
+}
+
 install_font() {
   echo "==========================================================="
   echo "                 Install Inconsolata LGC                   "
@@ -456,11 +522,8 @@ display_todo_list() {
   echo "                                                           "
   echo "  Do not forget to run these things:                       "
   echo "                                                           "
-  echo "    - NPM login                                            "
   echo "    - Setup .npmrc                                         "
-  echo "    - Setup iTerm2 or Warp                                 "
   echo "    - Setup launchd for notes                              "
-  echo "    - Create a case-sensitive volume                       "
   echo "    - https://www.v2ex.com/t/813229?p=1#r_11048555         "
   echo "                                                           "
   echo "==========================================================="
@@ -476,6 +539,7 @@ restore_dotfiles
 setup_ohmyzsh
 setup_gpg_agent
 setup_gitconfig
+setup_case_sensitive_volume
 format_gitconfig_files
 install_font
 install_homebrew
