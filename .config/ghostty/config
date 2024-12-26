@@ -1,0 +1,14 @@
+cursor-style = block
+cursor-style-blink = false
+
+font-family = "Inconsolata LGC Nerd Font Mono"
+font-size = 12
+
+macos-titlebar-style = tabs
+
+shell-integration = zsh
+shell-integration-features = no-cursor
+
+theme = Snazzy Soft
+
+title = "Bryan‘s Terminal"

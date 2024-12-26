@@ -31,6 +31,8 @@ brew "zoxide"
 cask "appcleaner"
 # Free and open-source web browser
 cask "chromium"
+# Fast, native, feature-rich terminal emulator pushing modern features
+cask "ghostty"
 # Web browser
 cask "google-chrome"
 # Switch and track your input sources with ease
@@ -45,8 +47,6 @@ cask "logseq"
 cask "raycast"
 # The minimal, blazing-fast, and infinitely customizable prompt for any shell
 cask "starship"
-# The Mac terminal for the 21st century
-cask "warp"
 # UNIX shell (command interpreter)
 brew "zsh"
 
