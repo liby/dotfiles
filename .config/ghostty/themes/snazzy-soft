@@ -1,0 +1,63 @@
+# Ansi 0 (Black)
+# R:0.0, G:0.0, B:0.0
+palette = 0=#000000
+
+# Ansi 1 (Red)
+# R:0.92677, G:0.40540, B:0.36810
+palette = 1=#ec6861
+
+# Ansi 2 (Green)
+# R:0.53634, G:0.95591, B:0.59726
+palette = 2=#89f498
+
+# Ansi 3 (Yellow)
+# R:0.95717, G:0.97570, B:0.65828
+palette = 3=#f4f9a8
+
+# Ansi 4 (Blue)
+# R:0.46112, G:0.77067, B:0.97928
+palette = 4=#75c4fa
+
+# Ansi 5 (Magenta)
+# R:0.92996, G:0.45234, B:0.74390
+palette = 5=#ed74be
+
+# Ansi 6 (Cyan)
+# R:0.67715, G:0.92093, B:0.98636
+palette = 6=#acecfc
+
+# Ansi 7 (White)
+# R:0.94509, G:0.94509, B:0.94152
+palette = 7=#f1f1f0
+
+# Ansi 8 (Bright Black)
+# R:0.40784, G:0.40784, B:0.40784
+palette = 8=#686868
+
+palette = 9=#ec6861
+palette = 10=#89f498
+palette = 11=#f4f9a8
+palette = 12=#75c4fa
+palette = 13=#ed74be
+palette = 14=#acecfc
+palette = 15=#f1f1f0
+
+# Background
+# R:0.15828, G:0.16445, B:0.20792
+background = #282a35
+
+# Foreground
+# R:0.93795, G:0.94104, B:0.92327
+foreground = #eff0ec
+
+# Cursor
+# R:0.91647, G:0.91648, B:0.91647
+cursor-color = #eaeaea
+
+# Selection Background
+# R:0.60626, G:0.73119, B:0.80824
+selection-background = #9abace
+
+# Selection Foreground
+# R:0.0, G:0.0, B:0.0
+selection-foreground = #000000
