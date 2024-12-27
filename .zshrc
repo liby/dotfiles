@@ -167,7 +167,6 @@ dlm() {
       ((failed++))
     fi
   done
-
   echo "\n${green}Operation complete.${reset}"
   echo "Branches deleted: ${deleted}"
   [[ $failed -gt 0 ]] && echo "${red}Branches failed to delete: ${failed}${reset}"
@@ -249,6 +248,7 @@ ZSH_AUTOSUGGEST_MANUAL_REBIND=""
 source $HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 source $HOME/.cargo/env
+[[ -f ~/.zsh/functions/cursor.zsh ]] && source ~/.zsh/functions/cursor.zsh
 
 # Initialize tools and configurations
 (( $+commands[cursor] )) && setup_editor_links &>/dev/null
