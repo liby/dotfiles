@@ -9,6 +9,6 @@ macos-titlebar-style = tabs
 shell-integration = zsh
 shell-integration-features = no-cursor
 
-theme = Snazzy Soft
+theme = "Snazzy Soft"
 
 title = "Bryan‘s Terminal"

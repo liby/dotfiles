@@ -87,7 +87,7 @@ alias ipcn="curl myip.ipip.net"
 alias ka='caffeinate -is'
 alias la='ls --all'
 alias ll='la --long --git'
-alias ls='eza --reverse --sort=modified --group-directories-first'
+alias ls='eza --reverse --sort=modified --group-directories-first --hyperlink'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
 alias pip='python -m pip'
 alias python='python3'
