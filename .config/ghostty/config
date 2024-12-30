@@ -4,6 +4,9 @@ cursor-style-blink = false
 font-family = "Inconsolata LGC Nerd Font Mono"
 font-size = 12
 
+keybind = ctrl+alt+i=inspector:toggle
+keybind = super+f=write_screen_file:open
+
 macos-titlebar-style = tabs
 
 shell-integration = zsh

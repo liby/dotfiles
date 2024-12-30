@@ -41,3 +41,6 @@ format = '\[[$symbol($version)]($style)\]'
 
 [rust]
 format = '\[[$symbol($version)]($style)\]'
+
+[zig]
+format = '\[[$symbol($version)]($style)\]'

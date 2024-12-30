@@ -291,6 +291,7 @@
     "editor.defaultFormatter": "unifiedjs.vscode-mdx"
   },
   "workbench.layoutControl.enabled": false,
+  "zig.zls.enabled": "on",
   // "github.copilot.enable": {
   //   "*": true,
   //   "plaintext": false,
