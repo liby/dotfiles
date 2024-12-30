@@ -8,11 +8,10 @@ keybind = ctrl+alt+i=inspector:toggle
 keybind = super+f=write_screen_file:open
 keybind = super+shift+f=write_selection_file:open
 
-macos-titlebar-style = tabs
-
 shell-integration = zsh
 shell-integration-features = no-cursor
 
 theme = "Snazzy Soft"
 
-title = "Bryan‘s Terminal"
+window-padding-x = 8
+window-padding-y = 8
