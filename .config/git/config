@@ -6,11 +6,16 @@
   ca = commit -a --amend --no-edit
   cm = commit -m
   co = checkout
-  pf = push --force
-  pr ="!f() { git fetch -fu ${2:-origin} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f"
   sc = switch --create
   st = status
-  undo = reset --hard HEAD
+
+  ### push ###
+  pf = push --force
+  pr ="!f() { git fetch -fu ${2:-origin} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f"
+
+  ### reset ###
+  cl = reset --hard HEAD
+  undo= reset --soft HEAD~1
 
   ### diff ###
   dc= "!git dh | pbcopy"
