@@ -6,6 +6,7 @@ font-size = 12
 
 keybind = ctrl+alt+i=inspector:toggle
 keybind = super+f=write_screen_file:open
+keybind = super+shift+f=write_selection_file:open
 
 macos-titlebar-style = tabs
 
