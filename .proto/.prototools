@@ -1,7 +1,16 @@
 npm = "bundled"
+zig = "0.13.0"
+zls = "0.13.0"
 
 [tools.node]
 bundled-npm = true
+
+[tools.npm]
+shared-globals-dir = true
+
+[plugins]
+zig = "github://konomae/zig-plugin"
+zls = "github://konomae/zls-plugin"
 
 [settings]
 auto-install = true
