@@ -2,11 +2,12 @@
   "breadcrumbs.icons": false,
   "css.lint.duplicateProperties": "warning",
   "cSpell.language": "en,en-GB,en-US",
+  "cursor.chat.terminalShowHoverHint": false,
   "cursor.cpp.disabledLanguages": [
     "plaintext",
-    "scminput"
+    "scminput",
   ],
-  "diffEditor.ignoreTrimWhitespace": true,
+  "diffEditor.ignoreTrimWhitespace": false,
   "editor.acceptSuggestionOnCommitCharacter": false,
   "editor.acceptSuggestionOnEnter": "off",
   "editor.accessibilitySupport": "off",
@@ -151,12 +152,19 @@
   "markdown.preview.fontFamily": "'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans', sans-serif",
   "oneDarkPro.vivid": true,
   "problems.showCurrentInStatus": true,
+  "search.collapseResults": "auto",
   "search.exclude": {
     "**/node_modules": true,
     "**/bower_components": true,
     "**/dist": true
   },
   "search.quickAccess.preserveInput": true,
+  "search.seedOnFocus": true,
+  "search.smartCase": true,
+  "search.useGlobalIgnoreFiles": true,
+  "search.useParentIgnoreFiles": true,
+  "scm.showActionButton": false,
+  "scss.lint.duplicateProperties": "warning",
   "terminal.integrated.cursorStyle": "line",
   "terminal.integrated.defaultProfile.osx": "zsh (login)",
   "terminal.integrated.profiles.osx": {
@@ -165,6 +173,7 @@
       "args": []
     }
   },
+  "terminal.integrated.rightClickBehavior": "default",
   "terminal.integrated.smoothScrolling": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "vim.easymotionMarkerBackgroundColor": "#115599",
@@ -261,41 +270,15 @@
   "workbench.commandPalette.experimental.suggestCommands": true,
   "workbench.commandPalette.preserveInput": true,
   "workbench.iconTheme": "material-icon-theme",
+  "workbench.layoutControl.enabled": false,
   "workbench.list.smoothScrolling": true,
   "workbench.quickOpen.preserveInput": true,
   "workbench.tree.enableStickyScroll": true,
-  "scm.showActionButton": false,
-  "scss.lint.duplicateProperties": "warning",
-  "search.collapseResults": "auto",
-  "search.seedOnFocus": true,
-  "search.smartCase": true,
-  "search.useGlobalIgnoreFiles": true,
-  "search.useParentIgnoreFiles": true,
-  "terminal.integrated.rightClickBehavior": "default",
-  "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  "zig.zls.enabled": "on",
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
   },
-  "[json]": {
+  "[json][jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
-  "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[mdx]": {
-    "editor.defaultFormatter": "unifiedjs.vscode-mdx"
-  },
-  "workbench.layoutControl.enabled": false,
-  "zig.zls.enabled": "on",
-  // "github.copilot.enable": {
-  //   "*": true,
-  //   "plaintext": false,
-  //   "markdown": true,
-  //   "scminput": false
-  // },
 }
