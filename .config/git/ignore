@@ -1,5 +1,8 @@
 # Global gitignore
 
+#Cursor
+.cursor
+
 # General
 log
 *.log
