@@ -1,0 +1,14 @@
+[
+  {
+    "command": "runCommands",
+    "key": "cmd+g cmd+g",
+    "args": {
+        "commands": [
+          "workbench.action.files.save",
+          "git.stageAll",
+          "cursor.generateGitCommitMessage",
+          "workbench.scm.focus"
+        ]
+      }
+  }
+]

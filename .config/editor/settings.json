@@ -131,7 +131,7 @@
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
   "git.pullTags": false,
-  "github.copilot.editor.enableAutoCompletions": true,
+  // "github.copilot.editor.enableAutoCompletions": true,
   "gitlens.advanced.messages": {
     "suppressCommitHasNoPreviousCommitWarning": true
   },
@@ -281,4 +281,5 @@
   "[json][jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
+  "cursor.composer.agentLoopOnLints": false,
 }
