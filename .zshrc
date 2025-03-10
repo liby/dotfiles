@@ -79,7 +79,7 @@ typeset -aU path
 path=($path_dirs $path[@])
 
 # Alias Set
-alias c='cursor'
+alias c='open $1 -a "Cursor"'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 ## ip & ipcn
 alias ip="curl ip.sb"
