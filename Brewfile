@@ -15,8 +15,6 @@ brew "eza"
 brew "git"
 # Git extension for versioning large files
 brew "git-lfs"
-# Blazing 💥 fast terminal-ui for git written in rust 🦀
-brew "gitui"
 # GNU Pretty Good Privacy (PGP) package
 brew "gnupg"
 # Lightweight and flexible command-line JSON processor
