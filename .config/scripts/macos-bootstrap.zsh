@@ -390,7 +390,7 @@ install_homebrew_packages() {
   local brew_bundle_status
 
   # Temporarily set locale to en_US for mas-cli compatibility
-  # Reference: https://github.com/mas-cli/mas/blob/main/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L22
+  # Reference:https://github.com/mas-cli/mas/blob/ed676787f0a0a26e23a10548eb841bc15411fa52/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L23
   defaults write NSGlobalDomain AppleLocale -string en_US
 
   # Run brew bundle
@@ -490,30 +490,6 @@ reload_zshrc() {
   exec zsh
 }
 
-setup_iterm2() {
-  echo "==========================================================="
-  echo "                   Setting up iTerm2...                    "
-  echo "-----------------------------------------------------------"
-
-  if [ ! -d "/Applications/iTerm.app" ]; then
-    echo "iTerm2 is not installed, skipping configuration..."
-    return 0
-  fi
-
-  local iterm2_config_dir="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Documents/iTerm2"
-
-  if [ ! -d "$iterm2_config_dir" ]; then
-    echo "iTerm2 config directory not found: $iterm2_config_dir"
-    return 0
-  fi
-
-  echo "Setting iTerm2 to use custom config directory..."
-  defaults write -app iTerm PrefsCustomFolder "$iterm2_config_dir"
-  defaults write -app iTerm LoadPrefsFromCustomFolder -bool true
-
-  echo "iTerm2 configuration completed."
-}
-
 setup_macos_defaults() {
   echo "==========================================================="
   echo "               Setting up macOS Defaults...                "
@@ -580,6 +556,5 @@ install_homebrew_packages
 install_nodejs
 install_rust
 reload_zshrc
-setup_iterm2
 setup_macos_defaults
 finish
