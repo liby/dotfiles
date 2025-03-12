@@ -1,3 +1,5 @@
+auto-update = check
+
 cursor-style = block
 cursor-style-blink = false
 
