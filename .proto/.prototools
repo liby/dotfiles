@@ -1,6 +1,6 @@
 npm = "bundled"
-zig = "0.13.0"
-zls = "0.13.0"
+zig = "0.14.0"
+zls = "0.14.0"
 
 [tools.node]
 bundled-npm = true
