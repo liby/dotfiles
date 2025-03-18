@@ -110,7 +110,7 @@
     "index.ts": "${dirname}.ts",
     "*": "${basename}.*.${dirname}",
     "tsconfig.json": "tsconfig.*.json",
-    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, npm-shrinkwrap.json"
+    "package.json": "bun.lockb, package-lock.json, yarn.lock, pnpm-lock.yaml, npm-shrinkwrap.json"
   },
   "extensions.ignoreRecommendations": true,
   "files.associations": {

@@ -159,7 +159,7 @@ dlm() {
   local failed=0
 
   for branch in "${branches[@]}"; do
-    if git branch -d "$branch" &>/dev/null; then
+    if git branch -D "$branch" &>/dev/null; then
       echo "${green}Deleted: $branch${reset}"
       ((deleted++))
     else
