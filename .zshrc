@@ -43,6 +43,7 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 export LC_ALL="en_US.UTF-8"
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 export PNPM_HOME="$HOME/Library/pnpm"
+export PROTO_AUTO_INSTALL_HIDE_OUTPUT=true
 export PROTO_HOME="$HOME/.proto"
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 export RUSTUP_DIST_SERVER="https://rsproxy.cn"

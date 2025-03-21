@@ -26,7 +26,7 @@
   "editor.fontLigatures": true,
   "editor.fontWeight": "400",
   "editor.formatOnSave": true,
-  "editor.formatOnSaveMode": "modifications",
+  // "editor.formatOnSaveMode": "modifications",
   "editor.hover.above": false,
   "editor.hover.hidingDelay": 0,
   "editor.inlineSuggest.enabled": true,
