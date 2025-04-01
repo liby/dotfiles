@@ -10,5 +10,9 @@
           "workbench.scm.focus"
         ]
       }
+  },
+  {
+    "key": "cmd+i",
+    "command": "composerMode.agent"
   }
 ]
