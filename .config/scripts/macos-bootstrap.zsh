@@ -55,22 +55,13 @@ restore_dotfiles() {
   git --git-dir=$HOME/.dotfiles --work-tree=$HOME remote set-url origin git@github.com:liby/dotfiles.git
 }
 
-setup_ohmyzsh() {
+setup_zsh_plugins() {
   echo "==========================================================="
   echo "                     Shells Environment                    "
   echo "-----------------------------------------------------------"
-  echo "                  * Installing Oh My Zsh...                "
-  echo "-----------------------------------------------------------"
-
-  if [[ -d "$HOME/.oh-my-zsh" ]]; then
-    echo "Oh My Zsh is already installed, skipping..."
-  else
-    echo "Oh My Zsh is not installed, proceeding with the installation..."
-    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-  fi
 
   echo "-----------------------------------------------------------"
-  echo "        * Installing ZSH Custom Plugins & Themes...        "
+  echo "             * Installing ZSH Custom Plugins...            "
   echo "                                                           "
   echo "                - zsh-autosuggestions                      "
   echo "                - zsh-completions                          "
@@ -545,7 +536,7 @@ finish() {
 
 start
 restore_dotfiles
-setup_ohmyzsh
+setup_zsh_plugins
 setup_gpg_agent
 setup_gitconfig
 setup_case_sensitive_volume

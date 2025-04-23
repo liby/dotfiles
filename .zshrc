@@ -1,17 +1,12 @@
 # https://github.com/SukkaW/dotfiles/blob/09b6b2d0a6d20a31143f4201f64c7b7f44fb85f6/_zshrc/macos.zshrc
 
-# Zsh Configuration
-COMPLETION_WAITING_DOTS="true"
-DISABLE_UNTRACKED_FILES_DIRTY="true"
-ENABLE_CORRECTION="true"
-HIST_STAMPS="yyyy-mm-dd"
-
 # Homebrew zsh completion path
 __BRYAN_HOMEBREW_ZSH_COMPLETION="${HOMEBREW_PREFIX}/share/zsh/site-functions"
 __BRYAN_ZSH_COMPLETION_SRC="${HOME}/.zsh/plugins/zsh-completions/src"
 
 # ZSH completions
-## For homebrew, is must be added before oh-my-zsh is called.
+## Add Homebrew completion path if not already present,
+## usually handled by `brew shellenv` in .zprofile
 ## https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh
 ## https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/github/README.md#homebrew-installation-note
 ## Add a check avoiding duplicated fpath
@@ -20,6 +15,8 @@ if (( ! $FPATH[(I)${__BRYAN_HOMEBREW_ZSH_COMPLETION}] && $+commands[brew] )) &>/
 fi
 ## https://github.com/zsh-users/zsh-completions
 [[ -d ${__BRYAN_ZSH_COMPLETION_SRC} ]] && fpath+=${__BRYAN_ZSH_COMPLETION_SRC}
+## Initialize the completion system
+## This must be done after all fpath modifications
 autoload -Uz compinit
 compinit
 
@@ -39,7 +36,6 @@ done
 if [[ -z "$GPG_PATH" ]]; then
   export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 fi
-export HOMEBREW_NO_AUTO_UPDATE=1
 export LC_ALL="en_US.UTF-8"
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 export PNPM_HOME="$HOME/Library/pnpm"
@@ -50,7 +46,6 @@ export RUSTUP_DIST_SERVER="https://rsproxy.cn"
 export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 export STARSHIP_CACHE="$HOME/.config/starship/cache"
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
-export UPDATE_ZSH_DAYS=7
 ## This speed up zsh-autosuggestions by a lot
 export ZSH_AUTOSUGGEST_USE_ASYNC='true'
 [[ $(command -v chromium) ]] && export PUPPETEER_EXECUTABLE_PATH=$(command -v chromium)
@@ -249,7 +244,6 @@ ZSH_AUTOSUGGEST_MANUAL_REBIND=""
 source $HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 source $HOME/.cargo/env
-[[ -f ~/.zsh/functions/cursor.zsh ]] && source ~/.zsh/functions/cursor.zsh
 
 # Initialize tools and configurations
 (( $+commands[cursor] )) && setup_editor_links &>/dev/null
