@@ -23,6 +23,8 @@ brew "jq"
 brew "mas"
 # Pinentry for GPG on Mac
 brew "pinentry-mac"
+#Python package and project manager
+brew "uv"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
 # Uninstall unwanted apps
