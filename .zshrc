@@ -77,6 +77,7 @@ path=($path_dirs $path[@])
 # Alias Set
 alias c='open $1 -a "Cursor"'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+alias dp='dot pull --rebase --autostash'
 ## ip & ipcn
 alias ip="curl ip.sb"
 alias ipcn="curl myip.ipip.net"
@@ -85,19 +86,19 @@ alias la='ls --all'
 alias ll='la --long --git'
 alias ls='eza --reverse --sort=modified --group-directories-first --hyperlink'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
-alias pip='python -m pip'
-alias python='python3'
+# alias pip='python -m pip'
+# alias python='python3'
 
 # Path Alias
 # usage: cd ~xxx
-hash -d desktop="$HOME/Desktop"
-hash -d downloads="$HOME/Downloads"
-hash -d download="$HOME/Downloads"
-hash -d documents="$HOME/Documents"
-hash -d document="$HOME/Documents"
-hash -d code="$HOME/Code"
-hash -d applications="/Applications"
-hash -d application="/Applications"
+# hash -d desktop="$HOME/Desktop"
+# hash -d downloads="$HOME/Downloads"
+# hash -d download="$HOME/Downloads"
+# hash -d documents="$HOME/Documents"
+# hash -d document="$HOME/Documents"
+# hash -d code="$HOME/Code"
+# hash -d applications="/Applications"
+# hash -d application="/Applications"
 
 # Functions
 dlm() {
