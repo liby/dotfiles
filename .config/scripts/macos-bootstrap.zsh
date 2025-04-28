@@ -180,6 +180,24 @@ setup_gitconfig() {
 
     git config --file "$github_config" user.signingkey "$gpg_key_id"
     git config --file "$gitlab_config" user.signingkey "$gpg_ssh_pub_key_file"
+
+    # Setup SSH signature verification
+    local allowed_signers_file="$ssh_dir/allowed_signers"
+    if [[ ! -f "$allowed_signers_file" ]]; then
+      echo "Creating allowed signers file for SSH signature verification..."
+      touch "$allowed_signers_file"
+    fi
+
+    echo "Adding user's SSH key to allowed signers file..."
+    local ssh_key=$(cat "$gpg_ssh_pub_key_file")
+
+    # Check if entry already exists
+    if ! grep -q "$GITLAB_EMAIL" "$allowed_signers_file"; then
+      echo "$GITLAB_EMAIL namespaces=\"git\" $ssh_key" > "$allowed_signers_file"
+      echo "SSH key added to allowed signers file."
+    else
+      echo "SSH key already exists in allowed signers file."
+    fi
   else
     echo "No GPG key found. Please ensure a GPG key is available."
   fi
