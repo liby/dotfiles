@@ -1,12 +1,7 @@
-tap "homebrew/bundle"
-tap "homebrew/services"
-
 # Cross-platform make
 brew "cmake"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
-# Write, edit, and chat about your code with AI
-brew "cursor"
 # Diff that understands syntax
 brew "difftastic"
 # Modern, maintained replacement for ls
@@ -23,14 +18,20 @@ brew "jq"
 brew "mas"
 # Pinentry for GPG on Mac
 brew "pinentry-mac"
+# The minimal, blazing-fast, and infinitely customizable prompt for any shell
+brew "starship"
 #Python package and project manager
 brew "uv"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
+# UNIX shell (command interpreter)
+brew "zsh"
 # Uninstall unwanted apps
 cask "appcleaner"
 # Free and open-source web browser
 cask "chromium"
+# Write, edit, and chat about your code with AI
+cask "cursor"
 # Fast, native, feature-rich terminal emulator pushing modern features
 cask "ghostty"
 # Web browser
@@ -45,10 +46,6 @@ cask "keycastr"
 cask "logseq"
 # Control your tools with a few keystrokes
 cask "raycast"
-# The minimal, blazing-fast, and infinitely customizable prompt for any shell
-cask "starship"
-# UNIX shell (command interpreter)
-brew "zsh"
 
 mas "Bob", id: 1630034110
 mas "Hidden Bar", id: 1452453066
