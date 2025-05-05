@@ -39,20 +39,156 @@ start() {
   cd $HOME
 }
 
+check_install_xcode_tools() {
+  echo "==========================================================="
+  echo "          Checking/Installing Xcode Command Tools          "
+  echo "-----------------------------------------------------------"
+  if ! xcode-select -p > /dev/null 2>&1; then
+    echo "Xcode Command Line Tools not found. Attempting to install..."
+    echo "Please follow the on-screen instructions to install the tools."
+    # This command opens a GUI prompt if tools are not installed
+    xcode-select --install
+    # Wait for user to install - this might need manual intervention or a loop check
+    echo "Please press Enter after Xcode Command Line Tools installation is complete."
+    read -r
+    # Re-check
+    if ! xcode-select -p > /dev/null 2>&1; then
+      echo "Xcode Command Line Tools installation failed or was cancelled. Exiting."
+      exit 1
+    fi
+    echo "Xcode Command Line Tools installed successfully."
+  else
+    echo "Xcode Command Line Tools already installed."
+  fi
+
+  # Ensure the license is accepted regardless of the installation path
+  echo "Attempting to accept Xcode license automatically..."
+  sudo xcodebuild -license accept || echo "Failed to accept Xcode license, or it was already accepted."
+}
+
+setup_brew_env() {
+  # It will export env variable: HOMEBREW_PREFIX, HOMEBREW_CELLAR, HOMEBREW_REPOSITORY, HOMEBREW_SHELLENV_PREFIX
+  # It will add path: $PATH, $MANPATH, $INFOPATH
+  if is_apple_silicon; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  else
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+}
+
+install_homebrew() {
+  echo "==========================================================="
+  echo "                     Install Homebrew                      "
+  echo "-----------------------------------------------------------"
+
+  if [ -x "$(command -v brew)" ]; then
+    echo "Homebrew already installed, updating..."
+    brew update || {
+      echo "Failed to update Homebrew"
+      return 1
+    }
+    return 0
+  fi
+
+  echo "Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
+    echo "Failed to install Homebrew"
+    return 1
+  }
+
+  setup_brew_env || return 1
+
+  local zprofile="$HOME/.zprofile"
+  if ! ([[ -e "$zprofile" ]] && grep -q "brew shellenv" "$zprofile"); then
+    echo "eval \"\$(${HOMEBREW_PREFIX}/bin/brew shellenv)\"" >> "$zprofile"
+    echo "typeset -U path" >> "$zprofile"
+  fi
+
+  brew analytics off && brew update || {
+    echo "Failed to configure Homebrew"
+    return 1
+  }
+
+  echo "Homebrew installed successfully."
+}
+
 restore_dotfiles() {
   echo "==========================================================="
   echo "         Restore Bryan’s dotfiles from GitHub.com          "
   echo "-----------------------------------------------------------"
 
-  if [[ -d "$HOME/.dotfiles" ]]; then
-    echo "Dotfiles already restored, skipping..."
-  else
-    git clone --bare https://github.com/liby/dotfiles.git $HOME/.dotfiles
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME config --local status.showUntrackedFiles no
-    git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout --force
+  if ! command -v git >/dev/null 2>&1; then
+    echo "Error: Git is not installed. Cannot proceed with dotfiles restoration."
+    return 1
   fi
 
+  if [[ -d "$HOME/.dotfiles" ]]; then
+    echo "Dotfiles directory already exists, attempting to update..."
+    if git --git-dir=$HOME/.dotfiles --work-tree=$HOME pull --ff-only; then
+      echo "Dotfiles updated successfully."
+      # Re-checkout might be needed if there were local changes conflicting
+      git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout --force
+    else
+      echo "Failed to update dotfiles. Continuing with existing ones..."
+      # Decide if you want to force checkout anyway or handle conflicts
+      git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout --force
+    fi
+  else
+    echo "Cloning dotfiles..."
+    if git clone --bare https://github.com/liby/dotfiles.git $HOME/.dotfiles; then
+      git --git-dir=$HOME/.dotfiles --work-tree=$HOME config --local status.showUntrackedFiles no
+      if ! git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout --force; then
+        echo "Error: Failed to checkout dotfiles. Exiting."
+        return 1 # Use return 1 instead of exit 1 if called from main script
+      fi
+      echo "Dotfiles cloned and checked out successfully."
+    else
+      echo "Error: Failed to clone dotfiles repository. Exiting."
+      return 1
+    fi
+  fi
+  # Set remote URL (consider if this should be conditional)
   git --git-dir=$HOME/.dotfiles --work-tree=$HOME remote set-url origin git@github.com:liby/dotfiles.git
+  echo "Dotfiles setup complete."
+}
+
+install_homebrew_packages() {
+  echo "==========================================================="
+  echo "           Installing packages from Brewfile...            "
+  echo "-----------------------------------------------------------"
+
+  local brewfile="$HOME/Brewfile"
+
+  if [[ ! -f "$brewfile" ]]; then
+    echo "No Brewfile found at $brewfile"
+    echo "Skipping package installation"
+    return 0
+  fi
+
+  # Save current locale setting
+  local current_locale=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null || echo en_CN)
+
+  # Store brew bundle exit status
+  local brew_bundle_status
+
+  # Temporarily set locale to en_US for mas-cli compatibility
+  # Reference:https://github.com/mas-cli/mas/blob/ed676787f0a0a26e23a10548eb841bc15411fa52/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L23
+  defaults write NSGlobalDomain AppleLocale -string en_US
+
+  # Run brew bundle
+  if brew bundle --file="$brewfile"; then
+    echo "Successfully installed all packages from Brewfile"
+    brew_bundle_status=0
+  else
+    echo "Warning: Some packages failed to install from Brewfile"
+    echo "You may want to run 'brew bundle' manually later"
+    brew_bundle_status=1
+  fi
+
+  # Restore original locale setting
+  defaults write NSGlobalDomain AppleLocale -string "$current_locale"
+
+  return $brew_bundle_status
 }
 
 setup_zsh_plugins() {
@@ -68,6 +204,12 @@ setup_zsh_plugins() {
   echo "                - fast-syntax-highlighting                 "
   echo "                                                           "
   echo "-----------------------------------------------------------"
+
+  # 确保git命令可用
+  if ! command -v git >/dev/null 2>&1; then
+    echo "Error: Git is not installed. Cannot proceed with ZSH plugins installation."
+    return 1
+  fi
 
   export ZSH_PLUGINS_PREFIX="$HOME/.zsh/plugins"
   [[ ! -d "$ZSH_PLUGINS_PREFIX" ]] && mkdir -p $ZSH_PLUGINS_PREFIX
@@ -90,6 +232,11 @@ setup_gpg_agent() {
   echo "                  Setting up GPG Agent...                  "
   echo "-----------------------------------------------------------"
 
+  if ! command -v gpg >/dev/null 2>&1 || ! command -v gpgconf >/dev/null 2>&1; then
+    echo "Error: GPG tools are not installed. Skipping GPG Agent setup."
+    return 1
+  fi
+
   if [[ ! -d "$HOME/.gnupg" ]]; then
     echo "Creating $HOME/.gnupg directory..."
     mkdir -p "$HOME/.gnupg"
@@ -108,25 +255,36 @@ setup_gpg_agent() {
     touch "$gpg_agent_conf"
   fi
 
-  if grep -q "pinentry-program" "$gpg_agent_conf"; then
-    echo "pinentry-program is already configured in $gpg_agent_conf."
+  if command -v pinentry-mac >/dev/null 2>&1; then
+    if grep -q "pinentry-program" "$gpg_agent_conf"; then
+      echo "pinentry-program is already configured in $gpg_agent_conf."
+    else
+      echo "Configuring pinentry-program in $gpg_agent_conf..."
+      echo "pinentry-program $(command -v pinentry-mac)" >> "$gpg_agent_conf"
+    fi
   else
-    echo "Configuring pinentry-program in $gpg_agent_conf..."
-    echo "pinentry-program $(command -v pinentry-mac)" >> "$gpg_agent_conf"
+    echo "Warning: pinentry-mac not found. Skipping pinentry configuration."
   fi
 
   echo "Launching gpg-agent if not already running..."
-  gpgconf --launch gpg-agent
+  gpgconf --launch gpg-agent || echo "Failed to launch gpg-agent"
 
   echo "Reloading gpg-agent configuration..."
-  echo RELOADAGENT | gpg-connect-agent
+  if command -v gpg-connect-agent >/dev/null 2>&1; then
+    echo RELOADAGENT | gpg-connect-agent || echo "Failed to reload gpg-agent"
+  else
+    echo "Warning: gpg-connect-agent not found. Skipping gpg-agent reload."
+  fi
 
   echo "Fetching GPG keys from Yubikey..."
   # Fetch the keys from Yubikey
-  echo "fetch" | gpg --command-fd 0 --status-fd 1 --card-edit > /dev/null 2>&1
-
-  # Wait for a moment to ensure the keys are fetched
-  sleep 3
+  if gpg --card-status >/dev/null 2>&1; then
+    echo "fetch" | gpg --command-fd 0 --status-fd 1 --card-edit > /dev/null 2>&1 || echo "Failed to fetch keys from Yubikey"
+    # Wait for a moment to ensure the keys are fetched
+    sleep 3
+  else
+    echo "Warning: No Yubikey detected or GPG card functionality not working."
+  fi
 
   echo "GPG Agent setup completed."
 }
@@ -135,6 +293,11 @@ setup_gitconfig() {
   echo "==========================================================="
   echo "                 Setting up git config...                  "
   echo "-----------------------------------------------------------"
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "Error: Git is not installed. Cannot proceed with git config setup."
+    return 1
+  fi
 
   local git_config_dir="$HOME/.config/git"
   local github_config="$git_config_dir/github.config"
@@ -170,36 +333,43 @@ setup_gitconfig() {
   git config --file "$gitlab_config" user.name "$GITLAB_NAME"
 
   # Check if GPG key exists and export it
-  local gpg_key_id=$(gpg --card-status | grep 'sec' | awk '{print $2}' | cut -d'/' -f2)
-  if [[ -n "$gpg_key_id" ]]; then
-    local gpg_ssh_pub_key_file="$ssh_dir/$gpg_key_id.pub"
+  if command -v gpg >/dev/null 2>&1; then
+    local gpg_key_id=$(gpg --card-status 2>/dev/null | grep 'sec' | awk '{print $2}' | cut -d'/' -f2)
+    if [[ -n "$gpg_key_id" ]]; then
+      local gpg_ssh_pub_key_file="$ssh_dir/$gpg_key_id.pub"
 
-    echo "Exporting GPG key $gpg_key_id as SSH key..."
-    gpg --export-ssh-key "$gpg_key_id" > "$gpg_ssh_pub_key_file"
-    echo "GPG SSH Public key exported successfully."
+      echo "Exporting GPG key $gpg_key_id as SSH key..."
+      gpg --export-ssh-key "$gpg_key_id" > "$gpg_ssh_pub_key_file" || {
+        echo "Failed to export GPG SSH key"
+        return 0
+      }
+      echo "GPG SSH Public key exported successfully."
 
-    git config --file "$github_config" user.signingkey "$gpg_key_id"
-    git config --file "$gitlab_config" user.signingkey "$gpg_ssh_pub_key_file"
+      git config --file "$github_config" user.signingkey "$gpg_key_id"
+      git config --file "$gitlab_config" user.signingkey "$gpg_ssh_pub_key_file"
 
-    # Setup SSH signature verification
-    local allowed_signers_file="$ssh_dir/allowed_signers"
-    if [[ ! -f "$allowed_signers_file" ]]; then
-      echo "Creating allowed signers file for SSH signature verification..."
-      touch "$allowed_signers_file"
-    fi
+      # Setup SSH signature verification
+      local allowed_signers_file="$ssh_dir/allowed_signers"
+      if [[ ! -f "$allowed_signers_file" ]]; then
+        echo "Creating allowed signers file for SSH signature verification..."
+        touch "$allowed_signers_file"
+      fi
 
-    echo "Adding user's SSH key to allowed signers file..."
-    local ssh_key=$(cat "$gpg_ssh_pub_key_file")
+      echo "Adding user's SSH key to allowed signers file..."
+      local ssh_key=$(cat "$gpg_ssh_pub_key_file")
 
-    # Check if entry already exists
-    if ! grep -q "$GITLAB_EMAIL" "$allowed_signers_file"; then
-      echo "$GITLAB_EMAIL namespaces=\"git\" $ssh_key" > "$allowed_signers_file"
-      echo "SSH key added to allowed signers file."
+      # Check if entry already exists
+      if ! grep -q "$GITLAB_EMAIL" "$allowed_signers_file"; then
+        echo "$GITLAB_EMAIL namespaces=\"git\" $ssh_key" > "$allowed_signers_file"
+        echo "SSH key added to allowed signers file."
+      else
+        echo "SSH key already exists in allowed signers file."
+      fi
     else
-      echo "SSH key already exists in allowed signers file."
+      echo "No GPG key found. Please ensure a GPG key is available."
     fi
   else
-    echo "No GPG key found. Please ensure a GPG key is available."
+    echo "GPG not installed. Skipping GPG key export."
   fi
 
   echo "Git config setup completed."
@@ -238,21 +408,20 @@ setup_case_sensitive_volume() {
     return 1
   fi
 
+  echo "Found APFS container: $container_id"
+
   # Create mount point
   mkdir -p "$HOME/Code"
 
-  # Check if already mounted
-  if mount | grep -q "/Users/.*/Code"; then
-    echo "Code volume is already mounted"
-    return 0
-  fi
-
   # Check if Code volume exists
+  local volume_exists=false
   if diskutil apfs list | grep -q "Name:.*Code.*Case-sensitive"; then
-    echo "Code volume exists, proceeding to mount"
+    echo "Code volume already exists"
+    volume_exists=true
   else
     echo "Creating case-sensitive Code volume..."
-    sudo diskutil apfs addVolume "$container_id" APFS "Code" -case-sensitive || return 1
+    # Use APFSX type for case-sensitive volume
+    sudo diskutil apfs addVolume "$container_id" APFSX "Code" || return 1
     echo "Volume created successfully"
     sleep 2
   fi
@@ -264,13 +433,34 @@ setup_case_sensitive_volume() {
     return 1
   fi
 
-  # Mount volume
-  echo "Mounting Code volume..."
-  sudo diskutil mount -mountPoint "$HOME/Code" "$volume_id" || return 1
+  echo "Found volume ID: $volume_id"
+
+  # Check current mount location
+  local current_mount=$(mount | grep "$volume_id" | awk '{print $3}')
+
+  # If mounted but not at desired location, unmount first
+  if [[ -n "$current_mount" && "$current_mount" != "$HOME/Code" ]]; then
+    echo "Volume currently mounted at $current_mount, preparing to remount..."
+    sudo diskutil unmount "$volume_id" || {
+      echo "Warning: Could not unmount volume $volume_id, trying force unmount"
+      sudo diskutil unmount force "$volume_id" || {
+        echo "Error: Could not unmount volume $volume_id"
+        return 1
+      }
+    }
+  fi
+
+  # Mount volume to desired location
+  if ! mount | grep -q "$HOME/Code"; then
+    echo "Mounting Code volume to $HOME/Code..."
+    sudo diskutil mount -mountPoint "$HOME/Code" "$volume_id" || return 1
+  else
+    echo "Code volume already mounted at desired location"
+  fi
 
   # Verify mount and case sensitivity
   echo "Verifying mount and case sensitivity..."
-  if mount | grep -q "/Users/.*/Code"; then
+  if mount | grep -q "$HOME/Code"; then
     (
       cd "$HOME/Code" || return 1
       local test_file="test_case_sensitive_$(date +%s)"
@@ -332,101 +522,32 @@ install_font() {
   echo "Installation complete and cleanup done."
 }
 
-setup_brew_env() {
-  # It will export env variable: HOMEBREW_PREFIX, HOMEBREW_CELLAR, HOMEBREW_REPOSITORY, HOMEBREW_SHELLENV_PREFIX
-  # It will add path: $PATH, $MANPATH, $INFOPATH
-  if is_apple_silicon; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  else
-    eval "$(/usr/local/bin/brew shellenv)"
-  fi
-}
-
-install_homebrew() {
-  echo "==========================================================="
-  echo "                     Install Homebrew                      "
-  echo "-----------------------------------------------------------"
-
-  if [ -x "$(command -v brew)" ]; then
-    echo "Homebrew already installed, updating..."
-    brew update || {
-      echo "Failed to update Homebrew"
-      return 1
-    }
-    return 0
-  fi
-
-  echo "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || {
-    echo "Failed to install Homebrew"
-    return 1
-  }
-
-
-  setup_brew_env || return 1
-
-  local zprofile="$HOME/.zprofile"
-  if ! ([[ -e "$zprofile" ]] && grep -q "brew shellenv" "$zprofile"); then
-    echo "eval \"\$(${HOMEBREW_PREFIX}/bin/brew shellenv)\"" >> "$zprofile"
-    echo "typeset -U path" >> "$zprofile"
-  fi
-
-  brew analytics off && brew update || {
-    echo "Failed to configure Homebrew"
-    return 1
-  }
-
-  echo "Homebrew installed successfully."
-}
-
-install_homebrew_packages() {
-  echo "==========================================================="
-  echo "           Installing packages from Brewfile...            "
-  echo "-----------------------------------------------------------"
-
-  local brewfile="$HOME/Brewfile"
-
-  if [[ ! -f "$brewfile" ]]; then
-    echo "No Brewfile found at $brewfile"
-    echo "Skipping package installation"
-    return 0
-  fi
-
-  # Save current locale setting
-  local current_locale=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null || echo en_CN)
-
-  # Store brew bundle exit status
-  local brew_bundle_status
-
-  # Temporarily set locale to en_US for mas-cli compatibility
-  # Reference:https://github.com/mas-cli/mas/blob/ed676787f0a0a26e23a10548eb841bc15411fa52/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L23
-  defaults write NSGlobalDomain AppleLocale -string en_US
-
-  # Run brew bundle
-  if brew bundle --file="$brewfile"; then
-    echo "Successfully installed all packages from Brewfile"
-    brew_bundle_status=0
-  else
-    echo "Warning: Some packages failed to install from Brewfile"
-    echo "You may want to run 'brew bundle' manually later"
-    brew_bundle_status=1
-  fi
-
-  # Restore original locale setting
-  defaults write NSGlobalDomain AppleLocale -string "$current_locale"
-
-  return $brew_bundle_status
-}
-
 install_nodejs() {
   echo "==========================================================="
   echo "              Setting up Node.js Environment               "
   echo "-----------------------------------------------------------"
+
+  if ! command -v xz >/dev/null 2>&1; then
+    echo "xz is required for unpacking archives. Installing with Homebrew..."
+    brew install xz || {
+      echo "Failed to install xz. Cannot proceed with Node.js installation."
+      return 1
+    }
+  fi
+
   if command -v proto > /dev/null; then
     echo "proto is already installed, skipping..."
   else
     echo "Installing proto..."
     curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --no-profile --yes
+
+    echo "Adding proto to PATH..."
+    export PATH="$HOME/.proto/bin:$PATH"
+  fi
+
+  if ! command -v proto >/dev/null 2>&1; then
+    echo "Error: proto command not available. Node.js installation will be skipped."
+    return 1
   fi
 
   echo "-----------------------------------------------------------"
@@ -444,33 +565,12 @@ install_nodejs() {
   echo -n "                    * pnpm Version:                     "
   proto run pnpm -- --version
   echo "-----------------------------------------------------------"
-
-  # Set NPM Global Path (if you still want to use npm for global packages)
-  export NPM_CONFIG_PREFIX="$HOME/.npm-global"
-  # Create .npm-global folder if not exists
-  [[ ! -d "$NPM_CONFIG_PREFIX" ]] && mkdir -p $NPM_CONFIG_PREFIX
-
-  __npm_global_pkgs=(
-    @upimg/cli
-    0x
-    npm-why
-  )
-
-  echo "-----------------------------------------------------------"
-  echo "              * npm install global packages:               "
-  echo "                                                           "
-  for __npm_pkg in "${__npm_global_pkgs[@]}"; do
-    echo "  - ${__npm_pkg}"
-    proto run npm -- install -g ${__npm_pkg}
-  done
-  echo "-----------------------------------------------------------"
 }
 
 install_rust() {
   echo "==========================================================="
   echo "                      Install Rust                         "
   echo "-----------------------------------------------------------"
-
 
   if command -v rustc > /dev/null; then
     echo "Rust is already installed, skipping..."
@@ -494,9 +594,6 @@ reload_zshrc() {
 
   echo "Reloading zsh completion system..."
   autoload -Uz compinit && compinit -i
-
-  echo "Starting a new zsh session..."
-  exec zsh
 }
 
 setup_macos_defaults() {
@@ -553,15 +650,16 @@ finish() {
 }
 
 start
+check_install_xcode_tools
+install_homebrew
 restore_dotfiles
+install_homebrew_packages
 setup_zsh_plugins
 setup_gpg_agent
 setup_gitconfig
-setup_case_sensitive_volume
 format_gitconfig_files
+setup_case_sensitive_volume
 install_font
-install_homebrew
-install_homebrew_packages
 install_nodejs
 install_rust
 reload_zshrc
