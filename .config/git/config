@@ -66,12 +66,12 @@
   required = true
 
 [filter "signingkey"]
-  clean = sed -e '/^[[:space:]]*signingkey[[:space:]]*=/d'
+  clean = sed -E '/^[[:space:]]*signingkey[[:space:]]*=/d'
   smudge = cat
   required = true
 
 [filter "user.config"]
-	clean = sed -E '/^[[:space:]]*(email|name|signingkey)[[:space:]]*=/d'
+  clean = sed -E '/^[[:space:]]*(email|name|signingkey)[[:space:]]*=/d'
   smudge = cat
   required = true
 
