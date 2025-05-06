@@ -20,11 +20,15 @@ fi
 autoload -Uz compinit
 compinit
 
+editor_config_path="$HOME/.config/editor"
+npm_global_path="$HOME/.npm-global"
+
 # Create necessary directories
 local -a dirs_to_create=(
-  "$HOME/.npm-global"
-  "$HOME/.npm-global/lib"
-  "$HOME/.npm-global/bin"
+  "$editor_config_path"
+  "$npm_global_path"
+  "$npm_global_path/lib"
+  "$npm_global_path/bin"
   "$HOME/.config/starship/cache"
 )
 
@@ -37,7 +41,7 @@ if [[ -z "$GPG_PATH" ]]; then
   export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 fi
 export LC_ALL="en_US.UTF-8"
-export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+export NPM_CONFIG_PREFIX="$npm_global_path"
 export PNPM_HOME="$HOME/Library/pnpm"
 export PROTO_AUTO_INSTALL_HIDE_OUTPUT=true
 export PROTO_HOME="$HOME/.proto"
@@ -76,6 +80,7 @@ path=($path_dirs $path[@])
 
 # Alias Set
 alias c='open $1 -a "Cursor"'
+alias cim='sync_cursor_extensions import'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 alias dp='dot pull --rebase --autostash'
 ## ip & ipcn
@@ -183,20 +188,81 @@ pastefinish() {
 zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
-setup_editor_links() {
+sync_cursor_extensions() {
+  local mode=${1:-"export"}
+  local ext_file="${editor_config_path}/extensions.list"
+
+  if [[ "$mode" == "export" ]]; then
+    cursor --list-extensions > "$ext_file"
+    echo "Exported Cursor extensions list to $ext_file"
+  elif [[ "$mode" == "import" ]]; then
+    [[ ! -f "$ext_file" ]] && { echo "Error: Extension list file doesn't exist, please export first"; return 1; }
+
+    local -a extensions
+    extensions=( $(tr '\n' ' ' < "$ext_file") )
+    echo "Preparing to install ${#extensions[@]} extensions..."
+
+    local existing_extensions=$(mktemp)
+    cursor --list-extensions > "${existing_extensions}" 2>&1
+
+    local extension
+    local -a failures
+    for extension in "${extensions[@]}"; do
+      printf "\n→ \e[4;33m%-40.40s \e[0m\n" "${extension}"
+
+      if grep -q -E "^${extension}$" "${existing_extensions}"; then
+        printf "→ \e[0;32mAlready installed, skipping.\e[0m\n"
+        continue
+      fi
+
+      cursor --force --install-extension "${extension}"
+      if [[ $? -ne 0 ]]; then
+        failures+=( "${extension}" )
+        printf "\n→ \e[4;34mIgnoring error and continuing...\e[0m\n"
+      fi
+    done
+
+    rm -f "${existing_extensions}"
+
+    if [[ ${#failures[@]} -gt 0 ]]; then
+      local error_file="${ext_file}.errors"
+      printf "\n\e[0;33mWARNING:\e[0m"
+      printf "The following extensions failed to install:\n"
+      echo "NOTE: The failed list is also saved to file [${error_file}]."
+      echo "${failures[@]}" | tr ' ' '\n' >&2
+      echo "${failures[@]}" | tr ' ' '\n' > "${error_file}"
+    fi
+  else
+    echo "Usage: sync_cursor_extensions [export|import]"
+    echo "  export - Export Cursor extensions list to ~/.config/editor/extensions.list"
+    echo "  import - Import extensions to Cursor from ~/.config/editor/extensions.list"
+  fi
+}
+
+sync_cursor_settings() {
   local cursor_path="$HOME/Library/Application Support/Cursor/User"
-  local editor_settings_path="$HOME/.config/editor"
 
   [[ ! -d "$(dirname "$cursor_path")" ]] && return
 
-  mkdir -p "$cursor_path" "$editor_settings_path"
+  mkdir -p "$cursor_path" "$editor_config_path"
+
+  # Export extensions list
+  echo "Exporting Cursor extensions..."
+  sync_cursor_extensions export
 
   for file in "settings.json" "keybindings.json"; do
-    if [[ -f "$cursor_path/$file" && ! -L "$cursor_path/$file" ]]; then
-      mv "$cursor_path/$file" "$cursor_path/$file.backup"
-    fi
-    ln -sf "$editor_settings_path/$file" "$cursor_path/$file"
-  done
+      local src="$cursor_path/$file"
+      local backup="$editor_config_path/$file"
+
+      if [[ -f "$src" && ! -L "$src" ]]; then
+        if [[ ! -f "$backup" || "$src" -nt "$backup" ]]; then
+          echo "Backing up $file..."
+          cp "$src" "$backup"
+        fi
+      fi
+
+      ln -sf "$backup" "$src"
+    done
 }
 
 setup_gpg_ssh() {
@@ -247,7 +313,7 @@ source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 source $HOME/.cargo/env
 
 # Initialize tools and configurations
-(( $+commands[cursor] )) && setup_editor_links &>/dev/null
+(( $+commands[cursor] )) && sync_cursor_settings &>/dev/null
 (( $+commands[gpg-connect-agent] )) && setup_gpg_ssh &>/dev/null
 (( $+commands[direnv] )) && eval "$(direnv hook zsh)"
 (( $+commands[proto] )) && eval "$(proto activate zsh)"

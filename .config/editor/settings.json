@@ -46,7 +46,7 @@
   "editor.scrollBeyondLastLine": false,
   "editor.smoothScrolling": true,
   "editor.suggestSelection": "recentlyUsedByPrefix",
-  "editor.tabSize": 2,
+  // "editor.tabSize": 2,
   "editor.tokenColorCustomizations": {
     "textMateRules": [
       {
