@@ -70,9 +70,9 @@ local -a path_dirs=(
   "/usr/local/opt/icu4c/sbin"
 )
 
-# Add Ruby PATH if available
-if HOMEBREW_RUBY_PATH=$(brew --prefix ruby 2>/dev/null)/bin; then
-  path_dirs=("$HOMEBREW_RUBY_PATH" $path_dirs)
+# Add UV PATH if available
+if HOMEBREW_UV_PATH=$(brew --prefix uv 2>/dev/null)/bin; then
+  path_dirs=("$HOMEBREW_UV_PATH" $path_dirs)
 fi
 
 typeset -aU path
@@ -91,8 +91,6 @@ alias la='ls --all'
 alias ll='la --long --git'
 alias ls='eza --reverse --sort=modified --group-directories-first --hyperlink'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
-# alias pip='python -m pip'
-# alias python='python3'
 
 # Path Alias
 # usage: cd ~xxx
