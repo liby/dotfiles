@@ -24,8 +24,7 @@
   "editor.cursorStyle": "line",
   "editor.dragAndDrop": false,
   "editor.find.addExtraSpaceOnTop": false,
-  "editor.fontFamily": "'Inconsolata LGC Nerd Font Mono',  'PingFang SC'",
-  "editor.fontLigatures": true,
+  "editor.fontFamily": "'Inconsolata LGC Nerd Font Mono', monospace",
   "editor.fontWeight": "400",
   "editor.formatOnSave": false,
   // "editor.formatOnSaveMode": "modifications",
@@ -152,7 +151,7 @@
   "guides.stack.color.dark": "rgba(0, 102, 204, 1)",
   "javascript.updateImportsOnFileMove.enabled": "always",
   "less.lint.duplicateProperties": "warning",
-  "markdown.preview.fontFamily": "'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans', sans-serif",
+  "markdown.preview.fontFamily": "-apple-system, 'PingFang SC', sans-serif",
   "oneDarkPro.vivid": true,
   "problems.showCurrentInStatus": true,
   "search.collapseResults": "auto",
@@ -286,5 +285,4 @@
   "[json][jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
-  "altimate.onboardedMcpServer": true,
 }
