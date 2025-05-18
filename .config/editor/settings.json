@@ -281,8 +281,5 @@
   "zig.zls.enabled": "on",
   "[json][jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
-  },
+  }
 }
