@@ -22,6 +22,7 @@
   "editor.cursorBlinking": "solid",
   "editor.cursorSmoothCaretAnimation": "on",
   "editor.cursorStyle": "line",
+  "editor.detectIndentation": false,
   "editor.dragAndDrop": false,
   "editor.find.addExtraSpaceOnTop": false,
   "editor.fontFamily": "'Inconsolata LGC Nerd Font Mono', monospace",
@@ -45,7 +46,7 @@
   "editor.scrollBeyondLastLine": false,
   "editor.smoothScrolling": true,
   "editor.suggestSelection": "recentlyUsedByPrefix",
-  // "editor.tabSize": 2,
+  "editor.tabSize": 2,
   "editor.tokenColorCustomizations": {
     "textMateRules": [
       {
@@ -126,7 +127,6 @@
   "files.exclude": {
     "**/eslint_cache": true
   },
-  "files.trimTrailingWhitespace": true,
   "files.autoSave": "onFocusChange",
   "git.autofetch": true,
   "git.autoStash": true,
@@ -279,10 +279,10 @@
   "workbench.quickOpen.preserveInput": true,
   "workbench.tree.enableStickyScroll": true,
   "zig.zls.enabled": "on",
-  "[typescript]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
-  },
   "[json][jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
 }
