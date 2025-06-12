@@ -6,8 +6,8 @@
   ca = commit -a --amend --no-edit
   cm = commit -m
   co = checkout
-  sc = switch --create
   st = status
+  new = "!f() { git switch -c \"$1\" && git push --set-upstream origin \"$1\" --dry-run; }; f"
 
   ### push ###
   pf = push --force
@@ -15,10 +15,10 @@
 
   ### reset ###
   cl = reset --hard HEAD
-  undo= reset --soft HEAD~1
+  undo = reset --soft HEAD~1
 
   ### diff ###
-  dc= "!git dh | pbcopy"
+  dc = "!git dh | pbcopy"
   dh = diff HEAD
   dl = "-c diff.external=difft log -p --ext-diff"
   ds = "!f() { git dh > /tmp/git_diff_head_$(date +\"%Y%m%d_%H%M_%S\").diff; }; f"

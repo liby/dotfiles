@@ -1,7 +1,5 @@
 # Cross-platform make
 brew "cmake"
-# Get a file from an HTTP, HTTPS or FTP server
-brew "curl"
 # Diff that understands syntax
 brew "difftastic"
 # Modern, maintained replacement for ls
