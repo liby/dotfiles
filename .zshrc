@@ -80,6 +80,7 @@ path=($path_dirs $path[@])
 
 # Alias Set
 alias c='open $1 -a "Cursor"'
+alias cc='claude'
 alias cim='sync_cursor_extensions import'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 alias dp='dot pull --rebase --autostash'

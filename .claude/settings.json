@@ -1,0 +1,18 @@
+{
+  "model": "opus",
+  "permissions": {
+    "allow": [
+      "Bash(fd:*)",
+      "Bash(git lg:*)",
+      "Bash(git new:*)",
+      "Bash(rg:*)",
+      "Bash(ast-grep:*)",
+      "Bash(jq:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run lint)",
+      "Bash(yq:*)",
+      "Read(~/.zshrc)",
+      "WebFetch(domain:ast-grep.github.io)"
+    ]
+  }
+}

@@ -1,3 +1,5 @@
+# Syntax-aware code search
+brew "ast-grep"
 # Cross-platform make
 brew "cmake"
 # Diff that understands syntax
@@ -26,8 +28,6 @@ brew "zoxide"
 brew "zsh"
 # Uninstall unwanted apps
 cask "appcleaner"
-# Free and open-source web browser
-cask "chromium"
 # Write, edit, and chat about your code with AI
 cask "cursor"
 # Fast, native, feature-rich terminal emulator pushing modern features
