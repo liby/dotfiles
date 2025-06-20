@@ -1,4 +1,6 @@
 {
+  "altimate.onboardedMcpServer": true,
+  "altimate.disableMcpServer": true,
   "breadcrumbs.icons": false,
   "css.lint.duplicateProperties": "warning",
   "cSpell.language": "en,en-GB,en-US",
@@ -281,5 +283,8 @@
   "zig.zls.enabled": "on",
   "[json][jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   }
 }

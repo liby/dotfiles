@@ -7,6 +7,7 @@
   cm = commit -m
   co = checkout
   st = status
+  sc = switch --create
   new = "!f() { git switch -c \"$1\" && git push --set-upstream origin \"$1\" --dry-run; }; f"
 
   ### push ###

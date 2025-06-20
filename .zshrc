@@ -1,5 +1,8 @@
 # https://github.com/SukkaW/dotfiles/blob/09b6b2d0a6d20a31143f4201f64c7b7f44fb85f6/_zshrc/macos.zshrc
 
+# Refresh command hash table on shell startup
+hash -r 2>/dev/null || true
+
 # Homebrew zsh completion path
 __BRYAN_HOMEBREW_ZSH_COMPLETION="${HOMEBREW_PREFIX}/share/zsh/site-functions"
 __BRYAN_ZSH_COMPLETION_SRC="${HOME}/.zsh/plugins/zsh-completions/src"
@@ -80,6 +83,7 @@ path=($path_dirs $path[@])
 
 # Alias Set
 alias c='open $1 -a "Cursor"'
+alias cc='claude'
 alias cim='sync_cursor_extensions import'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 alias dp='dot pull --rebase --autostash'
