@@ -18,6 +18,8 @@ brew "jq"
 brew "mas"
 # Pinentry for GPG on Mac
 brew "pinentry-mac"
+# Search tool like grep and The Silver Searcher
+brew "ripgrep"
 # The minimal, blazing-fast, and infinitely customizable prompt for any shell
 brew "starship"
 #Python package and project manager
@@ -28,8 +30,6 @@ brew "zoxide"
 brew "zsh"
 # Uninstall unwanted apps
 cask "appcleaner"
-# Write, edit, and chat about your code with AI
-cask "cursor"
 # Fast, native, feature-rich terminal emulator pushing modern features
 cask "ghostty"
 # Web browser
@@ -38,12 +38,14 @@ cask "google-chrome"
 cask "input-source-pro"
 # Menu bar calendar
 cask "itsycal"
-# Open-source keystroke visualiser
-cask "keycastr"
 # Privacy-first, open-source platform for knowledge sharing and management
 cask "logseq"
+# IDE for professional Python development
+cask "pycharm"
 # Control your tools with a few keystrokes
 cask "raycast"
+# code editor
+cask "visual-studio-code"
 
 mas "Bob", id: 1630034110
 mas "Hidden Bar", id: 1452453066

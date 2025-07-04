@@ -1,8 +1,5 @@
 # https://github.com/SukkaW/dotfiles/blob/09b6b2d0a6d20a31143f4201f64c7b7f44fb85f6/_zshrc/macos.zshrc
 
-# Refresh command hash table on shell startup
-hash -r 2>/dev/null || true
-
 # Homebrew zsh completion path
 __BRYAN_HOMEBREW_ZSH_COMPLETION="${HOMEBREW_PREFIX}/share/zsh/site-functions"
 __BRYAN_ZSH_COMPLETION_SRC="${HOME}/.zsh/plugins/zsh-completions/src"
@@ -40,6 +37,7 @@ for dir in $dirs_to_create; do
 done
 
 # Environment variables
+export ENABLE_BACKGROUND_TASKS=true
 if [[ -z "$GPG_PATH" ]]; then
   export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 fi
@@ -82,9 +80,9 @@ typeset -aU path
 path=($path_dirs $path[@])
 
 # Alias Set
-alias c='open $1 -a "Cursor"'
+alias c='open $1 -a "Visual Studio Code"'
 alias cc='claude'
-alias cim='sync_cursor_extensions import'
+# alias cim='sync_cursor_extensions import'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 alias dp='dot pull --rebase --autostash'
 ## ip & ipcn
@@ -315,7 +313,7 @@ source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 source $HOME/.cargo/env
 
 # Initialize tools and configurations
-(( $+commands[cursor] )) && sync_cursor_settings &>/dev/null
+# (( $+commands[cursor] )) && sync_cursor_settings &>/dev/null
 (( $+commands[gpg-connect-agent] )) && setup_gpg_ssh &>/dev/null
 (( $+commands[direnv] )) && eval "$(direnv hook zsh)"
 (( $+commands[proto] )) && eval "$(proto activate zsh)"
