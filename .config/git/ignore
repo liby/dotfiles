@@ -1,24 +1,24 @@
 # Global gitignore
 
-#Cursor
+## Claude Code
+**/.claude/settings.local.json
+
+## Cursor
 .cursor
 
-# General
+## General
 log
 *.log
 
-# JetBrains
+## JetBrains
 .idea
 
-# macOS
+## macOS
 .DS_Store
 
-# Node.js
+## Node.js
 node_modules
 npm-debug.log
 
-# Visual Studio Code
+## Visual Studio Code
 .vscode
-
-# Windows
-Thumbs.db

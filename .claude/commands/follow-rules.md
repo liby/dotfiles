@@ -1,3 +1,5 @@
-IMPORTANT: You MUST strictly follow ALL instructions in ~/.claude/CLAUDE.md:
+---
+description: Ensure strict adherence to CLAUDE.md instructions
+---
 
-Now proceed with: $ARGUMENTS
+You MUST strictly follow ALL instructions in @~/.claude/CLAUDE.md, now proceed with the task: $ARGUMENTS

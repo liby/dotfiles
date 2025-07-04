@@ -1,5 +1,4 @@
 {
-  "model": "opus",
   "permissions": {
     "allow": [
       "Bash(ast-grep:*)",
@@ -10,12 +9,36 @@
       "Bash(pnpm add:*)",
       "Bash(pnpm run lint)",
       "Bash(rg:*)",
+      "Bash(uv:*)",
       "Bash(yq:*)",
       "Read(~/.claude)",
       "Read(~/.config)",
       "Read(~/.zshrc)",
       "WebFetch(domain:ast-grep.github.io)",
       "WebFetch(domain:github.com)"
+    ]
+  },
+  "model": "opus",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run ~/.claude/scripts/hooks/check_command_best_practices.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '💡 Use `ast-grep --lang <language> -p <pattern>` instead of grep for syntax-aware or structural code searching' >&2"
+          }
+        ]
+      }
     ]
   }
 }
