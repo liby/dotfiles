@@ -14,17 +14,19 @@
 
 This repository contains a series of configuration files and scripts used to set up and manage my development environment, including but not limited to:
 
-  - Git configuration, such as: [_.config/git_](https://github.com/liby/dotfiles/tree/main/.config/git)
+  - Claude Code configuration: [_.claude_](https://github.com/liby/dotfiles/tree/main/.claude)
 
-  - Homebrew Bundle Backup: [_Brewfile_](https://github.com/liby/dotfiles/blob/main/Brewfile)
+  - Git configuration: [_.config/git_](https://github.com/liby/dotfiles/tree/main/.config/git)
+
+  - Terminal configuration: [_.config/starship_](https://github.com/liby/dotfiles/tree/main/.config/starship)
 
   - Initialization script: [_.config/scripts/macos-bootstrap.zsh_](https://github.com/liby/dotfiles/blob/main/.config/scripts/macos-bootstrap.zsh)
 
-  - Shell configuration, such as: [_.zshrc_](https://github.com/liby/dotfiles/blob/main/.zshrc)
+  - SSH configuration: [_.ssh/config_](https://github.com/liby/dotfiles/blob/main/.ssh/config)
 
-  - SSH configuration, such as: [_.ssh/config_](https://github.com/liby/dotfiles/blob/main/.ssh/config)
+  - Shell configuration: [_.zshrc_](https://github.com/liby/dotfiles/blob/main/.zshrc)
 
-  - Terminal configuration, such as: [_.config/starship_](https://github.com/liby/dotfiles/tree/main/.config/starship)
+  - Homebrew Bundle Backup: [_Brewfile_](https://github.com/liby/dotfiles/blob/main/Brewfile)
 
 These files are managed using a Git Bare Repo. This method allows me to keep my $HOME directory clean while using Git to manage my configuration files. If you’re interested in the rationale behind this and want to learn more about managing dotfiles with a Git Bare Repo, feel free to read [a document](https://note.itswhat.me/#/page/%E4%BD%BF%E7%94%A8%20git%20bare%20repo%20%E6%9D%A5%E7%AE%A1%E7%90%86%20dotfiles) (only Chinese) I previously wrote on this topic.
 

@@ -26,16 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run ~/.claude/scripts/hooks/check_command_best_practices.py"
-          }
-        ]
-      },
-      {
-        "matcher": "Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '💡 Use `ast-grep --lang <language> -p <pattern>` instead of grep for syntax-aware or structural code searching' >&2"
+            "command": "jq -r '\"\\(.tool_input.command) - \\(.tool_input.description // \"No description\")\"' >> ~/.claude/bash-command-log.txt"
           }
         ]
       }

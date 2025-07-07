@@ -14,17 +14,19 @@
 
 本仓库包含了一系列配置文件和脚本，用于设置和管理我的开发环境，包括但不限于：
 
-  - Git 配置，如： [_.config/git_](https://github.com/liby/dotfiles/tree/main/.config/git)
+  - Claude Code 配置：[_.claude_](https://github.com/liby/dotfiles/tree/main/.claude)
+
+  - Git 配置：[_.config/git_](https://github.com/liby/dotfiles/tree/main/.config/git)
+
+  - 终端配置：[_.config/starship_](https://github.com/liby/dotfiles/tree/main/.config/starship)
+
+  - 开发环境初始化脚本：[_.config/scripts/macos-bootstrap.zsh_](https://github.com/liby/dotfiles/blob/main/.config/scripts/macos-bootstrap.zsh)
+
+  - SSH 配置：[_.ssh/config_](https://github.com/liby/dotfiles/blob/main/.ssh/config)
+
+  - Shell 配置：[_.zshrc_](https://github.com/liby/dotfiles/blob/main/.zshrc)
 
   - Homebrew 备份文件：[_Brewfile_](https://github.com/liby/dotfiles/blob/main/Brewfile)
-
-  - Shell 配置，如：[_.zshrc_](https://github.com/liby/dotfiles/blob/main/.zshrc)
-
-  - SSH 配置，如：[_.ssh/config_](https://github.com/liby/dotfiles/blob/main/.ssh/config)
-
-  - 开发环境的初始化脚本：[_.config/scripts/macos-bootstrap.zsh_](https://github.com/liby/dotfiles/blob/main/.config/scripts/macos-bootstrap.zsh)
-
-  - 终端配置，如：[_.config/starship_](https://github.com/liby/dotfiles/tree/main/.config/starship)
 
 这些文件是通过 Git Bare Repo 来管理的，这种方法使我能在保持 `$HOME` 目录整洁的同时又能使用 Git 来管理配置文件。如果你对这其中的缘由感兴趣，又想了解使用 Git Bare Repo 管理 dotfiles 的更多信息，欢迎阅读我之前写的一篇[分享文档](https://note.itswhat.me/#/page/%E4%BD%BF%E7%94%A8%20git%20bare%20repo%20%E6%9D%A5%E7%AE%A1%E7%90%86%20dotfiles)。
 
@@ -85,7 +87,7 @@ Aborting
 
 ```sh
 mkdir -p .dotfiles-backup
-dot checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .dotfiles-backupp/{}
+dot checkout 2>&1 | egrep "\s+\." | awk {'print $1'} | xargs -I{} mv {} .dotfiles-backup/{}
 ```
 
 然后再次尝试检出文件：

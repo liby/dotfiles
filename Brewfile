@@ -1,5 +1,3 @@
-# Syntax-aware code search
-brew "ast-grep"
 # Cross-platform make
 brew "cmake"
 # Diff that understands syntax
