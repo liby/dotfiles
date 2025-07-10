@@ -18,6 +18,5 @@ Based on the above changes, create a git commit following rules:
 2. Stage relevant files
 3. Create a commit with a concise message that focuses on "why" rather than "what"
 4. Match the existing style for prefixes, tense, and formatting
-5. NEVER ADD CO-AUTHOR CREDITS
 
 Additional context: $ARGUMENTS

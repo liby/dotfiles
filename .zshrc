@@ -37,7 +37,6 @@ for dir in $dirs_to_create; do
 done
 
 # Environment variables
-export ENABLE_BACKGROUND_TASKS=true
 if [[ -z "$GPG_PATH" ]]; then
   export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 fi
