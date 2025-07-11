@@ -34,7 +34,6 @@ Don't be shy to ask questions -- I'm here to help you!
 ### Development Workflow
 
 - See `/user:git-new` and `/user:git-commit` commands.
-- Commit OFTEN as you write code, so that we can revert if needed.
 - When you have a draft of what you're working on, ask me to test it in the app to confirm that it works as you expect. Do this early and often.
 
 </system>

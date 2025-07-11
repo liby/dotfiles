@@ -23,21 +23,19 @@
   "model": "opus",
   "permissions": {
     "allow": [
-      "Bash(ast-grep:*)",
       "Bash(fd:*)",
-      "Bash(git lg:*)",
-      "Bash(git new:*)",
+      "Bash(find:*)",
       "Bash(jq:*)",
+      "Bash(mkdir:*)",
       "Bash(pnpm add:*)",
-      "Bash(pnpm run lint)",
+      "Bash(pnpm run:*)",
+      "Bash(ps:*)",
       "Bash(rg:*)",
+      "Bash(timeout:*)",
       "Bash(uv:*)",
-      "Bash(yq:*)",
-      "Read(~/.claude)",
-      "Read(~/.config)",
-      "Read(~/.zshrc)",
-      "WebFetch(domain:ast-grep.github.io)",
-      "WebFetch(domain:github.com)"
+      "Read(~/.claude/**)",
+      "Read(~/.config/**)",
+      "Read(~/.zshrc)"
     ]
   }
 }

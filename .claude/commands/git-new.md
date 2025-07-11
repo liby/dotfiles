@@ -3,7 +3,7 @@ allowed-tools: Bash(git new:*), Bash(git branch:*)
 description: Create a new git branch with proper prefix and optional ticket number
 ---
 
-Create a new git branch using the `git new` command based on: $ARGUMENTS
+Create a new git branch using the `git new` command based on: $ARGUMENTS.
 
 IMPORTANT: You MUST use the exact command `git new` (which is a git alias). DO NOT substitute with `git checkout -b` or `git switch -c` or any other git commands.
 
