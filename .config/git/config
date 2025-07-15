@@ -90,10 +90,10 @@
 
 [pull]
   rebase = true
-  autostash = true
 
 [push]
   autoSetupRemote = true
 
 [rebase]
 	autosquash = true
+	autostash = true

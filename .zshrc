@@ -83,7 +83,6 @@ alias c='open $1 -a "Visual Studio Code"'
 alias cc='claude'
 # alias cim='sync_cursor_extensions import'
 alias dot='$(command -v git) --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
-alias dp='dot pull --rebase --autostash'
 alias gca='git commit -m "$(claude -p "Look at the staged git changes and create a summarizing git commit title. Only respond with the title and no affirmation.")"'
 ## ip & ipcn
 alias ip="curl ip.sb"
