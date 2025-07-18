@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash(gh api:*), Bash(gh issue:*), Bash(gh repo:*), Bash(gh search:*), Bash(gh pr:*)
 description: Analyze GitHub issues, PRs, and discussions to provide insights or implementation guidance
+argument-hint:  owner/repo | issue number | PR number | GitHub URL
 ---
 
 Please analyze the GitHub content: $ARGUMENTS.
