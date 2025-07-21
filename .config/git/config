@@ -85,6 +85,9 @@
 [includeIf "gitdir:~/Code/"]
   path = fsmonitor.config
 
+[merge]
+	conflictStyle = zdiff3
+
 [pager]
   difftool = true
 
