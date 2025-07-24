@@ -1,12 +1,10 @@
 ---
-allowed-tools: Bash(git new:*), Bash(git branch:*), Bash(git diff:*), Bash(git status:*)
+allowed-tools: Bash(git switch:*), Bash(git branch:*), Bash(git diff:*), Bash(git status:*), Bash(git push:*)
 description: Create a new git branch with proper prefix and following naming conventions
 argument-hint: ticketNumber [context] | [additional context]
 ---
 
-Create a new git branch using the `git new` command based on: $ARGUMENTS.
-
-IMPORTANT: You MUST use the exact command `git new` (which is a git alias). DO NOT substitute with `git checkout -b` or `git switch -c` or any other git commands.
+Create a new git branch based on: $ARGUMENTS.
 
 ## Your Task
 
@@ -39,10 +37,10 @@ Analyze the current changes and generate an appropriate branch name following Gi
 
 ## Process
 
-1. Analyze current changes with `git diff` and !`git status`
+1. Analyze current changes with `git diff` and !`git status --short`
 2. Extract ticket number from $ARGUMENTS (if provided)
 3. Determine appropriate prefix based on the changes
 4. Generate descriptive suffix based on the code changes
 5. Format branch name following the rules above
-6. Execute `git new <branch-name>`
+6. Execute `git switch -c <branch-name>`
 7. Confirm creation with !`git branch --show-current`
