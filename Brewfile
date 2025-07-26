@@ -28,6 +28,8 @@ brew "zoxide"
 brew "zsh"
 # Uninstall unwanted apps
 cask "appcleaner"
+# Font with a modern monospaced design
+cask "font-maple-mono-nf-cn"
 # Fast, native, feature-rich terminal emulator pushing modern features
 cask "ghostty"
 # Web browser
