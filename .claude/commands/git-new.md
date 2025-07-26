@@ -37,7 +37,7 @@ Analyze the current changes and generate an appropriate branch name following Gi
 
 ## Process
 
-1. Analyze current changes with `git diff` and !`git status --short`
+1. Analyze current changes with !`git diff HEAD` and !`git status --short`
 2. Extract ticket number from $ARGUMENTS (if provided)
 3. Determine appropriate prefix based on the changes
 4. Generate descriptive suffix based on the code changes

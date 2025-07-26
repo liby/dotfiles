@@ -4,6 +4,7 @@ cursor-style = block
 cursor-style-blink = false
 
 font-family = "Inconsolata LGC Nerd Font Mono"
+font-family = "Maple Mono NF CN"
 font-size = 12
 
 keybind = ctrl+alt+i=inspector:toggle

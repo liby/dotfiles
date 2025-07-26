@@ -31,7 +31,12 @@ IMPORTANT: Use `dot` command instead of `git` when:
 Based on the context above, create a git commit following these steps:
 
 1. Examine the recent commits to understand the repository's commit style and conventions
-2. Stage the relevant files using the appropriate command (`git add` or `dot add`)
+2. Stage the relevant files using the appropriate command:
+   - For `git`: use `git add` with appropriate options
+   - For `dot`: 
+     - Use `dot add -u` to stage only tracked files (default)
+     - Use `dot add <specific-file>` for new files only when explicitly needed
+     - NEVER use `dot add -A` to stage all files
 3. Create a commit with a CONCISE message that:
    - Focuses on "WHY" rather than "WHAT"
    - Follows the commit message rules above
