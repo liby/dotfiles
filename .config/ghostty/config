@@ -12,6 +12,7 @@ keybind = ctrl+alt+i=inspector:toggle
 keybind = shift+enter=text:\n
 keybind = super+f=write_screen_file:open
 keybind = super+shift+f=write_selection_file:open
+keybind = super+u=text:\x1f
 
 shell-integration = zsh
 shell-integration-features = no-cursor
