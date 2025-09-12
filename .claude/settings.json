@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_ENABLE_UNIFIED_READ_TOOL": "1",
@@ -10,6 +11,7 @@
     "FORCE_AUTO_BACKGROUND_TASKS": "1"
   },
   "includeCoAuthoredBy": false,
+  "model": "opus",
   "permissions": {
     "allow": [
       "Bash(fd:*)",
