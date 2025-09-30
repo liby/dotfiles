@@ -11,7 +11,6 @@
     "FORCE_AUTO_BACKGROUND_TASKS": "1"
   },
   "includeCoAuthoredBy": false,
-  "model": "opus",
   "permissions": {
     "allow": [
       "Bash(fd:*)",
