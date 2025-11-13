@@ -43,6 +43,7 @@
   editor = vim
   quotepath = false
   untrackedCache = true
+	symlinks = true
 
 [diff]
   external = difft
