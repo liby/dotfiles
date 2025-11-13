@@ -28,23 +28,9 @@
       "WebFetch(domain:docs.anthropic.com)"
     ]
   },
-  "model": "opus",
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '\"\\(.tool_input.command) - \\(.tool_input.description // \"No description\")\"' >> ~/.claude/bash-command-log.txt"
-          }
-        ]
-      }
-    ]
+  "enabledPlugins": {
+    "feature-dev@claude-code-plugins": true,
+    "commit-commands@claude-code-plugins": true
   },
-  "statusLine": {
-    "type": "command",
-    "command": "bun x ccusage statusline",
-    "padding": 0
-  }
+  "alwaysThinkingEnabled": true
 }

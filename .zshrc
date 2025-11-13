@@ -75,6 +75,11 @@ if HOMEBREW_UV_PATH=$(brew --prefix uv 2>/dev/null)/bin; then
   path_dirs=("$HOMEBREW_UV_PATH" $path_dirs)
 fi
 
+# Add Homebrew curl PATH if available
+if HOMEBREW_CURL_PATH=$(brew --prefix curl 2>/dev/null)/bin; then
+  path_dirs=("$HOMEBREW_CURL_PATH" $path_dirs)
+fi
+
 typeset -aU path
 path=($path_dirs $path[@])
 
