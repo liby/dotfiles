@@ -88,17 +88,12 @@ MUST comment:
 
 - **Local search** - ALWAYS use `rg` instead of `grep`
 - **Web content** - Use `WebSearch` tool first
-- **GitHub** - MUST use `gh` for GitHub issues/discussions/PRs instead of `WebFetch` tool
-  - Most helpful comments: `gh api repos/owner/repo/issues/123/comments --paginate | jq 'sort_by(-.reactions.total_count) | .[0:3]'`
-  - Latest & Earliest: `jq 'sort_by(.created_at) | .[0:3], .[-3:]'`
+- **GitHub** - MUST use `gh` CLI for all GitHub operations, NEVER use WebFetch
 - **Package docs** - Use `context7` for latest usage, `mcp__grep__searchGitHub` for patterns
 
 ### VS Code Integration
 
-- **TypeScript validation** - Use `mcp__ide__getDiagnostics` (NOT `tsc --noEmit`)
-- **Code navigation** - Use `mcp__ide__get_references` for finding usages
-- **Refactoring** - Use `mcp__ide__rename_symbol` for renaming
-- **Auto-fix** - Use `mcp__ide__execute_command` with `command: "editor.action.fixAll"` to auto-fix ESLint and other linter errors instead of `Bash(eslint --fix)`
+Use IDE tools for code navigation and diagnostics. See `ide-diagnostics` skill for detailed usage.
 
 ### File Reading
 

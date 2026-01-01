@@ -8,6 +8,7 @@
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
     "DISABLE_TELEMETRY": "1",
     "ENABLE_BACKGROUND_TASKS": "1",
+    "ENABLE_LSP_TOOL": "1",
     "FORCE_AUTO_BACKGROUND_TASKS": "1"
   },
   "includeCoAuthoredBy": false,
@@ -15,6 +16,18 @@
     "allow": [
       "Bash(fd:*)",
       "Bash(find:*)",
+      "Bash(gh api issues:*)",
+      "Bash(gh api pulls:*)",
+      "Bash(gh api repos:*)",
+      "Bash(gh gist view:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh search:*)",
       "Bash(jq:*)",
       "Bash(mkdir:*)",
       "Bash(pnpm add:*)",
@@ -26,7 +39,8 @@
       "Read(~/.claude/**)",
       "Read(~/.config/**)",
       "Read(~/.zshrc)",
-      "WebFetch(domain:docs.anthropic.com)"
+      "WebFetch(domain:code.claude.com)",
+      "WebFetch(domain:docs.anthropic.com)",
     ]
   },
   "model": "claude-opus-4-5@20251101",
