@@ -1,6 +1,7 @@
 ---
 description: Remove AI-generated code slop from the current branch
 allowed-tools:
+  - Bash(git symbolic-ref:*)
   - Bash
   - Read
   - Edit
