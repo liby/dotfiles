@@ -48,7 +48,18 @@
   },
   "model": "claude-opus-4-5@20251101",
   "enabledPlugins": {
-    "context7@claude-plugins-official": true
+    "context7@claude-plugins-official": true,
+    "chrome-devtools-mcp@vibe-coding-plugins": true,
+    "grep-by-vercel@vibe-coding-plugins": true,
+    "notebooklm-skill@vibe-coding-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "vibe-coding-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "liby/vibe-coding-plugins"
+      }
+    }
   },
   "alwaysThinkingEnabled": true
 }
