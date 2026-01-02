@@ -1,9 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  },
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_ENABLE_UNIFIED_READ_TOOL": "1",
@@ -14,6 +10,10 @@
     "ENABLE_BACKGROUND_TASKS": "1",
     "ENABLE_LSP_TOOL": "1",
     "FORCE_AUTO_BACKGROUND_TASKS": "1"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
   },
   "permissions": {
     "allow": [
@@ -48,8 +48,7 @@
   },
   "model": "claude-opus-4-5@20251101",
   "enabledPlugins": {
-    "feature-dev@claude-code-plugins": true,
-    "commit-commands@claude-code-plugins": true
+    "context7@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true
 }
