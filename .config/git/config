@@ -14,8 +14,9 @@
   pr ="!f() { git fetch -fu ${2:-origin} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f"
 
   ### reset ###
-  cl = reset --hard HEAD
-  undo = reset --soft HEAD~1
+  sync = !git fetch origin && git reset --hard @{u}
+  base = !git fetch origin && git reset --hard origin/HEAD
+
 
   ### diff ###
   dc = "!git dh | pbcopy"
@@ -28,8 +29,10 @@
 
   ### rebase ###
   rb = rebase
+  rba = rebase --abort
   rbc = rebase --continue
   rbs = rebase --skip
+  fix = "!f() { git commit --fixup $1 && GIT_SEQUENCE_EDITOR=true git rebase -i $1^; }; f"
 
   ### tag ###
   lt = describe --tags --abbrev=0
@@ -43,7 +46,7 @@
   editor = vim
   quotepath = false
   untrackedCache = true
-	symlinks = true
+  symlinks = true
 
 [diff]
   external = difft
@@ -86,7 +89,7 @@
   path = fsmonitor.config
 
 [merge]
-	conflictStyle = zdiff3
+  conflictStyle = zdiff3
 
 [pager]
   difftool = true
@@ -98,5 +101,5 @@
   autoSetupRemote = true
 
 [rebase]
-	autosquash = true
-	autostash = true
+  autosquash = true
+  autostash = true
