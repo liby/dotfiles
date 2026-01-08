@@ -1,7 +1,14 @@
 ---
 name: ide-diagnostics
 description: Expert knowledge of IDE/LSP tools for code navigation, diagnostics, and refactoring. Use when working with TypeScript errors, linting issues, code navigation, or IDE operations.
-allowed-tools: mcp__ide__getDiagnostics, mcp__ide__get_references, mcp__ide__rename_symbol, mcp__ide__execute_command, Read, Glob
+allowed-tools:
+  - mcp__ide__getDiagnostics
+  - mcp__ide__get_references
+  - mcp__ide__rename_symbol
+  - mcp__ide__execute_command
+  - Read
+  - Glob
+user-invocable: false
 ---
 
 # IDE Diagnostics and Navigation Expert

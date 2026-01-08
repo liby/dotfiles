@@ -1,7 +1,7 @@
 ---
 name: diag
 description: Iteratively fix all IDE diagnostics/errors until none remain. Use proactively when there are TypeScript errors, linting issues, compilation failures, or when user requests diagnostic fixes.
-tools: mcp__ide__getDiagnostics, mcp__ide__execute_command, mcp__ide__rename_symbol, Read, Edit, Glob, TodoWrite
+tools: mcp__ide__getDiagnostics, mcp__ide__get_references, mcp__ide__execute_command, mcp__ide__rename_symbol, Read, Edit, Glob, TodoWrite
 model: inherit
 color: green
 ---

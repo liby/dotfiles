@@ -7,6 +7,7 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
+context: fork
 ---
 
 # Remove AI Code Slop

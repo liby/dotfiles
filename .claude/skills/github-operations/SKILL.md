@@ -1,7 +1,9 @@
 ---
 name: github-operations
 description: Expert knowledge of GitHub CLI (gh) usage and best practices. Use when analyzing GitHub issues, PRs, repositories, or when user mentions GitHub URLs, issue/PR numbers.
-allowed-tools: Bash(gh:*), Bash(jq:*)
+allowed-tools:
+  - Bash(gh *)
+  - Bash(jq *)
 ---
 
 # GitHub Operations Expert
