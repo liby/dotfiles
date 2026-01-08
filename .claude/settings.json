@@ -45,12 +45,8 @@
   },
   "model": "claude-opus-4-5@20251101",
   "enabledPlugins": {
-    "chrome-devtools-mcp@vibe-coding-plugins": true,
     "context7@claude-plugins-official": true,
-    "grep-by-vercel@vibe-coding-plugins": true,
-    "notebooklm-skill@vibe-coding-plugins": true,
-    "pyright-lsp@claude-plugins-official": false,
-    "typescript-lsp@claude-plugins-official": false
+    "notebooklm-skill@vibe-coding-plugins": true
   },
   "extraKnownMarketplaces": {
     "vibe-coding-plugins": {
