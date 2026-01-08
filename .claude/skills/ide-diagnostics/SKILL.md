@@ -2,12 +2,13 @@
 name: ide-diagnostics
 description: Expert knowledge of IDE/LSP tools for code navigation, diagnostics, and refactoring. Use when working with TypeScript errors, linting issues, code navigation, or IDE operations.
 allowed-tools:
-  - mcp__ide__getDiagnostics
-  - mcp__ide__get_references
-  - mcp__ide__rename_symbol
   - mcp__ide__execute_command
-  - Read
+  - mcp__ide__get_references
+  - mcp__ide__getDiagnostics
+  - mcp__ide__rename_symbol
   - Glob
+  - Grep
+  - Read
 user-invocable: false
 ---
 
@@ -166,6 +167,13 @@ Code: TS2339
 Fix: Add property or check type definition
 ```
 
+**Implicit any**:
+```
+Error: Parameter 'x' implicitly has an 'any' type
+Code: TS7006
+Fix: Add type annotation
+```
+
 ### ESLint Errors
 
 **Unused variables**:
@@ -180,6 +188,13 @@ Fix: Remove variable or use it
 Error: Missing return type on function
 Rule: @typescript-eslint/explicit-function-return-type
 Fix: Add explicit return type annotation
+```
+
+**Prefer const**:
+```
+Error: 'foo' is never reassigned
+Rule: prefer-const
+Fix: Change 'let' to 'const'
 ```
 
 ## Workflow: Fix All Diagnostics

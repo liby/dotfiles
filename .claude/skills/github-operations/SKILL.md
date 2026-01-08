@@ -10,9 +10,28 @@ allowed-tools:
 
 Master GitHub CLI (`gh`) commands and advanced techniques for analyzing issues, PRs, and repositories.
 
-## Core Principle
+## Core Principles
 
 **ALWAYS use `gh` CLI for GitHub operations. NEVER use WebFetch for GitHub URLs.**
+
+## ⚠️ Write Operations (Require Explicit Confirmation)
+
+**NEVER execute these without user confirmation:**
+
+| Command | Operation |
+|---------|-----------|
+| `gh pr create` | Creating PRs |
+| `gh issue create` | Creating issues |
+| `gh issue comment` / `gh pr comment` | Adding comments |
+| `gh pr review` | Submitting reviews |
+| `gh pr merge` | Merging PRs |
+| `gh issue close` / `gh pr close` | Closing issues/PRs |
+| `gh issue reopen` / `gh pr reopen` | Reopening issues/PRs |
+
+**Rules:**
+- Default to READ-ONLY analysis
+- Ask for confirmation before any write operation
+- Never proactively create PRs, issues, or comments
 
 ## Basic Commands
 
@@ -184,12 +203,23 @@ gh pr view <number> --json title,state,reviews,mergeable
 
 ## Common Analysis Patterns
 
-### Pattern 1: Analyze Long Discussion
+### Pattern 1: Analyze Long Discussion (100+ comments)
+
+**Strategy: Don't read everything - focus on high-value content**
 
 1. Get issue/PR body: `gh issue view <number>`
-2. Fetch most helpful comments: Use `jq` reaction sorting
-3. Check timeline: Get timeline events for context
-4. Summarize key points
+2. Fetch most helpful comments (by reactions):
+   ```bash
+   gh api repos/owner/repo/issues/<number>/comments --paginate \
+     | jq 'sort_by(-.reactions.total_count) | .[0:5]'
+   ```
+3. Get timeline view (first 3 + last 3 for evolution):
+   ```bash
+   gh api repos/owner/repo/issues/<number>/comments --paginate \
+     | jq 'sort_by(.created_at) | (.[0:3] + .[-3:])'
+   ```
+4. Check timeline events for context
+5. Summarize key points and community consensus
 
 ### Pattern 2: PR Code Review
 
