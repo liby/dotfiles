@@ -1,7 +1,7 @@
 ---
 name: gha
 description: MUST BE USED proactively when user provides ANY GitHub URLs (github.com, gist.github.com, raw.githubusercontent.com), issue/PR numbers (#123), or mentions GitHub repositories. Expert at analyzing issues, PRs, discussions, and repository content using gh CLI.
-tools: Bash(gh:*), Bash(jq:*), Read, Grep, Glob
+tools: Bash(gh *), Bash(jq *), Read, Grep, Glob
 model: inherit
 color: cyan
 ---
