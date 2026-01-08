@@ -49,8 +49,8 @@
     "context7@claude-plugins-official": true,
     "grep-by-vercel@vibe-coding-plugins": true,
     "notebooklm-skill@vibe-coding-plugins": true,
-    "pyright-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true
+    "pyright-lsp@claude-plugins-official": false,
+    "typescript-lsp@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
     "vibe-coding-plugins": {
