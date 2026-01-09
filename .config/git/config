@@ -32,7 +32,7 @@
   rba = rebase --abort
   rbc = rebase --continue
   rbs = rebase --skip
-  fix = "!f() { git commit --fixup $1 && GIT_SEQUENCE_EDITOR=true git rebase -i $1^; }; f"
+  fix = "!f() { git add -A && git commit --fixup $1 && GIT_SEQUENCE_EDITOR=true git rebase -i $1^; }; f"
 
   ### tag ###
   lt = describe --tags --abbrev=0
