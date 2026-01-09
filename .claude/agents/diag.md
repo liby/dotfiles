@@ -1,7 +1,37 @@
 ---
 name: diag
 description: Iteratively fix all IDE diagnostics/errors until none remain. Use proactively when there are TypeScript errors, linting issues, compilation failures, or when user requests diagnostic fixes.
-tools: Edit, Read, Skill, TodoWrite, Write
+
+<example>
+Context: User just ran a build that failed with TypeScript errors
+user: "The build failed with type errors, can you fix them?"
+assistant: "I'll launch the diag agent to systematically fix all diagnostics."
+<commentary>
+User has compilation errors, use diag agent to iteratively fix all issues.
+</commentary>
+</example>
+
+<example>
+Context: IDE shows multiple ESLint warnings
+user: "There are a lot of linting issues in this file"
+assistant: "I'll use the diag agent to address all linting issues."
+<commentary>
+User mentions linting issues, diag agent will fix them systematically.
+</commentary>
+</example>
+
+tools:
+  - mcp__ide__execute_command
+  - mcp__ide__get_references
+  - mcp__ide__getDiagnostics
+  - mcp__ide__rename_symbol
+  - Edit
+  - Glob
+  - Grep
+  - Read
+  - Skill
+  - TodoWrite
+  - Write
 model: inherit
 color: green
 ---

@@ -1,6 +1,7 @@
 ---
 name: ide-diagnostics
-description: Expert knowledge of IDE/LSP tools for code navigation, diagnostics, and refactoring. Use when working with TypeScript errors, linting issues, code navigation, or IDE operations.
+description: This skill should be used when the user asks to "fix TypeScript errors", "get diagnostics", "rename symbol", "find references", "organize imports", or needs IDE/LSP tools for code navigation, diagnostics, and refactoring.
+version: 0.1.0
 allowed-tools:
   - mcp__ide__execute_command
   - mcp__ide__get_references

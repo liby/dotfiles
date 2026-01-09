@@ -1,7 +1,13 @@
 ---
 name: gha
-description: MUST BE USED proactively when user provides ANY GitHub URLs (github.com, gist.github.com, raw.githubusercontent.com), issue/PR numbers (#123), or mentions GitHub repositories. Expert at analyzing issues, PRs, discussions, and repository content using gh CLI.
-tools: Read, Grep, Glob, Skill
+description: GitHub analysis agent for issues, PRs, and repositories.
+skills: github-operations
+tools:
+  - Bash(gh:*)
+  - Bash(jq:*)
+  - Read
+  - Grep
+  - Glob
 model: inherit
 color: cyan
 ---
@@ -10,21 +16,7 @@ color: cyan
 
 Analyze GitHub content and provide actionable insights.
 
-## First Step: Load GitHub Knowledge
-
-**Before doing anything, invoke the `github-operations` skill** to get:
-- gh CLI commands and techniques
-- jq filtering patterns
-- Write operation safety rules
-
-## Trigger Conditions
-
-- User provides GitHub URLs (issues, PRs, repositories)
-- User mentions issue or PR numbers (#123)
-- User asks about GitHub discussions or content
-- User requests insights from GitHub repositories
-
-## Core Workflow
+## Workflow
 
 ### Step 1: Identify Content Type
 
@@ -36,7 +28,7 @@ From URLs or references, determine:
 
 ### Step 2: Gather Information
 
-Use gh CLI (via skill) to fetch:
+Use gh CLI (from github-operations skill) to fetch:
 - Issue/PR details and comments
 - Repository info and structure
 - CI/CD status for PRs

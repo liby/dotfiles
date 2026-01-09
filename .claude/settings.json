@@ -46,9 +46,16 @@
   "model": "claude-opus-4-5@20251101",
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
-    "notebooklm-skill@vibe-coding-plugins": true
+    "notebooklm-skill@vibe-coding-plugins": true,
+    "planning-with-files@planning-with-files": true
   },
   "extraKnownMarketplaces": {
+    "planning-with-files": {
+      "source": {
+        "source": "github",
+        "repo": "OthmanAdi/planning-with-files"
+      }
+    },
     "vibe-coding-plugins": {
       "source": {
         "source": "github",
