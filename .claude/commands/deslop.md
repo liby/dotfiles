@@ -16,7 +16,7 @@ Check the diff against the default branch (use !`git symbolic-ref refs/remotes/o
 
 This includes:
 - Extra comments that a human wouldn't add or is inconsistent with the rest of the file
-- Extra defensive checks or try/catch blocks that are abnormal for that area of the codebase (especially if called by trusted / validated codepaths)
+- Extra defensive checks or try/catch blocks that are abnormal for that area of the codebase (especially if called by trusted / validated code paths)
 - Unnecessary fallbacks for scenarios that can't happen or are already guaranteed by upstream code
 - Casts to `any` to get around type issues
 - Any other style that is inconsistent with the file
