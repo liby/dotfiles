@@ -1,9 +1,9 @@
 ---
 name: github-operations
-description: Expert knowledge of GitHub CLI (gh) usage and best practices. Use when analyzing GitHub issues, PRs, repositories, or when user mentions GitHub URLs, issue/PR numbers.
-allowed-tools:
-  - Bash(gh *)
-  - Bash(jq *)
+description: This skill should be used when the user asks to "analyze a GitHub issue", "view PR details", "fetch repository info", "check CI status", "get issue comments", or mentions GitHub URLs, issue/PR numbers (#123). Provides gh CLI commands, jq patterns, and best practices.
+version: 0.1.0
+context: fork
+agent: gha
 ---
 
 # GitHub Operations Expert
