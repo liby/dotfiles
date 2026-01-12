@@ -1,6 +1,6 @@
 ---
 name: ide-diagnostics
-description: This skill should be used when the user asks to "fix TypeScript errors", "get diagnostics", "rename symbol", "find references", "organize imports", or needs IDE/LSP tools for code navigation, diagnostics, and refactoring.
+description: Fix TypeScript errors, get diagnostics, rename symbols, find references, organize imports. Use when user needs IDE/LSP tools for code navigation, diagnostics, and refactoring.
 version: 0.1.0
 allowed-tools:
   - mcp__ide__execute_command
@@ -19,254 +19,53 @@ Master IDE integration tools for diagnostics, code navigation, and automated fix
 
 ## Available IDE Tools
 
-### 1. Get Diagnostics (`mcp__ide__getDiagnostics`)
+### Get Diagnostics (`mcp__ide__getDiagnostics`)
 
-**Purpose**: Retrieve errors, warnings, and info messages from the IDE's language server.
+Retrieve errors, warnings, and info messages from the IDE's language server.
 
-**When to use**:
-- Before fixing TypeScript/JavaScript errors
-- Checking for linting violations
-- Validating code changes
-- Identifying compilation issues
+**When to use**: Before fixing errors, checking linting, validating changes
 
-**Usage**:
-```
-Use mcp__ide__getDiagnostics to get all diagnostics
-```
+### Find References (`mcp__ide__get_references`)
 
-**Output**: List of diagnostics with:
-- File path
-- Line and column numbers
-- Severity (error/warning/info)
-- Error message
-- Error code (e.g., `TS2304`, `@typescript-eslint/no-unused-vars`)
+Find all usages of a symbol (variable, function, class, etc.)
 
-**Best practices**:
-- Always check diagnostics before claiming code is error-free
-- Use this instead of running `tsc --noEmit` or manual compilation
-- Filter by severity if only interested in errors
-- Group diagnostics by file for systematic fixing
+**When to use**: Before renaming, understanding impact, finding callers
 
-### 2. Find References (`mcp__ide__get_references`)
+### Rename Symbol (`mcp__ide__rename_symbol`)
 
-**Purpose**: Find all usages of a symbol (variable, function, class, etc.)
+Safely rename across the entire codebase.
 
-**When to use**:
-- Before renaming or refactoring
-- Understanding code impact
-- Finding all callers of a function
-- Checking if code is unused
+**ALWAYS use this instead of manual find-replace** - handles scope correctly.
 
-**Usage**:
-```
-Use mcp__ide__get_references for symbol at file:line:column
-```
+### Execute IDE Command (`mcp__ide__execute_command`)
 
-**Best practices**:
-- Use before making changes to understand impact
-- Verify all references when refactoring
-- Check for unused code (0 references)
+Execute IDE commands like auto-fix, organize imports, format document.
 
-### 3. Rename Symbol (`mcp__ide__rename_symbol`)
-
-**Purpose**: Safely rename variables, functions, classes across the entire codebase
-
-**When to use**:
-- Renaming variables, functions, classes
-- Ensuring all references are updated
-- Avoiding manual find-replace errors
-
-**Usage**:
-```
-Use mcp__ide__rename_symbol at file:line:column to newName
-```
-
-**Best practices**:
-- **ALWAYS use this instead of manual find-replace**
-- Safer than Edit tool for renaming (handles scope correctly)
-- Automatically updates all references
-- Works across files
-
-### 4. Execute IDE Command (`mcp__ide__execute_command`)
-
-**Purpose**: Execute IDE commands like auto-fix, organize imports, format document
-
-**Common commands**:
-
-#### Auto-fix All Issues
-```
-Use mcp__ide__execute_command with command: "editor.action.fixAll"
-```
-
-**Use cases**:
-- Auto-fix ESLint violations
-- Auto-fix TypeScript quick fixes
-- Apply all available code actions
-
-#### Organize Imports
-```
-Use mcp__ide__execute_command with command: "editor.action.organizeImports"
-```
-
-**Use cases**:
-- Remove unused imports
-- Sort imports
-- Clean up import statements
-
-#### Format Document
-```
-Use mcp__ide__execute_command with command: "editor.action.formatDocument"
-```
-
-**Best practices**:
-- **Use `editor.action.fixAll` instead of running `eslint --fix` via Bash**
-- More efficient than manual fixes
-- Respects IDE configuration
-- Works with all language servers
-
-## Diagnostic Severity Levels
-
-1. **Error** (must fix):
-   - TypeScript type errors
-   - Syntax errors
-   - Missing imports
-   - Breaking compilation
-
-2. **Warning** (should fix):
-   - Unused variables
-   - Deprecated API usage
-   - Potential bugs
-   - Style violations (if configured as warnings)
-
-3. **Info** (consider fixing):
-   - Suggestions
-   - Code improvements
-   - Style preferences
-
-## Common Diagnostic Patterns
-
-### TypeScript Errors
-
-**Missing imports**:
-```
-Error: Cannot find name 'foo'
-Code: TS2304
-Fix: Add import statement
-```
-
-**Type mismatches**:
-```
-Error: Type 'string' is not assignable to type 'number'
-Code: TS2322
-Fix: Convert type or adjust declaration
-```
-
-**Property errors**:
-```
-Error: Property 'bar' does not exist on type 'Foo'
-Code: TS2339
-Fix: Add property or check type definition
-```
-
-**Implicit any**:
-```
-Error: Parameter 'x' implicitly has an 'any' type
-Code: TS7006
-Fix: Add type annotation
-```
-
-### ESLint Errors
-
-**Unused variables**:
-```
-Error: 'foo' is defined but never used
-Rule: @typescript-eslint/no-unused-vars
-Fix: Remove variable or use it
-```
-
-**Missing return types**:
-```
-Error: Missing return type on function
-Rule: @typescript-eslint/explicit-function-return-type
-Fix: Add explicit return type annotation
-```
-
-**Prefer const**:
-```
-Error: 'foo' is never reassigned
-Rule: prefer-const
-Fix: Change 'let' to 'const'
-```
-
-## Workflow: Fix All Diagnostics
-
-### Step 1: Get Current Diagnostics
-```
-Use mcp__ide__getDiagnostics
-```
-
-### Step 2: Prioritize Fixes
-1. Fix errors first (severity: error)
-2. Then warnings
-3. Then info-level suggestions
-
-### Step 3: Fix Systematically
-- Group by file
-- Fix one file at a time
-- Use `editor.action.fixAll` for auto-fixable issues
-- Manually fix remaining issues with Edit tool
-
-### Step 4: Verify
-```
-Use mcp__ide__getDiagnostics again to confirm all fixed
-```
-
-### Step 5: Iterate
-Repeat until no diagnostics remain
+Common commands:
+- `editor.action.fixAll` - Auto-fix all issues
+- `editor.action.organizeImports` - Remove/sort imports
+- `editor.action.formatDocument` - Format document
 
 ## Best Practices
 
 ### DO:
-- ✅ Use `mcp__ide__getDiagnostics` instead of `tsc --noEmit`
-- ✅ Use `mcp__ide__rename_symbol` instead of manual find-replace
-- ✅ Use `editor.action.fixAll` instead of `eslint --fix`
-- ✅ Check diagnostics before committing changes
-- ✅ Fix errors before warnings
-- ✅ Read file context before fixing (use Read tool)
+- Use `mcp__ide__getDiagnostics` instead of `tsc --noEmit`
+- Use `mcp__ide__rename_symbol` instead of manual find-replace
+- Use `editor.action.fixAll` instead of `eslint --fix` or `biome check --fix`
+- Check diagnostics before committing changes
+- Fix errors before warnings
+- Read file context before fixing (use Read tool)
 
 ### DON'T:
-- ❌ Don't run `tsc --noEmit` via Bash when you have `getDiagnostics`
-- ❌ Don't use Edit tool for renaming (use `rename_symbol`)
-- ❌ Don't ignore warnings - they often indicate real issues
-- ❌ Don't fix diagnostics without understanding the context
+- Run `tsc --noEmit` via Bash when you have `getDiagnostics`
+- Use Edit tool for renaming (use `rename_symbol`)
+- Ignore warnings - they often indicate real issues
+- Fix diagnostics without understanding the context
 
-## Integration with Other Tools
+## Additional Resources
 
-### With Read Tool
-Always read the file before fixing diagnostics to understand context:
-```
-1. Use Read to view the file
-2. Understand the code
-3. Fix diagnostics appropriately
-```
-
-### With Edit Tool
-After understanding diagnostics, use Edit to make targeted fixes:
-```
-1. Get diagnostics
-2. Read file
-3. Plan fixes
-4. Apply edits
-5. Verify with getDiagnostics
-```
-
-### With Glob Tool
-For project-wide issues, find affected files first:
-```
-1. Use Glob to find TypeScript files: **/*.ts
-2. Get diagnostics
-3. Fix systematically
-```
+- For diagnostic error codes and patterns, see [diagnostics.md](diagnostics.md)
+- For complete fix workflows, see [workflows.md](workflows.md)
 
 ## Troubleshooting
 
@@ -279,13 +78,14 @@ Possible causes:
 
 ### Diagnostics Not Updating
 
-After fixes, diagnostics may take a moment to refresh. If needed, trigger a refresh by:
-- Using `editor.action.fixAll`
-- Saving the file
-- Re-running `getDiagnostics`
+After fixes, diagnostics may take a moment to refresh. If needed:
+- Use `editor.action.fixAll`
+- Save the file
+- Re-run `getDiagnostics`
 
 ## References
 
 - VS Code Commands: Use `/ide` for interactive IDE features
 - TypeScript Error Codes: https://typescript.tv/errors/
 - ESLint Rules: https://eslint.org/docs/rules/
+- Biome Linter: https://biomejs.dev/linter/
