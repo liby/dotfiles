@@ -41,7 +41,8 @@
       "Bash(git push:*)",
       "Read(.env)",
       "Read(.env.*)"
-    ]
+    ],
+    "defaultMode": "plan"
   },
   "model": "claude-opus-4-5@20251101",
   "enabledPlugins": {
