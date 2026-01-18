@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+  "agents": {
+    "Sisyphus": {
+      "model": "vercel/openai/gpt-5.2-codex",
+      "prompt_append": "Use `zsh -lic '...'` to run shell commands (loads my .zshrc config)."
+    },
+    "oracle": {
+      "model": "vercel/openai/gpt-5.2"
+    },
+    "librarian": {
+      "model": "vercel/openai/gpt-5.2"
+    },
+    "explore": {
+      "model": "vercel/anthropic/claude-sonnet-4.5"
+    },
+    "frontend-ui-ux-engineer": {
+      "model": "vercel/google/gemini-3-pro-preview"
+    },
+    "document-writer": {
+      "model": "vercel/openai/gpt-5.2"
+    },
+    "multimodal-looker": {
+      "model": "vercel/google/gemini-3-pro-preview"
+    },
+    "Prometheus (Planner)": {
+      "model": "vercel/anthropic/claude-opus-4.5"
+    },
+    "Metis (Plan Consultant)": {
+      "model": "vercel/anthropic/claude-opus-4.5"
+    },
+    "Momus (Plan Reviewer)": {
+      "model":"vercel/openai/gpt-5.2"
+    },
+    "orchestrator-sisyphus": {
+      "model": "vercel/openai/gpt-5.2-codex"
+    }
+  },
+  "git_master": {
+    "commit_footer": false,
+    "include_co_authored_by": false
+  },
+  "background_task": {
+    "defaultConcurrency": 5,
+    "providerConcurrency": {
+      "anthropic": 3,
+      "openai": 5,
+      "google":7 
+    }
+  }
+}
