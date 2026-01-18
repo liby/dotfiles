@@ -40,6 +40,7 @@ done
 if [[ -z "$GPG_PATH" ]]; then
   export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 fi
+export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
 export LC_ALL="en_US.UTF-8"
 export NPM_CONFIG_PREFIX="$npm_global_path"
 export PNPM_HOME="$HOME/Library/pnpm"
@@ -96,6 +97,7 @@ alias la='ls --all'
 alias ll='la --long --git'
 alias ls='eza --reverse --sort=modified --group-directories-first --hyperlink'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
+alias oc='opencode'
 alias python='python3'
 
 # Path Alias
