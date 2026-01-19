@@ -3,7 +3,7 @@
   "agents": {
     "Sisyphus": {
       "model": "vercel/openai/gpt-5.2-codex",
-      "prompt_append": "Use `zsh -lic '...'` to run shell commands (loads my .zshrc config)."
+      "reasoningEffort": "xhigh"
     },
     "oracle": {
       "model": "vercel/openai/gpt-5.2"
@@ -24,16 +24,20 @@
       "model": "vercel/google/gemini-3-pro-preview"
     },
     "Prometheus (Planner)": {
-      "model": "vercel/anthropic/claude-opus-4.5"
+      "model": "vercel/anthropic/claude-opus-4.5",
+      "temperature": 0.1
     },
     "Metis (Plan Consultant)": {
-      "model": "vercel/anthropic/claude-opus-4.5"
+      "model": "vercel/anthropic/claude-opus-4.5",
+      "temperature": 0.1
     },
     "Momus (Plan Reviewer)": {
-      "model":"vercel/openai/gpt-5.2"
+      "model": "vercel/openai/gpt-5.2",
+      "temperature": 0.1
     },
     "orchestrator-sisyphus": {
-      "model": "vercel/openai/gpt-5.2-codex"
+      "model": "vercel/openai/gpt-5.2-codex",
+      "reasoningEffort": "xhigh"
     }
   },
   "git_master": {
