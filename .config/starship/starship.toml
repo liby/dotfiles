@@ -23,6 +23,9 @@ format = '\[[⏱ $duration]($style)\]'
 [deno]
 format = '\[[$symbol($version)]($style)\]'
 
+[docker_context]
+format = '\[[$symbol($context)]($style)\]'
+
 [git_branch]
 format = '\[[$symbol$branch]($style)\]'
 symbol = "󰘬·"
