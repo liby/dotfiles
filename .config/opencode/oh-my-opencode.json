@@ -40,10 +40,6 @@
       "reasoningEffort": "xhigh"
     }
   },
-  "git_master": {
-    "commit_footer": false,
-    "include_co_authored_by": false
-  },
   "background_task": {
     "defaultConcurrency": 5,
     "providerConcurrency": {
@@ -51,5 +47,10 @@
       "openai": 5,
       "google":7 
     }
+  },
+  "disabled_hooks": ["startup-toast"],
+  "git_master": {
+    "commit_footer": false,
+    "include_co_authored_by": false
   }
 }
