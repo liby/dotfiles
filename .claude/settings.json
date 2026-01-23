@@ -46,11 +46,18 @@
   },
   "model": "claude-opus-4-5@20251101",
   "enabledPlugins": {
+    "agent-browser@agent-browser": true,
     "context7@claude-plugins-official": true,
     "notebooklm-skill@vibe-coding-plugins": true,
     "planning-with-files@planning-with-files": true
   },
   "extraKnownMarketplaces": {
+    "agent-browser": {
+      "source": {
+        "source": "github",
+        "repo": "vercel-labs/agent-browser"
+      }
+    },
     "planning-with-files": {
       "source": {
         "source": "github",
