@@ -12,6 +12,7 @@
     "ENABLE_BACKGROUND_TASKS": "1",
     "ENABLE_LSP_TOOL": "1",
     "FORCE_AUTO_BACKGROUND_TASKS": "1",
+    "FORCE_AUTOUPDATE_PLUGINS": "1",
     "IS_DEMO": "1"
   },
   "attribution": {
@@ -47,6 +48,7 @@
   "model": "claude-opus-4-5@20251101",
   "enabledPlugins": {
     "agent-browser@agent-browser": true,
+    "utility-skills@baoyu-skills": true,
     "context7@claude-plugins-official": true,
     "notebooklm-skill@vibe-coding-plugins": true,
     "planning-with-files@planning-with-files": true
@@ -58,10 +60,22 @@
         "repo": "vercel-labs/agent-browser"
       }
     },
+    "baoyu-skills": {
+      "source": {
+        "source": "github",
+        "repo": "JimLiu/baoyu-skills"
+      }
+    },
     "planning-with-files": {
       "source": {
         "source": "github",
         "repo": "OthmanAdi/planning-with-files"
+      }
+    },
+    "supabase-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "supabase/agent-skills"
       }
     },
     "vibe-coding-plugins": {
