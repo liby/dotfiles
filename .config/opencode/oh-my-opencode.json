@@ -1,43 +1,69 @@
 {
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
   "agents": {
-    "Sisyphus": {
+    "atlas": {
       "model": "vercel/openai/gpt-5.2-codex",
       "reasoningEffort": "xhigh"
     },
-    "oracle": {
-      "model": "vercel/openai/gpt-5.2"
-    },
-    "librarian": {
-      "model": "vercel/openai/gpt-5.2"
+    "document-writer": {
+      "model": "vercel/openai/gpt-5.2",
+      "temperature": 0.3
     },
     "explore": {
       "model": "vercel/anthropic/claude-sonnet-4.5"
     },
-    "frontend-ui-ux-engineer": {
-      "model": "vercel/google/gemini-3-pro-preview"
-    },
-    "document-writer": {
+    "librarian": {
       "model": "vercel/openai/gpt-5.2"
+    },
+    "metis": {
+      "model": "vercel/anthropic/claude-opus-4.5",
+      "temperature": 0.1
+    },
+    "momus": {
+      "model": "vercel/openai/gpt-5.2",
+      "temperature": 0.1
     },
     "multimodal-looker": {
       "model": "vercel/google/gemini-3-pro-preview"
     },
-    "Prometheus (Planner)": {
+    "oracle": {
+      "model": "vercel/openai/gpt-5.2"
+    },
+    "prometheus": {
       "model": "vercel/anthropic/claude-opus-4.5",
       "temperature": 0.1
     },
-    "Metis (Plan Consultant)": {
-      "model": "vercel/anthropic/claude-opus-4.5",
-      "temperature": 0.1
+    "sisyphus": {
+      "model": "vercel/anthropic/claude-opus-4.5"
+    }
+  },
+  "categories": {
+    "artistry": {
+      "model": "vercel/google/gemini-3-pro-preview"
     },
-    "Momus (Plan Reviewer)": {
+    "business-logic": {
       "model": "vercel/openai/gpt-5.2",
       "temperature": 0.1
     },
-    "orchestrator-sisyphus": {
+    "quick": {
+      "model": "vercel/anthropic/claude-haiku-4.5"
+    },
+    "ultrabrain": {
       "model": "vercel/openai/gpt-5.2-codex",
       "reasoningEffort": "xhigh"
+    },
+    "unspecified-high": {
+      "model": "vercel/anthropic/claude-opus-4.5"
+    },
+    "unspecified-low": {
+      "model": "vercel/anthropic/claude-sonnet-4.5"
+    },
+    "visual-engineering": {
+      "model": "vercel/google/gemini-3-pro-preview"
+    },
+    "writing": {
+      "model": "vercel/openai/gpt-5.2",
+      "temperature": 0.5
     }
   },
   "background_task": {
@@ -45,10 +71,12 @@
     "providerConcurrency": {
       "anthropic": 3,
       "openai": 5,
-      "google":7 
+      "google": 7
     }
   },
-  "disabled_hooks": ["startup-toast"],
+  "disabled_hooks": [
+    "startup-toast"
+  ],
   "git_master": {
     "commit_footer": false,
     "include_co_authored_by": false
