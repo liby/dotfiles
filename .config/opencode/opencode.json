@@ -3,7 +3,6 @@
   "plugin": [
     "oh-my-opencode"
   ],
-  "model": "vercel/openai/gpt-5.2-codex",
   "provider": {
     "vercel": {
       "options": {
