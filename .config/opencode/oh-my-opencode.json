@@ -75,7 +75,8 @@
     }
   },
   "disabled_hooks": [
-    "startup-toast"
+    "startup-toast",
+    "directory-agents-injector"
   ],
   "git_master": {
     "commit_footer": false,
