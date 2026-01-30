@@ -1,5 +1,5 @@
 ## personal ##
 
-.config/git/github.config filter=signingkey
+.config/git/github.config filter=user.signingkey
 .config/git/gitlab.config filter=user.config
 .proto/.prototools filter=prototools

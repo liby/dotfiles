@@ -69,7 +69,7 @@
   smudge = cat
   required = true
 
-[filter "signingkey"]
+[filter "user.signingkey"]
   clean = sed -E '/^[[:space:]]*signingkey[[:space:]]*=/d'
   smudge = cat
   required = true
