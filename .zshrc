@@ -18,7 +18,12 @@ fi
 ## Initialize the completion system
 ## This must be done after all fpath modifications
 autoload -Uz compinit
-compinit
+# Only regenerate .zcompdump once a day
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+  compinit
+else
+  compinit -C
+fi
 
 editor_config_path="$HOME/.config/editor"
 npm_global_path="$HOME/.npm-global"
