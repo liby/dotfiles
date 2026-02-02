@@ -579,35 +579,6 @@ install_claude_code() {
     curl -fsSL https://claude.ai/install.sh | bash
   fi
 
-  # Install LSP servers for Claude Code plugins
-  echo "-----------------------------------------------------------"
-  echo "            Installing LSP servers for plugins             "
-  echo "-----------------------------------------------------------"
-
-  # TypeScript Language Server
-  if command -v npm >/dev/null 2>&1; then
-    if command -v typescript-language-server >/dev/null 2>&1; then
-      echo "typescript-language-server already installed, skipping..."
-    else
-      echo "Installing typescript-language-server via npm..."
-      npm install -g typescript-language-server
-    fi
-  else
-    echo "Warning: npm not found. Skipping typescript-language-server installation."
-  fi
-
-  # Pyright
-  if command -v uv >/dev/null 2>&1; then
-    if command -v pyright-langserver >/dev/null 2>&1; then
-      echo "pyright already installed, skipping..."
-    else
-      echo "Installing pyright via uv..."
-      uv tool install pyright
-    fi
-  else
-    echo "Warning: uv not found. Skipping pyright installation."
-  fi
-
   echo "Claude Code setup completed."
 }
 
