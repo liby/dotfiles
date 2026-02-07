@@ -37,9 +37,6 @@ IMPORTANT: Use `dot` command instead of `git` when:
 - Reference related commits with hash: `Fix bug introduced by [abc123]`
 - Be specific - mention all significant changes in one commit
 - Be CONCISE - avoid unnecessary words
-- **IMPORTANT**: Use SINGLE QUOTES around commit messages to prevent backtick interpretation:
-  - Correct: `git commit -m 'feat: add `new_feature` support'`
-  - Wrong: `git commit -m "feat: add \`new_feature\` support"` (backticks executed as commands)
 
 ## Your task
 

@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "respectGitignore": true,
+  "cleanupPeriodDays": 0,
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_ENABLE_UNIFIED_READ_TOOL": "1",
@@ -50,8 +51,7 @@
     "agent-browser@agent-browser": true,
     "utility-skills@baoyu-skills": true,
     "context7@claude-plugins-official": true,
-    "notebooklm-skill@vibe-coding-plugins": true,
-    "planning-with-files@planning-with-files": true
+    "notebooklm-skill@vibe-coding-plugins": true
   },
   "extraKnownMarketplaces": {
     "agent-browser": {
@@ -85,5 +85,10 @@
       }
     }
   },
-  "alwaysThinkingEnabled": true
+  "alwaysThinkingEnabled": true,
+  "showTurnDuration": false,
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": ["Vibing"]
+  }
 }
