@@ -2,18 +2,8 @@
 description: Create a git commit following repository conventions
 argument-hint: "[additional context] | dot [context]"
 allowed-tools:
-  - Bash(dot add:*)
-  - Bash(dot branch:*)
-  - Bash(dot commit:*)
-  - Bash(dot diff:*)
-  - Bash(dot log:*)
-  - Bash(dot status:*)
-  - Bash(git add:*)
-  - Bash(git branch:*)
-  - Bash(git commit:*)
-  - Bash(git diff:*)
-  - Bash(git log:*)
-  - Bash(git status:*)
+  - Bash(git:*)
+  - Bash(dot:*)
 ---
 
 ## Context

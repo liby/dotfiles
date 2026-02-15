@@ -85,10 +85,12 @@
       }
     }
   },
-  "alwaysThinkingEnabled": true,
-  "showTurnDuration": false,
   "spinnerVerbs": {
     "mode": "replace",
-    "verbs": ["Vibing"]
-  }
+    "verbs": [
+      "Vibing"
+    ]
+  },
+  "alwaysThinkingEnabled": true,
+  "showTurnDuration": false
 }

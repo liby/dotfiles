@@ -2,11 +2,7 @@
 description: Create a new git branch with proper prefix and following naming conventions
 argument-hint: ticketNumber [context] | [additional context]
 allowed-tools:
-  - Bash(git switch:*)
-  - Bash(git branch:*)
-  - Bash(git diff:*)
-  - Bash(git status:*)
-  - Bash(git push:*)
+  - Bash(git:*)
 ---
 
 Create a new git branch based on: $ARGUMENTS.
