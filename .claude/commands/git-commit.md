@@ -1,6 +1,7 @@
 ---
 description: Create a git commit following repository conventions
 argument-hint: "[additional context] | dot [context]"
+context: fork
 allowed-tools:
   - Bash(git:*)
   - Bash(dot:*)
