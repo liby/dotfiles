@@ -28,6 +28,7 @@ IMPORTANT: Use `dot` command instead of `git` when:
 - Reference related commits with hash: `Fix bug introduced by [abc123]`
 - Be specific - mention all significant changes in one commit
 - Be CONCISE - avoid unnecessary words
+- Be ACCURATE - describe what the diff actually shows, not assumptions about intent
 
 ## Your task
 

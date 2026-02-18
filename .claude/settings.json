@@ -21,14 +21,28 @@
     "commit": "",
     "pr": ""
   },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": true,
+    "excludedCommands": ["docker", "docker-compose", "dot", "git"],
+    "enableWeakerNestedSandbox": false,
+    "network": {
+      "allowedDomains": [
+        "*.anthropic.com",
+        "*.github.com",
+        "*.githubusercontent.com",
+        "*.npmjs.org",
+        "code.claude.com",
+        "github.com"
+      ],
+      "allowAllUnixSockets": false,
+      "allowLocalBinding": true
+    }
+  },
   "permissions": {
     "allow": [
-      "Bash(fd *)",
-      "Bash(find *)",
-      "Bash(mkdir *)",
-      "Bash(ps *)",
-      "Bash(rg *)",
-      "Bash(timeout *)",
+      "Edit",
       "Glob",
       "Grep",
       "mcp__context7__query-docs",
@@ -36,13 +50,21 @@
       "mcp__ide__getDiagnostics",
       "Read",
       "Skill(agent-browser)",
+      "Task",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "Write"
+    ],
+    "deny": [
+      "Edit(~/.ssh/**)",
+      "Edit(~/.gnupg/**)",
+      "Write(~/.ssh/**)",
+      "Write(~/.gnupg/**)",
+      "Read(.env)",
+      "Read(.env.local)"
     ],
     "ask": [
-      "Bash(git push:*)",
-      "Read(.env)",
-      "Read(.env.*)"
+      "Bash(git push:*)"
     ],
     "defaultMode": "plan"
   },
