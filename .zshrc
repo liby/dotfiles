@@ -102,7 +102,6 @@ alias la='ls --all'
 alias ll='la --long --git'
 alias ls='eza --reverse --sort=modified --group-directories-first --hyperlink'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
-alias oc='opencode'
 alias python='python3'
 
 # Path Alias

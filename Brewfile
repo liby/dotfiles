@@ -1,4 +1,3 @@
-tap "anomalyco/tap"
 # Cross-platform make
 brew "cmake"
 # Diff that understands syntax
@@ -29,8 +28,6 @@ brew "uv"
 brew "zoxide"
 # UNIX shell (command interpreter)
 brew "zsh"
-# The AI coding agent built for the terminal.
-brew "anomalyco/tap/opencode"
 # Memory training application
 cask "anki"
 # Application uninstaller
@@ -47,8 +44,6 @@ cask "google-chrome"
 cask "input-source-pro"
 # Menu bar calendar
 cask "itsycal"
-# Open-source keystroke visualiser
-cask "keycastr"
 # Privacy-first, open-source platform for knowledge sharing and management
 cask "logseq"
 # IDE for professional Python development
