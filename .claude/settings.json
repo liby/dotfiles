@@ -24,9 +24,7 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "allowUnsandboxedCommands": true,
     "excludedCommands": ["docker", "docker-compose", "dot", "git"],
-    "enableWeakerNestedSandbox": false,
     "network": {
       "allowedDomains": [
         "*.anthropic.com",
