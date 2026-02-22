@@ -71,11 +71,6 @@ MUST comment:
 - Module limitations and special behaviors
 - Important design decisions and trade-offs
 
-### Git Commit Message
-
-- Do NOT use heredoc (`<<EOF`) for commit messages — sandbox blocks temp file creation before `excludedCommands` takes effect
-- Instead: write the message to `$TMPDIR/commit-msg.txt` using the Write tool, then run `git commit -F "$TMPDIR/commit-msg.txt"`
-
 ### Forbidden Behaviors
 
 - NEVER run dev/build commands or open browsers
