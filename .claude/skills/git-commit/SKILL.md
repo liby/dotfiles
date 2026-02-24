@@ -15,11 +15,12 @@ Use `dot` instead of `git` when the request mentions "dot" or "dotfiles", or whe
 ## Commit message rules
 
 - Match the repository's existing format (prefix, emoji, tense) from recent commits
-- Present tense verbs: `Add`, `Fix`, `Update`, `Remove`
-- Backticks for code references: `` `$variable` ``, `` `someMethod()` ``
-- Reference related commits: `Fix bug introduced by [abc123]`
-- Be CONCISE, specific, and ACCURATE to the actual diff
+- When the repo uses Conventional Commits, choose prefix by the **intent** of the change, NOT by the type of files changed
 - Focus on "WHY" rather than "WHAT"
+- Be CONCISE, specific, and ACCURATE to the actual diff
+- Present tense verbs
+- Backticks for code references: `` `$variable` ``, `` `someMethod()` ``
+- Reference related commits: `fix bug introduced by [abc123]`
 
 ## Steps
 
@@ -28,4 +29,4 @@ Use `dot` instead of `git` when the request mentions "dot" or "dotfiles", or whe
 3. Stage relevant files:
     - `git`: use `git add` with appropriate options
     - `dot`: use `dot add -u` by default; `dot add <file>` only for new files; NEVER `dot add -A` (work tree is $HOME, would stage everything)
-4. Commit. Use `dangerouslyDisableSandbox: true` for all `dot` commands and `git commit` (sandbox blocks `$HOME/.dotfiles/` writes and `$HOME/.gnupg` for GPG signing)
+4. Commit with a message following the commit message rules above

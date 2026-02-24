@@ -24,9 +24,8 @@ This file provides guidance to Claude Code when working with code for all projec
 
 ## Communication Guidelines
 
-- Use Chinese for all explanations and discussions with me
-- Use English for all technical content: code, code comments, documentation, UI text and PR titles/descriptions
-- NEVER mix Chinese characters in technical content
+- Use Chinese for all conversations, explanations, code review results, and plan file content
+- Use English for all code-related content: code, code comments, documentation, UI strings, commit messages, PR titles/descriptions
 
 ## Development Guidelines
 
@@ -94,6 +93,10 @@ MUST comment:
 ### VS Code Integration
 
 Use IDE tools for code navigation and diagnostics. See `ide-diagnostics` skill for detailed usage.
+
+### Sandbox
+
+Use `dangerouslyDisableSandbox: true` for all `git` and `dot` commands. Sandbox overrides `TMPDIR`, causing commands like `diff`, `add`, `commit`, `checkout`, `switch` to fail with "unable to create temp-file". It also blocks `$HOME/.dotfiles/` writes and `$HOME/.gnupg` access for GPG signing.
 
 ### File Reading
 

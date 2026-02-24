@@ -4,9 +4,11 @@
   "cleanupPeriodDays": 99999,
   "env": {
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
     "CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION": "0",
     "CLAUDE_CODE_ENABLE_UNIFIED_READ_TOOL": "1",
     "CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS": "125000",
+    "CLAUDE_CODE_GLOB_HIDDEN": "1",
     "DISABLE_BUG_COMMAND": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_NON_ESSENTIAL_MODEL_CALLS": "1",
@@ -20,23 +22,6 @@
   "attribution": {
     "commit": "",
     "pr": ""
-  },
-  "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true,
-    "excludedCommands": ["docker", "docker-compose", "dot", "git"],
-    "network": {
-      "allowedDomains": [
-        "*.anthropic.com",
-        "*.github.com",
-        "*.githubusercontent.com",
-        "*.npmjs.org",
-        "code.claude.com",
-        "github.com"
-      ],
-      "allowAllUnixSockets": false,
-      "allowLocalBinding": true
-    }
   },
   "permissions": {
     "allow": [
@@ -105,6 +90,29 @@
       }
     }
   },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "network": {
+      "allowedDomains": [
+        "*.anthropic.com",
+        "*.github.com",
+        "*.githubusercontent.com",
+        "*.npmjs.org",
+        "code.claude.com",
+        "github.com"
+      ],
+      "allowAllUnixSockets": false,
+      "allowLocalBinding": true
+    },
+    "excludedCommands": [
+      "docker",
+      "docker-compose",
+      "dot",
+      "git"
+    ]
+  },
+  "spinnerTipsEnabled": false,
   "spinnerVerbs": {
     "mode": "replace",
     "verbs": [
