@@ -1,0 +1,113 @@
+# Centralized schema definition for Agent Skills frontmatter.
+#
+# This file is the single source of truth for:
+# - All allowed frontmatter fields and their constraints
+# - Agent types, hook events, and other enumerated values
+# - Validation constants (max lengths, reserved prefixes, etc.)
+#
+# Used by: validate_skill.py (programmatic), frontmatter_matrix.md (documentation)
+# When upstream specs change, update this file and all consumers stay in sync.
+
+schema_version: "2025-06"
+source: "https://agentskills.io/specification + Claude Code docs (Extend Claude with skills.md)"
+
+# ---------------------------------------------------------------------------
+# Frontmatter fields
+# ---------------------------------------------------------------------------
+fields:
+  # --- Open standard (agentskills.io) ---
+  name:
+    required: true
+    type: string
+    max_length: 64
+    format: kebab-case
+    layer: open-standard
+
+  description:
+    required: true
+    type: string
+    max_length: 1024
+    layer: open-standard
+
+  license:
+    required: false
+    type: string
+    layer: open-standard
+
+  compatibility:
+    required: false
+    type: string
+    max_length: 500
+    layer: open-standard
+
+  metadata:
+    required: false
+    type: mapping
+    layer: open-standard
+
+  allowed-tools:
+    required: false
+    type: string_or_list
+    layer: open-standard
+
+  # --- Claude Code extensions ---
+  argument-hint:
+    required: false
+    type: string
+    layer: claude-extension
+
+  disable-model-invocation:
+    required: false
+    type: boolean
+    layer: claude-extension
+
+  user-invocable:
+    required: false
+    type: boolean
+    layer: claude-extension
+
+  model:
+    required: false
+    type: string
+    layer: claude-extension
+
+  context:
+    required: false
+    type: string
+    values: [fork]
+    layer: claude-extension
+
+  agent:
+    required: false
+    type: string
+    layer: claude-extension
+
+  hooks:
+    required: false
+    type: mapping
+    layer: claude-extension
+
+  # --- Custom (skill-creator project) ---
+  version:
+    required: false
+    type: string
+    layer: custom
+
+# ---------------------------------------------------------------------------
+# Enumerated values
+# ---------------------------------------------------------------------------
+agents:
+  builtin: [Explore, Plan, general-purpose]
+
+hooks:
+  events: [PreToolUse, PostToolUse, Stop]
+
+# ---------------------------------------------------------------------------
+# Validation constraints
+# ---------------------------------------------------------------------------
+constraints:
+  max_name_length: 64
+  max_description_length: 1024
+  max_compatibility_length: 500
+  max_skill_md_lines: 500
+  reserved_prefixes: [claude, anthropic]
