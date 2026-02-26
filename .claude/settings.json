@@ -130,7 +130,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -lc 'p=$(cat); f=$(printf \"%s\" \"$p\" | jq -r \".tool_input.file_path // empty\"); case \"$f\" in */.claude/skills/*|*/.agents/skills/*) r=$(git -C \"$(dirname \"$f\")\" rev-parse --show-toplevel 2>/dev/null || exit 0); [ -e \"$r/.claude/skills\" ] || exit 0; mkdir -p \"$r/.agents\"; if [ ! -e \"$r/.agents/skills\" ] || [ -L \"$r/.agents/skills\" ]; then ln -sfn ../.claude/skills \"$r/.agents/skills\"; fi ;; esac'"
+            "command": "csl"
           }
         ]
       }

@@ -1,7 +1,7 @@
 # Global gitignore
 
 ## Agent
-**/.agents/*
+.agents
 
 ## Cursor
 .cursor

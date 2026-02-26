@@ -15,6 +15,7 @@ if (( ! $FPATH[(I)${__BRYAN_HOMEBREW_ZSH_COMPLETION}] && $+commands[brew] )) &>/
 fi
 ## https://github.com/zsh-users/zsh-completions
 [[ -d ${__BRYAN_ZSH_COMPLETION_SRC} ]] && fpath+=${__BRYAN_ZSH_COMPLETION_SRC}
+fpath+=$HOME/.zsh/functions
 ## Initialize the completion system
 ## This must be done after all fpath modifications
 autoload -Uz compinit
@@ -104,137 +105,13 @@ alias ls='eza --reverse --sort=modified --group-directories-first --hyperlink'
 alias lt='ll --tree --git-ignore --ignore-glob=.git'
 alias python='python3'
 
-# Path Alias
-# usage: cd ~xxx
-# hash -d desktop="$HOME/Desktop"
-# hash -d downloads="$HOME/Downloads"
-# hash -d download="$HOME/Downloads"
-# hash -d documents="$HOME/Documents"
-# hash -d document="$HOME/Documents"
-# hash -d code="$HOME/Code"
-# hash -d applications="/Applications"
-# hash -d application="/Applications"
-
-# Functions
-dlm() {
-  local red=$'\e[1;31m'
-  local green=$'\e[1;32m'
-  local yellow=$'\e[1;33m'
-  local blue=$'\e[1;34m'
-  local reset=$'\e[0m'
-
-  echo "${blue}Fetching latest changes and identifying branches...${reset}"
-
-  local max_retries=3
-  local retry_count=0
-  local fetch_success=false
-
-  while (( retry_count < max_retries )) && ! $fetch_success; do
-    if git fetch --quiet --all && git remote prune origin; then
-      fetch_success=true
-    else
-      ((retry_count++))
-      echo "${yellow}Fetch failed. Retrying... (Attempt $retry_count of $max_retries)${reset}"
-      sleep 2
-    fi
-  done
-
-  if ! $fetch_success; then
-    echo "${red}Failed to fetch after $max_retries attempts. Please check your network connection and try again.${reset}"
-    return 1
-  fi
-
-  local remote_branches=$(git ls-remote --heads origin | awk '{print $2}' | sed 's|refs/heads/||')
-
-  local branches=($(git for-each-ref --format '%(refname:short)' refs/heads |
-    grep -vE '^(master|main|develop)$' |
-    while read -r branch; do
-      if ! echo "$remote_branches" | grep -q "^$branch$"; then
-        echo "$branch"
-      fi
-    done))
-
-  if (( ${#branches[@]} == 0 )); then
-    echo "${green}No local branches to delete.${reset}"
-    return
-  fi
-
-  echo "\n${yellow}The following local branches are not present in remote:${reset}"
-  printf "%s\n" "${branches[@]}"
-
-  echo "\n${blue}Do you want to delete these branches? [Y/n]${reset}"
-  read -q response || return
-
-  echo
-
-  local deleted=0
-  local failed=0
-
-  for branch in "${branches[@]}"; do
-    if git branch -D "$branch" &>/dev/null; then
-      echo "${green}Deleted: $branch${reset}"
-      ((deleted++))
-    else
-      echo "${red}Failed to delete: $branch${reset}"
-      ((failed++))
-    fi
-  done
-  echo "\n${green}Operation complete.${reset}"
-  echo "Branches deleted: ${deleted}"
-  [[ $failed -gt 0 ]] && echo "${red}Branches failed to delete: ${failed}${reset}"
-}
+# Functions (autoloaded from ~/.zsh/functions/)
+autoload -Uz csl dlm pasteinit pastefinish setup_gpg_ssh
 
 # This speeds up pasting w/ autosuggest
 # https://github.com/zsh-users/zsh-autosuggestions/issues/238
-pasteinit() {
-  OLD_SELF_INSERT=${${(s.:.)widgets[self-insert]}[2,3]}
-  zle -N self-insert url-quote-magic # I wonder if you'd need `.url-quote-magic`?
-}
-
-pastefinish() {
-  zle -N self-insert $OLD_SELF_INSERT
-}
-
 zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
-
-setup_gpg_ssh() {
-  ## https://github.com/jessfraz/dotfiles/blob/master/.bashrc#L113C1-L130C1
-  ## Start the gpg-agent if not already running
-  if ! pgrep -x -u "${USER}" gpg-agent >/dev/null 2>&1; then
-    if ! gpg-connect-agent /bye >/dev/null 2>&1; then
-      echo "Failed to start gpg-agent" >&2
-      return 1
-    fi
-  fi
-
-  ## Update the TTY for gpg-agent
-  if ! gpg-connect-agent updatestartuptty /bye >/dev/null; then
-    echo "Failed to update GPG TTY" >&2
-    return 1
-  fi
-
-  ## Use the current terminal for GPG to avoid "Inappropriate ioctl for device" error
-  export GPG_TTY=$(tty)
-
-  ## Set SSH to use gpg-agent
-  unset SSH_AGENT_PID
-
-  ## Check if the SSH_AUTH_SOCK needs to be set to gpg-agent's socket
-  if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
-    if [[ -z "$SSH_AUTH_SOCK" || "$SSH_AUTH_SOCK" == *"apple.launchd"* ]]; then
-      local socket_path="$(gpgconf --list-dirs agent-ssh-socket)"
-      if [[ -S "$socket_path" ]]; then
-        export SSH_AUTH_SOCK="$socket_path"
-      else
-        echo "GPG SSH socket not found" >&2
-        return 1
-      fi
-    fi
-  fi
-
-  return 0
-}
 
 # Autosuggestions configuration# https://github.com/zsh-users/zsh-autosuggestions/issues/351
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste accept-line)
