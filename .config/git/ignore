@@ -1,8 +1,7 @@
 # Global gitignore
 
-## Claude Code
-**/.claude/settings.local.json
-CLAUDE.md
+## Agent
+**/.agents/*
 
 ## Cursor
 .cursor
@@ -13,6 +12,9 @@ log
 
 ## JetBrains
 .idea
+
+## Local overrides
+*.local.*
 
 ## macOS
 .DS_Store
