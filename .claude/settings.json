@@ -39,12 +39,15 @@
       "Write"
     ],
     "deny": [
-      "Edit(~/.ssh/**)",
       "Edit(~/.gnupg/**)",
-      "Write(~/.ssh/**)",
+      "Edit(~/.ssh/**)",
+      "Read(.env.local)",
+      "Read(**/.env)",
+      "Read(**/*.key)",
+      "Read(**/*.pem)",
+      "Read(~/.aws/**)",
       "Write(~/.gnupg/**)",
-      "Read(.env)",
-      "Read(.env.local)"
+      "Write(~/.ssh/**)"
     ],
     "ask": [
       "Bash(git push:*)"
@@ -124,13 +127,35 @@
   "promptSuggestionEnabled": false,
   "showTurnDuration": false,
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/guard-secrets.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|MultiEdit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "csl"
+            "command": "~/.claude/scripts/sync-skills-symlink.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/detect-secrets-output.sh",
+            "timeout": 5
           }
         ]
       }

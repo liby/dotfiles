@@ -106,7 +106,7 @@ alias lt='ll --tree --git-ignore --ignore-glob=.git'
 alias python='python3'
 
 # Functions (autoloaded from ~/.zsh/functions/)
-autoload -Uz csl dlm pasteinit pastefinish setup_gpg_ssh
+autoload -Uz dlm pasteinit pastefinish setup_gpg_ssh
 
 # This speeds up pasting w/ autosuggest
 # https://github.com/zsh-users/zsh-autosuggestions/issues/238

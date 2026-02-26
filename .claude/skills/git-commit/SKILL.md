@@ -28,5 +28,5 @@ Use `dot` instead of `git` when the request mentions "dot" or "dotfiles", or whe
 2. Examine recent commits to match the repository's commit style
 3. Stage relevant files:
     - `git`: use `git add` with appropriate options
-    - `dot`: use `dot add -u` by default; `dot add <file>` only for new files; NEVER `dot add -A` (work tree is $HOME, would stage everything)
+    - `dot`: use `dot add -u` by default; `dot add <file>` only for new files; NEVER `dot add -A` (work tree is $HOME, would stage everything). Always use **absolute paths** with `dot add` — relative paths resolve from CWD, not from work-tree root
 4. Commit with a message following the commit message rules above
