@@ -33,6 +33,7 @@ For trigger quality testing, continue to Steps 8-10 below.
 4. Validate before benchmarking. Benchmark before packaging.
 5. Prefer deterministic scripts for repetitive or fragile steps.
 6. Match the user's language and domain terms when drafting examples and trigger phrases.
+7. Minimize token consumption in data-heavy skills — prefer compact output formats and lazy-loaded references. See [references/token_efficiency.md](references/token_efficiency.md).
 
 ## End-to-End Workflow
 
@@ -163,6 +164,7 @@ See [references/advanced_patterns.md](references/advanced_patterns.md) for argum
 2. Step-by-step workflow.
 3. Error handling and recovery.
 4. Clear references to supporting files.
+5. Token-efficient patterns for data output (TSV/CSV over JSON, field selection, error guards). See [references/token_efficiency.md](references/token_efficiency.md).
 
 Keep body under 500 lines when possible.
 
@@ -181,6 +183,8 @@ Add only what improves repeatability:
 - Decision criterion: **importance and usage frequency first, content size second**. A 50-line block that is critical every time belongs in SKILL.md. A 30-line block only needed for debugging belongs in references.
 
 Avoid duplicating the same guidance in both SKILL.md and references.
+
+For data-heavy skills, use lazy loading: list reference files with brief descriptions and instruct "use READ tool to load when needed" rather than inlining content.
 
 ### Step 7: Validate structure and frontmatter
 
@@ -326,3 +330,4 @@ python3 scripts/package_skill.py ./my-skill --output-dir ./dist
 - For eval and grading JSON formats: [references/eval_schema.md](references/eval_schema.md)
 - For advanced patterns ($ARGUMENTS, dynamic injection, hooks, fork): [references/advanced_patterns.md](references/advanced_patterns.md)
 - For behavior quality grading: [references/skill_grader_prompt.md](references/skill_grader_prompt.md)
+- For token-efficient output patterns: [references/token_efficiency.md](references/token_efficiency.md)

@@ -69,6 +69,10 @@ Complete checklist for building, testing, and releasing a skill. Each phase incl
 - [ ] SKILL.md stays below 500 lines when practical.
 - [ ] `$ARGUMENTS` is used if the skill accepts input.
 - [ ] `` !`command` `` is used for dynamic context where needed.
+- [ ] Command output uses compact format (`@tsv`/`@csv`) instead of raw JSON where applicable.
+- [ ] API calls request only needed fields (where the API supports field selection).
+- [ ] Reference files use lazy loading ("READ when needed") instead of inline content.
+- [ ] jq transforms include error guards (`if .errorMessages then . else <transform> end`).
 
 **Common body pitfalls**:
 
@@ -76,6 +80,8 @@ Complete checklist for building, testing, and releasing a skill. Each phase incl
 - Burying trigger logic in the body instead of the description.
 - Not documenting error recovery (what to do when a step fails).
 - Missing references to supporting files.
+- Using JSON output when TSV/CSV suffices (wastes 60-80% tokens).
+- Inlining all reference content instead of lazy loading with "READ when needed".
 
 ## Phase 5: Validation and Evaluation
 
