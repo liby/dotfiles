@@ -57,10 +57,11 @@
   "model": "claude-opus-4-6",
   "enabledPlugins": {
     "agent-browser@agent-browser": true,
-    "utility-skills@baoyu-skills": true,
     "context7@claude-plugins-official": true,
     "notebooklm-skill@vibe-coding-plugins": true,
-    "planning-with-files@planning-with-files": true
+    "planning-with-files@planning-with-files": true,
+    "skill-codex@skill-codex": true,
+    "utility-skills@baoyu-skills": true
   },
   "extraKnownMarketplaces": {
     "agent-browser": {
@@ -79,6 +80,12 @@
       "source": {
         "source": "github",
         "repo": "OthmanAdi/planning-with-files"
+      }
+    },
+    "skill-codex": {
+      "source": {
+        "source": "github",
+        "repo": "skills-directory/skill-codex"
       }
     },
     "supabase-agent-skills": {
