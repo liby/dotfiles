@@ -28,7 +28,7 @@ For trigger quality testing, continue to Steps 8-10 below.
 ## Core Operating Rules
 
 1. Optimize for user outcomes, not templates.
-2. Keep SKILL.md lean and procedural; move heavy detail to `references/`.
+2. Keep critical, frequently-used information in SKILL.md; move supplementary, rarely-needed details to `references/`. Decide by importance and usage frequency, not content size.
 3. Keep triggering intent in frontmatter `description`; avoid burying trigger logic in the body.
 4. Validate before benchmarking. Benchmark before packaging.
 5. Prefer deterministic scripts for repetitive or fragile steps.
@@ -81,6 +81,34 @@ Decide invocation behavior and safety controls:
            - type: command
              command: "./scripts/lint-check.sh $TOOL_INPUT"
    ```
+
+Common frontmatter combinations by skill shape:
+
+```yaml
+# Reference-heavy knowledge skill
+name: api-conventions
+description: API design patterns for this codebase. Use when ...
+user-invocable: false
+
+# Task workflow skill (side effects, user-only)
+name: deploy-prod
+description: Deploy to production
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+allowed-tools: Bash(npm *), Bash(git *), Read
+
+# Read-only analysis skill
+name: code-analyzer
+description: Analyze code patterns. Use when asking about code quality or architecture.
+allowed-tools: Read, Grep, Glob
+
+# Research skill with isolation
+name: deep-research
+description: Research a topic in the codebase thoroughly. Use when ...
+context: fork
+agent: Explore
+```
 
 ### Step 3: Create folder structure
 
@@ -143,10 +171,16 @@ Keep body under 500 lines when possible.
 Add only what improves repeatability:
 
 1. `scripts/` for deterministic transformations or checks.
-2. `references/` for long-form docs, schemas, edge cases, and advanced patterns.
+2. `references/` for supplementary docs, schemas, edge cases, and advanced patterns.
 3. `assets/` for templates and output resources.
 
-Avoid duplicating the same long guidance in both SKILL.md and references.
+**What stays in SKILL.md vs goes to references/**:
+
+- SKILL.md: core workflow, frequently-used examples, essential configuration patterns, information needed on every execution.
+- references/: detailed field specs, rare edge cases, JSON schemas, grader prompts, content that is only consulted in specific scenarios.
+- Decision criterion: **importance and usage frequency first, content size second**. A 50-line block that is critical every time belongs in SKILL.md. A 30-line block only needed for debugging belongs in references.
+
+Avoid duplicating the same guidance in both SKILL.md and references.
 
 ### Step 7: Validate structure and frontmatter
 

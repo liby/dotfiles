@@ -13,7 +13,7 @@ allowed-tools:
 
 ## Task
 
-Check the diff against the default branch (use !`git symbolic-ref refs/remotes/origin/HEAD` to detect main/master) and remove all AI-generated slop introduced in this branch.
+Check the diff against the default branch (use `git symbolic-ref refs/remotes/origin/HEAD` to detect main/master) and remove all AI-generated slop introduced in this branch.
 
 ## What to remove
 

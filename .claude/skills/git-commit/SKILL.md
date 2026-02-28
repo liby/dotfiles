@@ -18,6 +18,7 @@ Use `dot` instead of `git` when the request mentions "dot" or "dotfiles", or whe
 - When the repo uses Conventional Commits, choose prefix by the **intent** of the change, NOT by the type of files changed
 - Focus on "WHY" rather than "WHAT"
 - Be CONCISE, specific, and ACCURATE to the actual diff
+- When rewriting history (amend, rebase, force push), write the message from the remote's perspective — don't reference intermediate local states that will never be published
 - Present tense verbs
 - Backticks for code references: `` `$variable` ``, `` `someMethod()` ``
 - Reference related commits: `fix bug introduced by [abc123]`

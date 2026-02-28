@@ -20,7 +20,6 @@ Complete checklist for building, testing, and releasing a skill. Each phase incl
 
 - [ ] Choose folder structure (`scripts/`, `references/`, `assets/` as needed).
 - [ ] Keep SKILL.md procedural and compact (under 500 lines).
-- [ ] Move heavy documentation to `references/` (only if 200+ lines of detail exist).
 - [ ] Add deterministic helpers to `scripts/` when repetition exists.
 - [ ] Do NOT create `README.md` inside the skill folder.
 - [ ] Do NOT create `agents/` inside the skill folder.
@@ -34,11 +33,12 @@ Complete checklist for building, testing, and releasing a skill. Each phase incl
 - [ ] Configure `hooks` if lifecycle automation is required.
 - [ ] Add `argument-hint` if the skill accepts arguments.
 
-**When to use progressive disclosure (references/)**:
+**Progressive disclosure — what stays in SKILL.md vs references/**:
 
-- Use references when the reference content exceeds 200 lines.
+- **Stays in SKILL.md**: core workflow steps, frequently-used examples, essential configuration patterns, information needed on every execution.
+- **Goes to references/**: detailed field specs, rare edge cases, JSON schemas, advanced patterns only needed in specific scenarios, grader prompts.
+- Decision criterion: **importance and usage frequency first, content size second**. A short but critical block belongs in SKILL.md; a long but rarely-needed reference belongs in references/.
 - Keep references one level deep (SKILL.md → reference files, not deeper).
-- If all references combined are under 100 lines, consider inlining into SKILL.md.
 
 ## Phase 3: Frontmatter Quality
 
