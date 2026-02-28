@@ -66,6 +66,12 @@ dot config --local status.showUntrackedFiles no
 
 如果不设置的话，执行 `dot status` 命令时会显示大量未跟踪的文件。这是因为 `$HOME` 目录下的文件默认都还没有被 Git 纳入管理，而我们实际上只需要管理特定的配置文件。
 
+此外，仓库根目录下的 `.gitignore` 文件包含通配符 `*`，用于忽略所有未追踪的文件。这可以防止 `dot status -u` 扫描整个 `$HOME` 目录（避免 macOS 隐私权限警告），同时也杜绝了意外追踪文件的可能。因此，添加新文件时需要使用 `-f` 参数强制添加：
+
+```sh
+dot add -f <file>
+```
+
 ### 4. 检出文件
 
 使用以下命令将仓库中的文件检出到你的 `$HOME` 目录：
@@ -101,7 +107,7 @@ dot checkout
 你可以使用以下命令来管理你的 dotfiles：
 
 ```sh
-dot add <file>：添加文件到仓库
+dot add -f <file>：添加新文件到仓库（需要 -f 因为根目录 .gitignore 忽略了所有文件）
 dot commit -m "message"：提交更改
 dot remote add origin <git_url>：配置远程仓库
 dot push -u origin <branch>：推送 commit 到远程仓库，同时将远程仓库与本地的 branch 分支关联
