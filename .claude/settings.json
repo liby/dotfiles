@@ -28,9 +28,9 @@
       "Edit",
       "Glob",
       "Grep",
-      "mcp__ide__getDiagnostics",
-      "mcp__plugin_context7_context7__query-docs",
-      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__ide__*",
+      "mcp__plugin_context-mode_context-mode__*",
+      "mcp__plugin_context7_context7__*",
       "Read",
       "Skill(agent-browser)",
       "Task",
@@ -92,6 +92,7 @@
   },
   "enabledPlugins": {
     "agent-browser@agent-browser": true,
+    "context-mode@claude-context-mode": true,
     "context7@claude-plugins-official": true,
     "notebooklm-skill@vibe-coding-plugins": true,
     "planning-with-files@planning-with-files": true,
@@ -109,6 +110,12 @@
       "source": {
         "source": "github",
         "repo": "JimLiu/baoyu-skills"
+      }
+    },
+    "claude-context-mode": {
+      "source": {
+        "source": "github",
+        "repo": "mksglu/claude-context-mode"
       }
     },
     "planning-with-files": {
