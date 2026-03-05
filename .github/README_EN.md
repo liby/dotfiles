@@ -66,7 +66,7 @@ dot config --local status.showUntrackedFiles no
 
 If this is not set, running `dot status` will list a large number of untracked files because not all files in `$HOME` are tracked by Git, and we don't intend to track all of them, which can make the output cluttered.
 
-Additionally, the `.gitignore` file at the repository root contains a `*` wildcard to ignore all untracked files. This prevents `dot status -u` from scanning the entire `$HOME` directory (avoiding macOS privacy permission warnings) and eliminates the risk of accidentally tracking files. As a result, new files must be force-added:
+Additionally, the bare repo uses `core.excludesFile` pointing to `~/.config/git/dotfiles-ignore` (which contains a `*` wildcard) to ignore all untracked files. This prevents `dot status -u` from scanning the entire `$HOME` directory (avoiding macOS privacy permission warnings) and eliminates the risk of accidentally tracking files. As a result, new files must be force-added:
 
 ```sh
 dot add -f <file>
@@ -107,7 +107,7 @@ dot checkout
 You can use the following commands to manage your dotfiles:
 
 ```sh
-dot add -f <file>: Add new file to the repository (-f required because root .gitignore ignores all files)
+dot add -f <file>: Add new file to the repository (-f required because core.excludesFile ignores all files)
 dot commit -m "message": Commit changes
 dot remote add origin <git_url>: Set up the remote repository
 dot push -u origin <branch>: Push commits to the remote repository and link the remote branch to the local branch

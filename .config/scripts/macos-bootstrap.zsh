@@ -133,12 +133,14 @@ restore_dotfiles() {
       # Decide if you want to force checkout anyway or handle conflicts
       git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout --force
     fi
-    # Ensure origin/HEAD is set (may be missing on older clones)
+    # Ensure excludesFile and origin/HEAD are set (may be missing on older clones)
+    git --git-dir=$HOME/.dotfiles --work-tree=$HOME config --local core.excludesFile ~/.config/git/dotfiles-ignore
     git --git-dir=$HOME/.dotfiles --work-tree=$HOME remote set-head origin main
   else
     echo "Cloning dotfiles..."
     if git clone --bare https://github.com/liby/dotfiles.git $HOME/.dotfiles; then
       git --git-dir=$HOME/.dotfiles --work-tree=$HOME config --local status.showUntrackedFiles no
+      git --git-dir=$HOME/.dotfiles --work-tree=$HOME config --local core.excludesFile ~/.config/git/dotfiles-ignore
       if ! git --git-dir=$HOME/.dotfiles --work-tree=$HOME checkout --force; then
         echo "Error: Failed to checkout dotfiles. Exiting."
         return 1 # Use return 1 instead of exit 1 if called from main script
