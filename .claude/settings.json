@@ -64,6 +64,10 @@
             "type": "command",
             "command": "~/.claude/scripts/guard-secrets.sh",
             "timeout": 5
+          },
+          { 
+            "type": "command",
+            "command": "~/.claude/hooks/rtk-rewrite.sh"
           }
         ]
       }
