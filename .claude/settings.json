@@ -92,11 +92,9 @@
   },
   "enabledPlugins": {
     "agent-browser@agent-browser": true,
-    "context-mode@claude-context-mode": true,
+    "context-mode@context-mode": true,
     "context7@claude-plugins-official": true,
-    "notebooklm-skill@vibe-coding-plugins": true,
-    "skill-codex@skill-codex": true,
-    "utility-skills@baoyu-skills": true
+    "skill-codex@skill-codex": true
   },
   "extraKnownMarketplaces": {
     "agent-browser": {
@@ -105,34 +103,16 @@
         "repo": "vercel-labs/agent-browser"
       }
     },
-    "baoyu-skills": {
+    "context-mode": {
       "source": {
         "source": "github",
-        "repo": "JimLiu/baoyu-skills"
-      }
-    },
-    "claude-context-mode": {
-      "source": {
-        "source": "github",
-        "repo": "mksglu/claude-context-mode"
+        "repo": "mksglu/context-mode"
       }
     },
     "skill-codex": {
       "source": {
         "source": "github",
         "repo": "skills-directory/skill-codex"
-      }
-    },
-    "supabase-agent-skills": {
-      "source": {
-        "source": "github",
-        "repo": "supabase/agent-skills"
-      }
-    },
-    "vibe-coding-plugins": {
-      "source": {
-        "source": "github",
-        "repo": "liby/vibe-coding-plugins"
       }
     }
   },
