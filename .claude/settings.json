@@ -95,7 +95,6 @@
     "context-mode@claude-context-mode": true,
     "context7@claude-plugins-official": true,
     "notebooklm-skill@vibe-coding-plugins": true,
-    "planning-with-files@planning-with-files": true,
     "skill-codex@skill-codex": true,
     "utility-skills@baoyu-skills": true
   },
@@ -116,12 +115,6 @@
       "source": {
         "source": "github",
         "repo": "mksglu/claude-context-mode"
-      }
-    },
-    "planning-with-files": {
-      "source": {
-        "source": "github",
-        "repo": "OthmanAdi/planning-with-files"
       }
     },
     "skill-codex": {
@@ -172,7 +165,7 @@
       "Vibing"
     ]
   },
-  "alwaysThinkingEnabled": true,
   "promptSuggestionEnabled": false,
-  "showTurnDuration": false
+  "showTurnDuration": false,
+  "effortLevel": "high"
 }
