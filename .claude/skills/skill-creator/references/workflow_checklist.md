@@ -94,18 +94,27 @@ Complete checklist for building, testing, and releasing a skill. Each phase incl
 ### Trigger Evaluation
 
 - [ ] Build eval set with 10+ queries (mix of positive and negative).
-- [ ] Run `eval_description.py --runs-per-query 3`.
-- [ ] Generate HTML report: `generate_report.py results.json --open`.
+- [ ] Run `python -m scripts.run_eval --eval-set eval_set.json --skill-path <path> --runs-per-query 3`.
 - [ ] Pass rate meets target (recommended: ≥ 80% for initial, ≥ 90% for release).
-- [ ] If under target, run `run_loop.py` with train/test split.
+- [ ] If under target, run `python -m scripts.run_loop` with train/test split.
 - [ ] Verify test set performance to detect overfitting.
 
-### Behavior Evaluation
+### Behavior Evaluation (Agent-Driven)
 
-- [ ] Run skill on 2-3 representative tasks.
-- [ ] Compare with-skill output against baseline (no-skill) output.
-- [ ] Use grader prompt template for structured scoring.
+- [ ] Spawn with-skill AND baseline runs in parallel for each test case (see SKILL.md Step 1).
+- [ ] Draft quantitative assertions while runs are in progress (Step 2).
+- [ ] Capture timing data from subagent notifications (Step 3).
+- [ ] Grade runs using `agents/grader.md` — save to `grading.json` (Step 4).
+- [ ] Aggregate results: `python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <name>`.
+- [ ] Run analyst pass using `agents/analyzer.md` patterns.
+- [ ] Launch eval viewer: `python eval-viewer/generate_review.py <workspace>/iteration-N --skill-name <name>`.
+- [ ] Collect user feedback via viewer, read `feedback.json` (Step 5).
 - [ ] Verify skill consistently improves over baseline.
+
+### Blind Comparison (Optional)
+
+- [ ] Use `agents/comparator.md` for rigorous A/B testing.
+- [ ] Use `agents/analyzer.md` for post-hoc analysis of comparison results.
 
 **Eval set design tips**:
 

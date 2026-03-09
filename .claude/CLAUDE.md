@@ -49,7 +49,7 @@
 
 ### Sandbox
 
-Use `dangerouslyDisableSandbox: true` for all `git` and `dot` commands — sandbox overrides `TMPDIR` causing "unable to create temp-file", and blocks `$HOME/.dotfiles/` writes and `$HOME/.gnupg` access.
+Use `dangerouslyDisableSandbox: true` for all `git` and `dot` commands. Sandbox overrides `TMPDIR`, causing commands like `diff`, `add`, `commit`, `checkout`, `switch` to fail with "unable to create temp-file". It also blocks `$HOME/.dotfiles/` writes and `$HOME/.gnupg` access for GPG signing.
 
 ### File Reading
 
