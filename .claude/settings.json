@@ -46,8 +46,6 @@
       "Read(**/*.key)",
       "Read(**/*.pem)",
       "Read(~/.aws/**)",
-      "WebFetch(*.github.com/**)",
-      "WebFetch(github.com/**)",
       "Write(~/.gnupg/**)",
       "Write(~/.ssh/**)"
     ],
@@ -121,6 +119,12 @@
         "source": "github",
         "repo": "supabase/agent-skills"
       }
+    },
+    "vibe-coding-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "liby/vibe-coding-plugins"
+      }
     }
   },
   "sandbox": {
@@ -140,9 +144,7 @@
     },
     "excludedCommands": [
       "docker",
-      "docker-compose",
-      "dot",
-      "git"
+      "docker-compose"
     ]
   },
   "spinnerTipsEnabled": false,
@@ -152,7 +154,7 @@
       "Vibing"
     ]
   },
+  "effortLevel": "high",
   "promptSuggestionEnabled": false,
-  "showTurnDuration": false,
-  "effortLevel": "high"
+  "showTurnDuration": false
 }

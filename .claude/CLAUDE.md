@@ -50,7 +50,10 @@
 
 ### Sandbox
 
-Use `dangerouslyDisableSandbox: true` for all `git` and `dot` commands. Sandbox overrides `TMPDIR`, causing commands like `diff`, `add`, `commit`, `checkout`, `switch` to fail with "unable to create temp-file". It also blocks `$HOME/.dotfiles/` writes and `$HOME/.gnupg` access for GPG signing.
+Use `dangerouslyDisableSandbox: true` for the following commands:
+
+- `git`, `dot` — Sandbox overrides `TMPDIR`, causing commands like `diff`, `add`, `commit`, `checkout`, `switch` to fail with "unable to create temp-file". It also blocks `$HOME/.dotfiles/` writes and `$HOME/.gnupg` access for GPG signing.
+- `gh` — Sandbox blocks Mach IPC to `com.apple.trustd.agent`, preventing Go's TLS certificate verification on macOS (`x509: OSStatus -26276`).
 
 ### File Reading
 
