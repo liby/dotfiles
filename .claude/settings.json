@@ -17,8 +17,7 @@
     "ENABLE_BACKGROUND_TASKS": "1",
     "ENABLE_LSP_TOOL": "1",
     "FORCE_AUTO_BACKGROUND_TASKS": "1",
-    "FORCE_AUTOUPDATE_PLUGINS": "1",
-    "IS_DEMO": "1"
+    "FORCE_AUTOUPDATE_PLUGINS": "1"
   },
   "attribution": {
     "commit": "",
