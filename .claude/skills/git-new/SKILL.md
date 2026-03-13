@@ -2,6 +2,7 @@
 name: git-new
 description: Create a new git branch with proper prefix and naming conventions. Use when the user says "new branch", "/git-new", or asks to create a branch.
 argument-hint: "ticketNumber [context] | [additional context]"
+version: 0.1.0
 disable-model-invocation: true
 allowed-tools:
   - Bash(git:*)

@@ -1,11 +1,12 @@
 ---
 name: skill-creator
-description: Create, improve, and evaluate Claude Code skills end-to-end. Use whenever the user mentions creating a skill, rewriting SKILL.md, frontmatter fields, slash-command behavior, trigger quality (under-triggering or over-triggering), adding scripts/references/assets for a skill, validating skill structure, benchmarking skill behavior, packaging a .skill artifact, or optimizing a skill description for better triggering accuracy.
+description: Create and improve Claude Code skills. Use when user says "/skill-creator" or asks to create, evaluate, or optimize a skill.
+version: 3.0.0
+disable-model-invocation: true
 argument-hint: "[skill-name or path]"
 compatibility: Python 3.9+, anthropic SDK, claude CLI on PATH. Unix/macOS.
 metadata:
   author: "Bryan"
-  version: "3.0.0"
   category: "developer-tooling"
 ---
 

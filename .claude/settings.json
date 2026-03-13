@@ -47,6 +47,8 @@
       "Read(**/*.key)",
       "Read(**/*.pem)",
       "Read(~/.aws/**)",
+      "WebFetch(*.github.com/**)",
+      "WebFetch(github.com/**)",
       "Write(~/.gnupg/**)",
       "Write(~/.ssh/**)"
     ],
@@ -68,7 +70,8 @@
           },
           {
             "type": "command",
-            "command": "~/.claude/hooks/rtk-rewrite.sh"
+            "command": "~/.claude/hooks/rtk-rewrite.sh",
+            "timeout": 10
           }
         ]
       }
@@ -79,7 +82,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/scripts/sync-skills-symlink.sh"
+            "command": "~/.claude/scripts/sync-skills-symlink.sh",
+            "timeout": 5
           }
         ]
       },
@@ -98,9 +102,7 @@
   "enabledPlugins": {
     "agent-browser@agent-browser": true,
     "context-mode@context-mode": true,
-    "context7@claude-plugins-official": true,
-    "skill-codex@skill-codex": true,
-    "utility-skills@baoyu-skills": true
+    "context7@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "agent-browser": {
@@ -109,23 +111,10 @@
         "repo": "vercel-labs/agent-browser"
       }
     },
-    "baoyu-skills": {
-      "source": {
-        "source": "github",
-        "repo": "jimliu/baoyu-skills"
-      },
-      "autoUpdate": true
-    },
     "context-mode": {
       "source": {
         "source": "github",
         "repo": "mksglu/context-mode"
-      }
-    },
-    "skill-codex": {
-      "source": {
-        "source": "github",
-        "repo": "skills-directory/skill-codex"
       }
     },
     "supabase-agent-skills": {

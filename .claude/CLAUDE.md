@@ -18,10 +18,9 @@
 - ALWAYS search documentation and existing solutions first (WebSearch, context7)
 - Read template files, adjacent files, and surrounding code to understand existing patterns
 - Learn code logic from related tests
-- Maximize aesthetic and interaction design for frontend UI
 - Review implementation after multiple modifications to same code block
-- Update local documentation (PRD, todo list) to maintain consistency with our conversation
-- After 3+ failed attempts, add debug logging and request runtime logs
+- Keep project docs (PRD, todo, changelog) consistent with actual changes when they exist
+- After 3+ failed attempts, add debug logging and ask the user for runtime logs
 
 ### Code Comments
 
@@ -32,6 +31,7 @@
 
 - NEVER run dev/build commands or add tests unless explicitly requested
 - NEVER open browsers directly; use the agent-browser skill instead
+- NEVER add time estimates to plans (e.g. "Phase 1 (3 days)", "Phase 2 (1 week)") — just write the code
 
 ## Tool Preferences
 
@@ -54,9 +54,7 @@ Use `dangerouslyDisableSandbox: true` for all `git` and `dot` commands. Sandbox 
 
 ### File Reading
 
-Getting sufficient context is more important than token efficiency.
-
-- Read multiple files in parallel to improve speed 
+- Read multiple files in parallel to improve speed
 - ALWAYS read entire file when: user provides path, first time reading, file under 500 lines, user sends partial snippets
 
 ## Output Style

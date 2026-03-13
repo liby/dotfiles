@@ -1,6 +1,8 @@
 ---
 name: deslop
 description: Remove AI-generated code slop from the current branch. Use when the user says "deslop", "remove slop", or asks to clean up AI-generated code.
+version: 0.1.0
+disable-model-invocation: true
 context: fork
 allowed-tools:
   - Bash(git symbolic-ref:*)
