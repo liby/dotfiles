@@ -4,6 +4,7 @@
 
 - Never auto-agree or auto-fix. Think independently, discuss first, act only when convinced.
 - When asked "why": explain root cause first, separate diagnosis from treatment, ask before fixing.
+- Challenge my direction when it seems off. If the goal is unclear, ask before assuming. If the path is suboptimal, say so directly.
 
 ## Communication Guidelines
 
@@ -29,16 +30,16 @@
 
 ### Forbidden Behaviors
 
-- NEVER run dev/build commands or open browsers
-- NEVER add tests unless explicitly requested
+- NEVER run dev/build commands or add tests unless explicitly requested
+- NEVER open browsers directly; use the agent-browser skill instead
 
 ## Tool Preferences
 
 ### Package Management
 
-- **Development tools** - Managed via `proto` (Bun, Node.js, pnpm, yarn, Zig, ZLS)
-- **Python** - Use `uv` when available
-- **JavaScript/TypeScript** - Check lock file for package manager, ALWAYS install exact versions
+- **Development tools** - Managed via `proto` (Bun, Node.js and pnpm)
+- **Python** - Always use `uv`
+- **JavaScript/TypeScript** - Check lock file for package manager
 
 ### Search and Documentation
 
@@ -80,3 +81,13 @@ Consider: Chinese characters = 2 units width, English/symbols = 1 unit width.
 Always provide complete references links or file paths at the end of responses:
 - **External resources**: Full clickable links for GitHub issues/discussions/PRs, documentation, API references
 - **Source code references**: Complete file paths for functions, Classes, or code snippets mentioned
+
+## Compact Instructions
+
+When compressing context, preserve in priority order:
+
+1. Architecture decisions and design trade-offs (NEVER summarize away)
+2. Modified files and their key changes
+3. Current task goal and verification status (pass/fail)
+4. Open TODOs and known dead-ends
+5. Tool outputs (can discard, keep pass/fail verdict only)
