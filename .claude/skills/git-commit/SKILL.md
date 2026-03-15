@@ -16,6 +16,7 @@ Use `dot` instead of `git` when the request mentions "dot" or "dotfiles", or whe
 ## Commit message rules
 
 - Match the repository's existing format (prefix, emoji, tense) from recent commits
+- Gitmoji repos: select emoji by **intent** (gitmoji.dev), not by copying past commits
 - When the repo uses Conventional Commits, choose prefix by the **intent** of the change, NOT by the type of files changed
 - Focus on "WHY" rather than "WHAT"
 - Be CONCISE, specific, and ACCURATE to the actual diff
