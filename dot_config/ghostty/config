@@ -1,0 +1,24 @@
+auto-update = check
+auto-update-channel = tip
+
+cursor-style = block
+cursor-style-blink = false
+
+font-codepoint-map = "U+27F3=STIX Two Math"
+font-family = "Inconsolata LGC Nerd Font Mono"
+font-family = "PingFang SC"
+font-size = 12
+
+keybind = ctrl+alt+i=inspector:toggle
+keybind = super+u=text:\x1f
+keybind = super+z=text:\x1a
+
+macos-option-as-alt = true
+
+shell-integration = zsh
+shell-integration-features = no-cursor
+
+theme = "Snazzy Soft"
+
+window-padding-x = 8
+window-padding-y = 8

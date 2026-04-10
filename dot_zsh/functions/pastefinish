@@ -1,0 +1,1 @@
+zle -N self-insert $OLD_SELF_INSERT

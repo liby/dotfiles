@@ -1,0 +1,103 @@
+[user]
+  email = 38807139+liby@users.noreply.github.com
+  name = Bryan Lee
+
+[alias]
+  st = status
+
+  ### amend ###
+  aa = "!git add -A && git commit --amend --no-edit"
+  as = commit --amend --no-edit
+
+  ### diff ###
+  df = "-c diff.external=difft diff"
+  dh = "-c diff.external=difft diff HEAD"
+
+  ### log ###
+  lg = log --graph --abbrev-commit --date=short --boundary --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %Cblue[%cn]%Creset'
+
+  ### push ###
+  pf = push --force-with-lease
+
+  ### rebase ###
+  fix = "!f() { git add -A && git commit --fixup $1 && GIT_SEQUENCE_EDITOR=true git rebase -i $1^; }; f"
+  rb = rebase
+  rba = rebase --abort
+  rbc = rebase --continue
+  rbs = rebase --skip
+
+  ### sync ###
+  base = !git fetch origin && git reset --hard origin/HEAD
+  sync = !git fetch origin && git reset --hard @{u}
+
+  ### tag ###
+  lt = describe --tags --abbrev=0
+
+[branch]
+  autosetuprebase = always
+  sort = -committerdate
+
+[column]
+  ui = auto
+
+[core]
+  attributesFile = ~/.config/git/attributes
+  autocrlf = input
+  editor = vim
+  quotepath = false
+
+[credential "https://gist.github.com"]
+  helper =
+  helper = !gh auth git-credential
+
+[credential "https://github.com"]
+  helper =
+  helper = !gh auth git-credential
+
+[diff]
+  algorithm = histogram
+  colorMoved = plain
+
+[fetch]
+  prune = true
+  pruneTags = true
+
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  process = git-lfs filter-process
+  required = true
+  smudge = git-lfs smudge -- %f
+
+[filter "prototools"]
+  clean = ~/.config/git/prototools.filter
+  required = true
+  smudge = cat
+
+[help]
+  autocorrect = prompt
+
+[merge]
+  conflictStyle = zdiff3
+
+[pull]
+  rebase = true
+
+[push]
+  autoSetupRemote = true
+
+[rebase]
+  autosquash = true
+  autostash = true
+  updateRefs = true
+
+[rerere]
+  enabled = true
+
+[includeIf "gitdir:~/Code/GitHub/"]
+  path = github.config
+
+[includeIf "gitdir:~/Code/GitLab/"]
+  path = gitlab.config
+
+[includeIf "gitdir:~/Code/"]
+  path = performance.config

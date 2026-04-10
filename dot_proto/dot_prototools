@@ -1,0 +1,13 @@
+bun = "latest"
+node = "lts"
+npm = "bundled"
+pnpm = "latest"
+
+[tools.node]
+bundled-npm = true
+
+[tools.npm]
+shared-globals-dir = true
+
+[settings]
+auto-install = true

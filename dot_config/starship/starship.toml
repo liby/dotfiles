@@ -1,0 +1,57 @@
+# Inserts a blank line between shell prompts
+add_newline = true
+command_timeout = 3600
+
+[git_commit]
+format = "[\\[$hash$tag\\]]($style)"
+
+[git_state]
+format = "\\[[$state( $progress_current/$progress_total)]($style)\\]"
+
+[git_status]
+format = "([\\[$all_status$ahead_behind\\]]($style))"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+
+[bun]
+format = '\[[$symbol($version)]($style)\]'
+
+[cmd_duration]
+format = '\[[⏱ $duration]($style)\]'
+
+[deno]
+format = '\[[$symbol($version)]($style)\]'
+
+[docker_context]
+format = '\[[$symbol($context)]($style)\]'
+
+[git_branch]
+format = '\[[$symbol$branch]($style)\]'
+symbol = "󰘬·"
+
+[memory_usage]
+disabled = false
+format = '\[$symbol[$ram( | $swap)]($style)\]'
+style = "bold dimmed purple"
+symbol = "󰆼 "
+
+[nodejs]
+format = '\[[$symbol($version)]($style)\]'
+symbol = "󰎙 "
+
+[package]
+format = '\[[$symbol$version]($style)\]'
+
+[python]
+format = '\[[${symbol}${pyenv_prefix}(${version})(\($virtualenv\))]($style)\]'
+symbol = "󰌠 "
+
+[ruby]
+format = '\[[$symbol($version)]($style)\]'
+
+[rust]
+format = '\[[$symbol($version)]($style)\]'
+
+[zig]
+format = '\[[$symbol($version)]($style)\]'

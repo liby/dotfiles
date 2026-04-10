@@ -1,0 +1,35 @@
+## https://github.com/jessfraz/dotfiles/blob/master/.bashrc#L113C1-L130C1
+## Start the gpg-agent if not already running
+if ! pgrep -x -u "${USER}" gpg-agent >/dev/null 2>&1; then
+  if ! gpg-connect-agent /bye >/dev/null 2>&1; then
+    echo "Failed to start gpg-agent" >&2
+    return 1
+  fi
+fi
+
+## Update the TTY for gpg-agent
+if ! gpg-connect-agent updatestartuptty /bye >/dev/null; then
+  echo "Failed to update GPG TTY" >&2
+  return 1
+fi
+
+## Use the current terminal for GPG to avoid "Inappropriate ioctl for device" error
+export GPG_TTY=$(tty)
+
+## Set SSH to use gpg-agent
+unset SSH_AGENT_PID
+
+## Check if the SSH_AUTH_SOCK needs to be set to gpg-agent's socket
+if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
+  if [[ -z "$SSH_AUTH_SOCK" || "$SSH_AUTH_SOCK" == *"apple.launchd"* ]]; then
+    local socket_path="$(gpgconf --list-dirs agent-ssh-socket)"
+    if [[ -S "$socket_path" ]]; then
+      export SSH_AUTH_SOCK="$socket_path"
+    else
+      echo "GPG SSH socket not found" >&2
+      return 1
+    fi
+  fi
+fi
+
+return 0

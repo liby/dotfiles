@@ -1,0 +1,32 @@
+#!/bin/zsh
+set -euo pipefail
+
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+
+[[ "$OSTYPE" == darwin* ]] || exit 0
+
+if [[ "$(uname -m)" == "arm64" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+brewfile="{{ .chezmoi.sourceDir }}/Brewfile"
+if [[ ! -f "$brewfile" ]]; then
+  echo "No Brewfile found at $brewfile"
+  exit 1
+fi
+
+# mas-cli requires en_US locale to search the App Store
+# https://github.com/mas-cli/mas/blob/ed676787f0a0a26e23a10548eb841bc15411fa52/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L23
+current_locale=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null || true)
+if [[ -n "$current_locale" ]]; then
+  defaults write NSGlobalDomain AppleLocale -string en_US
+fi
+
+echo "Installing brew packages..."
+brew bundle --file="$brewfile" || true
+
+if [[ -n "$current_locale" ]]; then
+  defaults write NSGlobalDomain AppleLocale -string "$current_locale"
+fi
