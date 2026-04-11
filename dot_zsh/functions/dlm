@@ -1,65 +1,116 @@
-local red=$'\e[1;31m'
-local green=$'\e[1;32m'
-local yellow=$'\e[1;33m'
-local blue=$'\e[1;34m'
-local reset=$'\e[0m'
+# dlm — list (and optionally delete) cleanup-ready local branches.
+#
+# Usage:
+#   dlm                    list cleanup candidates (fetches first)
+#   dlm --apply            delete branches that are both merged AND gone
+#   dlm --stale-days N     stale threshold (default: 90)
+#   dlm --base <ref>       override base (default: origin/HEAD)
+#
+# Always runs `git fetch --prune` on base's remote so `gone` reflects
+# current server state, not stale local cache.
+#
+# Classification (a branch can carry more than one label):
+#   merged  reachable from base
+#   gone    upstream ref deleted on remote (`[gone]` in upstream track)
+#   stale   last commit older than --stale-days
+#
+# --apply only deletes branches that are BOTH merged and gone — i.e. the
+# PR landed and the server already removed the branch. Merged-only,
+# gone-only, and stale are advisories: listed, never auto-deleted, because
+# they can be active work (long-lived release branches, forks, local-only
+# scratch) that happens to share a commit with base.
 
-echo "${blue}Fetching latest changes and identifying branches...${reset}"
+emulate -L zsh
 
-local max_retries=3
-local retry_count=0
-local fetch_success=false
-
-while (( retry_count < max_retries )) && ! $fetch_success; do
-  if git fetch --quiet --all && git remote prune origin; then
-    fetch_success=true
-  else
-    ((retry_count++))
-    echo "${yellow}Fetch failed. Retrying... (Attempt $retry_count of $max_retries)${reset}"
-    sleep 2
-  fi
+local apply=0 stale_days=90 base_override=""
+while (( $# )); do
+  case $1 in
+    --apply|-a) apply=1 ;;
+    --stale-days)
+      (( $# >= 2 )) || { print -u2 "dlm: --stale-days needs a value"; return 2 }
+      stale_days=$2; shift ;;
+    --base)
+      (( $# >= 2 )) || { print -u2 "dlm: --base needs a value"; return 2 }
+      base_override=$2; shift ;;
+    --help|-h)
+      print "Usage: dlm [--apply] [--stale-days N] [--base <ref>]"
+      return 0 ;;
+    *)
+      print -u2 "dlm: unknown option: $1"; return 2 ;;
+  esac
+  shift
 done
 
-if ! $fetch_success; then
-  echo "${red}Failed to fetch after $max_retries attempts. Please check your network connection and try again.${reset}"
-  return 1
-fi
+[[ $stale_days == <-> ]] || { print -u2 "dlm: --stale-days must be integer"; return 2 }
 
-local remote_branches=$(git ls-remote --heads origin | awk '{print $2}' | sed 's|refs/heads/||')
+local base=${base_override:-$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)}
+[[ -n $base ]] || { print -u2 "dlm: no base — set origin/HEAD or pass --base"; return 1 }
 
-local branches=($(git for-each-ref --format '%(refname:short)' refs/heads |
-  grep -vE '^(master|main|develop)$' |
-  while read -r branch; do
-    if ! echo "$remote_branches" | grep -q "^$branch$"; then
-      echo "$branch"
+# Only fetch the remote backing `base`. Unrelated remotes (fork upstream,
+# offline mirrors) shouldn't block local cleanup. Local base → default to origin.
+local base_remote=origin
+[[ $base == */* ]] && base_remote=${base%%/*}
+git fetch --quiet --prune $base_remote || { print -u2 "dlm: fetch $base_remote failed"; return 1 }
+
+local -A protected=(main 1 master 1 develop 1)
+protected[${base##*/}]=1
+
+local -A merged_set
+local line
+while IFS= read -r line; do
+  [[ -n $line ]] && merged_set[$line]=1
+done < <(git branch --merged=$base --format='%(refname:short)')
+
+# \x1f (Unit Separator) is safe as a field delimiter: git check-ref-format
+# forbids control chars in refnames, so it can never collide with a branch.
+# %(worktreepath) is non-empty when the branch is checked out in any worktree
+# (including the main one), which covers both HEAD and linked worktrees.
+local sep=$'\x1f'
+local fmt="%(refname:short)${sep}%(upstream:track)${sep}%(committerdate:unix)${sep}%(worktreepath)"
+local now=$(date +%s) stale_threshold=$(( now - stale_days * 86400 ))
+local -a out_branches out_labels out_ages
+local branch track cdate wtpath labels
+while IFS=$sep read -r branch track cdate wtpath; do
+  [[ -n ${protected[$branch]-} || -n $wtpath ]] && continue
+  labels=""
+  (( ${+merged_set[$branch]} )) && labels+=m
+  [[ $track == *"[gone]"* ]] && labels+=g
+  (( cdate < stale_threshold )) && labels+=s
+  [[ -n $labels ]] || continue
+  out_branches+=($branch)
+  out_labels+=($labels)
+  out_ages+=( $(( (now - cdate) / 86400 )) )
+done < <(git for-each-ref --sort=committerdate --format=$fmt refs/heads)
+
+local total=${#out_branches}
+print "# $total candidates  base=$base"
+(( total == 0 )) && return 0
+local i label_str
+for (( i = 1; i <= total; i++ )); do
+  label_str=""
+  [[ $out_labels[i] == *m* ]] && label_str+="merged "
+  [[ $out_labels[i] == *g* ]] && label_str+="gone "
+  [[ $out_labels[i] == *s* ]] && label_str+="stale "
+  printf '%-20s %4s  %s\n' "${label_str% }" "${out_ages[i]}d" $out_branches[i]
+done
+
+if (( apply )); then
+  print
+  print "# applying (merged+gone only)..."
+  local deleted=0 failed=0 skipped=0 reason
+  for (( i = 1; i <= total; i++ )); do
+    if [[ $out_labels[i] != *m* || $out_labels[i] != *g* ]]; then
+      (( skipped++ ))
+      continue
     fi
-  done))
-
-if (( ${#branches[@]} == 0 )); then
-  echo "${green}No local branches to delete.${reset}"
-  return
+    if reason=$(git branch -D $out_branches[i] 2>&1); then
+      print "deleted: $out_branches[i]"
+      (( deleted++ ))
+    else
+      print "failed:  $out_branches[i]  (${reason##*: })"
+      (( failed++ ))
+    fi
+  done
+  print "# done: $deleted deleted, $failed failed, $skipped skipped"
+  (( failed == 0 )) || return 1
 fi
-
-echo "\n${yellow}The following local branches are not present in remote:${reset}"
-printf "%s\n" "${branches[@]}"
-
-echo "\n${blue}Do you want to delete these branches? [Y/n]${reset}"
-read -q response || return
-
-echo
-
-local deleted=0
-local failed=0
-
-for branch in "${branches[@]}"; do
-  if git branch -D "$branch" &>/dev/null; then
-    echo "${green}Deleted: $branch${reset}"
-    ((deleted++))
-  else
-    echo "${red}Failed to delete: $branch${reset}"
-    ((failed++))
-  fi
-done
-echo "\n${green}Operation complete.${reset}"
-echo "Branches deleted: ${deleted}"
-[[ $failed -gt 0 ]] && echo "${red}Branches failed to delete: ${failed}${reset}"
