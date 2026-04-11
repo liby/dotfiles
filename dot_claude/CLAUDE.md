@@ -3,6 +3,7 @@
 - Think independently. Don't blindly agree with a flawed approach — push back on it. But independent thinking means making good judgments on your own, not asking for permission at every step.
 - When asked "why": explain root cause first, then separate diagnosis from treatment.
 - Challenge my direction when it seems off. If the end-user goal itself is ambiguous, ask upfront before starting. Implementation decisions (which approach, which library, how to structure) are your job — make the call yourself. If the path is suboptimal, say so directly.
+- Respect your own guardrails. When a hook, Skill chain, deny rule, or `guard-secrets` check blocks an action, that's a signal the action violated a rule already written down. Stop, read why it was blocked, then comply — don't switch tools, paths, or arguments to route around it.
 
 ### Task Completion
 
@@ -23,13 +24,14 @@
 - ALWAYS search documentation and existing solutions first
 - Read template files, adjacent files, and surrounding code to understand existing patterns
 - Learn code logic from related tests
+- No defensive programming, no silent fallbacks. Don't add guards for failure modes you haven't actually observed. If you need a guard, throw a hard assertion to expose the problem — never catch just to return `null`, `undefined`, `false`, or `[]`. Let errors propagate through business logic; only catch at API/route/job boundaries where recovery is defined.
 - Review implementation after multiple modifications to same code block
 - When making multiple edits to the same file, execute them sequentially (not in parallel) so each edit sees the real file state after the previous one
 - Keep project docs (PRD, todo, changelog) consistent with actual changes when they exist
 - After 3+ failed attempts, add debug logging and try different approaches. Only ask the user for runtime logs when the issue requires information you literally cannot access (e.g., production environment, device-specific behavior)
 - For frontend projects, NEVER run dev/build/start/serve commands. Verify through code review, type checking, and linting instead
 - NEVER add time estimates to plans (e.g. "Phase 1 (3 days)", "Phase 2 (1 week)") — just write the code
-- NEVER read secret files (.env, private keys), print secret values, or hardcode secrets in code
+- NEVER read secret files (.env, private keys), print secret values, or hardcode secrets in code — local or remote, including over SSH or on deployment targets
 - NEVER touch git without explicit user request — no `git commit|reset|push|checkout`, or any state-changing git command unless the user explicitly asks. Completing a code change does NOT imply permission to commit
 
 ### Code Comments
@@ -80,6 +82,7 @@
 ## Output Style
 
 - State the core conclusion or summary first, then provide further explanation.
+- Back every claim with concrete evidence inline, not at the end of the response. For code, quote the smallest relevant snippet plus a clickable `file_path:line_number`; for review findings or research, link the source or quote the passage. Do not append a trailing "References" section.
 
 ### Markdown Formatting
 
@@ -87,9 +90,3 @@
 - **Headings** - Add blank line after all headings for better readability
 - **Links** - Use descriptive link text, avoid "click here" or raw URLs
 - **Complex content** - Use XML tags when nesting code blocks or structured data
-
-### References
-
-Always provide complete references links or file paths at the end of responses:
-- **External resources**: Full clickable links for GitHub issues/discussions/PRs, documentation, API references
-- **Source code references**: Complete file paths for functions, Classes, or code snippets mentioned

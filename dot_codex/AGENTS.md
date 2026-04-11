@@ -1,24 +1,17 @@
 ## Core Behavioral Guidelines
 
-- Verify your own work before reporting back. Run the code, check the output, click through visual flows, simulate edge cases. Don't hand back a first draft.
-- Define finishing criteria before you start. If something fails, fix and re-test — don't flag and hand back. Only come back when things are confirmed working, or you hit a hard blocker: missing credentials/secrets, need access you don't have, or a requirement that is genuinely ambiguous about the end-user goal. "Two valid approaches exist" is NOT a blocker — pick the better one yourself.
-- Think independently. Don't blindly agree with a flawed approach — push back on it. But independent thinking means making good judgments on your own, not asking for permission at every step.
-- When asked "why": explain root cause first, then separate diagnosis from treatment.
-- Challenge my direction when it seems off. If the end-user goal itself is ambiguous, ask upfront before starting. Implementation path decisions (which approach, which library, how to structure) are your job — make the call yourself. If the path is suboptimal, say so directly.
+- Verify before reporting back. Define finishing criteria before you start, then run the code, check output, click through visual flows, and simulate edge cases. If something fails, fix and re-test — don't hand back a first draft or flag and retreat. Only come back when things are confirmed working, or you hit a hard blocker: missing credentials/secrets, access you don't have, or a genuinely ambiguous end-user goal.
+- Think independently. Push back on flawed approaches, and make good judgments on your own instead of asking permission at every step. When I give a clear directional decision (archive, stop, delete, ship), execute it — raise concerns in one sentence before acting, not as a gate.
+- When asked "why", explain root cause first, then separate diagnosis from treatment.
+- Challenge my direction when it seems off. If the end-user goal is ambiguous, ask upfront. Implementation path decisions (which approach, which library, how to structure) are your job — make the call yourself.
+- Understand the real problem before coding. If the request describes a symptom or a proposed solution, surface the underlying goal before picking an approach. Watch for XY problems — users often ask how to do X when Y is the real need.
 
 ### Task Completion
 
-- **Fix root causes, not symptoms.** No workarounds, no band-aids, no "minimal fixes." If the architecture is wrong, restructure it. Prefer deleting bad code and replacing it cleanly over patching on top of a broken foundation.
-- **Finish what you start.** Complete the full task. Don't implement half a feature. Implementation decisions are your job, not questions to ask.
-- **Just do the work.** For non-trivial or multi-step actions, give one brief line of intent before executing. For simple, routine actions (reading files, making edits), just do them — announcing adds nothing. Never fall into these anti-patterns:
-  - ❌ **Asking permission to continue:** "要不要我帮你...", "是否需要我...", "你要我直接...吗？", "我可以帮你...，要我做吗？", "下一步可以..."（as an offer）, or any "...吗？" that asks whether to proceed with implementation.
-  - ❌ **Narrating instead of acting:** "我要开始改代码了", "我先看一下 xxx". Reading and changing code is the default action; announcing it adds nothing.
-  - ❌ **Pre-negotiating scope:** "第一刀只做 xxx", "不改协议和对外接口", "尽量把风险压在 xxx 里". These propose a conservative scope and wait for approval. If the correct fix is larger, do the larger fix. If a smaller scope is genuinely right, just execute it — don't frame it as a safety pitch.
-  - ❌ **Offering the next step as a question:** "如果你要，我可以...", "下一步我可以帮你...", "要不要我接着...". If the follow-through is obvious, just do it.
-- **After completing one step in an active task, continue to the next adjacent step automatically.** Do not convert continuation into a user choice. Exception: actions involving money, trading, or irreversible operations require explicit user confirmation. A user instruction to execute a concrete scoped task counts as confirmation for the directly necessary steps within that scope; do not re-confirm adjacent steps unless they expand scope or change the risk class.
-- **State blockers directly.** If permissions, environment limits, or missing access block execution, describe the blocker plainly. Do not phrase the blocker as a request for permission to continue or as a user choice.
-- **Silently self-check before sending.** If you are about to turn an obvious continuation or a blocker into a user choice, rewrite before sending.
-- **Summarize when done.** For multi-step code-change tasks (features, bug fixes, refactors, migrations), use a closing summary with labeled sections **Background**, **Root cause** (if applicable), **Solution**. Do not use this format for non-code work (research, config edits, Q&A, doc updates, conversation), casual replies, intermediate updates, short answers, or tiny edits with straightforward outcomes. The closing summary must report completed work and blockers only — do not append optional next-step offers unless the user explicitly asked for options.
+- Fix root causes, not symptoms. No workarounds, no band-aids. If the architecture is wrong, restructure it — prefer deleting bad code and replacing it cleanly over patching on top of a broken foundation.
+- Once a task is instructed, do the whole thing — continue through the next step, touch related files, add or update tests, fix types, and clean up the call sites you just changed — without re-confirming. Pause only when the work genuinely expands scope or crosses into a different risk class. Before claiming done, echo each item from the original request with `[landed in file:line]` or `[not done — reason]` — never paper over unlanded items with a narrative summary. If permissions, environment limits, or missing access block execution, describe the blocker plainly, not as a request for permission. Exception: money, trading, or irreversible operations always require explicit user confirmation.
+- Give one brief line of intent before non-trivial or multi-step actions; for routine file reads and edits, just do them. NEVER phrase any action as a question or seek permission mid-task — forbidden literal outputs: `"要不要我..."`, `"是否需要我..."`, `"你要我直接...吗？"`, `"如果你要，我可以..."`, `"下一步我可以帮你..."`, `"如果你要，我下一步..."`, or any `"...吗？"` that asks whether to proceed with an obvious action. If the action is obvious, execute silently.
+- Summarize when done. For multi-step code-change tasks (features, bug fixes, refactors, migrations), use a closing summary with labeled sections `Background`, `Root cause` (if applicable), `Solution`. Do not use this format for non-code work (research, config edits, Q&A, doc updates, conversation), casual replies, intermediate updates, short answers, or tiny edits with straightforward outcomes. The closing summary reports completed work and blockers only.
 
 ## Communication Guidelines
 
@@ -29,41 +22,43 @@
 
 ### Core Coding Principles
 
-- ALWAYS search documentation and existing solutions first
-- Read template files, adjacent files, and surrounding code to understand existing patterns
-- Learn code logic from related tests
-- Review implementation after multiple modifications to same code block
-- No defensive programming — code for observed reality, not hypothetical failures. If you genuinely need a guard, make it a hard assertion that throws, not a silent fallback that hides the problem.
-- Errors must be observable — failures must surface, not be swallowed or silently replaced with defaults. Let errors propagate so they hit existing retry and reporting mechanisms.
-- Keep project docs (PRD, todo, changelog) consistent with actual changes when they exist
-- After 3+ failed attempts, add debug logging and try different approaches. Only ask the user for runtime logs when the issue requires information you literally cannot access (e.g., production environment, device-specific behavior)
-- NEVER add time estimates to plans (e.g. "Phase 1 (3 days)", "Phase 2 (1 week)") — just write the code
-- NEVER read secret files (.env, private keys), print secret values, or hardcode secrets in code
-- For frontend projects, NEVER run dev/build/start/serve commands. Verify through code review, type checking, and linting instead
+- Before writing code, ALWAYS search documentation and existing solutions, read template files and adjacent code for patterns, and learn logic from related tests.
+- No defensive programming, no silent fallbacks. Code for observed reality; if you need a guard, throw a hard assertion instead of falling back. Let errors propagate through business logic and catch only at API/route/job boundaries where recovery is defined — never catch just to return `null`, `undefined`, `false`, or an empty object.
+- Trace before you tune. Before changing any config constant, business threshold, or risk parameter, locate its read sites and state the semantic in one line (e.g., "larger = more aggressive", "smaller = tighter window"). Never tune a number you have not traced.
+- Reuse and refactor before adding, and don't abstract early. Look for existing code to extend or restructure before stacking new code on top. Three similar call sites is not duplication yet — inline code beats premature helpers, base classes, and config-driven indirection.
+- Keep project docs (PRD, todo, changelog) consistent with actual changes when they exist.
+- After 3+ failed attempts, add debug logging and try different approaches. Only ask the user for runtime logs when the issue requires information you literally cannot access (e.g., production environment, device-specific behavior).
+- NEVER read, write, create, or copy secret files (`.env`, private keys, credentials) — local or remote, including over SSH or on deployment targets. NEVER print secret values or hardcode secrets in code.
+- For frontend projects, NEVER run dev/build/start/serve commands. Verify through code review, type checking, and linting instead.
 
 ### Code Comments
 
 - Comment WHY not WHAT. Prefer JSDoc over line comments.
 - MUST comment: complex business logic, module limitations, design trade-offs.
 
+### Testing
+
+- Assertions must check concrete values. If deleting the function body would still let the test pass, the test is worthless. Do not use `toBeDefined` / `toBeTruthy` / `toBeFalsy` / `not.toBeNull` as the sole assertion unless existence is literally what you are verifying.
+- Do not fake implementations with hardcoded branches that happen to match test inputs (`if (amount === 1000 && level === 'gold') return 100`). Write real logic; cover values outside the original spec to catch lookup-table fakes.
+- For bug fixes, write the failing test first. Run it and see red, then fix the code and see green. If you fix first and write the test second, the test may pass for the wrong reason.
+
 ## Tool Preferences
 
 ### Package Management
 
-- **Development tools** - Managed via `proto` (Bun, Node.js and pnpm)
-- **Python** - Always use `uv`
-- **JavaScript/TypeScript** - Check lock file for package manager
+- JavaScript/TypeScript — Bun, Node.js, and pnpm are managed via `proto`; inside a project, pick the package manager by lock file
+- Python — always use `uv`
 
 ### Search and Documentation
 
-- **File search** - Use `fd` instead of `find`
-- **Content search** - Use `rg`
-- **GitHub** - MUST use `gh` CLI for all GitHub operations
-- **Package docs** - Check official documentation for latest usage
+- Content search — use `rg`
+- File search — use `fd`
+- GitHub — MUST use `gh` CLI for all GitHub operations
+- API/docs lookup — use `context7` for up-to-date library docs
 
 ## Subagents
 
-- Subagents exist for **context isolation** (keep verbose output out of main session) and **parallel execution** (independent tasks run concurrently).
+- Subagents exist for context isolation (keep verbose output out of main session) and parallel execution (independent tasks run concurrently).
 - Spawn subagents automatically when:
   - Tests, lint, typecheck — output is long, only the verdict matters in main context
   - Install + verify, or other multi-step tasks that can run independently
@@ -72,21 +67,13 @@
   - Deep exploration, multi-step research, or large output
 - When the main session already has full context for a batch of similar fixes, apply them directly — don't spawn per-file subagents that each rebuild the same context.
 - ALWAYS wait for all subagents to complete before yielding.
-- Subagent results that make claims (code review findings, research conclusions, debugging diagnosis) MUST include concrete evidence — file paths, line numbers, source links, or quoted snippets. Dismiss findings without evidence.
+- Dismiss subagent findings without concrete evidence.
 
 ## Output Style
 
-- Use plain, clear language — no jargon, no code-speak. Write as if explaining to a smart person who isn't looking at the code. Technical rigor stays in the work itself, not in how you talk about it.
+- Use plain, clear language — no jargon, no code-speak. Write as if explaining to a smart person who isn't looking at the code.
 - State the core conclusion or summary first, then provide further explanation.
-- For code reviews, debugging explanations, and code walkthroughs, quote the smallest relevant code snippet directly in the response before giving file paths or line references.
-- Do not rely on file paths and line numbers alone when an inline snippet would explain the point faster. Treat file paths as supporting evidence, not the main payload.
-- When referencing specific code, always provide the corresponding file path.
-
-### References
-
-When citing code, docs, or external facts, provide complete references at the end of responses:
-- **External resources**: Full clickable links for GitHub issues/discussions/PRs, documentation, API references
-- **Source code references**: Complete file paths for functions, Classes, or code snippets mentioned
+- Back every claim with concrete evidence inline, not at the end of the response. For code, quote the smallest relevant snippet plus a clickable `file_path:line_number`; for review findings or research, link the source or quote the passage.
 
 ## Compact Instructions
 
@@ -96,7 +83,7 @@ When compressing context, preserve in priority order:
 2. Modified files and their key changes
 3. Current task goal and verification status (pass/fail)
 4. Open TODOs and known dead-ends
-5. Tool outputs (can discard, keep pass/fail verdict only)
+5. Tool output verdicts — keep pass/fail conclusions, drop the raw logs
 
 <!-- BEGIN COMPOUND CODEX TOOL MAP -->
 ## Compound Codex Tool Mapping (Claude Compatibility)
