@@ -91,7 +91,7 @@ typeset -aU path
 path=($path_dirs $path[@])
 
 # Alias Set
-alias c='open $1 -a "Visual Studio Code"'
+alias c='open -a "Visual Studio Code"'
 alias cc='claude'
 alias cm='chezmoi'
 ## ip & ipcn
@@ -99,9 +99,9 @@ alias ip="curl ip.sb"
 alias ipcn="curl myip.ipip.net"
 alias ka='caffeinate -is'
 alias la='ls --all'
-alias ll='la --long --git'
-alias ls='eza --reverse --sort=modified --group-directories-first --hyperlink'
-alias lt='ll --tree --git-ignore --ignore-glob=.git'
+alias ll='la --long --git --time-style=long-iso --no-user'
+alias ls='eza --group-directories-first --hyperlink'
+alias lt='ll --tree --level=2 --git-ignore --ignore-glob=.git'
 alias python='python3'
 
 # Functions (autoloaded from ~/.zsh/functions/)

@@ -69,7 +69,7 @@
   smudge = git-lfs smudge -- %f
 
 [filter "prototools"]
-  clean = ~/.config/git/prototools.filter
+  clean = ~/.config/git/prototools.filter.sh
   required = true
   smudge = cat
 
