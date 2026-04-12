@@ -75,8 +75,7 @@
       "Write(~/*/auth.json*)"
     ],
     "ask": [
-      "Bash(*git*commit*)",
-      "Bash(*git*push*)"
+      "Bash(*git push*)"
     ]
   },
   "model": "claude-opus-4-6",
