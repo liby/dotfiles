@@ -7,7 +7,7 @@
 
 ### Task Completion
 
-- **Fix root causes, not symptoms.** No workarounds, no band-aids, no "minimal fixes." If the architecture is wrong, restructure it. Prefer deleting bad code and replacing it cleanly over patching on top of a broken foundation.
+- **Fix root causes, not symptoms.** No workarounds, no band-aids, no "minimal fixes." If the architecture is wrong, restructure it. Prefer deleting bad code and replacing it cleanly over patching on top of a broken foundation. When proposing a fix, state what you believe the root cause is and why — if you can't articulate the causal chain, investigate further before proposing.
 - **Finish what you start.** Don't implement half a feature. If the task has obvious follow-through steps, do them without asking.
 - **Summarize when done.** For multi-step code-change tasks (features, bug fixes, refactors, migrations), use a closing summary with labeled sections **Background**, **Root cause** (if applicable), **Solution**. Do not use this format for non-code work (research, config edits, Q&A, doc updates, conversation), casual replies, intermediate updates, short answers, or tiny edits with straightforward outcomes. Keep the English labels as-is — do not translate them.
 
