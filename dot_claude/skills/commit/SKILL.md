@@ -16,9 +16,9 @@ Create a git commit for: $ARGUMENTS
 - Be CONCISE, specific, and ACCURATE to the actual diff
 - Focus on WHY over WHAT, present-tense verbs. The diff already shows what changed — the message captures what the diff cannot: the problem being solved, the trade-offs considered, the reason this approach won over alternatives. For any non-trivial change, structure the body as Background / Problem / Solution, with a before/after snippet when it helps, so `git log` reads as a self-contained story and the message can double as the PR description without rewriting. A body that is just a list of changed files or functions ("add X, update Y, remove Z") has zero value — rewrite it around motivation, not inventory.
 - Match the repository's existing format (prefix, tense) from recent commits
-- When the repo uses Conventional Commits, choose prefix by the intent of the change, NOT by the type of files changed
+- When the repo uses Conventional Commits, choose prefix by the intent of the change, NOT by the type of files changed. Do not add a scope unless the repo has an established, documented set of scopes — a scope that appears in a few past commits is convention, not specification
 - Use backticks for code references, reference related commits by short hash
-- When rewriting history (amend, rebase, force push), describe only the net effect vs the last published commit — changes added then removed within unpublished commits don't exist from the remote's perspective
+- When rewriting history (amend, rebase, force push), describe only the net effect vs the base commit the rewrite lands on. Intermediate states — whether never pushed or previously pushed then overwritten by force push — are erased from the remote's history, so the message must not reference them
 
 ## Steps
 
