@@ -1,0 +1,83 @@
+# ccm — choose Claude Code mode (API / Subscription) and launch.
+#
+# Interactive picker: arrows navigate (circular), Space/Enter selects + launches,
+# Esc / Ctrl-C exits without launching.
+
+emulate -L zsh
+
+[[ -t 0 && -t 1 ]] || { print -u2 "ccm: requires an interactive terminal"; return 1 }
+
+local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/claude-code"
+local env_file="$config_dir/.env"
+local mode_file="$config_dir/mode"
+
+local selected=1
+[[ -f $mode_file && $(< $mode_file) == api ]] && selected=0
+
+local cursor=$selected
+local -a labels=(API Subscription)
+local key seq first=1
+local teardown=$'\e[2A\e[J\e[?25h'
+local i marker line
+
+print -n '\e[?25l'
+
+while true; do
+  (( first )) || print -n '\e[2A'
+  first=0
+  for i in 0 1; do
+    (( i == selected )) && marker='●' || marker='○'
+    line="  $marker ${labels[i+1]}"
+    if (( i == cursor )); then
+      print -rn -- $'\e[48;5;237m'"$line"$'\e[K\e[0m'
+    else
+      print -rn -- "$line"$'\e[K'
+    fi
+    print
+  done
+
+  read -rsk1 key
+  case $key in
+    $'\e')
+      seq=; read -rsk1 -t 0.05 seq 2>/dev/null
+      if [[ -z $seq ]]; then
+        print -n $teardown
+        return 1
+      fi
+      seq=; read -rsk1 -t 0.05 seq 2>/dev/null
+      [[ $seq == [AB] ]] && (( cursor ^= 1 ))
+      ;;
+    ' '|$'\n')
+      selected=$cursor
+      break
+      ;;
+    $'\x03')
+      print -n $teardown
+      return 130
+      ;;
+  esac
+done
+
+print -n $teardown
+
+if (( selected == 0 )); then
+  [[ -f $env_file ]] || { print -u2 "ccm: $env_file not found"; return 1 }
+  # Isolate API env to the claude process — don't leak into the parent shell.
+  (
+    set -a
+    source "$env_file" || exit 2
+    set +a
+    print -n api > $mode_file
+    exec claude "$@"
+  )
+  local rc=$?
+  (( rc == 2 )) && { print -u2 "ccm: failed to source $env_file"; return 1 }
+  return $rc
+else
+  local -a keep=(CLAUDE_CODE_OAUTH_TOKEN)
+  local -a targets=(${(M)${(k)parameters}:#(ANTHROPIC|CLAUDE_CODE)_*})
+  targets=(${targets:|keep})
+  (( $#targets )) && unset "${targets[@]}"
+  print -n sub > $mode_file
+  claude "$@"
+fi
