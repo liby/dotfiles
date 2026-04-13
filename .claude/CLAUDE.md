@@ -25,7 +25,7 @@ Bryan's dotfiles managed by [chezmoi](https://www.chezmoi.io/). Source directory
 ## Workflow
 
 - **Edit source, apply to destination.** chezmoi's data flow is one-way: source → `$HOME`. Use `chezmoi edit <dest-path>` to open the source file, then `chezmoi apply` to deploy
-- Destination files are often edited directly (e.g., Claude Code editing `~/.claude/CLAUDE.md`). A git pre-commit hook runs `chezmoi re-add` automatically, so commits always include the latest destination changes
+- **Before committing, run `chezmoi diff`** to check if destination files were edited externally. If only destination changed, `chezmoi re-add` to pull changes back to source. If both source and destination changed, review the diff and ask which version to keep
 - **`.chezmoi.toml.tmpl` is special — edit the template, then run `chezmoi init` to regenerate `~/.config/chezmoi/chezmoi.toml`.** Never edit the live config directly: it's a generated artifact, and chezmoi hashes the template to detect drift (warning `config file template has changed, run chezmoi init to regenerate` until `chezmoi init` is run)
 - New files: `chezmoi add <file>` (or `--encrypt` for secrets)
 - Cross-machine sync: `chezmoi update` on target machine

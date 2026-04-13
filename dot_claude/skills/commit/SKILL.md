@@ -24,7 +24,7 @@ Create a git commit for: $ARGUMENTS
 
 1. Gather context in parallel (single tool-call batch):
   - `git status --short`, `git diff HEAD`, `git branch --show-current`, `git log --oneline -10`. When amending, also `git show HEAD`.
-  - `cat .git/hooks/pre-commit` if present. Some repos auto-stage via hooks (`chezmoi re-add`, formatters, `git add -u`) at commit time — anything modified in the working tree lands in the commit regardless of what you staged. If the hook auto-stages and you only want a subset, `git stash push -- <unrelated-paths>` before step 2 so the hook has nothing extra to sweep in. Otherwise the message must cover every modified managed file.
+  - `cat .git/hooks/pre-commit` if present. Some repos auto-stage via hooks (formatters, `git add -u`) at commit time — anything modified in the working tree lands in the commit regardless of what you staged. If the hook auto-stages and you only want a subset, `git stash push -- <unrelated-paths>` before step 2 so the hook has nothing extra to sweep in. Otherwise the message must cover every modified managed file.
   - If the diff touches code you did not just write in this session, and the motivation is not already in the current conversation or a linked plan/issue, spawn `compound-engineering:research:session-historian` in the same batch — pass it the list of changed paths and ask for the motivation behind each one from prior sessions. Skip only for trivial one-line changes or when you already hold the full reasoning.
 2. Stage relevant files with `git add`.
 3. Verify staging: `git diff --staged --name-only`. Unstage anything unrelated.
