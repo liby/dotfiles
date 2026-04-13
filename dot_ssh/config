@@ -1,11 +1,10 @@
 Include ~/.orbstack/ssh/config
-Include config.local
+Include config.aws
 
 Host *
-  IgnoreUnknown UseKeychain
   AddKeysToAgent yes
   Compression yes
-  ForwardAgent yes
+  IgnoreUnknown UseKeychain
   ServerAliveInterval 30
   UseKeychain yes
 

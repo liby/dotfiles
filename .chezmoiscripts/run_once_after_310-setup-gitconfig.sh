@@ -46,10 +46,3 @@ sed -e "s|@GITLAB_EMAIL@|$GITLAB_EMAIL|" \
     -e "s|@GITLAB_NAME@|$GITLAB_NAME|" \
     -e "s|@SIGNINGKEY@|$gpg_ssh_pub_key_file|" \
     "$gitlab_config_tpl" > "$git_config_dir/gitlab.config"
-
-if [[ -n "$gpg_key_id" && -n "$gpg_ssh_pub_key_file" ]]; then
-  allowed_signers_file="$ssh_dir/allowed_signers"
-  if ! grep -q "$GITLAB_EMAIL" "$allowed_signers_file" 2>/dev/null; then
-    echo "$GITLAB_EMAIL namespaces=\"git\" $(< "$gpg_ssh_pub_key_file")" >> "$allowed_signers_file"
-  fi
-fi
