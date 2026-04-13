@@ -1,4 +1,5 @@
-# https://github.com/SukkaW/dotfiles/blob/09b6b2d0a6d20a31143f4201f64c7b7f44fb85f6/_zshrc/macos.zshrc
+# Must run before anything that references $HOMEBREW_PREFIX
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Homebrew zsh completion path
 __BRYAN_HOMEBREW_ZSH_COMPLETION="${HOMEBREW_PREFIX}/share/zsh/site-functions"
@@ -10,7 +11,7 @@ __BRYAN_ZSH_COMPLETION_SRC="${HOME}/.zsh/plugins/zsh-completions/src"
 ## https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh
 ## https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/github/README.md#homebrew-installation-note
 ## Add a check avoiding duplicated fpath
-if (( ! $FPATH[(I)${__BRYAN_HOMEBREW_ZSH_COMPLETION}] && $+commands[brew] )) &>/dev/null; then
+if (( ! ${fpath[(I)${__BRYAN_HOMEBREW_ZSH_COMPLETION}]} && $+commands[brew] )); then
   fpath+=${__BRYAN_HOMEBREW_ZSH_COMPLETION}
 fi
 ## https://github.com/zsh-users/zsh-completions
@@ -20,26 +21,26 @@ fpath+=$HOME/.zsh/functions
 ## This must be done after all fpath modifications
 autoload -Uz compinit
 # Only regenerate .zcompdump once a day
-if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
-  compinit
-else
-  compinit -C
-fi
+() {
+  setopt local_options extendedglob
+  if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+    compinit
+  else
+    compinit -C
+  fi
+}
 
-editor_config_path="$HOME/.config/editor"
 npm_global_path="$HOME/.npm-global"
 
 # Create necessary directories
 local -a dirs_to_create=(
-  "$editor_config_path"
   "$npm_global_path"
   "$npm_global_path/lib"
   "$npm_global_path/bin"
-  "$HOME/.config/starship/cache"
 )
 
 for dir in $dirs_to_create; do
-  [[ ! -d "$dir" ]] && mkdir -p "$dir"
+  mkdir -p "$dir"
 done
 
 # Environment variables
@@ -52,19 +53,14 @@ export NPM_CONFIG_PREFIX="$npm_global_path"
 export PNPM_HOME="$HOME/Library/pnpm"
 export PROTO_AUTO_INSTALL_HIDE_OUTPUT=true
 export PROTO_HOME="$HOME/.proto"
-export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-export RUSTUP_DIST_SERVER="https://rsproxy.cn"
-export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
-export STARSHIP_CACHE="$HOME/.config/starship/cache"
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
-## This speed up zsh-autosuggestions by a lot
-export ZSH_AUTOSUGGEST_USE_ASYNC='true'
-[[ $(command -v chromium) ]] && export PUPPETEER_EXECUTABLE_PATH=$(command -v chromium)
 
 # PATH configuration
 local -a path_dirs=(
   "$PROTO_HOME/shims"
   "$PROTO_HOME/bin"
+  "$HOMEBREW_PREFIX/opt/curl/bin"
+  "$HOMEBREW_PREFIX/opt/uv/bin"
   "$NPM_CONFIG_PREFIX/bin"
   "$PNPM_HOME"
   "./node_modules/.bin"
@@ -73,19 +69,7 @@ local -a path_dirs=(
   "$HOME/.local/bin"
   "$GPG_PATH/bin"
   "$GPG_PATH/libexec"
-  "/usr/local/opt/icu4c/bin"
-  "/usr/local/opt/icu4c/sbin"
 )
-
-# Add UV PATH if available
-if HOMEBREW_UV_PATH=$(brew --prefix uv 2>/dev/null)/bin; then
-  path_dirs=("$HOMEBREW_UV_PATH" $path_dirs)
-fi
-
-# Add Homebrew curl PATH if available
-if HOMEBREW_CURL_PATH=$(brew --prefix curl 2>/dev/null)/bin; then
-  path_dirs=("$HOMEBREW_CURL_PATH" $path_dirs)
-fi
 
 typeset -aU path
 path=($path_dirs $path[@])
@@ -105,25 +89,28 @@ alias lt='ll --tree --level=2 --git-ignore --ignore-glob=.git'
 alias python='python3'
 
 # Functions (autoloaded from ~/.zsh/functions/)
-autoload -Uz dlm pasteinit pastefinish setup_gpg_ssh
+autoload -Uz $HOME/.zsh/functions/*(N:t)
 
 # This speeds up pasting w/ autosuggest
 # https://github.com/zsh-users/zsh-autosuggestions/issues/238
 zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
-# Autosuggestions configuration# https://github.com/zsh-users/zsh-autosuggestions/issues/351
-ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste accept-line)
+# Skip per-precmd widget rebinding for faster prompt
 ZSH_AUTOSUGGEST_MANUAL_REBIND=""
 
 # Source plugins and configurations
 source $HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
-source $HOME/.cargo/env
+
+# Clear stale suggestion after paste (not in plugin defaults)
+# https://github.com/zsh-users/zsh-autosuggestions/issues/351
+ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
 # Initialize tools and configurations
-(( $+commands[gpg-connect-agent] )) && setup_gpg_ssh &>/dev/null
 (( $+commands[direnv] )) && eval "$(direnv hook zsh)"
+(( $+commands[gpg-connect-agent] )) && setup_gpg_ssh &>/dev/null
+(( $+commands[orb] )) && source ~/.orbstack/shell/init.zsh
 (( $+commands[proto] )) && eval "$(proto activate zsh)"
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
