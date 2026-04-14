@@ -75,6 +75,7 @@
       "Write(~/*/auth.json*)"
     ],
     "ask": [
+      "Bash(*git commit*)",
       "Bash(*git push*)"
     ]
   },
