@@ -1,0 +1,91 @@
+# claude — mode-aware launcher wrapping the claude binary.
+#
+# claude [args...]       Launch in the current mode.
+# claude -m [args...]    Interactive picker to switch mode, then launch.
+
+emulate -L zsh
+
+local pick=0
+if [[ $1 == -m ]]; then
+  pick=1
+  shift
+fi
+
+local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/claude-code"
+local mode_file="$config_dir/mode"
+local env_file="$config_dir/.env"
+
+local mode=sub
+[[ -f $mode_file ]] && mode=$(< $mode_file)
+
+if (( pick )); then
+  [[ -t 0 && -t 1 ]] || { print -u2 "claude: -m requires an interactive terminal"; return 1 }
+
+  local selected=1
+  [[ $mode == api ]] && selected=0
+
+  local cursor=$selected
+  local -a labels=(API Subscription)
+  local key seq first=1
+  local teardown=$'\e[2A\e[J\e[?25h'
+  local i marker line
+
+  print -n '\e[?25l'
+
+  while true; do
+    (( first )) || print -n '\e[2A'
+    first=0
+    for i in 0 1; do
+      (( i == selected )) && marker='●' || marker='○'
+      line="  $marker ${labels[i+1]}"
+      if (( i == cursor )); then
+        print -rn -- $'\e[48;5;237m'"$line"$'\e[K\e[0m'
+      else
+        print -rn -- "$line"$'\e[K'
+      fi
+      print
+    done
+
+    read -rsk1 key
+    case $key in
+      $'\e')
+        seq=; read -rsk1 -t 0.05 seq 2>/dev/null
+        if [[ -z $seq ]]; then
+          print -n $teardown
+          return 1
+        fi
+        seq=; read -rsk1 -t 0.05 seq 2>/dev/null
+        [[ $seq == [AB] ]] && (( cursor ^= 1 ))
+        ;;
+      ' '|$'\n')
+        selected=$cursor
+        break
+        ;;
+      $'\x03')
+        print -n $teardown
+        return 130
+        ;;
+    esac
+  done
+
+  print -n $teardown
+
+  (( selected == 0 )) && mode=api || mode=sub
+  print -n $mode > $mode_file
+fi
+
+# Subshell + exec: env vars don't leak into the parent shell.
+if [[ $mode == api ]]; then
+  [[ -f $env_file ]] || { print -u2 "claude: $env_file not found"; return 1 }
+  (
+    set -a
+    source "$env_file" || exit 2
+    set +a
+    exec command claude "$@"
+  )
+  local rc=$?
+  (( rc == 2 )) && { print -u2 "claude: failed to source $env_file"; return 1 }
+  return $rc
+else
+  command claude "$@"
+fi

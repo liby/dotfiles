@@ -77,6 +77,7 @@ path=($path_dirs $path[@])
 # Alias Set
 alias c='open -a "Visual Studio Code"'
 alias cc='claude'
+alias ccm='claude -m'
 alias cm='chezmoi'
 ## ip & ipcn
 alias ip="curl ip.sb"
