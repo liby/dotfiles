@@ -189,6 +189,7 @@
   },
   "effortLevel": "high",
   "promptSuggestionEnabled": false,
+  "awaySummaryEnabled": false,
   "autoDreamEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "showTurnDuration": false

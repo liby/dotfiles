@@ -1,134 +1,222 @@
 ---
 name: review
-description: Run a Codex adversarial review with anti-defensive-programming principles applied, filter defensive-only findings, then fix every remaining finding in-place and return a summary. Use when the user says "review", "/review", "让 codex 看一下", "codex review", or asks for a Codex review of current changes. Wraps /codex:adversarial-review — do not touch plugin files or the strict /codex:review flow.
-context: fork
-argument-hint: "[--base <ref>] [--scope auto|working-tree|branch] [focus ...]"
+description: Review a remote MR/PR (with description and discussion) or local code changes, reporting only real issues with context-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", or provides a MR/PR URL to review.
+argument-hint: "[--cc | --codex | URL | additional notes]"
 allowed-tools:
   - Bash
   - Read
   - Grep
   - Glob
-  - Edit
-  - Write
 ---
+
+## Cross-Model Delegation
+
+If `--codex` is passed, delegate the review to Codex. If `--cc` is passed, delegate to Claude Code. The delegate runs this same skill without the flag, so it reviews directly — no loop. See `references/delegation.md` for invocation details.
+
+If neither flag is passed, review the code directly using the rules below.
 
 ## Goal
 
-Run a principled Codex adversarial review against the current git state, filter out defensive-only findings, then **fix every remaining finding in-place** within this skill's execution, and return a summary of what was fixed and what was intentionally left alone. Skepticism and rigor stay — the only thing suppressed is defensive-programming advice for unobserved failures.
+Produce a high-signal review that focuses on real bugs, silent failure paths, bad state transitions, contract violations, semantic mismatches, security risks, meaningful testing gaps, and project-pattern mismatches.
 
-The user does not want a review-then-prompt loop. If a finding survives the filter, default to fixing it; only skip when fixing is genuinely wrong (e.g., the finding is incorrect, or the fix would violate a separate principle).
+Do not pad the report with generic style advice. Do not give "textbook review" feedback detached from the repository's actual runtime model.
 
-## Preflight
+Respond in Chinese unless the user explicitly asks otherwise.
 
-1. Confirm there is something to review:
-  - `git status --short --untracked-files=all`
-  - `git diff --shortstat --cached` and `git diff --shortstat`
-  - For `--base <ref>`, also `git diff --shortstat <ref>...HEAD`
-  - If the scoped state is empty, return `nothing to review` and stop.
+## Review Process
 
-2. Parse `$ARGUMENTS`:
-  - Collect `--base <ref>` and `--scope <value>` as pass-through flags.
-  - **Drop** any `--wait` or `--background` — this wrapper always runs foreground inside its forked subagent; the user is already blocked on the skill so detaching has no value.
-  - Everything after the known flags is the user's focus tail. Keep it; it will be appended after the principles block.
+### Flow
 
-## Principles injected as focus text
+1. Read the MR description and discussion before judging the diff.
+2. Review the local diff against the correct base.
+3. Read adjacent code, relevant call sites, and touched tests before finalizing severity.
+4. Infer the repository's real runtime context before deciding whether something is a blocker, a low-priority edge case, or not a real issue.
+5. Identify the real contract, semantics, ownership boundary, and failure model before commenting on implementation details.
+6. Report only the findings that survive that context check.
 
-Build the final focus string by concatenating this block verbatim, then a blank line, then the user's focus tail (if any):
+### Context Gathering
 
-```
-Principles the reviewer MUST apply (these override default defensive-programming habits):
+Determine the review mode:
 
-1. Do NOT suggest adding null guards, optional chaining, try/catch, or fallback values for code paths where no failure has actually been observed. If the API contract does not document that a value can be null or a call can throw, assume it does not.
-2. If a guard is genuinely required by contract or observed failure, prefer a hard assertion that exposes the violated invariant — not a silent fallback to null, undefined, false, or [].
-3. Errors must be observable. Do not suggest swallowing errors, using Promise.allSettled where errors should propagate, or wrapping business logic in try/catch just to continue. Let errors propagate and catch only at API/route/job boundaries where recovery is defined.
-4. Question every assumed failure mode. For each proposed guard you keep, cite the API doc, contract, or observed behavior that justifies it. Inconsistent defensive checks in the same code path (checking one field but not its siblings) are a code smell — flag the inconsistency, not the missing check.
-5. Retries are for transient faults only. Do not suggest retry as a way to wait for external resources — that should be explicit delay or polling.
-6. Prioritize real risks: correctness, auth, tenant isolation, data loss or corruption, rollback safety, races, schema or version skew, and observability gaps. Do not pad the report with stylistic defensive programming suggestions.
+- **MR/PR mode** (URL or number provided): fetch metadata from the remote, then diff locally.
+- **Local mode** (no URL): diff the working tree, staged changes, or branch against `--base <ref>`.
 
-Still report every material issue in the categories above. Do not go easy on the change — the goal is to drop stylistic defensiveness, not to lower the bar for real failures.
-```
+The review principles, severity, and output are the same in both modes. Only the context gathering differs.
 
-## Resolve the codex plugin root
+**MR/PR mode**: Use `glab` to fetch from GitLab. If the repository remote is GitHub, fall back to `gh`.
 
-Do not hardcode the plugin path — the authoritative install location is under `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/` and the version segment changes on every update. Resolve it at runtime via `claude plugin list --json`, which exposes an `installPath` field per plugin entry:
+Fetch MR metadata as TSV to minimize output tokens:
 
 ```bash
-CODEX_ROOT=$(claude plugin list --json | jq -r '.[] | select(.id == "codex@openai-codex" and .enabled == true) | .installPath')
-if [ -z "$CODEX_ROOT" ] || [ ! -f "$CODEX_ROOT/scripts/codex-companion.mjs" ]; then
-  echo "codex plugin not installed or disabled — cannot run principled review" >&2
-  exit 1
-fi
+glab mr view <number> --output json | jq -r '["title","state","author","source","target","labels"], [.title, .state, .author.username, .source_branch, .target_branch, (.labels | join(","))] | @tsv'
 ```
 
-Fail loud if the plugin is missing or disabled.
+Fetch description and discussions separately (these need full text, not TSV). Summarize the parts that materially affect the review: threat model, rollout assumptions, compatibility promises, migration notes, and anything reviewers already challenged. When existing discussions already debated a point, factor that into the review instead of repeating it blindly.
 
-## Run the review
-
-Call the companion script directly via the resolved root. Do not attempt `/codex:adversarial-review` — the slash command's `Foreground flow` section mandates `Return the command stdout verbatim, exactly as-is`, which leaves no hook for the post-processing this skill needs to do.
+Check out the head branch in a worktree so you can read files directly and run project validation commands:
 
 ```bash
-node "$CODEX_ROOT/scripts/codex-companion.mjs" adversarial-review --wait [pass-through flags] "<principles + user focus>"
+git fetch origin
+git worktree add "$TMPDIR/review-<mr-number>" origin/<head-branch> --detach
 ```
 
-The focus string is the trailing positional argument — shell-quote it so the whole block (including newlines) reaches the script as one argv element. Capture stdout verbatim.
+Run validation and diff commands from within the worktree. Clean up with `git worktree remove` after the review completes. If worktree creation fails (e.g. branch already checked out), fall back to `git show <ref>:path` for file reads — validation commands will not be available in this mode.
 
-`--wait` is load-bearing, not optional: it keeps `argv.length >= 2` so the companion script's `normalizeArgv` does not re-tokenize our multi-line focus block by whitespace. Never send empty focus either — `buildAdversarialReviewPrompt` substitutes a default placeholder that would erase the principles block.
+For the diff, `git diff <base>...<head>`.
 
-## Filter findings
+**Local mode**: Diff the working tree or branch against the base (`--base <ref>`, or infer from the branch's upstream).
 
-Walk every finding in the returned report and categorize:
+### Read Surrounding Code
 
-- **Keep**: any finding whose recommendation cites observed failure, an API contract, tenant isolation, data loss, auth bypass, race condition, schema drift, rollback risk, observability gap, idempotency, or a correctness bug.
-- **Skip**: any finding whose recommendation is entirely "add a null check", "add optional chaining", "add try/catch", "add fallback value", or "handle missing field" with no evidence of observed failure, contract violation, or downstream impact.
-- **Rewrite**: if a finding mixes a real concern with a defensive suggestion, keep the real concern and drop the defensive portion from the recommendation.
+In both modes, read beyond the diff before finalizing severity:
 
-Record skipped findings with their file/line and the one-line phrase `unobserved-failure guard`. Never suppress a finding that names a real failure mode — this is not about going easy on the change.
+- touched files in full
+- surrounding code and nearby helpers
+- direct call sites if behavior depends on them
+- relevant tests
 
-## Fix the kept findings
+If a claim depends on a control-flow detail, verify it in code before reporting it.
 
-After filtering, work through the kept findings and fix them directly using Edit / Write. Treat this as the default — do not return to the user and ask whether to fix. For each kept finding:
+If a claim depends on a repository convention, verify that convention in adjacent code instead of assuming it.
 
-1. Re-read the cited file/range to confirm the finding is accurate against the current code. Codex can be wrong, and its sandbox may have been stale.
-2. If the finding is correct, apply the minimal fix that addresses the root cause. Respect the repo's existing style and the anti-defensive-programming principles — prefer hard assertions or propagation over silent fallbacks.
-3. If the finding is wrong, or the fix would violate a separate principle (e.g., adding a guard Codex asked for but the contract does not justify), do not fix it. Record why under **Not fixed** in the summary.
-4. Opportunistic cleanup is allowed inside the hunks you are already editing (typos, dead code, local renames, obviously stale comments). Anything outside those hunks, or any change touching signatures / interfaces / control flow / data shape, is out of scope for this pass. Every opportunistic change must be listed under **Opportunistic cleanup** in the return summary — the summary must be a superset of the diff.
+## Core Principles
 
-Edit files inline within this skill's execution — do not spawn another subagent for the fix pass.
+### 1. Reject unobserved failure guards
 
-After edits, re-check the changed files (Read / Grep) to confirm each intended change landed and no stray edits slipped in. Run any cheap local verification that fits the repo (type check, lint) if one is already configured — skip if none exists, and do not fabricate new commands. Never run dev / build / start / serve commands for frontend projects.
+Do not recommend null guards, optional chaining, fallback values, or "safe" alternate branches unless the contract, docs, tests, or observed behavior show they are needed.
 
-## Return format
+If a guard is justified, prefer failing loudly over silently masking the problem.
 
-Return a compact summary to the user:
+Inconsistent guards are a finding on their own: if code checks field A but not sibling fields B and C on the same object, the issue is the inconsistency, not the missing checks.
 
-```
-# Codex principled review — <target>
+### 2. Keep errors observable
 
-Verdict: <ship | needs-attention | blocked>  (post-fix verdict)
+Do not normalize swallowed errors, unchecked `Promise.allSettled`, ignored exit codes, broad `catch {}` blocks, or fallback paths that convert failures into fake success.
 
-Fixed (<N>):
-- <file:line> — <what was wrong> — <what changed>
-...
+Every mechanism must match its purpose. Retries are for transient faults, not polling. Fallbacks are for defined alternate behavior, not hiding unexpected states. Error types (retriable vs non-retriable) must reflect the actual failure semantics.
 
-Not fixed (<N>):
-- <file:line> — <finding> — <reason for skipping>
-...
+Treat `isConfigured`, `alreadyDone`, `cache hit`, `skip`, and similar gates as high-risk review targets. They must reflect final usable state, not just partial traces.
 
-Opportunistic cleanup (<N>):
-- <file:line> — <what changed and why>
-...
+Raise severity when failure leaves behind a misleading "configured", "done", "cached", or "healthy" state.
 
-Skipped by filter (<N>, defensive-only):
-- <file:line> — <what Codex proposed>
-...
-```
+### 3. Question every assumption
 
-The summary must be a superset of the diff: if a change landed in a file, it appears in one of **Fixed** or **Opportunistic cleanup**. Drop empty sections rather than leaving them with `(0)`.
+For each claimed issue, identify the actual assumption:
 
-If the review found nothing material, return `Verdict: ship — no material findings` and stop. If Codex returned an `approve` status, mirror it as `Verdict: ship` and do not invent findings. If fixing is blocked on a question only the user can answer (ambiguous intent, missing domain knowledge), list that finding under **Not fixed** with the blocker — do not guess.
+- what the code assumes
+- why that assumption may be invalid
+- what concrete condition breaks it
 
-## Do not
+Do not write abstract criticism without a trigger path.
 
-- Do not edit plugin files or change how `/codex:review` or `/codex:adversarial-review` behave upstream.
-- Do not touch git state (commit, push, reset, checkout). Fixing means editing files only — commit is a separate user action.
-- Do not expand scope beyond the findings. This is a review-and-fix pass, not a refactor session.
+### 4. Follow repository reality
+
+Severity must match the project's real usage:
+
+- one-shot initializer vs long-running service
+- user-facing app vs internal tooling
+- migration script vs library
+- config writer vs transactional system
+
+Adapt emphasis by project type, but keep the same standard of evidence:
+
+- `infrastructure / IaC`: privilege boundaries, network exposure, resource scope, deployment behavior, least privilege
+- `data pipelines / integrations`: schema correctness, field semantics, sync direction, idempotency, ownership of derived values
+- `event-driven / async processing`: lifecycle, event naming, delivery semantics, retry vs polling, ordering guarantees, step boundaries
+- `APIs / services`: contract compatibility, backwards compatibility, error contracts, protocol semantics
+- `CLI / scripts / tooling`: user-visible failure modes, exit codes, idempotency, side effects
+
+Do not overrate a theoretical edge case that contradicts the repository's actual runtime model. Do not underrate a bug that can strand the system in a persistent bad state.
+
+### 5. Prefer simplicity
+
+Do not propose heavyweight redesigns unless the current approach is genuinely unsafe or broken.
+
+Prefer the smallest fix that removes the real risk.
+
+### 6. Names and boundaries must match reality
+
+Treat misleading names, mislayered abstractions, and wrong ownership boundaries as real findings when they obscure the system's true model.
+
+Ask:
+
+- does this name match the real entity or responsibility
+- is this field/event/state expressing the right concept
+- is this logic living in the right layer
+- are we adding a workaround instead of using the correct abstraction
+
+### 7. Contracts outrank convenience
+
+If behavior depends on external APIs, historical conventions, compatibility promises, or undocumented assumptions, look for the source of truth.
+
+If the source of truth is missing:
+
+- do not invent a "safe" fallback
+- ask whether a code comment or doc link is needed
+- consider whether the implementation is encoding guesswork as normal behavior
+
+## Review Priorities
+
+Look in this order:
+
+1. contract and source of truth
+2. semantic correctness: names, fields, event meaning, entity meaning
+3. ownership boundary: which layer or module should know this
+4. failure behavior: fail loud, partial success, misleading success, recoverability
+5. security / permissions / exposure surface
+6. complexity: whether the change introduced more machinery than the real problem needs
+7. tests and docs as supporting evidence
+
+Do not start from formatting, micro-style, or speculative edge cases.
+
+## Severity Guidance
+
+- `P1`: likely in normal or high-probability usage, or leaves a persistent bad state, or misleads the user/system into believing the operation succeeded
+- `P2`: needs specific conditions, but the failure mode and impact are real and meaningful
+- `P3`: narrow, low-impact, or mostly about maintainability / consistency
+
+Severity upweights:
+
+- partial success later treated as complete success
+- broken permissions or exposure boundary
+- semantic mismatch that will mislead future callers or operators
+- fallback that hides contract violations
+
+Severity downweights:
+
+- the issue depends on a repository mode the project does not actually use
+- the issue is real but local, obvious, and easy to recover from
+- the issue is mostly about preferred style without behavioral consequence
+
+## Verification Expectations
+
+Verify claims before reporting them.
+
+When useful and cheap, run existing validation commands already defined by the project (tests, lint, typecheck).
+
+Do not invent new verification commands. Do not run dev servers, build servers, or frontend serve commands just for review.
+
+When a claim is about semantics, verify it against neighboring names, docs, tests, or call sites. Do not rely on wording intuition alone.
+
+## Output
+
+Start with a direct conclusion: whether the MR should be blocked, how many issues at each severity, and the overall assessment.
+
+For each finding, ordered by severity:
+
+- State the conclusion first, not the investigation process.
+- Follow a causal narrative: what the code does now → why that is wrong → what concrete scenario breaks → what the impact is. Do not write abstract criticism disconnected from the trigger path.
+- Point to specific code (file + line). Do not make claims without evidence.
+- Explain why it matters in this project's context.
+- Suggest a fix direction, not a redesign.
+
+Report all issues regardless of severity. If a finding is low-priority, say so and explain why — do not omit it.
+
+If no real findings survive scrutiny, say so plainly.
+
+## Writing Rules
+
+- Do not start with a long overview.
+- Every vague phrase must be immediately followed by a specific trigger and consequence. If you say "bad state", "edge case", or "inconsistent check", translate it into what actually breaks and how.
+- Do not report a finding unless you can point to code that demonstrates it.
+- Prefer short, direct conclusions plus concrete evidence and fix direction.

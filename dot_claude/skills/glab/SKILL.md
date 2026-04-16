@@ -64,7 +64,7 @@ MRs are auto-created when branches are pushed. Use `glab mr list` to find them, 
   ```bash
   glab mr list --source-branch=$(git branch --show-current) -F json | jq '.[0] | {iid, title, web_url}'
   ```
-3. Update the MR title and description. Title uses ticket number as prefix if present in branch name (e.g., `PLAT-123 Add email status check`), not conventional commit format. Description follows the structure the user requests, no speculative statements:
+3. Update the MR title and description. Title is Title Case, derived from branch name. Uses ticket number as prefix if present in branch name (e.g., `PROJ-123 Add Email Status Check`). Do NOT use conventional commit format (`fix:`, `feat:`) in MR titles — that's for commit messages only. Description follows the structure the user requests, no speculative statements:
   ```bash
   glab mr update <iid> --title "<title>" --description "<description>"
   ```
