@@ -1,13 +1,12 @@
 {
-  "respectGitignore": true,
   "cleanupPeriodDays": 99999,
   "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "93",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
-    "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
     "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
+    "CLAUDE_CODE_EFFORT_LEVEL": "high",
     "CLAUDE_CODE_ENABLE_CFC": "0",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS": "125000",
@@ -23,10 +22,12 @@
     "commit": "",
     "pr": ""
   },
+  "includeGitInstructions": false,
   "permissions": {
     "allow": [
       "Agent",
       "Bash",
+      "Bash(rm .git/review-*)",
       "Edit",
       "ExitPlanMode",
       "Glob",
@@ -34,7 +35,7 @@
       "KillShell",
       "LSP",
       "mcp__ide__*",
-      "mcp__plugin_compound-engineering_context7__*",
+      "mcp__plugin_atlassian_atlassian__*",
       "mcp__plugin_context7_context7__*",
       "NotebookEdit",
       "Read",
@@ -80,7 +81,7 @@
       "Bash(*git push*)"
     ]
   },
-  "model": "claude-opus-4-6",
+  "model": "claude-opus-4-7[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -100,17 +101,6 @@
             "type": "command",
             "command": "~/.claude/hooks/rtk-rewrite.sh",
             "timeout": 30
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/pre-compact-instructions.sh",
-            "timeout": 10
           }
         ]
       }
@@ -135,13 +125,14 @@
             "timeout": 10
           }
         ]
-      },
+      }
+    ],
+    "PreCompact": [
       {
-        "matcher": "Skill",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/post-skill-review-reminder.sh",
+            "command": "~/.claude/hooks/pre-compact-instructions.sh",
             "timeout": 10
           }
         ]
@@ -153,29 +144,14 @@
     "command": "~/.claude/scripts/statusline.sh"
   },
   "enabledPlugins": {
-    "context7@claude-plugins-official": false,
-    "compound-engineering@compound-engineering-plugin": true,
-    "codex@openai-codex": true
+    "codex@openai-codex": true,
+    "context7@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
-    "compound-engineering-plugin": {
-      "source": {
-        "source": "github",
-        "repo": "EveryInc/compound-engineering-plugin"
-      },
-      "autoUpdate": true
-    },
     "openai-codex": {
       "source": {
         "source": "github",
         "repo": "openai/codex-plugin-cc"
-      },
-      "autoUpdate": true
-    },
-    "vibe-coding-plugins": {
-      "source": {
-        "source": "github",
-        "repo": "liby/vibe-coding-plugins"
       },
       "autoUpdate": true
     }
@@ -187,10 +163,12 @@
       "Vibing"
     ]
   },
-  "effortLevel": "high",
+  "alwaysThinkingEnabled": true,
+  "autoCompactWindow": 400000,
   "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
   "autoDreamEnabled": true,
+  "showThinkingSummaries": true,
   "skipDangerousModePermissionPrompt": true,
   "showTurnDuration": false
 }

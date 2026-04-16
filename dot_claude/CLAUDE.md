@@ -82,7 +82,8 @@
 ## Output Style
 
 - State the core conclusion or summary first, then provide further explanation.
-- Back every claim with concrete evidence inline, not at the end of the response. For code, quote the smallest relevant snippet plus a clickable `file_path:line_number`; for review findings or research, link the source or quote the passage. Do not append a trailing "References" section.
+- Back every claim with concrete evidence inline, not at the end of the response. For code, quote the smallest relevant snippet plus a clickable `file_path:line_number`. For external sources (PRs, issues, commits, tickets, docs), link to the source — quote a passage in addition when it sharpens the point, never as a substitute for the link. Do not append a trailing citation/sources section under any name.
+- Render external identifiers (PR/issue numbers, commit SHAs, ticket keys, etc.) as clickable markdown links, not plain text.
 
 ### Markdown Formatting
 

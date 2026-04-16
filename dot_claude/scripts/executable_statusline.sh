@@ -6,9 +6,10 @@
 # a function. Do NOT use `local` there — it silently fails outside functions.
 # Also, API values may be floats (e.g. 0.0); bash $(()) only handles integers.
 #
-# Verify after editing:
+# Verify after editing (CC sets CLAUDE_CODE_EFFORT_LEVEL from settings.env; pass
+# it explicitly here to exercise the same effort-resolution path the runtime uses):
 #   echo '{"context_window":{"context_window_size":200000,"current_usage":{"input_tokens":50000,"output_tokens":10000}},"cwd":"/tmp"}' \
-#   | bash ~/.claude/scripts/statusline.sh
+#   | CLAUDE_CODE_EFFORT_LEVEL=high bash ~/.claude/scripts/statusline.sh
 
 set -f
 
@@ -180,20 +181,55 @@ render_extra_rate_row() {
 (( size == 0 )) && size=200000
 
 settings_path="$HOME/.claude/settings.json"
-
-# Statusline JSON undercounts ~10pp (system prompt, MCP tools, CLAUDE.md, autocompact
-# buffer not exposed). Add fixed offset to align with Claude's internal display.
-# See: anthropics/claude-code#18241, #21651
-context_overhead_pct=10
-current=$(( input_tokens + output_tokens + cache_create + cache_read ))
-pct_used=$(( current * 100 / size + context_overhead_pct ))
-(( pct_used > 100 )) && pct_used=100
-
+# Effort resolution mirrors CLI's UhH(): env CLAUDE_CODE_EFFORT_LEVEL takes
+# precedence over settings.effortLevel. "auto"/"unset" in env is an explicit
+# override meaning "model default" — it must NOT fall through to settings.
+# Only an unset env falls through. "max" is runtime-only, not in settings schema.
 effort="default"
+_effort_env_set=0
+[ -n "${CLAUDE_CODE_EFFORT_LEVEL+x}" ] && _effort_env_set=1
+_effort_env=$(printf '%s' "${CLAUDE_CODE_EFFORT_LEVEL:-}" | tr '[:upper:]' '[:lower:]')
+case "$_effort_env" in
+  low|medium|high|xhigh|max) effort="$_effort_env" ;;
+esac
+auto_compact=0
+auto_compact_enabled=1
 if [ -f "$settings_path" ]; then
   _settings=$(<"$settings_path")
-  [[ "$_settings" =~ \"effortLevel\"[[:space:]]*:[[:space:]]*\"(high|low)\" ]] && effort="${BASH_REMATCH[1]}"
+  if [ "$effort" = "default" ] && [ "$_effort_env_set" = 0 ]; then
+    [[ "$_settings" =~ \"effortLevel\"[[:space:]]*:[[:space:]]*\"(low|medium|high|xhigh)\" ]] && effort="${BASH_REMATCH[1]}"
+  fi
+  [[ "$_settings" =~ \"autoCompactWindow\"[[:space:]]*:[[:space:]]*([0-9]+) ]] && auto_compact="${BASH_REMATCH[1]}"
+  [[ "$_settings" =~ \"autoCompactEnabled\"[[:space:]]*:[[:space:]]*false ]] && auto_compact_enabled=0
 fi
+# autocompact disabled if any of DISABLE_COMPACT/DISABLE_AUTO_COMPACT/autoCompactEnabled=false.
+# Edge-trim (not interior) + lowercase to mirror CC's SH() .toLowerCase().trim().
+_is_truthy() {
+  local v="$1"
+  v="${v#"${v%%[![:space:]]*}"}"
+  v="${v%"${v##*[![:space:]]}"}"
+  v=$(printf '%s' "$v" | tr '[:upper:]' '[:lower:]')
+  [[ "$v" =~ ^(1|true|yes|on)$ ]]
+}
+[ -n "$DISABLE_COMPACT" ] && _is_truthy "$DISABLE_COMPACT" && auto_compact_enabled=0
+[ -n "$DISABLE_AUTO_COMPACT" ] && _is_truthy "$DISABLE_AUTO_COMPACT" && auto_compact_enabled=0
+
+# Denominator = min(model capacity, autoCompactWindow); CC's context_window_size
+# only reports model capacity. HIDDEN_TOKENS accounts for system prompt + MCP defs
+# + CLAUDE.md not included in current_usage (~10pp on 200k, ~2pp on 1M).
+#
+# By design: when running a [1m] model variant, autoCompactWindow is set lower
+# than 1M (e.g. 400k) as the intended *working budget* — the bar should read
+# 100% at that threshold and compact there, using 1M only as spike headroom.
+# Recommended pattern per Claude Code maintainer (see .claude/CLAUDE.md).
+# Do NOT "fix" this to uncap the denominator.
+HIDDEN_TOKENS=20000
+effective_size=$size
+(( auto_compact_enabled && auto_compact > 0 && auto_compact < effective_size )) && effective_size=$auto_compact
+
+current=$(( input_tokens + output_tokens + cache_create + cache_read ))
+pct_used=$(( (current + HIDDEN_TOKENS) * 100 / effective_size ))
+(( pct_used > 100 )) && pct_used=100
 
 # ── LINE 1: Context % │ Dir:branch │ Effort ──
 pct_color=$(color_for_pct "$pct_used")
@@ -215,9 +251,12 @@ if [ -n "$git_branch" ]; then
 fi
 line1+="${sep}"
 case "$effort" in
-  high) line1+="${magenta}● ${effort}${reset}" ;;
-  low)  line1+="${dim}◔ ${effort}${reset}" ;;
-  *)  line1+="${dim}◑ ${effort}${reset}" ;;
+  max)    line1+="${red}✦ ${effort}${reset}" ;;
+  xhigh)  line1+="${coral}● ${effort}${reset}" ;;
+  high)   line1+="${magenta}◉ ${effort}${reset}" ;;
+  medium) line1+="${cyan}◐ ${effort}${reset}" ;;
+  low)    line1+="${dim}◔ ${effort}${reset}" ;;
+  *)      line1+="${dim}◑ ${effort}${reset}" ;;
 esac
 
 # ── OAuth token resolution ──────────────────────────────
