@@ -1,6 +1,6 @@
 # Cross-Model Delegation
 
-How to delegate the review to a different model when `--cc` or `--codex` is passed.
+How to delegate the review to a different model when `--cc` or `--cx` is passed.
 
 The delegate receives this same skill (without the flag), reads the full SKILL.md, and reviews directly. No principle extraction or loop prevention needed.
 
@@ -21,7 +21,7 @@ Key flags: `-p` for single-shot, `--allowedTools` to pre-approve tools, `--outpu
 - Do not touch git state (commit, push, reset, checkout). Fixing means editing files only.
 - Do not expand scope beyond the findings. This is a review-and-fix pass, not a refactor session.
 
-## `--codex`: Delegate to Codex
+## `--cx`: Delegate to Codex
 
 ### Resolve the Codex plugin
 

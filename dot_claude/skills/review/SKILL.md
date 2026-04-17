@@ -1,7 +1,7 @@
 ---
 name: review
 description: Review a remote MR/PR (with description and discussion) or local code changes, reporting only real issues with context-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", or provides a MR/PR URL to review.
-argument-hint: "[--cc | --codex | URL | additional notes]"
+argument-hint: "[--cc | --cx | --fix | URL | additional notes]"
 allowed-tools:
   - Bash
   - Read
@@ -9,11 +9,17 @@ allowed-tools:
   - Glob
 ---
 
-## Cross-Model Delegation
+## Arguments
 
-If `--codex` is passed, delegate the review to Codex. If `--cc` is passed, delegate to Claude Code. The delegate runs this same skill without the flag, so it reviews directly — no loop. See `references/delegation.md` for invocation details.
+### `--cc` / `--cx`: delegate to another model
 
-If neither flag is passed, review the code directly using the rules below.
+If `--cc` is passed, delegate to Claude Code. If `--cx` is passed, delegate to Codex. The delegate runs this same skill without the flag, so it reviews directly — no loop. See [references/delegation.md](references/delegation.md) for invocation details.
+
+### `--fix`: auto-fix loop
+
+Default (flag absent): review is **report-only**. Present findings and stop — the user decides what to fix.
+
+If `--fix` is passed, see [references/autofix.md](references/autofix.md) for the baseline setup and fix loop.
 
 ## Goal
 
@@ -33,6 +39,10 @@ Respond in Chinese unless the user explicitly asks otherwise.
 4. Infer the repository's real runtime context before deciding whether something is a blocker, a low-priority edge case, or not a real issue.
 5. Identify the real contract, semantics, ownership boundary, and failure model before commenting on implementation details.
 6. Report only the findings that survive that context check.
+
+### Project Conventions
+
+Before reviewing, scan for project-level agent instructions: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agent/`, `README.md`. Where they conflict with this skill's rules, defer to the project — it reflects local ground truth. Where they don't conflict, treat them as complementary context (e.g., "this repo runs on K8s" informs severity for config errors).
 
 ### Context Gathering
 

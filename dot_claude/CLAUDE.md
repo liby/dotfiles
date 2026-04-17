@@ -77,7 +77,6 @@
   - Clean up teams promptly when done — idle teammates still consume tokens.
 - ALWAYS wait for all subagents/teammates to complete before yielding.
 - Subagent results that make claims (code review findings, research conclusions, debugging diagnosis) MUST include concrete evidence — file paths, line numbers, source links, or quoted snippets. Dismiss findings without evidence.
-- After completing a code review, run `/simplify` then `/deslop` sequentially as finishing passes. Report all findings — do NOT auto-fix without user approval.
 
 ## Output Style
 

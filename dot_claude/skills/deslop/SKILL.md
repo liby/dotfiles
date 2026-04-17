@@ -12,7 +12,12 @@ allowed-tools:
 
 ## Task
 
-Get the diff to review via `git diff $(git symbolic-ref refs/remotes/origin/HEAD)` — this captures both committed and uncommitted changes against the remote default branch. If the diff is empty, report "no changes to review" and exit. Remove all AI-generated slop found in the diff.
+Resolve the diff to review using the first non-empty result from this order:
+
+1. **Branch-relative**: against the upstream branch if set (`git diff @{upstream}...HEAD`), else against the remote default branch (`git diff $(git symbolic-ref --short refs/remotes/origin/HEAD)...HEAD`). Captures committed-but-not-merged work.
+2. **Working-tree (incl. staged)**: `git diff HEAD`. Catches uncommitted local edits when the branch hasn't diverged yet (common when the user just edited files in the default branch without committing).
+
+If both are empty, report "no changes to review" and exit. Remove all AI-generated slop found in the resolved diff.
 
 ## What to remove
 
