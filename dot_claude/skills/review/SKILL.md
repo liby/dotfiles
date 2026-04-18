@@ -42,7 +42,7 @@ Respond in Chinese unless the user explicitly asks otherwise.
 
 ### Project Conventions
 
-Before reviewing, scan for project-level agent instructions: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agent/`, `README.md`. Where they conflict with this skill's rules, defer to the project — it reflects local ground truth. Where they don't conflict, treat them as complementary context (e.g., "this repo runs on K8s" informs severity for config errors).
+Before reviewing, scan for project-level agent instructions and review-specific rules: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agent/`, `README.md`, plus any project-level review files such as `.claude/skills/*review*/SKILL.md`, `.claude/commands/*review*.md`, `REVIEW.md`, `CODE_REVIEW.md`, or `CONTRIBUTING.md`. If found, read them in full. Where they conflict with this skill's rules, defer to the project — it reflects local ground truth. Where they don't conflict, treat them as complementary context and additional review rules (e.g., "this repo runs on K8s" informs severity for config errors; a project's own review checklist layers on top of this skill's defaults).
 
 ### Context Gathering
 

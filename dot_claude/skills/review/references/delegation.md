@@ -2,7 +2,7 @@
 
 How to delegate the review to a different model when `--cc` or `--cx` is passed.
 
-The delegate receives this same skill (without the flag), reads the full SKILL.md, and reviews directly. No principle extraction or loop prevention needed.
+The delegate receives this same skill (without the flag), reads the full SKILL.md, and reviews directly.
 
 ## `--cc`: Delegate to Claude Code
 
@@ -37,23 +37,25 @@ fi
 
 ### Run the review
 
+**Each round's review delegation must use a fixed `task` invocation that runs this same `/review` skill end-to-end. Do not write per-round custom prompts, and do not narrow scope between rounds.** The prompt is a single invariant string, the same every round of every loop; any caller-written variation makes scope a property of the caller and collapses round-over-round as the loop narrows onto the last fix. Going through `task` (instead of `adversarial-review`) preserves `/review`'s full semantic contract — logic bugs, API contract breakage, meaningful testing gaps — which `adversarial-review`'s own SKILL.md explicitly excludes.
+
 Run the Codex companion from within the worktree:
 
 ```bash
 cd "$TMPDIR/review-<mr-number>"
-node "$CODEX_ROOT/scripts/codex-companion.mjs" adversarial-review --wait [pass-through flags] "<focus text>"
+node "$CODEX_ROOT/scripts/codex-companion.mjs" task --wait \
+  "Follow the review skill at ~/.claude/skills/review/SKILL.md. Review this worktree against base <base-ref> within scope <scope>. Output findings per the skill's Output section."
 ```
 
-- `--wait` is required: it keeps `argv.length >= 2` so the companion script does not re-tokenize the focus block.
-- Inline the focus text directly as a shell argument. Do not write it to a temp file.
-- Shell-quote the focus string so newlines are preserved as one argv element.
-- Pass through `--base <ref>` and `--scope <value>` from the user.
+- `--wait` is required: it keeps `argv.length >= 2` so the companion script does not re-tokenize the prompt.
+- `<base-ref>` and `<scope>` come from the user's original `/review --fix` flags and are invariant across rounds. Substitute once; do not recompute per round.
+- The prompt above is the entire prompt. Do not append per-round context, do not inject "verify the fix from Round N-1", do not reference specific files or prior rounds, do not add severity filters. The round's scope is what `<base>` / `<scope>` say it is.
 
 ### Filter findings
 
 Walk every finding from the Codex report:
 
-- **Keep**: finding cites observed failure, API contract, tenant isolation, data loss, auth bypass, race condition, schema drift, rollback risk, observability gap, or correctness bug.
+- **Keep**: finding cites observed failure, API contract, tenant isolation, data loss, auth bypass, race condition, schema drift, rollback risk, observability gap, or correctness bug. Fix every Keep regardless of severity — `autofix.md`'s exit condition is defined against the Keep set, not P1/High.
 - **Skip**: finding is entirely "add a null check / optional chaining / try-catch / fallback" with no evidence of observed failure or contract violation.
 - **Rewrite**: finding mixes a real concern with a defensive suggestion — keep the real concern, drop the defensive portion.
 
