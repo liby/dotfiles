@@ -1,7 +1,7 @@
 ---
 name: review
 description: Review a remote MR/PR (with description and discussion) or local code changes, reporting only real issues with context-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", or provides a MR/PR URL to review.
-argument-hint: "[--cc | --cx | --fix | URL | additional notes]"
+argument-hint: "[--cx | --fix | URL | additional notes]"
 allowed-tools:
   - Bash
   - Read
@@ -11,23 +11,32 @@ allowed-tools:
 
 ## Arguments
 
-### `--cc` / `--cx`: delegate to another model
+> Path references in this skill's docs (e.g. `scripts/codex-review.sh`) use the **deployed** filenames Claude Code actually invokes. In the chezmoi source tree, the same script lives at `scripts/executable_codex-review.sh` — chezmoi strips the `executable_` prefix at apply time. Run commands only after `chezmoi apply`.
 
-If `--cc` is passed, delegate to Claude Code. If `--cx` is passed, delegate to Codex. The delegate runs this same skill without the flag, so it reviews directly — no loop. See [references/delegation.md](references/delegation.md) for invocation details.
+### `--cx`: delegate to Codex
+
+If `--cx` is passed, run a dual-path Codex review in parallel: `/codex:review` (broad multi-persona coverage) + `codex exec --ephemeral` reading this skill (opinionated SKILL-driven pass). Main session merges findings and applies the filter. See [references/delegation.md](references/delegation.md).
 
 ### `--fix`: auto-fix loop
 
 Default (flag absent): review is **report-only**. Present findings and stop — the user decides what to fix.
 
-If `--fix` is passed, see [references/autofix.md](references/autofix.md) for the baseline setup and fix loop.
+If `--fix` is passed, this is a LOOP, not a single pass:
+
+1. **Before round 1**: create the baseline snapshot commit (temp-index + `git commit-tree`, **not** `git stash create`). Write the SHA to `$GIT_DIR/review-fix-baseline`.
+2. **Each round**: one full review → filter (Keep / Rewrite / Skip / Drop) → apply Keep + Rewrite's real part → run cheap validation → repeat step 2.
+3. **On `|Keep|=0` (convergence)**: `/simplify` → `/deslop` → emit the summary diff helper → output Convergence Summary → remove baseline file → exit.
+4. **Safety cap**: abort after 7 rounds without convergence; still emit the summary diff and Not-fixed list.
+
+**MUST read [references/autofix.md](references/autofix.md) before round 1** — the baseline / summary bash helpers there are load-bearing (they capture untracked files and autofix-created files correctly; `git stash create` silently drops them). Do not improvise.
+
+`--fix` is **local-mode only** — MR/PR reviews are always report-only.
 
 ## Goal
 
 Produce a high-signal review that focuses on real bugs, silent failure paths, bad state transitions, contract violations, semantic mismatches, security risks, meaningful testing gaps, and project-pattern mismatches.
 
 Do not pad the report with generic style advice. Do not give "textbook review" feedback detached from the repository's actual runtime model.
-
-Respond in Chinese unless the user explicitly asks otherwise.
 
 ## Review Process
 
@@ -39,10 +48,11 @@ Respond in Chinese unless the user explicitly asks otherwise.
 4. Infer the repository's real runtime context before deciding whether something is a blocker, a low-priority edge case, or not a real issue.
 5. Identify the real contract, semantics, ownership boundary, and failure model before commenting on implementation details.
 6. Report only the findings that survive that context check.
+7. For any finding shaped `missing X` / `no guard for Y` / `needs a Z layer`, walk the request-handling chain in order before filing: entrypoint → routing or auth middleware → wrapper / root layout → handler decorator or filter → the handler itself. If X is present at any earlier layer, the finding is `diff duplicates / conflicts with existing handler`, not `missing`. Only keep it as `missing` once every earlier layer has been grep'd and is empty. (Adapt the chain to the stack — CLI is entrypoint → argument parser → command dispatch; data pipeline is trigger → orchestrator → step; etc.)
 
 ### Project Conventions
 
-Before reviewing, scan for project-level agent instructions and review-specific rules: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agent/`, `README.md`, plus any project-level review files such as `.claude/skills/*review*/SKILL.md`, `.claude/commands/*review*.md`, `REVIEW.md`, `CODE_REVIEW.md`, or `CONTRIBUTING.md`. If found, read them in full. Where they conflict with this skill's rules, defer to the project — it reflects local ground truth. Where they don't conflict, treat them as complementary context and additional review rules (e.g., "this repo runs on K8s" informs severity for config errors; a project's own review checklist layers on top of this skill's defaults).
+Before reviewing, scan for project-level agent instructions and review-specific rules: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`, `README.md`, plus any project-level review files such as `.claude/skills/*review*/SKILL.md`, `.agents/skills/*review*/SKILL.md`, `.claude/commands/*review*.md`, `REVIEW.md`, `CODE_REVIEW.md`, or `CONTRIBUTING.md`. If found, read them in full. Where they conflict with this skill's rules, defer to the project — it reflects local ground truth. Where they don't conflict, treat them as complementary context and additional review rules (e.g., "this repo runs on K8s" informs severity for config errors; a project's own review checklist layers on top of this skill's defaults).
 
 ### Context Gathering
 
@@ -63,16 +73,23 @@ glab mr view <number> --output json | jq -r '["title","state","author","source",
 
 Fetch description and discussions separately (these need full text, not TSV). Summarize the parts that materially affect the review: threat model, rollout assumptions, compatibility promises, migration notes, and anything reviewers already challenged. When existing discussions already debated a point, factor that into the review instead of repeating it blindly.
 
-Check out the head branch in a worktree so you can read files directly and run project validation commands:
+Check out the PR/MR head in a worktree so you can read files directly and run project validation commands. Fetch the head via the platform's merge-request ref namespace — this works for forks (both GitHub and GitLab mirror fork heads into `refs/pull/<N>/head` / `refs/merge-requests/<N>/head` on the target repo) and always reflects the latest remote head.
 
 ```bash
-git fetch origin
-git worktree add "$TMPDIR/review-<mr-number>" origin/<head-branch> --detach
+# GitHub
+git fetch origin "pull/<number>/head"
+git worktree add --detach "$TMPDIR/review-<number>" FETCH_HEAD
+
+# GitLab
+git fetch origin "merge-requests/<number>/head"
+git worktree add --detach "$TMPDIR/review-<number>" FETCH_HEAD
 ```
 
-Run validation and diff commands from within the worktree. Clean up with `git worktree remove` after the review completes. If worktree creation fails (e.g. branch already checked out), fall back to `git show <ref>:path` for file reads — validation commands will not be available in this mode.
+Do not `git fetch origin` + `git worktree add origin/<head-branch>`: that silently checks out the wrong branch when the PR/MR is from a fork, and trusts stale remote-tracking refs.
 
-For the diff, `git diff <base>...<head>`.
+Run validation and diff commands from within the worktree. Clean up with `git worktree remove --force "$TMPDIR/review-<number>"` after the review completes.
+
+For the diff, `git diff <base-ref>...FETCH_HEAD`, where `<base-ref>` is the MR/PR's target branch from the metadata (`target_branch` for glab, `baseRefName` for gh).
 
 **Local mode**: Diff the working tree or branch against the base (`--base <ref>`, or infer from the branch's upstream).
 
@@ -138,6 +155,8 @@ Adapt emphasis by project type, but keep the same standard of evidence:
 
 Do not overrate a theoretical edge case that contradicts the repository's actual runtime model. Do not underrate a bug that can strand the system in a persistent bad state.
 
+A finding shaped `behavior X is missing` is a claim about the whole repo, not the diff. Absence from touched files is not absence from the system — run Flow step 7 before it becomes Keep.
+
 ### 5. Prefer simplicity
 
 Do not propose heavyweight redesigns unless the current approach is genuinely unsafe or broken.
@@ -179,6 +198,8 @@ Look in this order:
 
 Do not start from formatting, micro-style, or speculative edge cases.
 
+Findings shaped `this diff adds code that another layer already handles` belong in priorities 3 (ownership boundary) and 6 (complexity). They do not surface naturally: the reviewer's default question is "what could break?", not "what's redundant?" Ask the redundancy question explicitly at least once per review.
+
 ## Severity Guidance
 
 - `P1`: likely in normal or high-probability usage, or leaves a persistent bad state, or misleads the user/system into believing the operation succeeded
@@ -208,7 +229,21 @@ Do not invent new verification commands. Do not run dev servers, build servers, 
 
 When a claim is about semantics, verify it against neighboring names, docs, tests, or call sites. Do not rely on wording intuition alone.
 
+### Runtime-verification-required claims
+
+Some claims only settle at runtime. Skip them and list in the termination output. Typical shapes:
+
+- Identifier-space equality — two ids the code pipelines as equal whose live values may diverge.
+- Cross-tab / cross-device timing — stale persisted cache vs. newer server state.
+- UI state-machine behavior — button disables, flicker, touch vs. hover.
+- Browser / runtime compatibility.
+- DB migration state — query error as "missing table" vs. "transient fault".
+
+Escalate a Skip to Keep only when the main session observes the behavior directly: a failing test, a `curl` returning the wrong value, a grep'd call site contradicting the claim. Additional code-reading evidence from later `--cx` rounds is not observation — it is the same inference restated.
+
 ## Output
+
+**Response language: Chinese (中文).** All narrative prose — findings, explanations, severity rationale, fix directions, convergence summaries, round-by-round status — must be Chinese. English is reserved for: code identifiers, file paths, `file.ext:line` citations, quoted code, and fixed label terms (`Background` / `Root cause` / `Solution` / `Applied Keep` / `Skip` / `Drop` / `Not fixed` / severity tags `P1`/`P2`/`P3`). This rule **overrides** the English phrasing of this skill's own docs — they are reference material, not output style.
 
 Start with a direct conclusion: whether the MR should be blocked, how many issues at each severity, and the overall assessment.
 
@@ -224,9 +259,19 @@ Report all issues regardless of severity. If a finding is low-priority, say so a
 
 If no real findings survive scrutiny, say so plainly.
 
+### `--fix` termination output
+
+Alongside the bucket counts, emit **Needs manual verification** for every runtime-verification Skip. Each entry: `file:line`, one-line claim, and the concrete observation to make (which page to open, which endpoint to hit, which two tabs to compare, which DB row to check).
+
 ## Writing Rules
 
-- Do not start with a long overview.
+- Do not start with a long overview — jump to the first finding.
 - Every vague phrase must be immediately followed by a specific trigger and consequence. If you say "bad state", "edge case", or "inconsistent check", translate it into what actually breaks and how.
-- Do not report a finding unless you can point to code that demonstrates it.
-- Prefer short, direct conclusions plus concrete evidence and fix direction.
+
+(Global conclusion-first / evidence-first / concise-prose rules come from the user's `CLAUDE.md`. This section only layers review-specific additions.)
+
+## Self-improve Journal
+
+Before exiting any review, write one entry to `~/.claude/skills/review/journal.md` capturing what to delete / codify / keep / flag for skill evolution. Main-session only — Codex delegates under `--cx` contribute observations via a `Journal suggestions` block in their prose output; the main session merges both sides into the single entry. For `--fix` loops: one entry per session, at exit, never per round.
+
+Full spec (schema, header fields, hard rules): [references/journal.md](references/journal.md).

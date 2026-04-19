@@ -2,8 +2,6 @@
 
 When `--fix` is passed, auto-apply fixes and loop until the review is clean, then run finishing passes and summarize.
 
-**Loop convergence means the chosen reviewer found no Keep findings in the latest sample.** It is not proof of feature correctness — the reviewer has inherent sampling variance and framing limits, and cross-file invariants are the category most likely to slip through.
-
 ## Setup
 
 Main session, once before round 1 — `/review` re-invocations detect the baseline file and must skip this branch:
@@ -11,37 +9,74 @@ Main session, once before round 1 — `/review` re-invocations detect the baseli
 ```bash
 BASELINE_FILE="$(git rev-parse --git-dir)/review-fix-baseline"
 if [ ! -f "$BASELINE_FILE" ]; then
-  BASELINE=$(git stash create); [ -z "$BASELINE" ] && BASELINE=$(git rev-parse HEAD)
+  # Snapshot the full working-tree state (tracked + staged + untracked) through a
+  # temp index so the baseline is a self-contained commit we can diff against at
+  # termination. `git stash create [-u]` doesn't work here: without -u it drops
+  # untracked, and with -u it puts untracked on a side parent whose content is
+  # invisible when diffing the primary commit directly.
+  TMP_INDEX=$(mktemp)
+  GIT_INDEX_FILE="$TMP_INDEX" git read-tree HEAD
+  GIT_INDEX_FILE="$TMP_INDEX" git add -A
+  BASELINE_TREE=$(GIT_INDEX_FILE="$TMP_INDEX" git write-tree)
+  rm "$TMP_INDEX"
+  BASELINE=$(git commit-tree "$BASELINE_TREE" -p HEAD -m "review-fix-baseline")
   echo "$BASELINE" > "$BASELINE_FILE"
 fi
 ```
 
-The baseline isolates the fix loop's changes from any pre-existing uncommitted work.
+The baseline is a detached commit object capturing the full working-tree state at round-1 entry. The fix loop's changes are anything that diverges from it at termination — including modifications to pre-existing untracked files and net-new files autofix created.
 
 ## Loop
 
-1. Report findings from this round.
-2. Apply the recommended fix direction directly to the code in the main session.
-3. Re-invoke `/review` with the same flags (including `--fix`) to verify. **This must be the same whole-feature review as Round 1 — same flags, same `--base` / `--scope`, no custom prompt, no narrowed scope, no "verify the fix from Round N-1" framing.** For `--cx`, this means the fixed `task` prompt defined in [delegation.md](delegation.md), byte-for-byte identical every round. Scope narrowing between rounds is how cross-file invariants slip through: each round must re-run the same broad sweep so a round-N fix that breaks a round-K invariant is still caught.
-4. Loop until the review reports no Keep findings (see [delegation.md](delegation.md) for the Keep / Skip / Rewrite classification). A real Keep is a real Keep regardless of severity. Track each Keep across rounds by identity `(file path, line range, title)`, not by raw count — `{A}→{B}→{A}` oscillation keeps count at 1, and `{A,B}→{B,C}→{C,D}` sliding keeps count at 2, but neither is progress.
+`--fix` is local-mode only (see SKILL.md). It wraps a single review in an apply-fix-and-re-review loop; it does not change what a single review does.
 
-   Stall conditions (any one stops the loop early):
-   - **Oscillation**: a finding retired in an earlier round reappears (same identity) in a later round — a fix re-introduced something a prior fix cleared.
-   - **No forward progress**: two consecutive rounds where the prior round's Keep set loses zero members in the current round — the loop is treading water or sliding.
-   - **Hard backstop**: 10 total rounds. Past that, the feature needs a human design pass, not more loop iterations.
+The per-round flow:
 
-   On any stall, abort and hand off: report the outstanding Keep findings with file/line evidence, preserve `$BASELINE_FILE` **and the worktree** so the user can inspect partial progress via `git diff "$(cat "$BASELINE_FILE")"`, and do not proceed to finishing passes or the summary — both assume clean convergence.
-5. Run `/simplify`, then `/deslop`, as finishing passes (those skills auto-fix by design).
-6. Summarize with `git diff "$(cat "$BASELINE_FILE")"`, then clean up: `rm "$BASELINE_FILE"` and `git worktree remove "$TMPDIR/review-<mr-number>"`. The baseline file is the source of truth and survives compaction — do not rely on session memory for what was changed.
+1. Run the review against the user's live checkout (no per-round worktree rebuild — `--fix` reads files directly each round, which naturally reflects the previous round's applied fixes). **Every round uses the same invocation: same flags, no custom prompt, no "verify the fix from Round N-1" framing.** Scope narrowing between rounds is how cross-file invariants slip through — a round-N fix that breaks a round-K invariant only surfaces if the same broad sweep runs again.
+    - Plain `--fix` = main session reviews directly, reading the checkout with the Read/Grep/Glob tools per SKILL.md.
+    - `--fix --cx` = main session invokes [`scripts/codex-review.sh`](../scripts/codex-review.sh) with the same `--base` / `--remote` / `--platform` flags every round and merges both Codex paths per [delegation.md](delegation.md). The script is idempotent given unchanged HEAD / upstream / origin/HEAD.
+2. Apply recommended fixes directly to the checkout in the main session.
+3. Run existing validation commands (tests, lint, typecheck) if cheap. Required for `--cx`: both Codex paths are `read-only` sandboxed and cannot verify fixes themselves.
+4. If the merged Keep set is non-empty → next round (step 1). If empty → convergence, follow [Termination](#termination).
 
-## Composition with `--cc` / `--cx`
+## Termination
 
-Delegation and `--fix` are orthogonal: delegation controls *who* reviews; `--fix` controls *what the main session does after the review returns*. All autofix state (baseline, loop, finishing passes, summary) lives in the main session.
+At termination (either path below) run the summary diff via the helper below. It builds a matching post-fix snapshot through its own temp index, so `git diff` compares two self-contained commits — no `git add -A` on the user's real index, no pre-existing untracked pollution, and any autofix changes to pre-existing untracked files show up too:
 
-Per [delegation.md](delegation.md), the delegate receives `/review` with all flags stripped — it reports findings and exits, never drives the loop. The flow is symmetric regardless of which model is delegated to:
+```bash
+summary_diff() {
+  local baseline_file="$1"
+  local baseline_sha
+  baseline_sha=$(cat "$baseline_file")
+  local tmp_index
+  tmp_index=$(mktemp)
+  GIT_INDEX_FILE="$tmp_index" git read-tree HEAD
+  GIT_INDEX_FILE="$tmp_index" git add -A
+  local final_tree
+  final_tree=$(GIT_INDEX_FILE="$tmp_index" git write-tree)
+  rm "$tmp_index"
+  local final_sha
+  final_sha=$(git commit-tree "$final_tree" -p "$baseline_sha" -m "review-fix-final")
+  git diff "$baseline_sha" "$final_sha"
+  rm -f "$baseline_file"
+}
+```
 
-1. Main session creates the baseline (setup above, idempotent across rounds).
-2. Main session delegates one review round to the chosen reviewer (Codex for `--cx`, Claude Code for `--cc`); the delegate returns findings.
-3. Main session applies fixes, then re-invokes `/review` with the same flags → back to step 2. The re-invocation goes through the same delegation path, not a custom prompt.
-4. On a clean round (no Keep findings), main session runs `/simplify` then `/deslop` directly (finishing passes are not delegated).
-5. Main session diffs against the baseline, summarizes, then removes both the baseline file and the review worktree.
+**Convergence** (primary): When `|Keep|` reaches 0, run `/simplify` then `/deslop`, then `summary_diff "$BASELINE_FILE"` to show the final diff. Output the summary (see below), exit.
+
+**Safety cap** (secondary): After 7 rounds without convergence, abort. Output: (1) remaining Keep findings as Not fixed, labeled "reached round cap — user judgment needed"; (2) `Baseline: <sha>` inline; (3) `summary_diff "$BASELINE_FILE"` output inline.
+
+## Convergence Summary Format
+
+On convergence exit, output (per SKILL.md `## Output`: bucket labels and `file:line` stay English, prose is Chinese):
+
+- Applied Keep: N
+- Applied Rewrite (real-part-only): M
+- Skip: X  (defensive-guard without trigger, unverified contract risk, runtime-verification-required)
+- Drop: Y  (explicitly NOT — generic style, unwarranted performance/maintainability nits)
+- Not fixed: Z  with `file:line` and reason per item
+- Needs manual verification: K  runtime-verification Skips per SKILL.md `## Output → --fix termination output`. Each entry: `file:line`, one-line claim, observation to make (page / endpoint / two tabs / DB row).
+
+Main session counts these buckets directly from per-round filter decisions. No schema required.
+
+Keep "Needs manual verification" separate from "Not fixed": the former is Skips left for human judgment; the latter is Keeps the main session tried to apply and couldn't.
