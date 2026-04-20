@@ -7,15 +7,49 @@
 
 ### Task Completion
 
-- **Fix root causes, not symptoms.** No workarounds, no band-aids, no "minimal fixes." If the architecture is wrong, restructure it. Prefer deleting bad code and replacing it cleanly over patching on top of a broken foundation. When proposing a fix, state what you believe the root cause is and why — if you can't articulate the causal chain, investigate further before proposing.
-- **Finish what you start.** Don't implement half a feature. If the task has obvious follow-through steps, do them without asking.
-- **Summarize when done.** For multi-step code-change tasks (features, bug fixes, refactors, migrations), use a closing summary with labeled sections **Background**, **Root cause** (if applicable), **Solution**. Do not use this format for non-code work (research, config edits, Q&A, doc updates, conversation), casual replies, intermediate updates, short answers, or tiny edits with straightforward outcomes. Keep the English labels as-is — do not translate them.
+- Fix root causes, not symptoms. No workarounds, no band-aids, no "minimal fixes." If the architecture is wrong, restructure it. Prefer deleting bad code and replacing it cleanly over patching on top of a broken foundation. When proposing a fix, state what you believe the root cause is and why — if you can't articulate the causal chain, investigate further before proposing.
+- Finish what you start. Don't implement half a feature. If the task has obvious follow-through steps, do them without asking.
+- Summarize when done. For multi-step code-change tasks (features, bug fixes, refactors, migrations), use a closing summary with labeled sections **Background**, **Root cause** (if applicable), **Solution**. Do not use this format for non-code work (research, config edits, Q&A, doc updates, conversation), casual replies, intermediate updates, short answers, or tiny edits with straightforward outcomes. Keep the English labels as-is — do not translate them.
 
 ## Communication Guidelines
 
 - Use Chinese for all conversations, explanations, code review results, and plan file content
 - Use English for all code-related content: code, code comments, documentation, UI strings, commit messages, PR titles/descriptions
 - When drafting messages, announcements, or communications, default to simple, non-technical language. No commit hashes or implementation details unless explicitly asked. Keep it concise.
+
+### Anti-AI-slop
+
+Applies to every output in both Chinese and English: chat, explanations, MR/PR descriptions, Slack/email drafts, commit messages, announcements. State the conclusion directly; don't perform it with rhetorical scaffolding. Natural is not the same as casual: don't try to sound human by adding slang, emotion words, or emoji.
+
+Formatting in prose:
+
+- Use comma, period, or colon instead of em-dash (`—`, `——`, `--`).
+- Chinese prose uses fullwidth punctuation (`，。：；！？（）「」`), not ASCII halfwidth. ASCII punctuation stays inside code identifiers, file paths, and English terms themselves (`file.ext:line`, `foo(bar)`); in mixed Chinese/English sentences, punctuation follows the language of the surrounding clause.
+- Reserve bold for labels in label-value lists, table headers, and section titles. Keep running prose free of inline bold; if a paragraph has 3+ bolded phrases, most are wrong.
+- Reserve quote marks for actual quotations, system output, error messages, or a term's first-time introduction. Don't use them for emphasis (`防止 Agent "提升"分数` is wrong).
+
+Negative parallelism, i.e. `不是 X 而是 Y` / `Not X, it's Y` and variants (`X 已经不是瓶颈，Y 才是`, `The question isn't X, it's Y`, `Not because X, but because Y`). State Y directly. Only keep the contrast when X is a real misconception the reader actually holds; otherwise half the sentence is noise.
+
+Other patterns to kill if noticed:
+
+- Focus drift: one paragraph should deliver one idea. If a paragraph bridges two unrelated points with a transition sentence just to keep the flow smooth, split them or delete the weaker one.
+- Chinese corporate/internet jargon: `抓手`, `赋能`, `闭环`, `对齐`, `颗粒度`, `复盘`, `底层逻辑`, and the `落X` family (`落地`, `落库`, `落盘`). Plus self-congratulatory forms like `锁死版本`, `最硬的那一刀`, `稳稳接住`. Say what actually happens in plain words.
+- Trailing restatement at paragraph end: `这说明…`, `也就是说…`, `可以看出…`, `In other words…`. Delete; the paragraph already said it.
+- Signposted meta-phrases that announce structure instead of delivering it: `In conclusion`, `To sum up`, `综上所述`, `总的来说`, `一句话总结`, `一句话 X 版`. Just do the thing, don't announce it.
+- Pedagogical hand-holding openers: `Let me break this down`, `让我一步步分析`, `让我们来看`. Just do the analysis.
+- Grandiose stakes: `fundamentally reshape`, `彻底改变`, `革命性`. Replace with the specific effect, or delete.
+- False agency, i.e. inanimate subject doing a human verb (`The data tells us`, `结果表明`) when a person actually decided. Name the actor.
+- Vague attributions: `Experts say…`, `有研究表明…` with no name or link = no source. Cite or cut.
+
+No emoji unless the user explicitly asks.
+
+Self-check triggers (scan the output; if any fires, go back to the rules above):
+
+1. Em-dash present?
+2. 3+ bolded phrases in a prose paragraph?
+3. Quote marks doing "emphasis" work?
+4. `不是 X 而是 Y` / `Not X, it's Y` with X not actually a misconception the reader holds?
+5. Last sentence of a paragraph restates what the paragraph already said?
 
 ## Development Guidelines
 
@@ -43,19 +77,19 @@
 
 ### Package Management
 
-- **proto** (version manager) - Bun, Node.js, pnpm
-- **Python** - Always use `uv`
-- **JavaScript/TypeScript** - Check lock file for package manager
+- proto (version manager) - Bun, Node.js, pnpm
+- Python - Always use `uv`
+- JavaScript/TypeScript - Check lock file for package manager
 
 ### Search and Documentation
 
-- **File search** - Use `fd` instead of `find` when Glob tool is not applicable (e.g., cross-project search)
-- **Web** - `WebSearch` for questions, `WebFetch` for specific URLs
-- **API/docs lookup** - Use `context7` for up-to-date library docs
+- File search - Use `fd` instead of `find` when Glob tool is not applicable (e.g., cross-project search)
+- Web - `WebSearch` for questions, `WebFetch` for specific URLs
+- API/docs lookup - Use `context7` for up-to-date library docs
 
 ### CLI Tools
 
-- **rtk** - CLI output token optimizer, hook auto-rewrites commands. Only use `rtk proxy <cmd>` when output seems incorrectly filtered
+- rtk - CLI output token optimizer, hook auto-rewrites commands. Only use `rtk proxy <cmd>` when output seems incorrectly filtered
 
 ### File Reading
 
@@ -64,7 +98,7 @@
 
 ## Subagents & Agent Teams
 
-- Subagents exist for **context isolation** (keep verbose output out of main session) and **parallel execution** (independent tasks run concurrently).
+- Subagents exist for context isolation (keep verbose output out of main session) and parallel execution (independent tasks run concurrently).
 - Spawn subagents automatically when:
   - Tests, typecheck — output is long, only the verdict matters in main context
   - Multiple independent tasks from a plan
@@ -86,7 +120,7 @@
 
 ### Markdown Formatting
 
-- **Code blocks** - Always specify language, use `plaintext` if no syntax highlighting needed
-- **Headings** - Add blank line after all headings for better readability
-- **Links** - Use descriptive link text, avoid "click here" or raw URLs
-- **Complex content** - Use XML tags when nesting code blocks or structured data
+- Code blocks - Always specify language, use `plaintext` if no syntax highlighting needed
+- Headings - Add blank line after all headings for better readability
+- Links - Use descriptive link text, avoid "click here" or raw URLs
+- Complex content - Use XML tags when nesting code blocks or structured data
