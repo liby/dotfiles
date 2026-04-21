@@ -11,26 +11,24 @@ allowed-tools:
 
 ## Arguments
 
-> Path references in this skill's docs (e.g. `scripts/codex-review.sh`) use the **deployed** filenames Claude Code actually invokes. In the chezmoi source tree, the same script lives at `scripts/executable_codex-review.sh` — chezmoi strips the `executable_` prefix at apply time. Run commands only after `chezmoi apply`.
-
 ### `--cx`: delegate to Codex
 
 If `--cx` is passed, run a dual-path Codex review in parallel: `/codex:review` (broad multi-persona coverage) + `codex exec --ephemeral` reading this skill (opinionated SKILL-driven pass). Main session merges findings and applies the filter. See [references/delegation.md](references/delegation.md).
 
 ### `--fix`: auto-fix loop
 
-Default (flag absent): review is **report-only**. Present findings and stop — the user decides what to fix.
+Default (flag absent): review is report-only. Present findings and stop — the user decides what to fix.
 
 If `--fix` is passed, this is a LOOP, not a single pass:
 
-1. **Before round 1**: create the baseline snapshot commit (temp-index + `git commit-tree`, **not** `git stash create`). Write the SHA to `$GIT_DIR/review-fix-baseline`.
-2. **Each round**: one full review → filter (Keep / Rewrite / Skip / Drop) → apply Keep + Rewrite's real part → run cheap validation → repeat step 2.
-3. **On `|Keep|=0` (convergence)**: `/simplify` → `/deslop` → emit the summary diff helper → output Convergence Summary → remove baseline file → exit.
-4. **Safety cap**: abort after 7 rounds without convergence; still emit the summary diff and Not-fixed list.
+1. Before round 1: create the baseline snapshot commit (temp-index + `git commit-tree`, NOT `git stash create`). Write the SHA to `$GIT_DIR/review-fix-baseline`.
+2. Each round: one full review → filter (Keep / Rewrite / Skip / Drop) → apply Keep + Rewrite's real part → run cheap validation → repeat step 2.
+3. On `|Keep|=0` (convergence): `/simplify` → `/deslop` → emit the summary diff helper → output Convergence Summary → remove baseline file → exit.
+4. Round budget (5 rounds): Round 5 is the final round. At its end, emit the summary diff plus any remaining Keep findings as the handoff list, and exit. The budget is the loop's contract with the user: return control at a predictable point, with a concrete Not-fixed list they can act on. Rounds 1–3 surface issues in the original diff; rounds 4–5 polish what those rounds produced; beyond 5, new findings trend toward reactions to earlier fixes rather than the original work, so five rounds keeps the handoff crisp. In-round directives like "都可以修 / fix everything" calibrate Keep/Skip aggressiveness inside a round; the round budget is a separate property of the loop itself. See [references/autofix.md](references/autofix.md) for the terminal-block format.
 
-**MUST read [references/autofix.md](references/autofix.md) before round 1** — the baseline / summary bash helpers there are load-bearing (they capture untracked files and autofix-created files correctly; `git stash create` silently drops them). Do not improvise.
+MUST read [references/autofix.md](references/autofix.md) before round 1 — the baseline / summary bash helpers there are load-bearing (they capture untracked files and autofix-created files correctly; `git stash create` silently drops them). Do not improvise.
 
-`--fix` is **local-mode only** — MR/PR reviews are always report-only.
+`--fix` is local-mode only — MR/PR reviews are always report-only.
 
 ## Goal
 
@@ -58,12 +56,14 @@ Before reviewing, scan for project-level agent instructions and review-specific 
 
 Determine the review mode:
 
-- **MR/PR mode** (URL or number provided): fetch metadata from the remote, then diff locally.
-- **Local mode** (no URL): diff the working tree, staged changes, or branch against `--base <ref>`.
+- MR/PR mode (URL or number provided): fetch metadata from the remote, then diff locally.
+- Local mode (no URL): diff the working tree, staged changes, or branch against `--base <ref>`.
 
 The review principles, severity, and output are the same in both modes. Only the context gathering differs.
 
-**MR/PR mode**: Use `glab` to fetch from GitLab. If the repository remote is GitHub, fall back to `gh`.
+#### MR/PR mode
+
+Use `glab` to fetch from GitLab. If the repository remote is GitHub, fall back to `gh`.
 
 Fetch MR metadata as TSV to minimize output tokens:
 
@@ -91,7 +91,9 @@ Run validation and diff commands from within the worktree. Clean up with `git wo
 
 For the diff, `git diff <base-ref>...FETCH_HEAD`, where `<base-ref>` is the MR/PR's target branch from the metadata (`target_branch` for glab, `baseRefName` for gh).
 
-**Local mode**: Diff the working tree or branch against the base (`--base <ref>`, or infer from the branch's upstream).
+#### Local mode
+
+Diff the working tree or branch against the base (`--base <ref>`, or infer from the branch's upstream).
 
 ### Read Surrounding Code
 
@@ -243,7 +245,7 @@ Escalate a Skip to Keep only when the main session observes the behavior directl
 
 ## Output
 
-**Response language: Chinese (中文).** All narrative prose — findings, explanations, severity rationale, fix directions, convergence summaries, round-by-round status — must be Chinese. English is reserved for: code identifiers, file paths, `file.ext:line` citations, quoted code, and fixed label terms (`Background` / `Root cause` / `Solution` / `Applied Keep` / `Skip` / `Drop` / `Not fixed` / severity tags `P1`/`P2`/`P3`). This rule **overrides** the English phrasing of this skill's own docs — they are reference material, not output style.
+Response language: Chinese (中文). All narrative prose — findings, explanations, severity rationale, fix directions, convergence summaries, round-by-round status — must be Chinese. English is reserved for: code identifiers, file paths, `file.ext:line` citations, quoted code, and fixed label terms (`Background` / `Root cause` / `Solution` / `Applied Keep` / `Skip` / `Drop` / `Not fixed` / severity tags `P1`/`P2`/`P3`). This rule OVERRIDES the English phrasing of this skill's own docs — they are reference material, not output style.
 
 Start with a direct conclusion: whether the MR should be blocked, how many issues at each severity, and the overall assessment.
 
@@ -261,7 +263,7 @@ If no real findings survive scrutiny, say so plainly.
 
 ### `--fix` termination output
 
-Alongside the bucket counts, emit **Needs manual verification** for every runtime-verification Skip. Each entry: `file:line`, one-line claim, and the concrete observation to make (which page to open, which endpoint to hit, which two tabs to compare, which DB row to check).
+Alongside the bucket counts, emit `Needs manual verification` for every runtime-verification Skip. Each entry: `file:line`, one-line claim, and the concrete observation to make (which page to open, which endpoint to hit, which two tabs to compare, which DB row to check).
 
 ## Writing Rules
 

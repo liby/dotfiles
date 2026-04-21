@@ -32,7 +32,7 @@ The baseline is a detached commit object capturing the full working-tree state a
 
 The per-round flow:
 
-1. Run the review against the user's live checkout (no per-round worktree rebuild — `--fix` reads files directly each round, which naturally reflects the previous round's applied fixes). **Every round uses the same invocation: same flags, no custom prompt, no "verify the fix from Round N-1" framing.** Scope narrowing between rounds is how cross-file invariants slip through — a round-N fix that breaks a round-K invariant only surfaces if the same broad sweep runs again.
+1. Run the review against the user's live checkout (no per-round worktree rebuild — `--fix` reads files directly each round, which naturally reflects the previous round's applied fixes). Every round uses the same invocation: same flags, no custom prompt, no "verify the fix from Round N-1" framing. Scope narrowing between rounds is how cross-file invariants slip through — a round-N fix that breaks a round-K invariant only surfaces if the same broad sweep runs again.
     - Plain `--fix` = main session reviews directly, reading the checkout with the Read/Grep/Glob tools per SKILL.md.
     - `--fix --cx` = main session invokes [`scripts/codex-review.sh`](../scripts/codex-review.sh) with the same `--base` / `--remote` / `--platform` flags every round and merges both Codex paths per [delegation.md](delegation.md). The script is idempotent given unchanged HEAD / upstream / origin/HEAD.
 2. Apply recommended fixes directly to the checkout in the main session.
@@ -62,9 +62,18 @@ summary_diff() {
 }
 ```
 
-**Convergence** (primary): When `|Keep|` reaches 0, run `/simplify` then `/deslop`, then `summary_diff "$BASELINE_FILE"` to show the final diff. Output the summary (see below), exit.
+#### Convergence (primary exit)
 
-**Safety cap** (secondary): After 7 rounds without convergence, abort. Output: (1) remaining Keep findings as Not fixed, labeled "reached round cap — user judgment needed"; (2) `Baseline: <sha>` inline; (3) `summary_diff "$BASELINE_FILE"` output inline.
+When `|Keep|` reaches 0, run `/simplify` then `/deslop`, then `summary_diff "$BASELINE_FILE"` to show the final diff. Output the summary (see below), exit.
+
+#### Round budget (secondary exit, after 5 rounds)
+
+Check `|Keep|` at the end of each round. If `|Keep| == 0`, take the convergence path above. If round 5 ends with `|Keep| > 0`, the loop's output becomes the handoff — emit one final block and exit:
+
+1. remaining Keep findings as `Not fixed`, labeled "reached round budget — user judgment needed"
+2. `Baseline: <sha>` inline
+3. `summary_diff "$BASELINE_FILE"` output inline
+4. `rm -f "$BASELINE_FILE"`
 
 ## Convergence Summary Format
 
