@@ -34,6 +34,8 @@ brew "polymarket/polymarket-cli/polymarket"
 brew "ripgrep"
 # CLI proxy to minimize LLM token consumption
 brew "rtk"
+# Snowflake Developer CLI for SQL and data warehouse operations
+brew "snowflake-cli"
 # Cross-shell prompt for astronauts
 brew "starship"
 # Extremely fast Python package installer and resolver, written in Rust
