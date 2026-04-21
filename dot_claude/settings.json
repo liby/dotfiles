@@ -16,7 +16,8 @@
     "DISABLE_INSTALLATION_CHECKS": "1",
     "DISABLE_TELEMETRY": "1",
     "ENABLE_PROMPT_CACHING_1H": "1",
-    "ENABLE_TOOL_SEARCH": "1"
+    "ENABLE_TOOL_SEARCH": "1",
+    "MCP_CONNECTION_NONBLOCKING": "1"
   },
   "attribution": {
     "commit": "",
@@ -25,14 +26,11 @@
   "includeGitInstructions": false,
   "permissions": {
     "allow": [
-      "Agent",
       "Bash",
       "Bash(rm .git/review-*)",
       "Edit",
-      "ExitPlanMode",
       "Glob",
       "Grep",
-      "KillShell",
       "LSP",
       "mcp__ide__*",
       "mcp__plugin_atlassian_atlassian__*",
@@ -40,13 +38,6 @@
       "NotebookEdit",
       "Read",
       "Skill",
-      "TaskCreate",
-      "TaskGet",
-      "TaskList",
-      "TaskOutput",
-      "TaskStop",
-      "TaskUpdate",
-      "ToolSearch",
       "WebFetch",
       "WebSearch",
       "Write"
@@ -77,7 +68,6 @@
       "Write(~/*/auth.json*)"
     ],
     "ask": [
-      "Bash(*git commit*)",
       "Bash(*git push*)"
     ]
   },
