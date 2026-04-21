@@ -28,4 +28,13 @@ Create a git commit for: $ARGUMENTS
   - If the diff touches code you did not just write in this session, and the motivation is not already in the current conversation or a linked plan/issue, spawn `compound-engineering:research:session-historian` in the same batch — pass it the list of changed paths and ask for the motivation behind each one from prior sessions. Skip only for trivial one-line changes or when you already hold the full reasoning.
 2. Stage relevant files with `git add`.
 3. Verify staging: `git diff --staged --name-only`. Unstage anything unrelated.
-4. Commit with a message following the rules above. Before sending, sanity-check: does the body explain why a reader should care? If it only describes what moved, rewrite.
+4. Pipe a single-quoted heredoc straight into `git commit -F -`:
+
+    ```bash
+    git commit -F - <<'COMMIT_MSG_END'
+    <message exactly as it should read in `git log`>
+    COMMIT_MSG_END
+    ```
+
+    The single quotes on `'COMMIT_MSG_END'` disable every form of shell expansion, so write backticks, `$`, `\`, `!`, and `"` literally with no escaping. Do not default to `<<'EOF'`: `EOF` is common in technical prose and collides whenever the commit message quotes heredoc examples or discusses end-of-file semantics. Do not wrap the heredoc in `"$(cat <<'...' ... )"` or `git commit -m "..."`, that reintroduces a double-quoted layer where escaping habits misfire.
+5. Before sending, sanity-check the message: does the body explain why a reader should care? If it only describes what moved, rewrite.
