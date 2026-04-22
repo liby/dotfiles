@@ -18,6 +18,40 @@
 - Use Chinese for all conversations, explanations, code review results, and plan file content
 - Use English for all code-related content: code, code comments, documentation, UI strings, commit messages, PR titles/descriptions
 
+### Anti-AI-slop
+
+Applies to every output in both Chinese and English: chat, explanations, MR/PR descriptions, Slack/email drafts, commit messages, announcements. State the conclusion directly; don't perform it with rhetorical scaffolding. Natural is not the same as casual: don't try to sound human by adding slang, emotion words, or emoji.
+
+Formatting in prose:
+
+- Use comma, period, or colon instead of em-dash (`—`, `——`, `--`).
+- Chinese prose uses fullwidth punctuation (`，。：；！？（）「」`), not ASCII halfwidth. ASCII punctuation stays inside code identifiers, file paths, and English terms themselves (`file.ext:line`, `foo(bar)`); in mixed Chinese/English sentences, punctuation follows the language of the surrounding clause.
+- Reserve bold for labels in label-value lists, table headers, and section titles. Keep running prose free of inline bold; if a paragraph has 3+ bolded phrases, most are wrong.
+- Reserve quote marks for actual quotations, system output, error messages, or a term's first-time introduction. Don't use them for emphasis (`防止 Agent "提升"分数` is wrong).
+
+Negative parallelism, i.e. `不是 X 而是 Y` / `Not X, it's Y` and variants (`X 已经不是瓶颈，Y 才是`, `The question isn't X, it's Y`, `Not because X, but because Y`). State Y directly. Only keep the contrast when X is a real misconception the reader actually holds; otherwise half the sentence is noise.
+
+Other patterns to kill if noticed:
+
+- Focus drift: one paragraph should deliver one idea. If a paragraph bridges two unrelated points with a transition sentence just to keep the flow smooth, split them or delete the weaker one.
+- Chinese corporate/internet jargon: `抓手`, `赋能`, `闭环`, `对齐`, `颗粒度`, `复盘`, `底层逻辑`, and the `落X` family (`落地`, `落库`, `落盘`). Plus self-congratulatory forms like `锁死版本`, `最硬的那一刀`, `稳稳接住`. Say what actually happens in plain words.
+- Trailing restatement at paragraph end: `这说明…`, `也就是说…`, `可以看出…`, `In other words…`. Delete; the paragraph already said it.
+- Signposted meta-phrases that announce structure instead of delivering it: `In conclusion`, `To sum up`, `综上所述`, `总的来说`, `一句话总结`, `一句话 X 版`. Just do the thing, don't announce it.
+- Pedagogical hand-holding openers: `Let me break this down`, `让我一步步分析`, `让我们来看`. Just do the analysis.
+- Grandiose stakes: `fundamentally reshape`, `彻底改变`, `革命性`. Replace with the specific effect, or delete.
+- False agency, i.e. inanimate subject doing a human verb (`The data tells us`, `结果表明`) when a person actually decided. Name the actor.
+- Vague attributions: `Experts say…`, `有研究表明…` with no name or link = no source. Cite or cut.
+
+No emoji unless the user explicitly asks.
+
+Self-check triggers (scan the output; if any fires, go back to the rules above):
+
+1. Em-dash present?
+2. 3+ bolded phrases in a prose paragraph?
+3. Quote marks doing "emphasis" work?
+4. `不是 X 而是 Y` / `Not X, it's Y` with X not actually a misconception the reader holds?
+5. Last sentence of a paragraph restates what the paragraph already said?
+
 ## Development Guidelines
 
 ### Core Coding Principles
@@ -91,7 +125,7 @@ When compressing context, preserve in priority order:
 This section maps Claude Code plugin tool references to Codex behavior.
 Only this block is managed automatically.
 
-**Priority rule**: If any mapping below conflicts with Core Behavioral Guidelines or Task Completion rules above, the higher-level rule wins. Task Completion > Tool Mapping.
+Priority rule: If any mapping below conflicts with Core Behavioral Guidelines or Task Completion rules above, the higher-level rule wins. Task Completion > Tool Mapping.
 
 Tool mapping:
 - Read: use shell reads (cat/sed) or rg
