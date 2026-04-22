@@ -27,10 +27,10 @@ while (( $# )); do
   case $1 in
     --apply|-a) apply=1 ;;
     --stale-days)
-      (( $# >= 2 )) || { print -u2 "dlm: --stale-days needs a value"; return 2 }
+      (( $# >= 2 )) && [[ -n $2 && $2 != -* ]] || { print -u2 "dlm: --stale-days needs a value"; return 2 }
       stale_days=$2; shift ;;
     --base)
-      (( $# >= 2 )) || { print -u2 "dlm: --base needs a value"; return 2 }
+      (( $# >= 2 )) && [[ -n $2 && $2 != -* ]] || { print -u2 "dlm: --base needs a value"; return 2 }
       base_override=$2; shift ;;
     --help|-h)
       print "Usage: dlm [--apply] [--stale-days N] [--base <ref>]"
