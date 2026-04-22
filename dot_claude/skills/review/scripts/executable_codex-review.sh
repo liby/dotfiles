@@ -133,21 +133,29 @@ else
   fi
   [ -n "$BASE_REF" ] && SCOPE=branch || SCOPE=working-tree
 
-  # Dirty tree under branch scope: companion's resolveReviewTarget(baseRef) forces
+  # Branch scope always snapshots to a transient worktree so the delegate's
+  # workspace-write sandbox (set below) cannot touch the user's real checkout.
+  # Dirty-tree reasoning: companion's resolveReviewTarget(baseRef) forces
   # mode=branch and diffs only mergeBase..HEAD (git.mjs:142+265), so uncommitted
   # changes fall out of the broad path. Materialize a snapshot commit on a
   # detached worktree so both paths see committed + staged + unstaged + untracked.
   # `git stash create [-u]` won't work: without -u it drops untracked; with -u it
   # parks untracked on a side parent, so a detached worktree of the stash commit
   # still wouldn't contain them. Build the snapshot through a temp index instead.
-  if [ "$SCOPE" = "branch" ] && [ -n "$(git status --porcelain=v1 2>/dev/null)" ]; then
+  # Clean-tree case: `git add -A` is a no-op and we snapshot HEAD directly; the
+  # worktree isolation still matters because the delegate may run validation
+  # commands that write build artifacts, coverage, or cache files.
+  # Working-tree scope skips this: the companion's --scope working-tree expects
+  # uncommitted diffs in the cwd, and committing them into a snapshot erases
+  # exactly what that scope is designed to review.
+  if [ "$SCOPE" = "branch" ]; then
     TMP_INDEX=$(mktemp)
     GIT_INDEX_FILE="$TMP_INDEX" git read-tree HEAD
     GIT_INDEX_FILE="$TMP_INDEX" git add -A
     SNAPSHOT_TREE=$(GIT_INDEX_FILE="$TMP_INDEX" git write-tree)
     rm "$TMP_INDEX"
     SNAPSHOT=$(git commit-tree "$SNAPSHOT_TREE" -p HEAD -m "review-snapshot")
-    REVIEW_CWD="${TMPDIR%/}/review-dirty-$$"
+    REVIEW_CWD="${TMPDIR%/}/review-snapshot-$$"
     git worktree remove --force "$REVIEW_CWD" >/dev/null 2>&1 || true
     git worktree add --detach "$REVIEW_CWD" "$SNAPSHOT" >&2
     OWNED_WORKTREE="$REVIEW_CWD"
@@ -168,20 +176,48 @@ SKILL_PATH="$(cd "$(dirname "$0")/.." && pwd -P)/SKILL.md"
 
 echo "codex-review.sh: dispatching (scope=$SCOPE, base=${BASE_REF:-<none>}, cwd=$REVIEW_CWD)" >&2
 
+# Journal contract: SKILL.md §Self-improve Journal says writes are main-session
+# only, but delegates historically read the opening sentence ("write one entry...")
+# and attempt to append from the sandbox, producing PermissionError noise in every
+# --cx session. Pin the prohibition in the prompt itself so it lands before
+# SKILL.md's own wording is reached.
+JOURNAL_INSTRUCTION="Do not write to ~/.claude/skills/review/journal.md — that file is main-session only. Instead, end your output with a 'Journal suggestions' block: 1-3 bullets, each prefixed with one of 'Over-specified:', 'Under-specified:', 'Rule that saved me:', or 'Odd behavior:', and each citing a file:line or concrete behavior. Skip the block entirely if you have nothing concrete — do not pad."
+
+# Sandbox selection hinges on whether REVIEW_CWD is a transient worktree we own
+# (MR/PR mode or local branch mode) or the user's real checkout (local working-tree
+# mode, which cannot be snapshotted without erasing the uncommitted diff the
+# companion reviews). Only the transient case is safe for workspace-write; the
+# real-checkout case must stay read-only so delegate-triggered validation never
+# writes into the user's tree.
+if [ -n "$OWNED_WORKTREE" ]; then
+  SANDBOX_ARGS=(--sandbox workspace-write)
+  # --add-dir extends writability to tool-manager roots outside the worktree —
+  # proto-managed pnpm/pnpx shims materialize under ~/.proto on first invocation.
+  # Pre-create ~/.proto so cold-start machines still get it allowlisted; probe
+  # other pnpm caches without creating them (they're tool-specific, not universal).
+  mkdir -p "$HOME/.proto"
+  SANDBOX_ARGS+=(--add-dir "$HOME/.proto")
+  for extra in "$HOME/.cache/pnpm" "$HOME/.local/share/pnpm" "$HOME/Library/pnpm"; do
+    [ -d "$extra" ] && SANDBOX_ARGS+=(--add-dir "$extra")
+  done
+else
+  SANDBOX_ARGS=(--sandbox read-only)
+fi
+
 if [ "$SCOPE" = "branch" ]; then
   node "$CODEX_ROOT/scripts/codex-companion.mjs" review --wait --json \
     --cwd "$REVIEW_CWD" --base "$BASE_REF" --scope branch > "$BROAD_OUT" 2>&1 &
   BROAD_PID=$!
-  codex exec --ephemeral --sandbox read-only -C "$REVIEW_CWD" \
-    "Follow the review skill at $SKILL_PATH. Review the current worktree against base $BASE_REF. Output findings per the skill's Output section." \
+  codex exec --ephemeral "${SANDBOX_ARGS[@]}" -C "$REVIEW_CWD" \
+    "Follow the review skill at $SKILL_PATH. Review the current worktree against base $BASE_REF. Output findings per the skill's Output section. $JOURNAL_INSTRUCTION" \
     > "$OPINIONATED_OUT" 2>&1 &
   OPINIONATED_PID=$!
 else
   node "$CODEX_ROOT/scripts/codex-companion.mjs" review --wait --json \
     --cwd "$REVIEW_CWD" --scope working-tree > "$BROAD_OUT" 2>&1 &
   BROAD_PID=$!
-  codex exec --ephemeral --sandbox read-only -C "$REVIEW_CWD" \
-    "Follow the review skill at $SKILL_PATH. Review the current worktree's uncommitted changes. Output findings per the skill's Output section." \
+  codex exec --ephemeral "${SANDBOX_ARGS[@]}" -C "$REVIEW_CWD" \
+    "Follow the review skill at $SKILL_PATH. Review the current worktree's uncommitted changes. Output findings per the skill's Output section. $JOURNAL_INSTRUCTION" \
     > "$OPINIONATED_OUT" 2>&1 &
   OPINIONATED_PID=$!
 fi

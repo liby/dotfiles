@@ -36,7 +36,7 @@ The per-round flow:
     - Plain `--fix` = main session reviews directly, reading the checkout with the Read/Grep/Glob tools per SKILL.md.
     - `--fix --cx` = main session invokes [`scripts/codex-review.sh`](../scripts/codex-review.sh) with the same `--base` / `--remote` / `--platform` flags every round and merges both Codex paths per [delegation.md](delegation.md). The script is idempotent given unchanged HEAD / upstream / origin/HEAD.
 2. Apply recommended fixes directly to the checkout in the main session.
-3. Run existing validation commands (tests, lint, typecheck) if cheap. Required for `--cx`: both Codex paths are `read-only` sandboxed and cannot verify fixes themselves.
+3. Run existing validation commands (tests, lint, typecheck) if cheap. Required for `--cx`: the broad path is `read-only` sandboxed and the opinionated path's validation only runs inside a transient snapshot worktree, so neither can verify fixes against the user's real checkout. Main-session validation after applying Keep fixes is load-bearing.
 4. If the merged Keep set is non-empty → next round (step 1). If empty → convergence, follow [Termination](#termination).
 
 ## Termination
@@ -62,18 +62,28 @@ summary_diff() {
 }
 ```
 
+Both exit paths share the same finishing sequence. Do not skip `/simplify` and `/deslop` on the round-budget path — they operate on the accumulated diff, not on Keep findings, so they apply regardless of whether the loop converged.
+
+Shared sequence (run in order for both paths):
+
+1. `/simplify`
+2. `/deslop`
+3. `summary_diff "$BASELINE_FILE"` — emit inline
+4. Output the exit block (convergence summary or round-budget handoff, per below)
+5. `rm -f "$BASELINE_FILE"`
+
+Language: all prose in the exit block is Chinese per SKILL.md `## Output`. English stays inside code identifiers, `file:line` citations, quoted code, and fixed label terms (`Applied Keep` / `Skip` / `Drop` / `Not fixed` / `Baseline` / `P1`/`P2`/`P3`). The round-budget handoff's "reached round budget — user judgment needed" label is a fixed English tag; the reasons attached to each `Not fixed` item are Chinese.
+
 #### Convergence (primary exit)
 
-When `|Keep|` reaches 0, run `/simplify` then `/deslop`, then `summary_diff "$BASELINE_FILE"` to show the final diff. Output the summary (see below), exit.
+`|Keep|` reaches 0 at the end of a round. Output the Convergence Summary (see below) as the exit block.
 
 #### Round budget (secondary exit, after 5 rounds)
 
-Check `|Keep|` at the end of each round. If `|Keep| == 0`, take the convergence path above. If round 5 ends with `|Keep| > 0`, the loop's output becomes the handoff — emit one final block and exit:
+Check `|Keep|` at the end of each round. If `|Keep| == 0`, take the convergence path above. If round 5 ends with `|Keep| > 0`, the loop's output becomes the handoff. The exit block contains:
 
-1. remaining Keep findings as `Not fixed`, labeled "reached round budget — user judgment needed"
+1. remaining Keep findings as `Not fixed`, labeled "reached round budget — user judgment needed" (each reason in Chinese)
 2. `Baseline: <sha>` inline
-3. `summary_diff "$BASELINE_FILE"` output inline
-4. `rm -f "$BASELINE_FILE"`
 
 ## Convergence Summary Format
 

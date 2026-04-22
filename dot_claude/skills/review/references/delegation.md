@@ -13,8 +13,6 @@ Every `--cx` review invokes two Codex paths **in parallel** and merges their fin
 - **Broad path** — `/codex:review` via the Codex companion. Multi-persona coverage (correctness-reviewer, testing-reviewer, api-contract-reviewer, adversarial-reviewer, etc.). Output is a JSON envelope whose `codex.stdout` is free-form `reviewText` prose, not a machine-readable findings array. `/codex:review` is hardcoded ephemeral (no sidebar entry) and rejects custom focus text at the companion layer.
 - **Opinionated path** — `codex exec --ephemeral` reading `/review`'s SKILL.md. Single-persona pass against our contract (principles, priorities, severity calibration). Output is free-form prose per SKILL.md's Output section.
 
-Both paths run in a `read-only` sandbox — validation commands (tests, lint, typecheck) are the main session's job after applying fixes, never the delegate's.
-
 ### Invocation
 
 Main session calls [`scripts/codex-review.sh`](../scripts/codex-review.sh) (path relative to the skill root; resolve against the skill's base directory before executing), which resolves the review target, sets up the MR/PR worktree (if `--mr` is passed), and fires both paths in parallel.
@@ -55,7 +53,7 @@ After `eval`, the caller has:
 - `$BASE_REF` — resolved base, empty when `SCOPE=working-tree`
 - `$SCOPE` — `branch` or `working-tree`
 - `$BROAD_OUT` — path to `/codex:review` JSON envelope (extract prose with `jq -r .codex.stdout "$BROAD_OUT"`)
-- `$OPINIONATED_OUT` — path to `codex exec` stdout
+- `$OPINIONATED_OUT` — path to `codex exec` stdout. Findings live at the **tail** of this file, not the head: the prefix is a session header plus a recent-file `... N lines omitted` pseudo-summary, often 2000–3000 lines. Use `tail -c 8000` or `awk '/^codex$/{flag=1} flag'` to reach the actual report.
 
 The script encodes the [Companion API limitation](#companion-api-limitation) (do **not** pass `--base` under `--scope working-tree` — companion silently flips to branch mode), so callers never construct these commands manually.
 
@@ -91,7 +89,11 @@ Use when:
 Skip items appear in the final summary count. Runtime-verification Skips also surface in the `--fix` termination "Needs manual verification" list.
 
 **Drop** — Discard silently.
-Use only when the finding is in SKILL.md's explicitly-NOT list AND has no concrete trigger path. Examples: generic style advice, performance/maintainability nits with no cited failure, pattern-complaint with no trigger.
+Use when:
+- the finding is in SKILL.md's explicitly-NOT list AND has no concrete trigger path. Examples: generic style advice, performance/maintainability nits with no cited failure, pattern-complaint with no trigger; or
+- the finding proposes behavior the user explicitly rejected earlier in the same session. Cite the prior turn in the round report so the Drop is auditable. Do not Skip — Skip implies "unverified but possibly valid"; here the user has already verified the opposite.
+
+**Prior-round re-surface** — When a finding was raised in an earlier round and the user neither accepted nor rejected it explicitly, do not silently drop and do not silently escalate. Re-surface with a `prior-round: <severity>` tag and a one-line note of what changed since last round (new trigger path, new code evidence, or "no new evidence, re-asking"). Ambiguous user silence is not consent to either direction.
 
 ## Conflict Protocol
 
@@ -99,6 +101,18 @@ When two Keep findings recommend opposing actions (e.g., one says add an asserti
 contract and source of truth > semantic correctness > ownership boundary > failure behavior > security > complexity > tests and docs
 
 The lower-priority finding moves to Not fixed. Main session does not improvise a resolution.
+
+**Cross-path severity disagreement.** When broad and opinionated agree on a finding but disagree on severity by one step (P1 vs P2, P2 vs P3), separate the disagreement shape before deciding:
+
+- *Scope-boundary disagreement* — both paths cite the same facts but locate the "contract" at different layers (one treats the plan doc as binding, the other treats the downstream consumer as binding). Take the lower severity and note the scope interpretation explicitly in the report.
+- *Factual disagreement* — paths cite different code, different trigger paths, or different impact claims. Investigate in the main session (read the cited code, run a cheap repro) before surfacing. Do not split the difference without resolving the facts.
+
+## Pre-filter sanity checks
+
+Run these against the raw delegate output before applying the Filter:
+
+- **Diff direction (MR/PR mode).** If a delegate flags a file not in `origin/<base>..HEAD`, suspect working-tree-vs-commit direction confusion — the finding may describe master commits the MR doesn't yet have, which rebase will absorb. Verify with `git log <base>..HEAD -- <file>` before forwarding.
+- **File-not-in-diff (local mode).** Working-tree scope sweeps pre-existing untracked drift into the review surface. If a finding cites a file untouched by the user's actual session work, either note it as pre-existing or drop it — don't let the loop spend rounds fixing unrelated drift.
 
 ## Batch Fix Boundary
 

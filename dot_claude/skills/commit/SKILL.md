@@ -37,4 +37,12 @@ Create a git commit for: $ARGUMENTS
     ```
 
     The single quotes on `'COMMIT_MSG_END'` disable every form of shell expansion, so write backticks, `$`, `\`, `!`, and `"` literally with no escaping. Do not default to `<<'EOF'`: `EOF` is common in technical prose and collides whenever the commit message quotes heredoc examples or discusses end-of-file semantics. Do not wrap the heredoc in `"$(cat <<'...' ... )"` or `git commit -m "..."`, that reintroduces a double-quoted layer where escaping habits misfire.
-5. Before sending, sanity-check the message: does the body explain why a reader should care? If it only describes what moved, rewrite.
+5. Before sending, sanity-check the message:
+    - Does the body explain why a reader should care? If it only describes what moved, rewrite.
+    - Does the subject use a scope (`type(scope):`)? Only keep it if the project explicitly whitelists scopes. Check in order:
+      - `rules.scope-enum[2]` in `commitlint.config.{js,cjs,mjs,ts}`, `.commitlintrc*`, or `package.json#commitlint`
+      - `scopes` array in `.cz-config.js` / `.config/cz-config.js` (cz-customizable)
+      - `[tool.commitizen.customize]` in `pyproject.toml` / `.cz.toml` (commitizen-tools)
+      - "Scopes" / "Commit scopes" section in `CONTRIBUTING.md`, `.github/CONTRIBUTING.md`, or `docs/commit-conventions.md`
+
+      If none yield a list, drop the scope. Default is no scope.

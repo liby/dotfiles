@@ -23,8 +23,10 @@ If `--fix` is passed, this is a LOOP, not a single pass:
 
 1. Before round 1: create the baseline snapshot commit (temp-index + `git commit-tree`, NOT `git stash create`). Write the SHA to `$GIT_DIR/review-fix-baseline`.
 2. Each round: one full review → filter (Keep / Rewrite / Skip / Drop) → apply Keep + Rewrite's real part → run cheap validation → repeat step 2.
-3. On `|Keep|=0` (convergence): `/simplify` → `/deslop` → emit the summary diff helper → output Convergence Summary → remove baseline file → exit.
-4. Round budget (5 rounds): Round 5 is the final round. At its end, emit the summary diff plus any remaining Keep findings as the handoff list, and exit. The budget is the loop's contract with the user: return control at a predictable point, with a concrete Not-fixed list they can act on. Rounds 1–3 surface issues in the original diff; rounds 4–5 polish what those rounds produced; beyond 5, new findings trend toward reactions to earlier fixes rather than the original work, so five rounds keeps the handoff crisp. In-round directives like "都可以修 / fix everything" calibrate Keep/Skip aggressiveness inside a round; the round budget is a separate property of the loop itself. See [references/autofix.md](references/autofix.md) for the terminal-block format.
+3. Termination runs the same finishing sequence in both exit paths: `/simplify` → `/deslop` → `summary_diff` → output block → remove baseline file → exit. The two paths only differ in the output block's content.
+   - Convergence exit (`|Keep|=0`): output the Convergence Summary.
+   - Round-budget exit (round 5 ends with `|Keep|>0`): output the remaining Keep findings as `Not fixed` (labeled "reached round budget — user judgment needed"), followed by `Baseline: <sha>` and the summary diff.
+4. Round budget is 5. It is the loop's contract with the user: return control at a predictable point, with a concrete Not-fixed list they can act on. Rounds 1–3 surface issues in the original diff; rounds 4–5 polish what those rounds produced; beyond 5, new findings trend toward reactions to earlier fixes rather than the original work, so five rounds keeps the handoff crisp. In-round directives like "都可以修 / fix everything" calibrate Keep/Skip aggressiveness inside a round; the round budget is a separate property of the loop itself. See [references/autofix.md](references/autofix.md) for the terminal-block format.
 
 MUST read [references/autofix.md](references/autofix.md) before round 1 — the baseline / summary bash helpers there are load-bearing (they capture untracked files and autofix-created files correctly; `git stash create` silently drops them). Do not improvise.
 
@@ -201,6 +203,8 @@ Look in this order:
 Do not start from formatting, micro-style, or speculative edge cases.
 
 Findings shaped `this diff adds code that another layer already handles` belong in priorities 3 (ownership boundary) and 6 (complexity). They do not surface naturally: the reviewer's default question is "what could break?", not "what's redundant?" Ask the redundancy question explicitly at least once per review.
+
+Findings shaped `this diff routes around a shared proxy/gateway/middleware that peer modules use` also belong in priority 3, not priority 6. Using a direct SDK client when the project centralizes through a gateway (e.g., ai-gateway, a routing layer, a shared HTTP client) is an ownership-boundary violation, not a style difference — it bypasses the layer the project established to own that concern. Check whether peer modules in the same directory use the centralized path before accepting the new code as idiomatic.
 
 ## Severity Guidance
 
