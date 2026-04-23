@@ -29,8 +29,6 @@
       "Bash",
       "Bash(rm .git/review-*)",
       "Edit",
-      "Glob",
-      "Grep",
       "LSP",
       "mcp__ide__*",
       "mcp__plugin_atlassian_atlassian__*",

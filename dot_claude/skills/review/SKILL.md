@@ -5,8 +5,6 @@ argument-hint: "[--cx | --fix | URL | additional notes]"
 allowed-tools:
   - Bash
   - Read
-  - Grep
-  - Glob
 ---
 
 ## Arguments

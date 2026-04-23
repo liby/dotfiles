@@ -6,8 +6,6 @@ allowed-tools:
   - Bash(git:*)
   - Read
   - Edit
-  - Grep
-  - Glob
 ---
 
 ## Task

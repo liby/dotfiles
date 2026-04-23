@@ -4,9 +4,8 @@ description: Use IDE language server via MCP to fix diagnostics, rename symbols,
 context: fork
 allowed-tools:
   - mcp__ide__*
+  - Bash
   - Edit
-  - Glob
-  - Grep
   - Read
   - Write
 ---

@@ -33,7 +33,7 @@ The baseline is a detached commit object capturing the full working-tree state a
 The per-round flow:
 
 1. Run the review against the user's live checkout (no per-round worktree rebuild — `--fix` reads files directly each round, which naturally reflects the previous round's applied fixes). Every round uses the same invocation: same flags, no custom prompt, no "verify the fix from Round N-1" framing. Scope narrowing between rounds is how cross-file invariants slip through — a round-N fix that breaks a round-K invariant only surfaces if the same broad sweep runs again.
-    - Plain `--fix` = main session reviews directly, reading the checkout with the Read/Grep/Glob tools per SKILL.md.
+    - Plain `--fix` = main session reviews directly, reading the checkout with the Read tool and Bash-driven search (`rg`/`ugrep`, `fd`/`bfs`) per SKILL.md.
     - `--fix --cx` = main session invokes [`scripts/codex-review.sh`](../scripts/codex-review.sh) with the same `--base` / `--remote` / `--platform` flags every round and merges both Codex paths per [delegation.md](delegation.md). The script is idempotent given unchanged HEAD / upstream / origin/HEAD.
 2. Apply recommended fixes directly to the checkout in the main session.
 3. Run existing validation commands (tests, lint, typecheck) if cheap. Required for `--cx`: the broad path is `read-only` sandboxed and the opinionated path's validation only runs inside a transient snapshot worktree, so neither can verify fixes against the user's real checkout. Main-session validation after applying Keep fixes is load-bearing.

@@ -55,18 +55,15 @@ Self-check triggers (scan the output; if any fires, go back to the rules above):
 
 ### Core Coding Principles
 
-- ALWAYS search documentation and existing solutions first
-- Read template files, adjacent files, and surrounding code to understand existing patterns
-- Learn code logic from related tests
+- Before coding, check docs, adjacent files, and related tests for existing patterns
 - No defensive programming, no silent fallbacks. Don't add guards for failure modes you haven't actually observed. If you need a guard, throw a hard assertion to expose the problem — never catch just to return `null`, `undefined`, `false`, or `[]`. Let errors propagate through business logic; only catch at API/route/job boundaries where recovery is defined.
-- Review implementation after multiple modifications to same code block
 - When making multiple edits to the same file, execute them sequentially (not in parallel) so each edit sees the real file state after the previous one
 - Keep project docs (PRD, todo, changelog) consistent with actual changes when they exist
 - After 3+ failed attempts, add debug logging and try different approaches. Only ask the user for runtime logs when the issue requires information you literally cannot access (e.g., production environment, device-specific behavior)
 - For frontend projects, NEVER run dev/build/start/serve commands. Verify through code review, type checking, and linting instead
 - NEVER add time estimates to plans (e.g. "Phase 1 (3 days)", "Phase 2 (1 week)") — just write the code
 - NEVER read secret files (.env, private keys), print secret values, or hardcode secrets in code — local or remote, including over SSH or on deployment targets
-- NEVER touch git without explicit user request — no `git commit|reset|push|checkout`, or any state-changing git command unless the user explicitly asks. Completing a code change does NOT imply permission to commit
+- NEVER touch git without explicit user request — no `git commit|reset|push|checkout`, or any state-changing git command unless the user explicitly asks
 
 ### Code Comments
 
@@ -81,11 +78,9 @@ Self-check triggers (scan the output; if any fires, go back to the rules above):
 - Python - Always use `uv`
 - JavaScript/TypeScript - Check lock file for package manager
 
-### Search and Documentation
+### Search
 
-- File search - Use `fd` instead of `find` when Glob tool is not applicable (e.g., cross-project search)
-- Web - `WebSearch` for questions, `WebFetch` for specific URLs
-- API/docs lookup - Use `context7` for up-to-date library docs
+`fd` for files, `rg` for content  
 
 ### CLI Tools
 
@@ -93,7 +88,7 @@ Self-check triggers (scan the output; if any fires, go back to the rules above):
 
 ### File Reading
 
-- Read multiple files in parallel to improve speed
+- Read multiple files in parallel
 - ALWAYS read entire file when: user provides path, first time reading, file under 500 lines, user sends partial snippets
 
 ## Subagents & Agent Teams
