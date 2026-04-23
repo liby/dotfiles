@@ -27,7 +27,25 @@ set -euo pipefail
 # so any exit path — success, hard-fail on dual-path failure, or unexpected error —
 # cleans them up instead of leaving `/tmp/review-*` dirs behind.
 OWNED_WORKTREE=""
+BROAD_PID=""
+OPINIONATED_PID=""
 cleanup_owned_worktree() {
+  # Kill any still-running delegate before removing the worktree they were
+  # working in. Without this, an early trap (Ctrl-C, exit 5 from the other
+  # path's failure) deletes the worktree out from under codex exec, which then
+  # blindly logs hundreds of `cannot change to <path>` errors into its output
+  # file and makes post-mortem reading useless. SIGTERM first to let codex
+  # flush; brief grace period; SIGKILL anything still alive.
+  for pid in "$BROAD_PID" "$OPINIONATED_PID"; do
+    [ -n "$pid" ] && kill -TERM "$pid" 2>/dev/null || true
+  done
+  if [ -n "$BROAD_PID$OPINIONATED_PID" ]; then
+    sleep 1
+    for pid in "$BROAD_PID" "$OPINIONATED_PID"; do
+      [ -n "$pid" ] && kill -KILL "$pid" 2>/dev/null || true
+      [ -n "$pid" ] && wait "$pid" 2>/dev/null || true
+    done
+  fi
   [ -n "$OWNED_WORKTREE" ] && git worktree remove --force "$OWNED_WORKTREE" >/dev/null 2>&1 || true
 }
 
@@ -107,6 +125,12 @@ if [ -n "$MR_NUMBER" ]; then
   SCOPE=branch
 else
   REVIEW_CWD=$(git rev-parse --show-toplevel)
+  # Track whether BASE_REF came from an explicit --base flag. The rewind guard
+  # below must not override an explicit user choice — they may legitimately
+  # ask to review HEAD~1..HEAD on a branch that's at-or-behind origin/HEAD
+  # (e.g., reviewing the most recent commit on main itself).
+  BASE_EXPLICIT=""
+  [ -n "$BASE_REF" ] && BASE_EXPLICIT=1
   # Only auto-promote to branch scope when HEAD has commits ahead of the candidate
   # base; otherwise `<base>..HEAD` is empty and the broad path would review nothing,
   # silently hiding dirty working-tree changes from a review that claims to cover them.
@@ -130,6 +154,20 @@ else
       git show-ref --verify --quiet "refs/heads/$CANDIDATE" || continue
       [ -n "$(git rev-list "$CANDIDATE..HEAD" --max-count=1 2>/dev/null)" ] && { BASE_REF="$CANDIDATE"; break; }
     done
+  fi
+  # Soft-reset / rewind guard. If HEAD has been rewound onto (or behind) the
+  # default-branch tip while the workspace still carries the rewound commits'
+  # content (`reset --soft HEAD~N` style), branch scope reviews the wrong
+  # thing: it diffs UPSTREAM..HEAD, which after the rewind is "everything
+  # between the old upstream and default branch" — code the user inherited,
+  # not their pending work. The pending work lives in the index/working tree,
+  # which working-tree scope sees directly. Force-push workflows are not
+  # affected: there HEAD still has commits ahead of origin/HEAD.
+  if [ -z "$BASE_EXPLICIT" ] && [ -n "$BASE_REF" ] && \
+     ORIGIN_HEAD=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null); then
+    if git merge-base --is-ancestor HEAD "${ORIGIN_HEAD#refs/remotes/}" 2>/dev/null; then
+      BASE_REF=""
+    fi
   fi
   [ -n "$BASE_REF" ] && SCOPE=branch || SCOPE=working-tree
 
@@ -226,8 +264,23 @@ BROAD_EXIT=0; OPINIONATED_EXIT=0
 wait "$BROAD_PID" || BROAD_EXIT=$?
 wait "$OPINIONATED_PID" || OPINIONATED_EXIT=$?
 
-[ "$BROAD_EXIT" -ne 0 ] && echo "codex-review.sh: broad path exit=$BROAD_EXIT (output in $BROAD_OUT)" >&2
-[ "$OPINIONATED_EXIT" -ne 0 ] && echo "codex-review.sh: opinionated path exit=$OPINIONATED_EXIT (output in $OPINIONATED_OUT)" >&2
+# Treat 0-byte output as failure even when exit==0: companion / codex exec
+# rarely return success without producing anything, and silent empties make
+# post-mortem ("did broad fail or did I read the wrong file?") impossible.
+# Promote to nonzero so the dual-path-failure check below trips and the
+# caller sees a real error instead of a clean eval with empty contents.
+if [ "$BROAD_EXIT" -eq 0 ] && [ ! -s "$BROAD_OUT" ]; then
+  BROAD_EXIT=124
+  echo "codex-review.sh: broad path exit=0 but produced 0-byte output — companion likely never started (check codex plugin auth/install or rerun with CODEX_LOG=debug)" >&2
+elif [ "$BROAD_EXIT" -ne 0 ]; then
+  echo "codex-review.sh: broad path exit=$BROAD_EXIT (output in $BROAD_OUT, $(wc -c <"$BROAD_OUT") bytes)" >&2
+fi
+if [ "$OPINIONATED_EXIT" -eq 0 ] && [ ! -s "$OPINIONATED_OUT" ]; then
+  OPINIONATED_EXIT=124
+  echo "codex-review.sh: opinionated path exit=0 but produced 0-byte output — codex exec likely never started" >&2
+elif [ "$OPINIONATED_EXIT" -ne 0 ]; then
+  echo "codex-review.sh: opinionated path exit=$OPINIONATED_EXIT (output in $OPINIONATED_OUT, $(wc -c <"$OPINIONATED_OUT") bytes)" >&2
+fi
 
 # --cx's contract is "both Codex paths in parallel, merge findings". Any single-path
 # failure means the merged findings are incomplete; the caller would then treat the

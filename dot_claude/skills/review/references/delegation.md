@@ -32,6 +32,10 @@ Invocation flags:
 
 ```bash
 # Local mode (base auto-resolved: --base → @{upstream} if HEAD has commits ahead → origin/HEAD if HEAD has commits ahead → local main/master/trunk if HEAD has commits ahead → working-tree)
+# Final guard: if the resolved base would put HEAD at-or-behind origin/HEAD
+# (e.g. after `reset --soft HEAD~N` rewinds HEAD onto the default branch),
+# scope falls through to working-tree so the review sees the pending workspace
+# changes instead of inherited commits between old upstream and default branch.
 scripts/codex-review.sh
 scripts/codex-review.sh --base origin/main
 
@@ -61,7 +65,7 @@ Read both output files, then apply the [Filter](#filter) below. Whenever `$REVIE
 
 Under `--fix`, call the script the same way each round with the same `--base` / `--mr` / `--remote` flags. The script is idempotent given unchanged HEAD / upstream / origin/HEAD, so re-resolving each round yields the same triple.
 
-If either path exits non-zero, the script exits with status 5 and publishes nothing to stdout — the caller's `eval` sets no outputs, so a degraded "half-review" can never be treated as a complete one. Under `--fix`, this aborts the loop; convergence requires a clean round from both paths.
+If either path exits non-zero — or returns a 0-byte output file, which the script promotes to an exit=124 failure — the script exits with status 5 and publishes nothing to stdout. The caller's `eval` sets no outputs, so a degraded "half-review" can never be treated as a complete one. Under `--fix`, this aborts the loop; convergence requires a clean round (non-empty output) from both paths. The 0-byte case typically means companion auth/install is broken (broad path) or codex exec couldn't initialize its sandbox (opinionated path) — see the script's stderr for which side and rerun with `CODEX_LOG=debug`.
 
 ### Companion API limitation
 
