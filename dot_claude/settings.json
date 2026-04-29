@@ -125,6 +125,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/stop-slop-check.sh",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {

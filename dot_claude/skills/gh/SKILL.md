@@ -1,6 +1,6 @@
 ---
 name: gh
-description: Analyze GitHub issues, PRs, and repos via `gh` CLI. Use when user mentions GitHub URLs, issue/PR numbers (#123), or asks about GitHub content.
+description: GitHub operations via `gh` CLI — analyze issues/PRs/repos AND install/update/preview Agent Skills from GitHub repos (`gh skill install`). Use when user mentions GitHub URLs, issue/PR numbers (#123), GitHub content, or asks to install/update/preview a skill from a GitHub repo (e.g. a `SKILL.md` path, `owner/repo` skill reference).
 context: fork
 allowed-tools:
   - Bash(gh:*)
@@ -46,7 +46,7 @@ Don't read everything — focus on high-value content:
 
 ## Agent Skills
 
-`gh skill` installs Agent Skills from GitHub repos. State lives in each `SKILL.md`'s frontmatter (`metadata.github-*`) — there is no central manifest.
+`gh skill` installs Agent Skills from GitHub repos. Don't fetch `SKILL.md` manually with `gh api`/`curl`/`wget`. State lives in each `SKILL.md`'s frontmatter (`metadata.github-*`) — there is no central manifest.
 
 User mainly uses Claude Code and Codex. Pass `--agent` explicitly; default would be `github-copilot`.
 

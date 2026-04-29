@@ -2,6 +2,7 @@ bun = "latest"
 node = "lts"
 npm = "bundled"
 pnpm = "latest"
+proto = "latest"
 
 [tools.node]
 bundled-npm = true
