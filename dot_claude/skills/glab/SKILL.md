@@ -8,15 +8,15 @@ allowed-tools:
   - Read
 ---
 
-Use `glab` CLI for all GitLab operations. Use your training knowledge — run `glab <command> --help` when unsure.
+Use `glab` CLI for all GitLab operations. Lean on your training knowledge; run `glab <command> --help` when unsure.
 
-The GitLab host is already configured via `glab auth login` — run `glab auth status` to discover it.
+The GitLab host is already configured via `glab auth login`; run `glab auth status` to discover it.
 
 ## URL Parsing
 
 Extract group/project and number from GitLab URLs:
-- `https://<host>/group/project/-/merge_requests/123` → `glab mr view 123 -R group/project`
-- `https://<host>/group/project/-/issues/456` → `glab issue view 456 -R group/project`
+- `https://<host>/group/project/-/merge_requests/123` -> `glab mr view 123 -R group/project`
+- `https://<host>/group/project/-/issues/456` -> `glab issue view 456 -R group/project`
 
 ## Structured Output
 
@@ -64,7 +64,7 @@ MRs are auto-created when branches are pushed. Use `glab mr list` to find them, 
   ```bash
   glab mr list --source-branch=$(git branch --show-current) -F json | jq '.[0] | {iid, title, web_url}'
   ```
-3. Update the MR title and description. Title is Title Case, derived from branch name. Uses ticket number as prefix if present in branch name (e.g., `PROJ-123 Add Email Status Check`). Do NOT use conventional commit format (`fix:`, `feat:`) in MR titles — that's for commit messages only. Description follows the structure the user requests, no speculative statements:
+3. Update the MR title and description. Title is Title Case derived from the branch name, with the ticket number as prefix when present (e.g., `PROJ-123 Add Email Status Check`). Conventional Commits prefixes (`fix:`, `feat:`, `chore:`, `refactor:`, `docs:`, etc.) belong in commit messages, not MR titles. Description follows the structure the user requests, no speculative statements:
   ```bash
   glab mr update <iid> --title "<title>" --description "<description>"
   ```

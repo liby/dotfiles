@@ -1,6 +1,6 @@
 ---
 name: deslop
-description: Remove AI-generated code slop from the current branch. Use as a finishing pass after code review — when user says "收尾", "clean up", or asks to run simplify + deslop together. Run sequentially after /simplify, not in parallel.
+description: Remove AI-generated code slop. Closing step in the /review -> /simplify -> /deslop chain ("收尾"). Run sequentially after /simplify, not in parallel.
 context: fork
 allowed-tools:
   - Bash(git:*)

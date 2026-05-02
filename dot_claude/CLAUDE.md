@@ -34,6 +34,7 @@
 - Use English for all code-related content: code, code comments, documentation, UI strings, commit messages, PR titles/descriptions
 - When drafting messages, announcements, or communications, use everyday language. Mention commit hashes, file paths, or implementation details only when explicitly asked. Keep it concise.
 - Use emoji only when the user explicitly asks.
+- Mention IDE diagnostics only when they signal real code or syntax problems. cSpell unknown-word warnings on technical terms (library/CLI names, domain jargon, coined identifiers) do not qualify.
 
 ### Anti-AI-slop
 
@@ -42,6 +43,7 @@ Applies to every output in both Chinese and English: chat, explanations, MR/PR d
 Formatting in prose:
 
 - Use comma, period, or colon for separators. Replace em-dash (`—`, `——`, `--`) with one of those three.
+- Use ASCII `->` for chain or transformation arrows in prose, and `>` for breadcrumb separators (`Settings > Account > Profile`). Unicode `→` reads as AI decoration unless the context is mathematical or scientific. For git ref ranges, use the literal git syntax `A..B` / `A...B`, not arrow prose.
 - Chinese prose uses fullwidth punctuation (`，。：；！？（）「」`), not ASCII halfwidth. ASCII punctuation stays inside code identifiers, file paths, and English terms themselves (`file.ext:line`, `foo(bar)`); in mixed Chinese/English sentences, punctuation follows the language of the surrounding clause.
 - Reserve bold for labels in label-value lists, table headers, and section titles. A paragraph with 3+ bolded phrases means most are wrong.
 - Reserve quote marks for actual quotations, system output, error messages, or a term's first-time introduction. Use plain text or italic for emphasis: `防止 Agent 提升分数` is the right form, `防止 Agent "提升"分数` is the wrong form.
@@ -53,6 +55,7 @@ Each item: positive rule, then `Tokens:` (do not emit).
 
 - Focus drift: one paragraph delivers one idea. Split paragraphs that bridge unrelated points with a transition.
 - Chinese corporate/internet jargon: say what actually happens in plain words. Tokens: `抓手`, `赋能`, `闭环`, `对齐`, `颗粒度`, `复盘`, `底层逻辑`, `落地`, `落库`, `落盘`, `锁死版本`, `最硬的那一刀`, `稳稳接住`, `开干`, `起飞`.
+- AI / corporate English verbs that claim work without naming it: state what concretely changed (added X, removed Y, rejected Z, validated W). Tokens: `tighten`, `streamline`, `enhance`, `refine`, `polish`, `harden`, `robustify`, `optimize` (without a measured metric), `leverage` (use `use`), `facilitate`.
 - Trailing restatement: end paragraphs at the actual point. Tokens: `这说明…`, `也就是说…`, `可以看出…`, `In other words…`.
 - Signposted meta-phrases: deliver the conclusion, do not announce structure. Tokens: `In conclusion`, `To sum up`, `综上所述`, `总的来说`, `一句话总结`, `一句话 X 版`.
 - Pedagogical hand-holding openers: open with the analysis itself. Tokens: `Let me break this down`, `让我一步步分析`, `让我们来看`.

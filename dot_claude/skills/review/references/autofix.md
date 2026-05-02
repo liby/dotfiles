@@ -4,7 +4,7 @@ When `--fix` is passed, auto-apply fixes and loop until the review is clean, the
 
 ## Setup
 
-Main session, once before round 1 — `/review` re-invocations detect the baseline file and must skip this branch:
+Main session, once before round 1. `/review` re-invocations detect the baseline file and must skip this branch:
 
 ```bash
 BASELINE_FILE="$(git rev-parse --git-dir)/review-fix-baseline"
@@ -24,7 +24,7 @@ if [ ! -f "$BASELINE_FILE" ]; then
 fi
 ```
 
-The baseline is a detached commit object capturing the full working-tree state at round-1 entry. The fix loop's changes are anything that diverges from it at termination — including modifications to pre-existing untracked files and net-new files autofix created.
+The baseline is a detached commit object capturing the full working-tree state at round-1 entry. The fix loop's changes are anything that diverges from it at termination, including modifications to pre-existing untracked files and net-new files autofix created.
 
 ## Loop
 
@@ -32,16 +32,36 @@ The baseline is a detached commit object capturing the full working-tree state a
 
 The per-round flow:
 
-1. Run the review against the user's live checkout (no per-round worktree rebuild — `--fix` reads files directly each round, which naturally reflects the previous round's applied fixes). Every round uses the same invocation: same flags, no custom prompt, no "verify the fix from Round N-1" framing. Scope narrowing between rounds is how cross-file invariants slip through — a round-N fix that breaks a round-K invariant only surfaces if the same broad sweep runs again.
+1. Run the review against the user's live checkout (no per-round worktree rebuild; `--fix` reads files directly each round, which naturally reflects the previous round's applied fixes). Every round uses the same invocation: same flags, no custom prompt, no "verify the fix from Round N-1" framing. Scope narrowing between rounds is how cross-file invariants slip through. A round-N fix that breaks a round-K invariant only surfaces if the same broad sweep runs again.
     - Plain `--fix` = main session reviews directly, reading the checkout with the Read tool and Bash-driven search (`rg`/`ugrep`, `fd`/`bfs`) per SKILL.md.
     - `--fix --cx` = main session invokes [`scripts/codex-review.sh`](../scripts/codex-review.sh) with the same `--base` / `--remote` / `--platform` flags every round and merges both Codex paths per [delegation.md](delegation.md). The script is idempotent given unchanged HEAD / upstream / origin/HEAD.
 2. Apply recommended fixes directly to the checkout in the main session.
 3. Run existing validation commands (tests, lint, typecheck) if cheap. Required for `--cx`: the broad path is `read-only` sandboxed and the opinionated path's validation only runs inside a transient snapshot worktree, so neither can verify fixes against the user's real checkout. Main-session validation after applying Keep fixes is load-bearing.
-4. If the merged Keep set is non-empty → next round (step 1). If empty → convergence, follow [Termination](#termination).
+4. If the merged Keep set is non-empty -> next round (step 1). If empty -> convergence, follow [Termination](#termination).
+
+## Filter provenance
+
+Each round's broad sweep legitimately re-reviews lines autofix introduced in earlier rounds. Without a provenance check, P3 polish and maintainability nits on autofix-touched code accumulate in Keep indefinitely and the loop never converges naturally, hitting the round budget every time.
+
+Before bucketing a finding into Keep / Rewrite / Skip / Drop, check whether the cited `file:line` is autofix-touched relative to the baseline. The baseline (written during Setup) is the working tree at round-1 entry, i.e., the original diff the user asked to review.
+
+```bash
+BASELINE=$(cat "$(git rev-parse --git-dir)/review-fix-baseline")
+git diff "$BASELINE" -- <file>   # baseline -> current working tree. Hunks here are autofix-touched.
+```
+
+Two provenance categories:
+
+- **Original-diff line** (unchanged since baseline): apply the normal Keep / Rewrite / Skip / Drop rules. This is the work the user asked to review.
+- **Autofix-touched line** (added or modified after baseline): raise the bar. Only P1/P2 real bugs and regressions of original-diff behavior stay Keep. P3 polish, style preferences, and maintainability nits Drop even when they would normally Keep on an original-diff line.
+
+This rule lives at filter time only. The broad sweep itself does not narrow; it still reviews the full base..HEAD diff and runs Flow step 7, preserving cross-file regression detection. Provenance only changes what blocks loop convergence.
+
+Round 1 has no autofix-touched lines yet, so the rule is a no-op until round 2.
 
 ## Termination
 
-At termination (either path below) run the summary diff via the helper below. It builds a matching post-fix snapshot through its own temp index, so `git diff` compares two self-contained commits — no `git add -A` on the user's real index, no pre-existing untracked pollution, and any autofix changes to pre-existing untracked files show up too:
+At termination (either path below) run the summary diff via the helper below. It builds a matching post-fix snapshot through its own temp index, so `git diff` compares two self-contained commits: no `git add -A` on the user's real index, no pre-existing untracked pollution, and any autofix changes to pre-existing untracked files show up too:
 
 ```bash
 summary_diff() {
@@ -62,17 +82,17 @@ summary_diff() {
 }
 ```
 
-Both exit paths share the same finishing sequence. Do not skip `/simplify` and `/deslop` on the round-budget path — they operate on the accumulated diff, not on Keep findings, so they apply regardless of whether the loop converged.
+Both exit paths share the same finishing sequence. Always run `/simplify` and `/deslop`, including on the round-budget path: they operate on the accumulated diff, not on Keep findings, so they apply regardless of whether the loop converged.
 
 Shared sequence (run in order for both paths):
 
 1. `/simplify`
 2. `/deslop`
-3. `summary_diff "$BASELINE_FILE"` — emit inline
+3. `summary_diff "$BASELINE_FILE"`: emit inline
 4. Output the exit block (convergence summary or round-budget handoff, per below)
 5. `rm -f "$BASELINE_FILE"`
 
-Language: all prose in the exit block is Chinese per SKILL.md `## Output`. English stays inside code identifiers, `file:line` citations, quoted code, and fixed label terms (`Applied Keep` / `Skip` / `Drop` / `Not fixed` / `Baseline` / `P1`/`P2`/`P3`). The round-budget handoff's "reached round budget — user judgment needed" label is a fixed English tag; the reasons attached to each `Not fixed` item are Chinese.
+Language: all prose in the exit block is Chinese per SKILL.md `## Output`. English stays inside code identifiers, `file:line` citations, quoted code, and fixed label terms (`Applied Keep` / `Skip` / `Drop` / `Not fixed` / `Baseline` / `P1`/`P2`/`P3`). The round-budget handoff's "reached round budget, user judgment needed" label is a fixed English tag; the reasons attached to each `Not fixed` item are Chinese.
 
 #### Convergence (primary exit)
 
@@ -82,7 +102,7 @@ Language: all prose in the exit block is Chinese per SKILL.md `## Output`. Engli
 
 Check `|Keep|` at the end of each round. If `|Keep| == 0`, take the convergence path above. If round 5 ends with `|Keep| > 0`, the loop's output becomes the handoff. The exit block contains:
 
-1. remaining Keep findings as `Not fixed`, labeled "reached round budget — user judgment needed" (each reason in Chinese)
+1. remaining Keep findings as `Not fixed`, labeled "reached round budget, user judgment needed" (each reason in Chinese)
 2. `Baseline: <sha>` inline
 
 ## Convergence Summary Format
@@ -92,9 +112,9 @@ On convergence exit, output (per SKILL.md `## Output`: bucket labels and `file:l
 - Applied Keep: N
 - Applied Rewrite (real-part-only): M
 - Skip: X  (defensive-guard without trigger, unverified contract risk, runtime-verification-required)
-- Drop: Y  (explicitly NOT — generic style, unwarranted performance/maintainability nits)
+- Drop: Y  (explicitly NOT: generic style, unwarranted performance/maintainability nits, plus P3 polish on autofix-touched lines per [Filter provenance](#filter-provenance))
 - Not fixed: Z  with `file:line` and reason per item
-- Needs manual verification: K  runtime-verification Skips per SKILL.md `## Output → --fix termination output`. Each entry: `file:line`, one-line claim, observation to make (page / endpoint / two tabs / DB row).
+- Needs manual verification: K  runtime-verification Skips per SKILL.md `## Output > --fix termination output`. Each entry: `file:line`, one-line claim, observation to make (page / endpoint / two tabs / DB row).
 
 Main session counts these buckets directly from per-round filter decisions. No schema required.
 

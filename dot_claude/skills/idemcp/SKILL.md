@@ -19,23 +19,23 @@ Prefer IDE MCP tools over CLI equivalents:
 
 ## Available Tools
 
-**getDiagnostics** — Retrieve errors, warnings, and info from the language server. Use before fixing, after editing, and before committing.
+**getDiagnostics**: Retrieve errors, warnings, and info from the language server. Use before fixing, after editing, and before committing.
 
-**rename_symbol** — Rename across the entire codebase with scope awareness. Always prefer this over manual Edit-based renaming.
+**rename_symbol**: Rename across the entire codebase with scope awareness. Always prefer this over manual Edit-based renaming.
 
-**get_references** — Find all usages of a symbol. Use before renaming or to understand impact of changes.
+**get_references**: Find all usages of a symbol. Use before renaming or to understand impact of changes.
 
-**execute_command** — Run IDE commands:
-- `editor.action.fixAll` — auto-fix all issues (ESLint, TS quick fixes, unused imports)
-- `editor.action.organizeImports` — sort and remove unused imports
-- `editor.action.formatDocument` — format according to project settings
+**execute_command**: Run IDE commands:
+- `editor.action.fixAll`: auto-fix all issues (ESLint, TS quick fixes, unused imports)
+- `editor.action.organizeImports`: sort and remove unused imports
+- `editor.action.formatDocument`: format according to project settings
 
 ## Workflow
 
-1. **Assess** — get all diagnostics, report count and severity breakdown
-2. **Fix** — try `editor.action.fixAll` first, then manually fix remaining issues file by file, root causes first
-3. **Verify** — re-run getDiagnostics, confirm count decreased with no new errors
-4. **Iterate** — repeat until zero diagnostics
+1. **Assess**: get all diagnostics, report count and severity breakdown
+2. **Fix**: try `editor.action.fixAll` first, then manually fix remaining issues file by file, root causes first
+3. **Verify**: re-run getDiagnostics, confirm count decreased with no new errors
+4. **Iterate**: repeat until zero diagnostics
 
 Report when done: what was fixed, which files were modified.
 

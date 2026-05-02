@@ -1,6 +1,6 @@
 ---
 name: gh
-description: GitHub operations via `gh` CLI — analyze issues/PRs/repos AND install/update/preview Agent Skills from GitHub repos (`gh skill install`). Use when user mentions GitHub URLs, issue/PR numbers (#123), GitHub content, or asks to install/update/preview a skill from a GitHub repo (e.g. a `SKILL.md` path, `owner/repo` skill reference).
+description: GitHub operations via `gh` CLI. Analyze issues/PRs/repos, and install/update/preview Agent Skills from GitHub repos (`gh skill install`). Use when user mentions GitHub URLs, issue/PR numbers (#123), GitHub content, or asks to install/update/preview a skill from a GitHub repo (e.g. a `SKILL.md` path, `owner/repo` skill reference).
 context: fork
 allowed-tools:
   - Bash(gh:*)
@@ -8,13 +8,13 @@ allowed-tools:
   - Read
 ---
 
-Use `gh` CLI for all GitHub operations. Use your training knowledge — run `gh <command> --help` when unsure.
+Use `gh` CLI for all GitHub operations. Lean on your training knowledge; run `gh <command> --help` when unsure.
 
 ## URL Parsing
 
 Extract owner/repo and number from GitHub URLs:
-- `https://github.com/owner/repo/issues/123` → `gh issue view 123 --repo owner/repo`
-- `https://github.com/owner/repo/pull/456` → `gh pr view 456 --repo owner/repo`
+- `https://github.com/owner/repo/issues/123` -> `gh issue view 123 --repo owner/repo`
+- `https://github.com/owner/repo/pull/456` -> `gh pr view 456 --repo owner/repo`
 - Cross-repo shorthand: `owner/repo#123`
 
 ## Structured Output
@@ -37,7 +37,7 @@ gh api repos/OWNER/REPO/issues/N/comments --paginate >/tmp/gh_comments.json \
 
 ## Long Discussions (100+ comments)
 
-Don't read everything — focus on high-value content:
+Don't read everything; focus on high-value content:
 
 1. Get the issue/PR body first
 2. Fetch most-reacted comments: `jq 'sort_by(-.reactions.total_count) | .[0:5]'`
@@ -46,7 +46,7 @@ Don't read everything — focus on high-value content:
 
 ## Agent Skills
 
-`gh skill` installs Agent Skills from GitHub repos. Don't fetch `SKILL.md` manually with `gh api`/`curl`/`wget`. State lives in each `SKILL.md`'s frontmatter (`metadata.github-*`) — there is no central manifest.
+`gh skill` installs Agent Skills from GitHub repos. Don't fetch `SKILL.md` manually with `gh api`/`curl`/`wget`. State lives in each `SKILL.md`'s frontmatter (`metadata.github-*`); there is no central manifest.
 
 User mainly uses Claude Code and Codex. Pass `--agent` explicitly; default would be `github-copilot`.
 
@@ -63,10 +63,10 @@ gh skill update --all         # update everything non-interactively
 
 Scope paths:
 
-- Claude Code: user → `~/.claude/skills`, project → `$PWD/.claude/skills`
-- Codex: user → `~/.codex/skills`, project → `$PWD/.agents/skills` (shared with Copilot/Cursor/Gemini)
+- Claude Code: user -> `~/.claude/skills`, project -> `$PWD/.claude/skills`
+- Codex: user -> `~/.codex/skills`, project -> `$PWD/.agents/skills` (shared with Copilot/Cursor/Gemini)
 
-`gh skill update` only finds project-scope skills when run from that project root — it does not walk up parent dirs.
+`gh skill update` only finds project-scope skills when run from that project root; it does not walk up parent dirs.
 
 No `uninstall` command exists. To remove a skill, delete its directory directly (e.g. `rm -rf ~/.claude/skills/<name>`).
 
@@ -74,7 +74,7 @@ No `uninstall` command exists. To remove a skill, delete its directory directly 
 
 Only perform write operations (create issues, comment, label, close, merge) when the user **explicitly** asks. Default to read-only analysis.
 
-When creating issues or PRs, **always mask personal information** — replace hostnames, directory paths, email addresses, repo URLs, and other identifiable details with generic placeholders (e.g. `<hostname>`, `/path/to/project`, `example/example-repo.git`). Debug logs and error output should also be sanitized before including in public issues.
+When creating issues or PRs, **always mask personal information**: replace hostnames, directory paths, email addresses, repo URLs, and other identifiable details with generic placeholders (e.g. `<hostname>`, `/path/to/project`, `example/example-repo.git`). Debug logs and error output should also be sanitized before including in public issues.
 
 ## Troubleshooting
 
