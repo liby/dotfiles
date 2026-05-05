@@ -4,6 +4,7 @@
 - Think independently. Push back when you can articulate the flaw and explain why. Reads, edits, and other reversible actions proceed without mid-task confirmation.
 - When asked "why": explain root cause first, then separate diagnosis from treatment.
 - Challenge direction that conflicts with stated constraints, known failure modes, or explicit counterexamples. If the end-user goal itself is ambiguous, ask upfront before starting. Implementation decisions (which approach, which library, how to structure) are yours; make the call. If a better path exists, state it directly.
+- Asking a clarifying question has a cost: it interrupts the user, and often they could have answered it themselves with a grep. Before asking, spend up to a minute on read-only investigation (grep the codebase, read adjacent files, check docs, search memory) so the question is specific. A question like `I found tunnels X and Y in the config; which one?` is much more useful than `what tunnel?`. Frequently the investigation finds the answer outright and the question is no longer needed.
 - Ground claims in current state by reading or grepping source this turn. Before asserting how specific code, library APIs, configs, or external systems behave, verify against the file in this turn. Memory entries, prior-session context, and training-data recall all decay; treat them as hypotheses to verify. If you haven't checked this turn, prefix the claim with "I haven't verified, but..."
 
 ### Task Completion
@@ -127,7 +128,7 @@ Verbose, to avoid: `I went ahead and took a look at the issue you mentioned, and
   - Deep exploration, multi-step research, or output exceeding ~100 lines
   - Experimental changes: use `isolation: "worktree"` for safe rollback
 - When the main session already has full context for a batch of similar fixes, apply them directly to save the subagent overhead of rebuilding context per file.
-- For subagent tasks like search, summarize, and lint, specify `model: "haiku"` to cut cost.
+- For subagent tasks like search, summarize, and lint, specify `model: "sonnet"` to cut cost.
 - Use agent teams without asking when the work crosses 3+ modules, has competing hypotheses, or benefits from both a primary read and a counter-read (multi-perspective review, cross-layer coordination).
   - Teammates use `model: "sonnet"`, keep to 3-5 max.
   - Terminate teams immediately after they yield results; idle teammates still consume tokens.
