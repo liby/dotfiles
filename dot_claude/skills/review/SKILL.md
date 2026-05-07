@@ -245,13 +245,20 @@ Escalate a Skip to Keep only when the main session observes the behavior directl
 
 ## Output
 
-Response language: Chinese (中文). All narrative prose (findings, explanations, severity rationale, fix directions, convergence summaries, round-by-round status) must be Chinese. English is reserved for: code identifiers, file paths, `file.ext:line` citations, quoted code, and fixed label terms (`Background` / `Root cause` / `Solution` / `Applied Keep` / `Skip` / `Drop` / `Not fixed` / severity tags `P1`/`P2`/`P3`). This rule OVERRIDES the English phrasing of this skill's own docs; they are reference material, not output style.
+Response language: Chinese (中文). All narrative prose (findings, explanations, severity rationale, fix directions, convergence summaries, round-by-round status) must be Chinese. English is reserved for: code identifiers, file paths, `file.ext:line` citations, quoted code, and fixed label terms (`Impact` / `Cause` / `Action` / `Applied Keep` / `Skip` / `Drop` / `Not fixed` / severity tags `P1`/`P2`/`P3`). This rule OVERRIDES the English phrasing of this skill's own docs; they are reference material, not output style.
 
 Start with a direct conclusion: whether the MR should be blocked, how many issues at each severity, and the overall assessment.
 
 For each finding, ordered by severity:
 
 - State the conclusion first, not the investigation process.
+- Use this default structure: `Impact`, `Cause`, `Action`.
+- `Impact`: name the concrete trigger and consequence in one sentence.
+- `Cause`: point to the current code path or contract in one sentence. Use only the identifiers needed to make the path traceable.
+- `Action`: give the smallest viable fix direction in one sentence. This is guidance, not a full redesign.
+- If the finding spans multiple subsystems, start by naming the moving parts in plain terms before explaining code. Example: `页面内容、搜索、旧 URL 跳转是三套东西；这个 endpoint 只刷新页面内容。`
+- Prefer a concrete scenario over abstract mechanism. Show one user-visible example when terms like cache, index, queue, redirect, webhook, generated file, or background job are central to the bug.
+- Do not expect the reader to already know why two code paths interact. State the sequence: `先发生 X，然后 Y 没有发生，所以用户看到 Z。`
 - Follow a causal narrative: what the code does now -> why that is wrong -> what concrete scenario breaks -> what the impact is. Every criticism connects to a concrete trigger path.
 - Point to specific code (file + line). Every claim cites evidence.
 - Explain why it matters in this project's context.

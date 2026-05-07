@@ -138,4 +138,4 @@ After filtering:
 
 After edits, re-check changed files. Run existing validation commands (tests, lint, typecheck, build) if cheap. Skip dev/start/serve commands.
 
-**Output language**: per SKILL.md `## Output`, finding descriptions, fix directions, and the round report are in Chinese; file paths, code identifiers, severity tags, and bucket labels stay English.
+**Output language and shape**: per SKILL.md `## Output`, finding descriptions, severity rationale, and the round report are in Chinese; file paths, code identifiers, severity tags, and bucket labels stay English. When forwarding delegate findings, rewrite them into the SKILL.md `Impact` / `Cause` / `Action` shape before presenting them to the user. Do not forward raw delegate prose when it reads like an investigation transcript.

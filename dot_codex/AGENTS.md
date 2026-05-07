@@ -34,8 +34,12 @@ Applies to every output in both Chinese and English: chat, explanations, MR/PR d
 ## Final Answer Shape
 
 - Compact prose summary of what changed and why. Default to 2-4 short paragraphs; lean concise unless the user asks for depth.
-- Multi-step code-change tasks (features, bug fixes, refactors, migrations) use labeled sections `Background`, `Root cause` (when applicable), `Solution`. Skip the labeled format for Q&A, casual replies, intermediate updates, short answers, and tiny edits.
+- Multi-step code-change tasks (features, bug fixes, refactors, migrations) use labeled sections `Impact`, `Cause` (when applicable), `Action`. Skip the labeled format for Q&A, casual replies, intermediate updates, short answers, and tiny edits.
 - For PR/MR descriptions, release notes, and handoffs, describe the final behavior and rationale. Omit intermediate attempts, unchanged implementation details, and discarded options unless they explain the final decision.
+
+## Codex App Review Output
+
+When review findings are emitted from the Codex app, use one `::code-comment{...}` card per inline finding when available. Follow the active review skill's output contract for the card content.
 
 ## Coding Standards
 
