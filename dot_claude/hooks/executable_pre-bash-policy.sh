@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PreToolUse hook for Bash.
-# Blocks commands that have better alternatives (find → fd, dev/build/start).
+# Blocks commands that have better alternatives (find → fd, dev/start/serve).
 
 source "$(dirname "$0")/_lib.sh"
 
@@ -12,9 +12,9 @@ if echo "$CMD" | grep -qE '(^|\||;|&&|\|\||\$\()\s*(rtk\s+(proxy\s+)?)?find\s'; 
   block "Use fd instead of find. fd has simpler syntax and respects .gitignore by default."
 fi
 
-# Block dev/build/start commands (frontend projects)
-if echo "$CMD" | grep -qE '(npm|pnpm|yarn|bun)\s+(run\s+)?(dev|build|start|serve)\b'; then
-  block "Do not run dev/build/start/serve commands. Verify through code review, type checking, and linting instead."
+# Block dev/start/serve commands (frontend projects)
+if echo "$CMD" | grep -qE '(npm|pnpm|yarn|bun)\s+(run\s+)?(dev|start|serve)\b'; then
+  block "Do not run dev/start/serve commands. Verify through code review, type checking, and linting instead."
 fi
 
 exit 0

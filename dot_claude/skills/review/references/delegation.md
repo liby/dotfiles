@@ -136,6 +136,6 @@ After filtering:
 3. If wrong or the fix would violate a principle, record why under **Not fixed**.
 4. Opportunistic cleanup is allowed inside edited hunks only (typos, dead code, local renames). Anything outside those hunks is out of scope.
 
-After edits, re-check changed files. Run existing validation commands (tests, lint, typecheck) if cheap. Skip dev/build/start/serve commands.
+After edits, re-check changed files. Run existing validation commands (tests, lint, typecheck, build) if cheap. Skip dev/start/serve commands.
 
 **Output language**: per SKILL.md `## Output`, finding descriptions, fix directions, and the round report are in Chinese; file paths, code identifiers, severity tags, and bucket labels stay English.

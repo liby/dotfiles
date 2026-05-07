@@ -227,7 +227,7 @@ Verify claims before reporting them.
 
 When useful and cheap, run existing validation commands already defined by the project (tests, lint, typecheck).
 
-Use only the project's existing validation commands. Skip dev servers, build servers, and frontend serve commands during review.
+Use only the project's existing validation commands. Skip dev servers, start commands, and frontend serve commands during review.
 
 When a claim is about semantics, verify it against neighboring names, docs, tests, or call sites. Do not rely on wording intuition alone.
 
