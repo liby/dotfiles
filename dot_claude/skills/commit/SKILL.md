@@ -2,7 +2,6 @@
 name: commit
 description: Create a git commit following repository conventions. Use when the user says "commit", "/commit", or asks to commit changes.
 argument-hint: "[additional context]"
-disable-model-invocation: true
 allowed-tools:
   - Bash(git:*)
   - Bash(cat:.git/hooks/*)
