@@ -1,6 +1,7 @@
 {
   "cleanupPeriodDays": 99999,
   "env": {
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-6",
     "CLAUDE_AUTO_BACKGROUND_TASKS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",

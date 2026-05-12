@@ -3,19 +3,16 @@
 
 # block — deny a PreToolUse action and exit.
 # Usage: block "reason message"
+# Callers must have invoked require_jq first; this writes the structured deny
+# response on stdout per the PreToolUse hookSpecificOutput protocol.
 block() {
-  if command -v jq &>/dev/null; then
-    jq -n --arg reason "DENIED: $1 Do NOT bypass this restriction or retry the same blocked command." '{
-      "hookSpecificOutput": {
-        "hookEventName": "PreToolUse",
-        "permissionDecision": "deny",
-        "permissionDecisionReason": $reason
-      }
-    }'
-    jq -n --arg reason "Blocked: $1" '{decision: "block", reason: $reason}' >&2
-  else
-    echo "Blocked: $1" >&2
-  fi
+  jq -n --arg reason "DENIED: $1 Do NOT bypass this restriction or retry the same blocked command." '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": $reason
+    }
+  }'
   exit 2
 }
 

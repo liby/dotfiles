@@ -217,9 +217,19 @@ echo "codex-review.sh: dispatching (scope=$SCOPE, base=${BASE_REF:-<none>}, cwd=
 # Journal contract: SKILL.md §Self-improve Journal says writes are main-session
 # only, but delegates historically read the opening sentence ("write one entry...")
 # and attempt to append from the sandbox, producing PermissionError noise in every
-# --cx session. Pin the prohibition in the prompt itself so it lands before
-# SKILL.md's own wording is reached.
-JOURNAL_INSTRUCTION="Do not write to ~/.claude/skills/review/journal.md — that file is main-session only. Instead, end your output with a 'Journal suggestions' block: 1-3 bullets, each prefixed with one of 'Over-specified:', 'Under-specified:', 'Rule that saved me:', or 'Odd behavior:', and each citing a file:line or concrete behavior. Skip the block entirely if you have nothing concrete — do not pad."
+# --cx session. Pin the redirection in the prompt itself so it lands before
+# SKILL.md's own wording is reached. Phrased as "do this" rather than "do not do
+# that" because instruction-following models comply better with positive framing.
+JOURNAL_INSTRUCTION="Journal suggestions: end your output with a 'Journal suggestions' block of 1-3 bullets, each prefixed with one of 'Over-specified:', 'Under-specified:', 'Rule that saved me:', or 'Odd behavior:', and each citing a file:line or concrete behavior. The main session writes the journal at ~/.claude/skills/review/journal.md; your role is to contribute observations through this block so the main session can merge them at exit. Skip the block entirely if you have nothing concrete to add."
+
+# Coverage prompt: review delegates self-filter low-severity findings when given
+# vague guidance, which silently drops real bugs the main-session filter would
+# have kept. Anthropic's code-review-harness guidance recommends explicitly
+# separating finding (coverage) from filtering (precision); --cx already does
+# this two-stage shape, so make the contract explicit in the delegate prompt.
+REVIEW_GUIDANCE="Reporting bar: report every issue you find, including ones you are uncertain about or consider low-severity. Do not filter for importance or confidence at this stage; the main session filters and ranks findings downstream. Coverage matters more than precision here. For each finding include severity (P1/P2/P3) and a confidence level so the downstream filter can rank them.
+
+Investigate before answering: never speculate about code you have not opened. Read any file you reference before making claims about it."
 
 # Sandbox selection hinges on whether REVIEW_CWD is a transient worktree we own
 # (MR/PR mode or local branch mode) or the user's real checkout (local working-tree
@@ -247,7 +257,11 @@ if [ "$SCOPE" = "branch" ]; then
     --cwd "$REVIEW_CWD" --base "$BASE_REF" --scope branch > "$BROAD_OUT" 2>&1 &
   BROAD_PID=$!
   codex exec --ephemeral "${SANDBOX_ARGS[@]}" -C "$REVIEW_CWD" \
-    "Follow the review skill at $SKILL_PATH. Review the current worktree against base $BASE_REF. Output findings per the skill's Output section. $JOURNAL_INSTRUCTION" \
+    "Review the current worktree against base $BASE_REF, following the review skill at $SKILL_PATH. Output findings per the skill's Output section.
+
+$REVIEW_GUIDANCE
+
+$JOURNAL_INSTRUCTION" \
     > "$OPINIONATED_OUT" 2>&1 &
   OPINIONATED_PID=$!
 else
@@ -255,7 +269,13 @@ else
     --cwd "$REVIEW_CWD" --scope working-tree > "$BROAD_OUT" 2>&1 &
   BROAD_PID=$!
   codex exec --ephemeral "${SANDBOX_ARGS[@]}" -C "$REVIEW_CWD" \
-    "Follow the review skill at $SKILL_PATH. Review the current worktree's uncommitted changes. Output findings per the skill's Output section. $JOURNAL_INSTRUCTION" \
+    "Review the current worktree's uncommitted changes, following the review skill at $SKILL_PATH. Output findings per the skill's Output section.
+
+How to see the diff: run 'git diff HEAD' to see all uncommitted changes (staged and unstaged combined). Plain 'git diff' only shows unstaged hunks and misses anything already staged, which is the most common cause of empty review output in this mode.
+
+$REVIEW_GUIDANCE
+
+$JOURNAL_INSTRUCTION" \
     > "$OPINIONATED_OUT" 2>&1 &
   OPINIONATED_PID=$!
 fi
