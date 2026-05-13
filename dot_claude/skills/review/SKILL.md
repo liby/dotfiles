@@ -30,13 +30,13 @@ MUST read [references/autofix.md](references/autofix.md) before round 1. The bas
 
 `--fix` is local-mode only. MR/PR reviews are always report-only.
 
-## Goal
+## Focus the review
 
 Produce a high-signal review that focuses on real bugs, silent failure paths, bad state transitions, contract violations, semantic mismatches, security risks, meaningful testing gaps, and project-pattern mismatches.
 
 Skip generic style advice and textbook review feedback detached from the repository's actual runtime model.
 
-## Review Process
+## Gather context and diff
 
 ### Flow
 
@@ -130,13 +130,7 @@ Raise severity when failure leaves behind a misleading "configured", "done", "ca
 
 ### 3. Question every assumption
 
-For each claimed issue, identify the actual assumption:
-
-- what the code assumes
-- why that assumption may be invalid
-- what concrete condition breaks it
-
-Every criticism needs a concrete trigger path.
+For each claimed issue, name what the code assumes, why that assumption may be invalid, and what concrete condition breaks it. Every criticism needs a concrete trigger path.
 
 ### 4. Follow repository reality
 
@@ -159,11 +153,7 @@ Do not overrate a theoretical edge case that contradicts the repository's actual
 
 A finding shaped `behavior X is missing` is a claim about the whole repo, not the diff. Absence from touched files is not absence from the system. Run Flow step 7 before it becomes Keep.
 
-### 5. Prefer simplicity
-
-Prefer the smallest fix that removes the real risk. Propose heavyweight redesigns only when the current approach is genuinely unsafe or broken.
-
-### 6. Names and boundaries must match reality
+### 5. Names and boundaries must match reality
 
 Treat misleading names, mislayered abstractions, and wrong ownership boundaries as real findings when they obscure the system's true model.
 
@@ -174,7 +164,7 @@ Ask:
 - is this logic living in the right layer
 - are we adding a workaround instead of using the correct abstraction
 
-### 7. Contracts outrank convenience
+### 6. Contracts outrank convenience
 
 If behavior depends on external APIs, historical conventions, compatibility promises, or undocumented assumptions, look for the source of truth.
 
@@ -183,6 +173,10 @@ If the source of truth is missing:
 - do not invent a "safe" fallback
 - ask whether a code comment or doc link is needed
 - consider whether the implementation is encoding guesswork as normal behavior
+
+### 7. Apply fixes symmetrically
+
+When a diff introduces an escaping/parsing helper, splits a state field, or rolls back behavior in one match arm, grep all same-class call sites, all writers and readers of the field, and all peer arms. Partial application is a partial fix and a real finding, even when the touched code looks correct in isolation. Asymmetry between the touched path and its peers is itself the bug.
 
 ## Review Priorities
 
@@ -202,7 +196,11 @@ Findings shaped `this diff adds code that another layer already handles` belong 
 
 Findings shaped `this diff routes around a shared proxy/gateway/middleware that peer modules use` also belong in priority 3, not priority 6. Using a direct SDK client when the project centralizes through a gateway (e.g., ai-gateway, a routing layer, a shared HTTP client) is an ownership-boundary violation, not a style difference. It bypasses the layer the project established to own that concern. Check whether peer modules in the same directory use the centralized path before accepting the new code as idiomatic.
 
-## Severity Guidance
+Findings shaped `this diff splits or widens a schema field` also belong in priority 3. When an enum gains a variant, a single-value field becomes plural, or an output schema's column set changes, grep every writer and every reader before deciding the diff is complete. Hardcoded consumers of the old shape are findings even when they sit outside the diff.
+
+Prefer the smallest fix that removes the real risk (priority 6). Propose heavyweight redesigns only when the current approach is genuinely unsafe or broken.
+
+## Calibrate severity
 
 - `P1`: likely in normal or high-probability usage, or leaves a persistent bad state, or misleads the user/system into believing the operation succeeded
 - `P2`: needs specific conditions, but the failure mode and impact are real and meaningful
@@ -221,7 +219,7 @@ Severity downweights:
 - the issue is real but local, obvious, and easy to recover from
 - the issue is mostly about preferred style without behavioral consequence
 
-## Verification Expectations
+## Verify before reporting
 
 Verify claims before reporting them.
 
@@ -245,7 +243,9 @@ Escalate a Skip to Keep only when the main session observes the behavior directl
 
 ## Output
 
-Response language: Chinese (中文). All narrative prose (findings, explanations, severity rationale, fix directions, convergence summaries, round-by-round status) must be Chinese. English is reserved for: code identifiers, file paths, `file.ext:line` citations, quoted code, and fixed label terms (`Impact` / `Cause` / `Action` / `Applied Keep` / `Skip` / `Drop` / `Not fixed` / severity tags `P1`/`P2`/`P3`). This rule OVERRIDES the English phrasing of this skill's own docs; they are reference material, not output style.
+Response language: Chinese (中文). All narrative prose (findings, explanations, severity rationale, fix directions, convergence summaries, round-by-round status) must be Chinese. English is reserved for: code identifiers, file paths, `path:line` citations, quoted code, and fixed label terms (`Impact` / `Cause` / `Action` / `Applied Keep` / `Skip` / `Drop` / `Not fixed` / severity tags `P1`/`P2`/`P3`). This rule OVERRIDES the English phrasing of this skill's own docs; they are reference material, not output style.
+
+**Citation format.** `path` means the repo-relative path from the project root (e.g., `src/agents/review/runner.ts:42`), not just the basename (`runner.ts:42`). A basename alone forces the user to grep to locate the file when a project has multiple files of the same name; the relative path lets them jump directly. This applies wherever this skill (or its references) say `path:line`.
 
 Start with a direct conclusion: whether the MR should be blocked, how many issues at each severity, and the overall assessment.
 
@@ -260,7 +260,8 @@ For each finding, ordered by severity:
 - Prefer a concrete scenario over abstract mechanism. Show one user-visible example when terms like cache, index, queue, redirect, webhook, generated file, or background job are central to the bug.
 - Do not expect the reader to already know why two code paths interact. State the sequence: `先发生 X，然后 Y 没有发生，所以用户看到 Z。`
 - Follow a causal narrative: what the code does now -> why that is wrong -> what concrete scenario breaks -> what the impact is. Every criticism connects to a concrete trigger path.
-- Point to specific code (file + line). Every claim cites evidence.
+- Point to specific code with a repo-relative `path:line` citation. Every claim cites evidence.
+- On first use within a finding, gloss every project-specific term (schema field, enum value, internal identifier) and every skill-internal label (`P1` / `P2` / `P3`, `Skip`, `Drop`, `self-review only`) with a parenthetical 一句话 definition or concrete example. The reader has the diff, not the skill's taxonomy or the upstream schema.
 - Explain why it matters in this project's context.
 - Suggest a fix direction, not a redesign.
 
@@ -268,14 +269,11 @@ Report all issues regardless of severity. If a finding is low-priority, say so a
 
 If no real findings survive scrutiny, say so plainly.
 
-### `--fix` termination output
-
-Alongside the bucket counts, emit `Needs manual verification` for every runtime-verification Skip. Each entry: `file:line`, one-line claim, and the concrete observation to make (which page to open, which endpoint to hit, which two tabs to compare, which DB row to check).
-
 ## Writing Rules
 
 - Open with the first finding directly. No overview, no preamble.
 - Every vague phrase must be immediately followed by a specific trigger and consequence. If you say "bad state", "edge case", or "inconsistent check", translate it into what actually breaks and how.
+- Do not narrate the skill's own mechanics or report process status (`worktree prepared`, `per SKILL.md § X`, `Context gathered`, `chain walked`, `Flow step 7 ran`). The user wants findings, not workflow telemetry. Skill-internal observations belong in the journal, not the user-facing output.
 
 (Global conclusion-first / evidence-first / concise-prose rules come from the user's `CLAUDE.md`. This section only layers review-specific additions.)
 

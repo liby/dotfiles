@@ -16,7 +16,7 @@ Create a new git branch based on: $ARGUMENTS
 - Hyphens `-` to separate words, no other special characters
 - Period `.` only in version numbers
 - 3-8 words in the description, concise but descriptive, present tense
-- Use concrete action verbs (`add`, `fix`, `validate`, `reject`, `expose`, `migrate`). Skip vague AI verbs (`tighten`, `streamline`, `enhance`, `refine`, `polish`); they describe nothing.
+- Use concrete action verbs (`add`, `fix`, `validate`, `reject`, `expose`, `migrate`). Skip vague verbs (`tighten`, `streamline`, `enhance`, `refine`, `polish`); they describe nothing.
 
 ### Examples
 

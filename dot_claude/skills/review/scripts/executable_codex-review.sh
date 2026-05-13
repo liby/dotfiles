@@ -220,7 +220,7 @@ echo "codex-review.sh: dispatching (scope=$SCOPE, base=${BASE_REF:-<none>}, cwd=
 # --cx session. Pin the redirection in the prompt itself so it lands before
 # SKILL.md's own wording is reached. Phrased as "do this" rather than "do not do
 # that" because instruction-following models comply better with positive framing.
-JOURNAL_INSTRUCTION="Journal suggestions: end your output with a 'Journal suggestions' block of 1-3 bullets, each prefixed with one of 'Over-specified:', 'Under-specified:', 'Rule that saved me:', or 'Odd behavior:', and each citing a file:line or concrete behavior. The main session writes the journal at ~/.claude/skills/review/journal.md; your role is to contribute observations through this block so the main session can merge them at exit. Skip the block entirely if you have nothing concrete to add."
+JOURNAL_INSTRUCTION="Journal suggestions: end your output with a 'Journal suggestions' block of 1-3 bullets, each prefixed with one of 'Over-specified:', 'Under-specified:', 'Rule that saved me:', or 'Odd behavior:', and each citing a repo-relative path:line (e.g., src/foo.ts:42, not foo.ts:42) or a concrete behavior. The main session writes the journal at ~/.claude/skills/review/journal.md; your role is to contribute observations through this block so the main session can merge them at exit. Skip the block entirely if you have nothing concrete to add."
 
 # Coverage prompt: review delegates self-filter low-severity findings when given
 # vague guidance, which silently drops real bugs the main-session filter would

@@ -61,7 +61,7 @@ gh skill update --dry-run     # check what's outdated
 gh skill update --all         # update everything non-interactively
 ```
 
-Scope paths:
+### Scope paths
 
 - Claude Code: user -> `~/.claude/skills`, project -> `$PWD/.claude/skills`
 - Codex: user -> `~/.codex/skills`, project -> `$PWD/.agents/skills` (shared with Copilot/Cursor/Gemini)
@@ -78,4 +78,4 @@ When creating issues or PRs, **always mask personal information**: replace hostn
 
 ## Troubleshooting
 
-If `gh` commands fail, check: `gh auth status`
+If `gh` commands fail, check: `gh auth status`.

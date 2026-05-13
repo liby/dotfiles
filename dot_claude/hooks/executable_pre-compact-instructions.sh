@@ -5,30 +5,22 @@
 cat <<'EOF'
 <compaction-instructions>
 
-<goal>
-Produce a summary that lets a fresh agent continue the current work without re-deriving context. The post-compact session inherits only this summary; anything you drop is forgotten until the user re-supplies it.
-</goal>
+Goal: summarize so a fresh agent can continue the current work without re-deriving context. The post-compact session inherits only this summary.
 
-<identifier-preservation>
-Copy identifiers character for character: UUIDs, commit hashes, IPs, ports, URLs, file paths, branch names, PR numbers. A single altered character breaks downstream tool calls silently, with no error.
-</identifier-preservation>
+Identifier preservation: copy identifiers character for character (UUIDs, commit hashes, IPs, ports, URLs, file paths, branch names, PR numbers). A single altered character breaks downstream tool calls silently.
 
-<preserve-in-priority-order>
-1. Architecture decisions and design trade-offs: keep the decision, the rationale, and alternatives rejected.
-2. Modified files and the substantive nature of each change; quote file paths.
-3. Current task goal and verification status (pass or fail).
-4. Open TODOs, known dead-ends, and unresolved side threads (paused threads typically resume).
-5. Current working directory, active git branch, and any environment variables set or referenced this session (for example HTTP_PROXY, NODE_ENV, PYTHONPATH, model or effort overrides). Without these the next tool call may run in the wrong place or with the wrong config.
+Don't duplicate artifacts; reference them. When work has been committed, pushed, or written to a durable artifact, cite the artifact (commit hash, PR URL, file path) and name which user request it resolved. Do not re-prose the diff or the file body; the next agent runs `git show <hash>` or opens the file when they need detail. Re-prosing committed work scatters the completion signal across the summary, and the post-compact agent treats already-resolved requests as still pending and re-launches them. For external references (PRDs, ADRs, third-party issues), cite plus one inline line on the working fact (decision, status, conclusion).
+
+Preserve in priority order:
+
+1. Architecture decisions and design trade-offs: keep the decision, the rationale, and alternatives rejected. These outlast any single task.
+2. Resolved user requests: cite the resolving artifact per the rule above, one line each. The artifact carries the detail.
+3. In-flight work: uncommitted edits, ongoing investigation. Quote file paths and the substantive nature of pending changes so the next agent can pick up without re-deriving.
+4. Known dead-ends: approaches tried this session that did not work, with one line on why each failed, so the next agent does not re-try.
+5. Current working directory, active git branch, and environment variables in play (HTTP_PROXY, NODE_ENV, PYTHONPATH, model or effort overrides). Without these the next tool call may run in the wrong place or with the wrong config.
 6. Tool outputs: keep the pass/fail verdict; raw output may be discarded.
-</preserve-in-priority-order>
 
-<weighting-when-trimming>
-When two items at the same priority compete for space, prefer the one related to the user's most recent instruction. The most recent instruction is a tie-breaker, not an exclusive filter; topically distant items at higher priority still win.
-</weighting-when-trimming>
-
-<external-artifacts>
-Cite external artifacts (PRDs, plans, ADRs, issues, commits, diffs) by path or URL and keep the working fact (decision, status, conclusion) inline. Locators alone are insufficient because the post-compact session may be unable to refetch the artifact. Architecture decisions and trade-offs stay fully inline regardless of whether an ADR documents them.
-</external-artifacts>
+Tie-breaker: when two items at the same priority compete for space, prefer the one tied to the user's most recent instruction. Topically distant items at higher priority still win.
 
 </compaction-instructions>
 EOF

@@ -4,6 +4,7 @@ description: Analyze GitLab merge requests, issues, pipelines, and repos via `gl
 context: fork
 allowed-tools:
   - Bash(glab:*)
+  - Bash(git:*)
   - Bash(jq:*)
   - Read
 ---

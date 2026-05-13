@@ -88,7 +88,7 @@ When a single finding mixes a genuine bug with a defensive-programming suggestio
 Use when:
 - defensive guard without a failing trigger (null check, optional chaining advice with no demonstrated failure path), or
 - unverified contract risk that needs human judgment (no source of truth available in the repo), or
-- runtime-verification-required (SKILL.md `Verification Expectations > Runtime-verification-required claims`). Under `--cx`, this is the default bucket for any Codex finding whose trigger path was inferred from code rather than witnessed running. Escalate to Keep only when the main session observes the behavior directly (failing test, `curl` result, contradicting call site).
+- runtime-verification-required (SKILL.md `Verify before reporting > Runtime-verification-required claims`). Under `--cx`, this is the default bucket for any Codex finding whose trigger path was inferred from code rather than witnessed running. Escalate to Keep only when the main session observes the behavior directly (failing test, `curl` result, contradicting call site).
 
 Skip items appear in the final summary count. Runtime-verification Skips also surface in the `--fix` termination "Needs manual verification" list.
 

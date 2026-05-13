@@ -43,7 +43,7 @@ The per-round flow:
 
 Each round's broad sweep legitimately re-reviews lines autofix introduced in earlier rounds. Without a provenance check, P3 polish and maintainability nits on autofix-touched code accumulate in Keep indefinitely and the loop never converges naturally, hitting the round budget every time.
 
-Before bucketing a finding into Keep / Rewrite / Skip / Drop, check whether the cited `file:line` is autofix-touched relative to the baseline. The baseline (written during Setup) is the working tree at round-1 entry, i.e., the original diff the user asked to review.
+Before bucketing a finding into Keep / Rewrite / Skip / Drop, check whether the cited `path:line` is autofix-touched relative to the baseline. The baseline (written during Setup) is the working tree at round-1 entry, i.e., the original diff the user asked to review.
 
 ```bash
 BASELINE=$(cat "$(git rev-parse --git-dir)/review-fix-baseline")
@@ -92,7 +92,7 @@ Shared sequence (run in order for both paths):
 4. Output the exit block (convergence summary or round-budget handoff, per below)
 5. `rm -f "$BASELINE_FILE"`
 
-Language: all prose in the exit block is Chinese per SKILL.md `## Output`. English stays inside code identifiers, `file:line` citations, quoted code, and fixed label terms (`Applied Keep` / `Skip` / `Drop` / `Not fixed` / `Baseline` / `P1`/`P2`/`P3`). The round-budget handoff's "reached round budget, user judgment needed" label is a fixed English tag; the reasons attached to each `Not fixed` item are Chinese.
+Language: all prose in the exit block is Chinese per SKILL.md `## Output`. English stays inside code identifiers, `path:line` citations, quoted code, and fixed label terms (`Applied Keep` / `Skip` / `Drop` / `Not fixed` / `Baseline` / `P1`/`P2`/`P3`). The round-budget handoff's "reached round budget, user judgment needed" label is a fixed English tag; the reasons attached to each `Not fixed` item are Chinese.
 
 #### Convergence (primary exit)
 
@@ -103,18 +103,19 @@ Language: all prose in the exit block is Chinese per SKILL.md `## Output`. Engli
 Check `|Keep|` at the end of each round. If `|Keep| == 0`, take the convergence path above. If round 5 ends with `|Keep| > 0`, the loop's output becomes the handoff. The exit block contains:
 
 1. remaining Keep findings as `Not fixed`, labeled "reached round budget, user judgment needed" (each reason in Chinese)
-2. `Baseline: <sha>` inline
+2. `Needs manual verification` for every runtime-verification Skip, in the same per-entry shape as the Convergence Summary item below
+3. `Baseline: <sha>` inline
 
 ## Convergence Summary Format
 
-On convergence exit, output (per SKILL.md `## Output`: bucket labels and `file:line` stay English, prose is Chinese):
+On convergence exit, output (per SKILL.md `## Output`: bucket labels and `path:line` stay English, prose is Chinese):
 
 - Applied Keep: N
 - Applied Rewrite (real-part-only): M
 - Skip: X  (defensive-guard without trigger, unverified contract risk, runtime-verification-required)
 - Drop: Y  (explicitly NOT: generic style, unwarranted performance/maintainability nits, plus P3 polish on autofix-touched lines per [Filter provenance](#filter-provenance))
-- Not fixed: Z  with `file:line` and reason per item
-- Needs manual verification: K  runtime-verification Skips per SKILL.md `## Output > --fix termination output`. Each entry: `file:line`, one-line claim, observation to make (page / endpoint / two tabs / DB row).
+- Not fixed: Z  with `path:line` and reason per item
+- Needs manual verification: K  runtime-verification Skips. Each entry: `path:line`, one-line claim, and the concrete observation to make (which page to open, which endpoint to hit, which two tabs to compare, which DB row to check).
 
 Main session counts these buckets directly from per-round filter decisions. No schema required.
 
