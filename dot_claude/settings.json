@@ -36,7 +36,6 @@
       "Bash(rm .git/review-*)",
       "Edit",
       "LSP",
-      "mcp__ide__*",
       "mcp__plugin_atlassian_atlassian__*",
       "mcp__plugin_context7_context7__*",
       "NotebookEdit",
