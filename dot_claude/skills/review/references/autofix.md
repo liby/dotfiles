@@ -82,15 +82,14 @@ summary_diff() {
 }
 ```
 
-Both exit paths share the same finishing sequence. Always run `/simplify` and `/deslop`, including on the round-budget path: they operate on the accumulated diff, not on Keep findings, so they apply regardless of whether the loop converged.
+Both exit paths share the same finishing sequence. Always run `/deslop`, including on the round-budget path: it operates on the accumulated diff, not on Keep findings, so it applies regardless of whether the loop converged.
 
 Shared sequence (run in order for both paths):
 
-1. `/simplify`
-2. `/deslop`
-3. `summary_diff "$BASELINE_FILE"`: emit inline
-4. Output the exit block (convergence summary or round-budget handoff, per below)
-5. `rm -f "$BASELINE_FILE"`
+1. `/deslop`
+2. `summary_diff "$BASELINE_FILE"`: emit inline
+3. Output the exit block (convergence summary or round-budget handoff, per below)
+4. `rm -f "$BASELINE_FILE"`
 
 Language: all prose in the exit block is Chinese per SKILL.md `## Output`. English stays inside code identifiers, `path:line` citations, quoted code, and fixed label terms (`Applied Keep` / `Skip` / `Drop` / `Not fixed` / `Baseline` / `P1`/`P2`/`P3`). The round-budget handoff's "reached round budget, user judgment needed" label is a fixed English tag; the reasons attached to each `Not fixed` item are Chinese.
 

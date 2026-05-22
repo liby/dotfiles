@@ -139,6 +139,22 @@ else
       [ -n "$(git rev-list "$UPSTREAM..HEAD" --max-count=1 2>/dev/null)" ] && BASE_REF="$UPSTREAM"
     fi
   fi
+  # Amend detection. HEAD == upstream can mean either truly synced or
+  # "user just amended + force-pushed and wants to review the amend's delta".
+  # Without this, the next fallback is origin/HEAD, which silently widens
+  # scope to the whole branch (master..HEAD). Reflog HEAD@{1} sharing HEAD's
+  # parent with a different SHA is the amend fingerprint; in that case base
+  # = HEAD@{1} so the review covers the amend, not the whole branch.
+  if [ -z "$BASE_REF" ] && [ -n "${UPSTREAM:-}" ] && \
+     [ "$(git rev-parse HEAD 2>/dev/null)" = "$(git rev-parse "$UPSTREAM" 2>/dev/null)" ]; then
+    PREV=$(git rev-parse HEAD@{1} 2>/dev/null) || PREV=""
+    HEAD_SHA=$(git rev-parse HEAD 2>/dev/null)
+    if [ -n "$PREV" ] && [ "$PREV" != "$HEAD_SHA" ] && \
+       [ "$(git rev-parse HEAD^ 2>/dev/null)" = "$(git rev-parse "${PREV}^" 2>/dev/null)" ]; then
+      BASE_REF="$PREV"
+      echo "codex-review.sh: HEAD == $UPSTREAM but HEAD@{1} ($PREV) shares HEAD's parent; treating as amend, base=HEAD@{1}" >&2
+    fi
+  fi
   if [ -z "$BASE_REF" ]; then
     if ORIGIN_HEAD=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null); then
       CANDIDATE="${ORIGIN_HEAD#refs/remotes/}"

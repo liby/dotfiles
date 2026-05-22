@@ -61,6 +61,12 @@ run_case BLOCK 'tar czf backup.tgz .env'
 run_case BLOCK 'sed -n 1,5p .env'
 run_case BLOCK 'cat ".env"'
 run_case BLOCK 'cat .env; echo done'
+run_case BLOCK 'rg E2B_API_KEY .env.local'
+run_case BLOCK 'rg secret .env'
+run_case BLOCK 'rg -n foo /path/to/.env'
+run_case BLOCK 'rg API_KEY .env.production'
+run_case BLOCK 'ag pattern .env'
+run_case BLOCK 'ack token .env.staging'
 run_case PASS  'cat .env.example'
 run_case PASS  'cat .env.sample'
 run_case PASS  'cat .env.template'
@@ -68,6 +74,7 @@ run_case PASS  'cat .env.age'
 run_case PASS  "grep -E 'process\.env\.\w+' cli.js"
 run_case PASS  'grep "process.env.ANTHROPIC_API_KEY" cli.js'
 run_case PASS  'rg process.env cli.js'
+run_case PASS  'rg "process.env.E2B_API_KEY" cli.js'
 run_case PASS  "grep -r 'CLAUDE_CODE_' node_modules/"
 
 section "Sensitive files"

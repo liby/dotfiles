@@ -1,6 +1,6 @@
 ---
 name: deslop
-description: Closing-pass cleanup after AI edits. Removes generated code slop and catches type-driven refactors that broke runtime behavior. Closing step in the /review -> /simplify -> /deslop chain. Use when the user says "/deslop" or "deslop".
+description: Closing-pass cleanup after AI edits. Removes generated code slop and catches type-driven refactors that broke runtime behavior. Closing step in the /review --fix loop. Use when the user says "/deslop" or "deslop".
 context: fork
 allowed-tools:
   - Bash(git:*)
@@ -28,9 +28,9 @@ If both are empty, report "no changes to review" and exit. Otherwise run both cl
 
 ## Verify type-driven refactors
 
-AI tools (including /simplify) extract their model of "what this field contains" from the type signature, not from runtime data. When the data violates the type contract, the AI's "fix" can be runtime-wrong: swapping a derived value for a typed field, removing a null check the type "proves" unneeded, deleting a fallback the type marks required, stripping optional chaining after narrowing, trusting a generated API-response type.
+AI tools extract their model of "what this field contains" from the type signature, not from runtime data. When the data violates the type contract, the AI's "fix" can be runtime-wrong: swapping a derived value for a typed field, removing a null check the type "proves" unneeded, deleting a fallback the type marks required, stripping optional chaining after narrowing, trusting a generated API-response type.
 
-**For any such change in the diff, sample the actual data before keeping it**: grep fixtures, open the JSON the type maps to, or check a recent API response. If the field is missing, empty, non-unique, or otherwise violates the type contract, revert the change and add a code comment naming why the original guard or derivation is required (so the next /simplify pass doesn't undo the revert).
+**For any such change in the diff, sample the actual data before keeping it**: grep fixtures, open the JSON the type maps to, or check a recent API response. If the field is missing, empty, non-unique, or otherwise violates the type contract, revert the change and add a code comment naming why the original guard or derivation is required (so the next review pass doesn't undo the revert).
 
 ## Output
 

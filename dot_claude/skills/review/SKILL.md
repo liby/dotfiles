@@ -21,7 +21,7 @@ If `--fix` is passed, this is a LOOP, not a single pass:
 
 1. Before round 1: create the baseline snapshot commit (temp-index + `git commit-tree`, NOT `git stash create`). Write the SHA to `$GIT_DIR/review-fix-baseline`.
 2. Each round: one full review -> filter (Keep / Rewrite / Skip / Drop) -> apply Keep + Rewrite's real part -> run cheap validation -> repeat step 2.
-3. Termination runs the same finishing sequence in both exit paths: `/simplify` -> `/deslop` -> `summary_diff` -> output block -> remove baseline file -> exit. The two paths only differ in the output block's content.
+3. Termination runs the same finishing sequence in both exit paths: `/deslop` -> `summary_diff` -> output block -> remove baseline file -> exit. The two paths only differ in the output block's content.
    - Convergence exit (`|Keep|=0`): output the Convergence Summary.
    - Round-budget exit (round 5 ends with `|Keep|>0`): output the remaining Keep findings as `Not fixed` (labeled "reached round budget, user judgment needed"), followed by `Baseline: <sha>` and the summary diff.
 4. Round budget is 5. It is the loop's contract with the user: return control at a predictable point, with a concrete Not-fixed list they can act on. Rounds 1-3 surface issues in the original diff; rounds 4-5 polish what those rounds produced; beyond 5, new findings trend toward reactions to earlier fixes rather than the original work, so five rounds keeps the handoff crisp. In-round directives like "都可以修 / fix everything" calibrate Keep/Skip aggressiveness inside a round; the round budget is a separate property of the loop itself. See [references/autofix.md](references/autofix.md) for the terminal-block format.
@@ -178,6 +178,14 @@ If the source of truth is missing:
 
 When a diff introduces an escaping/parsing helper, splits a state field, or rolls back behavior in one match arm, grep all same-class call sites, all writers and readers of the field, and all peer arms. Partial application is a partial fix and a real finding, even when the touched code looks correct in isolation. Asymmetry between the touched path and its peers is itself the bug.
 
+### 8. Scan each line for mechanical bugs
+
+On every changed line, sweep for: inverted or wrong condition (truthiness flipped, off-comparison), off-by-one in loop bounds or index arithmetic, null / undefined deref before guard, missing `await` on async call, falsy-zero check (`if (x)` where `0` is valid input), wrong-variable copy-paste (sibling var stale, loop variable used outside scope), and unescaped regex metacharacters in user-supplied patterns. The priorities below (contract / semantics / ownership / failure / security / complexity) do not catch these on their own; they shape what counts as a finding, not the line-local scan that surfaces it.
+
+Audit deleted lines on the same pass: a removed guard, validation, or test is a finding unless the diff preserves the original behavior elsewhere.
+
+Apply the same sweep to moved code: when a block migrates between files or layers, check that call-site preconditions and wrapping guards still hold at the new location.
+
 ## Review Priorities
 
 Look in this order:
@@ -199,6 +207,8 @@ Findings shaped `this diff routes around a shared proxy/gateway/middleware that 
 Findings shaped `this diff splits or widens a schema field` also belong in priority 3. When an enum gains a variant, a single-value field becomes plural, or an output schema's column set changes, grep every writer and every reader before deciding the diff is complete. Hardcoded consumers of the old shape are findings even when they sit outside the diff.
 
 Prefer the smallest fix that removes the real risk (priority 6). Propose heavyweight redesigns only when the current approach is genuinely unsafe or broken.
+
+Run the per-line mechanical-bug sweep (Core Principle 8) alongside these priorities. The sweep is orthogonal to the priority ordering: it surfaces line-local correctness errors, while the priorities decide how to weight what it surfaces.
 
 ## Calibrate severity
 
