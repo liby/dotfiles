@@ -1,294 +1,125 @@
 ---
 name: review
-description: Review a remote MR/PR (with description and discussion) or local code changes, reporting only real issues with context-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", or provides a MR/PR URL to review.
-argument-hint: "[--cx] [--fix | MR/PR URL] [additional notes]"
+description: Review a remote MR/PR or local code changes, reporting real issues with evidence-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", asks for review findings, or provides a MR/PR URL.
+argument-hint: "[--cx] [--fix] [MR/PR URL or notes]"
 allowed-tools:
   - Bash
   - Read
+  - Task
 ---
 
-## Arguments
+# Review
 
-### `--cx`: delegate to Codex
+Read, verify, report. Clean verdicts and no-op are valid outcomes. Default review is read-only for the reviewed project: do not edit reviewed files, post comments, start dev servers, or apply fixes in the main reviewer context.
 
-If `--cx` is passed, run a dual-path Codex review in parallel: `/codex:review` (broad multi-persona coverage) + `codex exec --ephemeral` reading this skill (opinionated SKILL-driven pass). Main session merges findings and applies the filter. See [references/delegation.md](references/delegation.md).
+## Flow
 
-### `--fix`: auto-fix loop
+1. Resolve scope: MR/PR, branch diff, working tree, or explicit notes.
+2. Before reading any diff body, collect changed paths and refuse secret-like names without printing raw paths. Refuse `.env*`, `.env/`, keys, certificates, `.ssh/`, shell history, log files or directories, and names containing `credential`, `secret`, or `token`.
+3. List changed files before judging behavior:
+   - branch: parse `git diff -z --name-status <base>...HEAD`; for `R*` and `C*`, inspect both source and destination paths before any full diff
+   - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`
+   - MR/PR: compare host changed files with the local checkout or diff
+4. Read local instructions that can change review rules: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`, `README.md`, `REVIEW.md`, `CODE_REVIEW.md`, project review commands, and project review skills.
+5. Read the MR/PR description and discussions when available.
+6. Read touched files, adjacent code, direct call sites, and relevant tests before final severity.
+7. For exported identifiers, deleted symbols, schema fields, event names, and shared helpers, `rg` callers, readers, writers, and tests.
+8. Load [references/core-principles.md](references/core-principles.md) for matching triggers. Load [references/responsibility-checks.md](references/responsibility-checks.md) only when the diff touches that responsibility.
+9. Verify each candidate with code, docs, tests, runtime output, or the cheapest existing validation command that covers the changed path.
+10. Report only findings with a concrete trigger path and realistic repository impact.
 
-Default (flag absent): review is report-only. Present findings and stop. The user decides what to fix.
+## Modes
 
-If `--fix` is passed, this is a LOOP, not a single pass:
+### `--cx`
 
-1. Before round 1: create the baseline snapshot commit (temp-index + `git commit-tree`, NOT `git stash create`). Write the SHA to `$GIT_DIR/review-fix-baseline`.
-2. Each round: one full review -> filter (Keep / Rewrite / Skip / Drop) -> apply Keep + Rewrite's real part -> run cheap validation -> repeat step 2.
-3. Termination runs the same finishing sequence in both exit paths: `/deslop` -> `summary_diff` -> output block -> remove baseline file -> exit. The two paths only differ in the output block's content.
-   - Convergence exit (`|Keep|=0`): output the Convergence Summary.
-   - Round-budget exit (round 5 ends with `|Keep|>0`): output the remaining Keep findings as `Not fixed` (labeled "reached round budget, user judgment needed"), followed by `Baseline: <sha>` and the summary diff.
-4. Round budget is 5. It is the loop's contract with the user: return control at a predictable point, with a concrete Not-fixed list they can act on. Rounds 1-3 surface issues in the original diff; rounds 4-5 polish what those rounds produced; beyond 5, new findings trend toward reactions to earlier fixes rather than the original work, so five rounds keeps the handoff crisp. In-round directives like "都可以修 / fix everything" calibrate Keep/Skip aggressiveness inside a round; the round budget is a separate property of the loop itself. See [references/autofix.md](references/autofix.md) for the terminal-block format.
+Load [references/cx-delegation.md](references/cx-delegation.md). The helper supports local changes and GitLab MR URLs only; review other hosts in the main session. Delegates return cited candidates; the main session verifies before forwarding. Delegate agreement is a lead, not proof.
 
-MUST read [references/autofix.md](references/autofix.md) before round 1. The baseline / summary bash helpers there are load-bearing (they capture untracked files and autofix-created files correctly; `git stash create` silently drops them). Do not improvise.
+### `--fix`
 
-`--fix` is local-mode only. MR/PR reviews are always report-only.
+1. Run the normal review first. Review delegates remain read-only.
+2. Classify findings as accepted, skipped, dropped, or manual verification, then freeze the accepted set before any mutation.
+3. If `IS_TRANSIENT=1` came from [references/cx-delegation.md](references/cx-delegation.md), report accepted findings and stop. Fixes must run from the intended local branch or worktree.
+4. Launch one fresh write-capable fix-orchestrator subagent with the frozen accepted set, repo root, review scope, validation commands, and [references/fix-policy.md](references/fix-policy.md).
+5. If no write-capable subagent is available, report accepted findings and do not mutate files.
+6. The fix-orchestrator independently triages, edits, validates, reuses its own context for later mutation rounds, and returns a structured summary.
+7. The main session reviews that summary and reports changed, skipped, manual, and still-open items.
 
-## Focus the review
+The main reviewer must not edit reviewed project files. Only the fix-orchestrator may mutate, and only inside a local writable checkout.
 
-Produce a high-signal review that focuses on real bugs, silent failure paths, bad state transitions, contract violations, semantic mismatches, security risks, meaningful testing gaps, and project-pattern mismatches.
+## Review Stance
 
-Skip generic style advice and textbook review feedback detached from the repository's actual runtime model.
+- Evidence before claims: find the source of truth before approving or rejecting behavior.
+- No speculative support paths: guards, fallbacks, `undefined`, caches, switches, and helpers need a current caller, contract, test, or observed failure.
+- Failure must stay visible: do not turn errors, bad statuses, partial work, or terminal-state ambiguity into success.
+- Names, states, boundaries, and config are contract surfaces.
+- A changed contract needs a symmetry sweep across writers, readers, callers, generated types, generated artifacts, and direct consumers.
+- Tests must prove the invariant, not just satisfy the fixture.
+- Changed lines still need a mechanical pass for line-local bugs.
 
-## Gather context and diff
+## Finding Bar
 
-### Flow
+Prioritize:
 
-1. Read the MR description and discussion before judging the diff.
-2. Review the local diff against the correct base.
-3. Read adjacent code, relevant call sites, and touched tests before finalizing severity.
-4. Infer the repository's real runtime context before deciding whether something is a blocker, a low-priority edge case, or not a real issue.
-5. Identify the real contract, semantics, ownership boundary, and failure model before commenting on implementation details.
-6. Report only the findings that survive that context check.
-7. For any finding shaped `missing X` / `no guard for Y` / `needs a Z layer`, walk the request-handling chain in order before filing: entrypoint -> routing or auth middleware -> wrapper / root layout -> handler decorator or filter -> the handler itself. If X is present at any earlier layer, the finding is `diff duplicates / conflicts with existing handler`, not `missing`. Only keep it as `missing` once every earlier layer has been grep'd and is empty. (Adapt the chain to the stack: CLI is entrypoint -> argument parser -> command dispatch; data pipeline is trigger -> orchestrator -> step; etc.)
+1. Contract and source-of-truth mismatch
+2. Semantic mismatch in names, fields, states, events, or API shape
+3. Ownership boundary violation
+4. Hidden failure, false success, or silent data corruption
+5. Security, permission, identity, exposure, or environment-isolation risk
+6. Incomplete symmetry across writers, readers, sibling cases, schema variants, generated output, or removed consumers
+7. Mechanical bugs in changed lines
+8. Tests and docs, only when they prove or hide one of the risks above
 
-### Project Conventions
+Skip pure style, speculative guards, broad maintainability advice, and pattern matches without a concrete trigger path.
 
-Before reviewing, scan for project-level agent instructions and review-specific rules: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`, `README.md`, plus any project-level review files such as `.claude/skills/*review*/SKILL.md`, `.agents/skills/*review*/SKILL.md`, `.claude/commands/*review*.md`, `REVIEW.md`, `CODE_REVIEW.md`, or `CONTRIBUTING.md`. If found, read them in full. Where they conflict with this skill's rules, defer to the project. It reflects local ground truth. Where they don't conflict, treat them as complementary context and additional review rules (e.g., "this repo runs on K8s" informs severity for config errors; a project's own review checklist layers on top of this skill's defaults).
+## Severity
 
-### Context Gathering
+- `P1`: likely in normal use, breaks a security or permission boundary, leaves persistent bad state, or records a failed operation as successful.
+- `P2`: needs specific conditions, but the trigger and consequence are real in this repository.
+- `P3`: local, recoverable, low impact, or mainly maintainability with a concrete future failure path.
 
-Determine the review mode:
+Downshift when the project does not run in the required mode. Upshift when bad state persists, misleads operators, widens access, or silently affects downstream data.
 
-- MR/PR mode (URL or number provided): fetch metadata from the remote, then diff locally.
-- Local mode (no URL): diff the working tree, staged changes, or branch against `--base <ref>`.
+## Verification
 
-The review principles, severity, and output are the same in both modes. Only the context gathering differs.
+- Control flow claim: read the call path.
+- Convention claim: verify adjacent code.
+- External contract claim: read the local wrapper, docs, schema, generated type, or tests.
+- Runtime claim: observe it directly or mark manual verification.
+- Missing-X claim: search the whole ownership chain first.
 
-#### MR/PR mode
+Discover validation commands from local instructions, `package.json`, `Makefile`, `justfile`, task config, CI workflow, and adjacent tests. Use the cheapest existing command that covers the changed path. Do not run dev/start/serve commands during review.
 
-Use `glab` to fetch from GitLab. If the repository remote is GitHub, fall back to `gh`.
-
-Fetch MR metadata as TSV to minimize output tokens:
-
-```bash
-glab mr view <number> --output json | jq -r '["title","state","author","source","target","labels"], [.title, .state, .author.username, .source_branch, .target_branch, (.labels | join(","))] | @tsv'
-```
-
-Fetch description and discussions separately (these need full text, not TSV). Summarize the parts that materially affect the review: threat model, rollout assumptions, compatibility promises, migration notes, and anything reviewers already challenged. When existing discussions already debated a point, factor that into the review instead of repeating it blindly.
-
-Check out the PR/MR head in a worktree so you can read files directly and run project validation commands. Fetch the head via the platform's merge-request ref namespace. This works for forks (both GitHub and GitLab mirror fork heads into `refs/pull/<N>/head` / `refs/merge-requests/<N>/head` on the target repo) and always reflects the latest remote head.
-
-```bash
-# GitHub
-git fetch origin "pull/<number>/head"
-git worktree add --detach "$TMPDIR/review-<number>" FETCH_HEAD
-
-# GitLab
-git fetch origin "merge-requests/<number>/head"
-git worktree add --detach "$TMPDIR/review-<number>" FETCH_HEAD
-```
-
-Do not `git fetch origin` + `git worktree add origin/<head-branch>`: that silently checks out the wrong branch when the PR/MR is from a fork, and trusts stale remote-tracking refs.
-
-Run validation and diff commands from within the worktree. Clean up with `git worktree remove --force "$TMPDIR/review-<number>"` after the review completes.
-
-For the diff, `git diff <base-ref>...FETCH_HEAD`, where `<base-ref>` is the MR/PR's target branch from the metadata (`target_branch` for glab, `baseRefName` for gh).
-
-#### Local mode
-
-Diff the working tree or branch against the base (`--base <ref>`, or infer from the branch's upstream).
-
-### Read Surrounding Code
-
-In both modes, read beyond the diff before finalizing severity:
-
-- touched files in full
-- surrounding code and nearby helpers
-- direct call sites if behavior depends on them
-- relevant tests
-
-If a claim depends on a control-flow detail, verify it in code before reporting it.
-
-If a claim depends on a repository convention, verify that convention in adjacent code instead of assuming it.
-
-## Core Principles
-
-### 1. Reject unobserved failure guards
-
-Do not recommend null guards, optional chaining, fallback values, or "safe" alternate branches unless the contract, docs, tests, or observed behavior show they are needed.
-
-If a guard is justified, prefer failing loudly over silently masking the problem.
-
-Inconsistent guards are a finding on their own: if code checks field A but not sibling fields B and C on the same object, the issue is the inconsistency, not the missing checks.
-
-### 2. Keep errors observable
-
-Do not normalize swallowed errors, unchecked `Promise.allSettled`, ignored exit codes, broad `catch {}` blocks, or fallback paths that convert failures into fake success.
-
-Every mechanism must match its purpose. Retries are for transient faults, not polling. Fallbacks are for defined alternate behavior, not hiding unexpected states. Error types (retriable vs non-retriable) must reflect the actual failure semantics.
-
-Treat `isConfigured`, `alreadyDone`, `cache hit`, `skip`, and similar gates as high-risk review targets. They must reflect final usable state, not just partial traces.
-
-Raise severity when failure leaves behind a misleading "configured", "done", "cached", or "healthy" state.
-
-### 3. Question every assumption
-
-For each claimed issue, name what the code assumes, why that assumption may be invalid, and what concrete condition breaks it. Every criticism needs a concrete trigger path.
-
-### 4. Follow repository reality
-
-Severity must match the project's real usage:
-
-- one-shot initializer vs long-running service
-- user-facing app vs internal tooling
-- migration script vs library
-- config writer vs transactional system
-
-Adapt emphasis by project type, but keep the same standard of evidence:
-
-- `infrastructure / IaC`: privilege boundaries, network exposure, resource scope, deployment behavior, least privilege
-- `data pipelines / integrations`: schema correctness, field semantics, sync direction, idempotency, ownership of derived values
-- `event-driven / async processing`: lifecycle, event naming, delivery semantics, retry vs polling, ordering guarantees, step boundaries
-- `APIs / services`: contract compatibility, backwards compatibility, error contracts, protocol semantics
-- `CLI / scripts / tooling`: user-visible failure modes, exit codes, idempotency, side effects
-
-Do not overrate a theoretical edge case that contradicts the repository's actual runtime model. Do not underrate a bug that can strand the system in a persistent bad state.
-
-A finding shaped `behavior X is missing` is a claim about the whole repo, not the diff. Absence from touched files is not absence from the system. Run Flow step 7 before it becomes Keep.
-
-### 5. Names and boundaries must match reality
-
-Treat misleading names, mislayered abstractions, and wrong ownership boundaries as real findings when they obscure the system's true model.
-
-Ask:
-
-- does this name match the real entity or responsibility
-- is this field/event/state expressing the right concept
-- is this logic living in the right layer
-- are we adding a workaround instead of using the correct abstraction
-
-### 6. Contracts outrank convenience
-
-If behavior depends on external APIs, historical conventions, compatibility promises, or undocumented assumptions, look for the source of truth.
-
-If the source of truth is missing:
-
-- do not invent a "safe" fallback
-- ask whether a code comment or doc link is needed
-- consider whether the implementation is encoding guesswork as normal behavior
-
-### 7. Apply fixes symmetrically
-
-When a diff introduces an escaping/parsing helper, splits a state field, or rolls back behavior in one match arm, grep all same-class call sites, all writers and readers of the field, and all peer arms. Partial application is a partial fix and a real finding, even when the touched code looks correct in isolation. Asymmetry between the touched path and its peers is itself the bug.
-
-### 8. Scan each line for mechanical bugs
-
-On every changed line, sweep for: inverted or wrong condition (truthiness flipped, off-comparison), off-by-one in loop bounds or index arithmetic, null / undefined deref before guard, missing `await` on async call, falsy-zero check (`if (x)` where `0` is valid input), wrong-variable copy-paste (sibling var stale, loop variable used outside scope), and unescaped regex metacharacters in user-supplied patterns. The priorities below (contract / semantics / ownership / failure / security / complexity) do not catch these on their own; they shape what counts as a finding, not the line-local scan that surfaces it.
-
-Audit deleted lines on the same pass: a removed guard, validation, or test is a finding unless the diff preserves the original behavior elsewhere.
-
-Apply the same sweep to moved code: when a block migrates between files or layers, check that call-site preconditions and wrapping guards still hold at the new location.
-
-## Review Priorities
-
-Look in this order:
-
-1. contract and source of truth
-2. semantic correctness: names, fields, event meaning, entity meaning
-3. ownership boundary: which layer or module should know this
-4. failure behavior: fail loud, partial success, misleading success, recoverability
-5. security / permissions / exposure surface
-6. complexity: whether the change introduced more machinery than the real problem needs
-7. tests and docs as supporting evidence
-
-Start from contracts and semantics, not from formatting, micro-style, or speculative edge cases.
-
-Findings shaped `this diff adds code that another layer already handles` belong in priorities 3 (ownership boundary) and 6 (complexity). They do not surface naturally: the reviewer's default question is "what could break?", not "what's redundant?" Ask the redundancy question explicitly at least once per review.
-
-Findings shaped `this diff routes around a shared proxy/gateway/middleware that peer modules use` also belong in priority 3, not priority 6. Using a direct SDK client when the project centralizes through a gateway (e.g., ai-gateway, a routing layer, a shared HTTP client) is an ownership-boundary violation, not a style difference. It bypasses the layer the project established to own that concern. Check whether peer modules in the same directory use the centralized path before accepting the new code as idiomatic.
-
-Findings shaped `this diff splits or widens a schema field` also belong in priority 3. When an enum gains a variant, a single-value field becomes plural, or an output schema's column set changes, grep every writer and every reader before deciding the diff is complete. Hardcoded consumers of the old shape are findings even when they sit outside the diff.
-
-Prefer the smallest fix that removes the real risk (priority 6). Propose heavyweight redesigns only when the current approach is genuinely unsafe or broken.
-
-Run the per-line mechanical-bug sweep (Core Principle 8) alongside these priorities. The sweep is orthogonal to the priority ordering: it surfaces line-local correctness errors, while the priorities decide how to weight what it surfaces.
-
-## Calibrate severity
-
-- `P1`: likely in normal or high-probability usage, or leaves a persistent bad state, or misleads the user/system into believing the operation succeeded
-- `P2`: needs specific conditions, but the failure mode and impact are real and meaningful
-- `P3`: narrow, low-impact, or mostly about maintainability / consistency
-
-Severity upweights:
-
-- partial success later treated as complete success
-- broken permissions or exposure boundary
-- semantic mismatch that will mislead future callers or operators
-- fallback that hides contract violations
-
-Severity downweights:
-
-- the issue depends on a repository mode the project does not actually use
-- the issue is real but local, obvious, and easy to recover from
-- the issue is mostly about preferred style without behavioral consequence
-
-## Verify before reporting
-
-Verify claims before reporting them.
-
-When useful and cheap, run existing validation commands already defined by the project (tests, lint, typecheck).
-
-Use only the project's existing validation commands. Skip dev servers, start commands, and frontend serve commands during review.
-
-When a claim is about semantics, verify it against neighboring names, docs, tests, or call sites. Do not rely on wording intuition alone.
-
-### Runtime-verification-required claims
-
-Some claims only settle at runtime. Skip them and list in the termination output. Typical shapes:
-
-- Identifier-space equality: two ids the code pipelines as equal whose live values may diverge.
-- Cross-tab / cross-device timing: stale persisted cache vs. newer server state.
-- UI state-machine behavior: button disables, flicker, touch vs. hover.
-- Browser / runtime compatibility.
-- DB migration state: query error as "missing table" vs. "transient fault".
-
-Escalate a Skip to Keep only when the main session observes the behavior directly: a failing test, a `curl` returning the wrong value, a grep'd call site contradicting the claim. Additional code-reading evidence from later `--cx` rounds is not observation; it is the same inference restated.
+Require runtime evidence for browser or hydration behavior, cross-tab timing, live identifier equality, DB migration state, UI enablement, external service paging, and terminal states not encoded locally.
 
 ## Output
 
-Response language: Chinese (中文). All narrative prose (findings, explanations, severity rationale, fix directions, convergence summaries, round-by-round status) must be Chinese. English is reserved for: code identifiers, file paths, `path:line` citations, quoted code, and fixed label terms (`Impact` / `Cause` / `Action` / `Applied Keep` / `Skip` / `Drop` / `Not fixed` / severity tags `P1`/`P2`/`P3`). This rule OVERRIDES the English phrasing of this skill's own docs; they are reference material, not output style.
+Use Chinese for review prose unless the user gives an exact output contract. Keep code identifiers, file paths, quoted code, commands, and severity tags in English.
 
-**Citation format.** `path` means the repo-relative path from the project root (e.g., `src/agents/review/runner.ts:42`), not just the basename (`runner.ts:42`). A basename alone forces the user to grep to locate the file when a project has multiple files of the same name; the relative path lets them jump directly. This applies wherever this skill (or its references) say `path:line`.
+Respect exact output contracts: `approve`, `No blocking findings.`, verdict-only, blocker-only, or any user-provided shape.
 
-Start with a direct conclusion: whether the MR should be blocked, how many issues at each severity, and the overall assessment.
+Open with the highest-severity finding. If there are no findings, say so plainly.
 
-For each finding, ordered by severity:
+Finding format:
 
-- State the conclusion first, not the investigation process.
-- Use this default structure: `Impact`, `Cause`, `Action`.
-- `Impact`: name the concrete trigger and consequence in one sentence.
-- `Cause`: point to the current code path or contract in one sentence. Use only the identifiers needed to make the path traceable.
-- `Action`: give the smallest viable fix direction in one sentence. This is guidance, not a full redesign.
-- If the finding spans multiple subsystems, start by naming the moving parts in plain terms before explaining code. Example: `页面内容、搜索、旧 URL 跳转是三套东西；这个 endpoint 只刷新页面内容。`
-- Prefer a concrete scenario over abstract mechanism. Show one user-visible example when terms like cache, index, queue, redirect, webhook, generated file, or background job are central to the bug.
-- Do not expect the reader to already know why two code paths interact. State the sequence: `先发生 X，然后 Y 没有发生，所以用户看到 Z。`
-- Follow a causal narrative: what the code does now -> why that is wrong -> what concrete scenario breaks -> what the impact is. Every criticism connects to a concrete trigger path.
-- Point to specific code with a repo-relative `path:line` citation. Every claim cites evidence.
-- On first use within a finding, gloss every project-specific term (schema field, enum value, internal identifier) and every skill-internal label (`P1` / `P2` / `P3`, `Skip`, `Drop`, `self-review only`) with a parenthetical 一句话 definition or concrete example. The reader has the diff, not the skill's taxonomy or the upstream schema.
-- Explain why it matters in this project's context.
-- Suggest a fix direction, not a redesign.
+```text
+P2 src/path/file.ts:42 conclusion in one sentence
 
-Report all issues regardless of severity. If a finding is low-priority, say so and explain why; do not omit it.
+Evidence: `quoted code or exact cited behavior`
 
-If no real findings survive scrutiny, say so plainly.
+Why it breaks: current sequence -> missing or wrong step -> concrete consequence.
 
-## Writing Rules
+Correct fix: root-cause fix direction, including direct dependents when needed.
+```
 
-- Open with the first finding directly. No overview, no preamble.
-- Every vague phrase must be immediately followed by a specific trigger and consequence. If you say "bad state", "edge case", or "inconsistent check", translate it into what actually breaks and how.
-- Do not narrate the skill's own mechanics or report process status (`worktree prepared`, `per SKILL.md § X`, `Context gathered`, `chain walked`, `Flow step 7 ran`). The user wants findings, not workflow telemetry. Skill-internal observations belong in the journal, not the user-facing output.
+Rules:
 
-(Global conclusion-first / evidence-first / concise-prose rules come from the user's `CLAUDE.md`. This section only layers review-specific additions.)
+- Use repo-relative `path:line`, not a basename.
+- Quote only the code needed to prove the claim.
+- Explain project-specific terms on first use.
+- Prefer one concrete scenario over abstract mechanism.
+- Correct fix means root cause plus direct dependents. Flag unrelated rewrites, surrounding refactors, and adjacent cleanup separately.
+- Do not narrate review mechanics, tool setup, worktree preparation, or skill rules.
 
-## Self-improve Journal
+## Evolution
 
-Before exiting any review, write one entry to `~/.claude/skills/review/journal.md` capturing what to delete / codify / keep / flag for skill evolution. Main-session only. Codex delegates under `--cx` contribute observations via a `Journal suggestions` block in their prose output; the main session merges both sides into the single entry. For `--fix` loops: one entry per session, at exit, never per round.
-
-Full spec (schema, header fields, hard rules): [references/journal.md](references/journal.md).
+At the end of a review or fix run, and when the user asks to evolve the skill or record a review lesson, use [references/self-improvement.md](references/self-improvement.md).

@@ -46,7 +46,7 @@ Don't read everything; focus on high-value content:
 
 ## Agent Skills
 
-`gh skill` installs Agent Skills from GitHub repos. Don't fetch `SKILL.md` manually with `gh api`/`curl`/`wget`. State lives in each `SKILL.md`'s frontmatter (`metadata.github-*`); there is no central manifest.
+`gh skill` installs Agent Skills from GitHub repos. Don't fetch `SKILL.md` manually with `gh api`/`curl`/`wget`. Provenance lives in `SKILL.md` frontmatter; install records go to `~/.agents/.skill-lock.json`.
 
 User mainly uses Claude Code and Codex. Pass `--agent` explicitly; default would be `github-copilot`.
 
@@ -65,6 +65,7 @@ gh skill update --all         # update everything non-interactively
 
 - Claude Code: user -> `~/.claude/skills`, project -> `$PWD/.claude/skills`
 - Codex: user -> `~/.codex/skills`, project -> `$PWD/.agents/skills` (shared with Copilot/Cursor/Gemini)
+- The install location follows `--scope`, but `gh skill install` records installs in the user-level lock file.
 
 `gh skill update` only finds project-scope skills when run from that project root; it does not walk up parent dirs.
 

@@ -164,6 +164,7 @@ render_extra_rate_row() {
   read -r five_hour_reset_epoch
   read -r seven_day_pct_raw
   read -r seven_day_reset_epoch
+  read -r stdin_effort
 } < <(jq -r '
   (.context_window.context_window_size // 200000),
   (.context_window.current_usage.input_tokens // 0),
@@ -174,29 +175,31 @@ render_extra_rate_row() {
   (.rate_limits.five_hour.used_percentage // ""),
   (.rate_limits.five_hour.resets_at // ""),
   (.rate_limits.seven_day.used_percentage // ""),
-  (.rate_limits.seven_day.resets_at // "")
+  (.rate_limits.seven_day.resets_at // ""),
+  (.effort.level // "")
 ' <<< "$input")
 
 : "${size:=200000}"
 (( size == 0 )) && size=200000
 
 settings_path="$HOME/.claude/settings.json"
-# Effort resolution mirrors CLI's UhH(): env CLAUDE_CODE_EFFORT_LEVEL takes
-# precedence over settings.effortLevel. "auto"/"unset" in env is an explicit
-# override meaning "model default" — it must NOT fall through to settings.
-# Only an unset env falls through. "max" is runtime-only, not in settings schema.
+# Prefer stdin effort.level (CC >= 2.1.121, reflects runtime state including env
+# priority). Fall back to env / settings for older CC versions.
 effort="default"
-_effort_env_set=0
-[ -n "${CLAUDE_CODE_EFFORT_LEVEL+x}" ] && _effort_env_set=1
-_effort_env=$(printf '%s' "${CLAUDE_CODE_EFFORT_LEVEL:-}" | tr '[:upper:]' '[:lower:]')
-case "$_effort_env" in
-  low|medium|high|xhigh|max) effort="$_effort_env" ;;
+case "$stdin_effort" in
+  low|medium|high|xhigh|max) effort="$stdin_effort" ;;
+  *)
+    _effort_env=$(printf '%s' "${CLAUDE_CODE_EFFORT_LEVEL:-}" | tr '[:upper:]' '[:lower:]')
+    case "$_effort_env" in
+      low|medium|high|xhigh|max) effort="$_effort_env" ;;
+    esac
+    ;;
 esac
 auto_compact=0
 auto_compact_enabled=1
 if [ -f "$settings_path" ]; then
   _settings=$(<"$settings_path")
-  if [ "$effort" = "default" ] && [ "$_effort_env_set" = 0 ]; then
+  if [ "$effort" = "default" ]; then
     [[ "$_settings" =~ \"effortLevel\"[[:space:]]*:[[:space:]]*\"(low|medium|high|xhigh)\" ]] && effort="${BASH_REMATCH[1]}"
   fi
   [[ "$_settings" =~ \"autoCompactWindow\"[[:space:]]*:[[:space:]]*([0-9]+) ]] && auto_compact="${BASH_REMATCH[1]}"
@@ -214,21 +217,18 @@ _is_truthy() {
 [ -n "$DISABLE_COMPACT" ] && _is_truthy "$DISABLE_COMPACT" && auto_compact_enabled=0
 [ -n "$DISABLE_AUTO_COMPACT" ] && _is_truthy "$DISABLE_AUTO_COMPACT" && auto_compact_enabled=0
 
-# Denominator = min(model capacity, autoCompactWindow); CC's context_window_size
-# only reports model capacity. HIDDEN_TOKENS accounts for system prompt + MCP defs
-# + CLAUDE.md not included in current_usage (~10pp on 200k, ~2pp on 1M).
-#
-# By design: when running a [1m] model variant, autoCompactWindow is set lower
-# than 1M (e.g. 400k) as the intended *working budget* — the bar should read
-# 100% at that threshold and compact there, using 1M only as spike headroom.
-# Recommended pattern per Claude Code maintainer (see .claude/CLAUDE.md).
-# Do NOT "fix" this to uncap the denominator.
-HIDDEN_TOKENS=20000
+# CC triggers auto-compact at min(model_capacity, autoCompactWindow) - COMPACT_RESERVE.
+# 33000 = nAK(20000, max-output reserve) + BAK(13000, compact buffer).
+# Reverse-engineered from CLI 2.1.150 e6H()/LG_(). May change across versions.
+# Do NOT "fix" the denominator to uncap past autoCompactWindow — see .claude/CLAUDE.md.
+COMPACT_RESERVE=33000
 effective_size=$size
 (( auto_compact_enabled && auto_compact > 0 && auto_compact < effective_size )) && effective_size=$auto_compact
 
 current=$(( input_tokens + output_tokens + cache_create + cache_read ))
-pct_used=$(( (current + HIDDEN_TOKENS) * 100 / effective_size ))
+compact_at=$(( effective_size - COMPACT_RESERVE ))
+(( compact_at < 1 )) && compact_at=1
+pct_used=$(( current * 100 / compact_at ))
 (( pct_used > 100 )) && pct_used=100
 
 # ── LINE 1: Context % │ Dir:branch │ Effort ──
