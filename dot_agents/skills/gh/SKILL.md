@@ -46,30 +46,31 @@ Don't read everything; focus on high-value content:
 
 ## Agent Skills
 
-`gh skill` installs Agent Skills from GitHub repos. Don't fetch `SKILL.md` manually with `gh api`/`curl`/`wget`. Provenance lives in `SKILL.md` frontmatter; install records go to `~/.agents/.skill-lock.json`.
+`gh skill` installs Agent Skills from GitHub repos or local directories. Use it instead of manually fetching `SKILL.md`. For a local source, add `--from-local`.
 
-User mainly uses Claude Code and Codex. Pass `--agent` explicitly; default would be `github-copilot`.
+Preview third-party skills before installing. Read `SKILL.md` and bundled scripts because installed skills become agent instructions.
 
-Skills are unverified third-party content. Preview and skim `SKILL.md` (and any scripts) before installing anything the user hasn't vetted.
+For this setup, install shared personal skills into `~/.agents/skills`; `~/.claude/skills` is a symlink to that root for Claude Code. Use `--agent` and `--scope` only when the user asks for a native host path or project install.
 
 ```bash
 gh skill preview <owner/repo> <skill>
 
-gh skill install <owner/repo> <skill> --agent <claude-code|codex> --scope <user|project>
+gh skill install <owner/repo> <skill> --dir ~/.agents/skills
 
-gh skill update --dry-run     # check what's outdated
-gh skill update --all         # update everything non-interactively
+gh skill update --dry-run --dir ~/.agents/skills
+gh skill update --all --dir ~/.agents/skills
 ```
 
-### Scope paths
+If `gh skill update --dry-run` reports duplicate skill names, verify overlapping host paths and rerun against the canonical root:
 
-- Claude Code: user -> `~/.claude/skills`, project -> `$PWD/.claude/skills`
-- Codex: user -> `~/.codex/skills`, project -> `$PWD/.agents/skills` (shared with Copilot/Cursor/Gemini)
-- The install location follows `--scope`, but `gh skill install` records installs in the user-level lock file.
+```bash
+ls -ld ~/.claude/skills ~/.agents/skills 2>/dev/null
+gh skill update --dry-run --dir ~/.agents/skills
+```
 
-`gh skill update` only finds project-scope skills when run from that project root; it does not walk up parent dirs.
+If `gh skill update` prompts for missing source metadata, answer only when the original repo is known. Otherwise reinstall from a known source instead of guessing provenance.
 
-No `uninstall` command exists. To remove a skill, delete its directory directly (e.g. `rm -rf ~/.claude/skills/<name>`).
+To remove a skill, delete its directory directly (e.g. `rm -rf ~/.agents/skills/<name>`).
 
 ## Write Operations
 

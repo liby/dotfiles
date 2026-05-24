@@ -16,6 +16,8 @@
 
   - Agentic coding 配置：[`dot_claude`](https://github.com/liby/dotfiles/tree/main/dot_claude) / [`dot_codex`](https://github.com/liby/dotfiles/tree/main/dot_codex)
 
+  - Shared Agent Skills：[`dot_agents/skills`](https://github.com/liby/dotfiles/tree/main/dot_agents/skills)
+
   - Git 配置：[`dot_config/git`](https://github.com/liby/dotfiles/tree/main/dot_config/git)
 
   - Homebrew 依赖：[`Brewfile`](https://github.com/liby/dotfiles/blob/main/Brewfile)

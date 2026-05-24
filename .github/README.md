@@ -16,6 +16,8 @@ This repository contains a series of configuration files and scripts used to set
 
   - Agentic coding configuration: [`dot_claude`](https://github.com/liby/dotfiles/tree/main/dot_claude) / [`dot_codex`](https://github.com/liby/dotfiles/tree/main/dot_codex)
 
+  - Shared Agent Skills: [`dot_agents/skills`](https://github.com/liby/dotfiles/tree/main/dot_agents/skills)
+
   - Git configuration: [`dot_config/git`](https://github.com/liby/dotfiles/tree/main/dot_config/git)
 
   - Homebrew dependencies: [`Brewfile`](https://github.com/liby/dotfiles/blob/main/Brewfile)

@@ -108,16 +108,6 @@
             "timeout": 10
           }
         ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/post-edit-sync-symlink.sh",
-            "timeout": 10
-          }
-        ]
       }
     ],
     "PreCompact": [

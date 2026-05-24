@@ -82,6 +82,7 @@ For API, SDK, CLI, platform, or MCP skills, lock behavior claims to a current do
 - Start with what the loaded skill must do, not why the skill exists.
 - Use imperative sentences. One sentence should produce one behavior.
 - Put the common path in `SKILL.md`; move variants, long examples, and lookup material out.
+- For self-describing tools such as CLIs, teach the default path and non-obvious local constraints. Let the agent load option details with `<cmd> --help` or nearby source; if one command affects several places, name only the place that changes the next action.
 - Prefer positive action rules: `Read SKILL.md fully, then preserve working triggers while changing only the requested behavior.`
 - Keep examples close to the rule they prove. Delete examples that merely decorate the rule.
 - Mask project names, hosts, private paths, clients, internal URLs, and customer data in public skills.
