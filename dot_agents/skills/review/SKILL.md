@@ -1,11 +1,16 @@
 ---
 name: review
-description: Review a remote MR/PR or local code changes, reporting real issues with evidence-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", asks for review findings, or provides a MR/PR URL.
+description: Review a remote MR/PR or local code changes, reporting real issues with evidence-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", asks for review findings, or provides an MR/PR URL. Not for prose review, skill-authoring audits, or ordinary implementation.
 argument-hint: "[--cx] [--fix] [MR/PR URL or notes]"
 allowed-tools:
   - Bash
   - Read
-  - Task
+  - TaskCreate
+  - TaskGet
+  - TaskList
+  - TaskOutput
+  - TaskStop
+  - TaskUpdate
 ---
 
 # Review
@@ -15,7 +20,7 @@ Read, verify, report. Clean verdicts and no-op are valid outcomes. Default revie
 ## Flow
 
 1. Resolve scope: MR/PR, branch diff, working tree, or explicit notes.
-2. Before reading any diff body, collect changed paths and refuse secret-like names without printing raw paths. Refuse `.env*`, `.env/`, keys, certificates, `.ssh/`, shell history, log files or directories, and names containing `credential`, `secret`, or `token`.
+2. Before reading any diff body, collect changed paths. Refuse secret-like names without printing raw paths: `.env*`, `.env/`, private keys, certificates, `.ssh/`, shell history, log files or directories, and names containing `credential`, `secret`, or `token`.
 3. List changed files before judging behavior:
    - branch: parse `git diff -z --name-status <base>...HEAD`; for `R*` and `C*`, inspect both source and destination paths before any full diff
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`
@@ -122,4 +127,4 @@ Rules:
 
 ## Evolution
 
-At the end of a review or fix run, and when the user asks to evolve the skill or record a review lesson, use [references/self-improvement.md](references/self-improvement.md).
+At the end of a review or fix run, and when the user asks to evolve the skill or record a review lesson, use [references/self-improvement.md](references/self-improvement.md). Do not output self-improvement content when the user gave an exact output contract such as `approve`, clean-verdict-only, verdict-only, or blocker-only; record privately when configured, otherwise skip output.

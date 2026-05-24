@@ -1,37 +1,57 @@
 ---
 name: deslop
-description: Closing-pass cleanup after AI edits. Removes generated code slop and catches type-driven refactors that broke runtime behavior. Closing step in the /review --fix loop. Use when the user says "/deslop" or "deslop".
+description: Run a closing cleanup pass after AI-generated edits, especially after `/review --fix`, to remove generated-code artifacts and catch type-driven refactors that are wrong at runtime. Use when the user says "/deslop", "deslop", or asks for final generated-code cleanup before validation.
 context: fork
 allowed-tools:
   - Bash(git:*)
   - Bash(rg:*)
+  - Bash(fd:*)
   - Read
   - Edit
 ---
 
-## Identify changes
+Clean only the resolved diff for: $ARGUMENTS
 
-Resolve the diff to review using the first non-empty result from this order:
+## Resolve Scope
 
-1. **Branch-relative**: against the upstream branch if set (`git diff @{upstream}...HEAD`), else against the remote default branch (`git diff $(git symbolic-ref --short refs/remotes/origin/HEAD)...HEAD`). Captures committed-but-not-merged work.
-2. **Working-tree (incl. staged)**: `git diff HEAD`. Catches uncommitted local edits when the branch hasn't diverged yet (common when the user just edited files in the default branch without committing).
+Build the cleanup scope from both sources, then de-duplicate paths:
 
-If both are empty, report "no changes to review" and exit. Otherwise run both cleanup sections below on the resolved diff.
+1. Branch-relative diff against upstream when set, otherwise remote default branch when available. This catches committed but unmerged work.
+2. Working-tree diff against `HEAD`, including staged and unstaged tracked files. This catches local edits made after the branch diff.
 
-## Remove slop
+If branch-relative diff setup fails because no upstream or remote default branch is available, continue with the working-tree diff and report that branch scope was skipped. If a working-tree diff command fails, report the command and stderr summary before stopping. If both scopes are empty, report `no changes to review` and stop.
 
-- Extra comments a human wouldn't add or inconsistent with the rest of the file
-- Unnecessary defensive checks or try/catch blocks (especially from trusted/validated code paths)
-- Fallbacks for scenarios that can't happen or are already guaranteed by upstream code
-- Casts to `any` to work around type issues
-- Any style inconsistent with the surrounding file
+Do not edit a hunk unless it is inside the resolved diff and clearly belongs to the current AI-generated change. If ownership is unclear, report it as a candidate instead of changing it.
 
-## Verify type-driven refactors
+## Cleanup Checks
 
-AI tools extract their model of "what this field contains" from the type signature, not from runtime data. When the data violates the type contract, the AI's "fix" can be runtime-wrong: swapping a derived value for a typed field, removing a null check the type "proves" unneeded, deleting a fallback the type marks required, stripping optional chaining after narrowing, trusting a generated API-response type.
+Remove or rewrite only when the current diff introduced the issue:
 
-**For any such change in the diff, sample the actual data before keeping it**: grep fixtures, open the JSON the type maps to, or check a recent API response. If the field is missing, empty, non-unique, or otherwise violates the type contract, revert the change and add a code comment naming why the original guard or derivation is required (so the next review pass doesn't undo the revert).
+- comments a human maintainer would not add, or comments inconsistent with nearby files
+- unnecessary defensive checks, broad `try`/`catch`, or fallbacks for impossible states
+- casts to `any` or similar escapes that hide a type problem
+- helpers, config switches, or compatibility paths that only rename one caller
+- style that conflicts with the surrounding file and is limited to the edited hunk
+
+## Type-Driven Refactor Check
+
+AI edits often trust type signatures over runtime data. For each diff hunk that removes a guard, fallback, optional chain, derived value, or normalization because the type appears stricter:
+
+1. Inspect the actual data source when locally available: fixtures, JSON samples, generated API output, schema comments, or adjacent parsing tests.
+2. Keep the refactor only when runtime evidence matches the type contract.
+3. If runtime data violates the type contract, restore the guard or derivation and add a short comment naming the source of dirty data.
+4. If runtime evidence is unavailable, report a manual verification candidate instead of guessing.
+
+## Validation
+
+Discover the cheapest existing validation from local instructions, `package.json`, `Makefile`, `justfile`, task config, or adjacent tests. Run the command that covers changed files only when it is available, non-server, and allowed by the active tool policy. If the best validation command is outside the allowed tools, report the exact command instead of running it. Do not run dev/start/serve commands unless the user explicitly asked for that environment.
+
+If no validation command is available, say exactly what was searched.
 
 ## Output
 
-Report a 1-3 sentence summary of changes from each section at the end.
+Return:
+
+- Changed: files and one-line reason for each edit, or `none`
+- Candidates left: ownership-unclear or runtime-unverified items
+- Validation: command and pass/fail, or skipped reason

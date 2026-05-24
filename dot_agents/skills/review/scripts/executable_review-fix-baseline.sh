@@ -5,53 +5,28 @@
 
 set -euo pipefail
 
+# shellcheck source=_lib.sh
+source "$(dirname "$0")/_lib.sh"
+
 if [ "$#" -ne 1 ]; then
-  echo "review-fix-baseline.sh: usage: review-fix-baseline.sh <nul-delimited-fix-scope-file>" >&2
+  echo "${0##*/}: usage: ${0##*/} <nul-delimited-fix-scope-file>" >&2
   exit 2
 fi
 
 FIX_SCOPE_FILE="$1"
 if [ ! -f "$FIX_SCOPE_FILE" ]; then
-  echo "review-fix-baseline.sh: fix scope file does not exist" >&2
+  echo "${0##*/}: fix scope file does not exist" >&2
   exit 2
 fi
 
-RESTORE_NOCASEMATCH=0
-shopt -q nocasematch || RESTORE_NOCASEMATCH=1
-shopt -s nocasematch
-
-REFUSED=0
-while IFS= read -r -d '' path; do
-  [ -z "$path" ] && continue
-  case "$path" in
-    .env*|.env*/*|*/.env*|*/.env*/*|*.pem|*.key|*.p12|*.pfx|*.crt|*.cer|\
-    id_rsa|id_dsa|id_ecdsa|id_ed25519|*/id_rsa|*/id_dsa|*/id_ecdsa|*/id_ed25519|\
-    .ssh|*/.ssh|*/.ssh/*|.ssh/*|*.history|.*_history|*/.*_history|*.log|*.log/*|log|logs|*/log|*/logs|log/*|logs/*|*/log/*|*/logs/*|\
-    *credential*|*secret*|*token*)
-      REFUSED=$((REFUSED + 1))
-      ;;
-  esac
-done < "$FIX_SCOPE_FILE"
-
-if [ "$REFUSED" -gt 0 ]; then
-  echo "review-fix-baseline.sh: refusing $REFUSED secret-like fix path(s)" >&2
-  exit 4
-fi
-
-[ "$RESTORE_NOCASEMATCH" -eq 1 ] && shopt -u nocasematch
+validate_path_file_nul "$FIX_SCOPE_FILE" || exit 4
 
 TMP_INDEX=$(mktemp)
 FIX_SCOPE_NUL=$(mktemp)
-cleanup() {
-  rm -f "$TMP_INDEX" "$FIX_SCOPE_NUL"
-}
+cleanup() { rm -f "$TMP_INDEX" "$FIX_SCOPE_NUL"; }
 trap cleanup EXIT
 
-: > "$FIX_SCOPE_NUL"
-while IFS= read -r -d '' path; do
-  [ -z "$path" ] && continue
-  printf ':(literal)%s\0' "$path" >> "$FIX_SCOPE_NUL"
-done < "$FIX_SCOPE_FILE"
+path_file_nul_to_literal_pathspec "$FIX_SCOPE_FILE" "$FIX_SCOPE_NUL"
 
 GIT_INDEX_FILE="$TMP_INDEX" git read-tree HEAD
 GIT_INDEX_FILE="$TMP_INDEX" git add --pathspec-from-file="$FIX_SCOPE_NUL" --pathspec-file-nul

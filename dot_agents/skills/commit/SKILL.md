@@ -1,108 +1,118 @@
 ---
 name: commit
-description: Create a git commit following repository conventions. Use when the user says "commit", "/commit", or asks to commit changes.
+description: Create or amend a local git commit after the user explicitly asks to commit, `/commit`, amend, save changes, or needs committed work before a requested git action such as push. Use to stage relevant files, write a repository-matching message, and run `git commit`. Not for message-only drafts or branch creation.
 argument-hint: "[additional context]"
 context: fork
 allowed-tools:
   - Bash(git:*)
   - Bash(cat:.git/hooks/*)
   - Bash(rg:*)
+  - Bash(fd:*)
+  - Bash(jq:*)
   - Read
 ---
 
-Create a git commit for: $ARGUMENTS
+Create one git commit for: $ARGUMENTS
 
-## Focus on WHY over WHAT
+## Contract
 
-The diff already shows what changed. The message captures what the diff cannot: motivation, trade-offs, why this approach beat alternatives, non-obvious consequences for future readers. **Lead with motivation, end with the chosen approach.**
+- Commit only after an explicit user request.
+- Do not push, reset, checkout, rebase, or rewrite history unless the user explicitly asked for that operation.
+- Recover motivation from the current conversation, linked issue or plan, project docs, current diff, and targeted agent transcript search when the user wants one commit for work spread across prior conversations or agents.
+- Do not read shell history. Treat transcripts as secret surfaces: search them narrowly, do not dump raw snippets into chat, and extract only the motivation needed for the commit message.
+- Screen changed paths before reading diffs. Stop without reading or staging hard secret surfaces: `.env*`, private keys, certificates, `.ssh/`, shell history, logs, credential dumps, token files, or paths whose basename clearly names a secret. For ambiguous substring hits in source, tests, fixtures, docs, or public-key material such as `*.pub`, report the caution path count and ask for one explicit confirmation before including them.
 
-By change type: bug fix surfaces the root cause, feature names the user-visible gap, refactor names the constraint that forced the restructure. Add a before/after snippet when the contrast sharpens the point.
+## Message Rules
 
-The body should read as a self-contained story so the message doubles as the PR description without rewriting. **An inventory body (`add X, update Y, remove Z`) has zero value.** Rewrite around motivation.
+- The diff shows what changed. The message must explain what the diff cannot: motivation, trade-offs, user-visible behavior, and why the chosen approach fits the current constraints.
+- Bug fixes name the root cause. Features name the user-visible gap. Refactors name the constraint that forced the restructure.
+- Lead with the reason the change exists, then name the approach. A body that only says `add X`, `update Y`, or `remove Z` is inventory; rewrite it around the invariant, consequence, or decision.
+- Anchor every body bullet to a staged diff hunk. If a sentence cannot point to a staged hunk, rewrite it or remove it.
+- Use concrete verbs: `reject empty subscriber list`, `validate write access before subscribing`, `reduce p99 from 200ms to 50ms`.
+- Replace vague verbs with the exact behavior, metric, bound, invariant, or threat model that changed. Avoid `tighten`, `streamline`, `enhance`, `refine`, `polish`, bare `optimize`, and bare `harden`.
+- Use backticks for code references. Reference related commits by short hash only when the new commit depends on them.
 
-### Examples
+Format precedence:
 
-Inventory style (avoid):
+1. Dialect, tense, and subject case come from `git log --oneline -10`.
+2. Type (`feat`, `fix`, `chore`, `refactor`) comes from the intent of this change.
+3. Scope comes only from declarative config: `commitlint`, `commitizen`, or a Scopes section in `CONTRIBUTING.md`. If no config pins scopes, omit scope even when recent commits use one.
 
-```plaintext
-fix: update SessionProvider
+Format:
 
-Modified useEffect dependency array.
-```
+- Subject is 50 characters or fewer, imperative present tense, and has no trailing period.
+- Body wraps at 72 characters, after one blank line below the subject.
+- Do not refer to "this PR" or "this commit" inside the body.
+- Do not quote the new commit's own hash.
 
-Motivation style (use):
+## Process
 
-```plaintext
-fix(auth): stop session refresh from racing with sign-out
+1. Gather context in one read-only batch:
+   - `git diff -z --name-only HEAD`
+   - `git ls-files -z --others --exclude-standard`
+   - `git diff --cached -z --name-only`
+   - `git diff -z --name-only`
+   - `git branch --show-current`
+   - `git log --oneline -10`
+   - `cat .git/hooks/pre-commit` if present
+2. Refuse secret-like paths before reading file diffs.
+3. Decide ordinary commit mode unless the user explicitly asked to amend the previous git commit. In amend mode, read `git show --stat --patch HEAD` and treat staged changes as the net replacement relative to `HEAD^`; ordinary commit mode must not use `git commit --amend`.
+4. Read `git diff HEAD` for ordinary commit mode or the amend-mode net diff.
+5. If the log dialect is Conventional Commits, look for scope config with:
+   - `rg -l --no-ignore-vcs '"?commitlint"?|"?commitizen"?' -g '!node_modules' -g '!.git' .`
+   - `fd CONTRIBUTING -d 3 .`
+6. Record the pre-staged set from `git diff --cached -z --name-only`. Before any `git add`, compute the intersection of planned commit paths with `git diff -z --name-only`; if a pre-staged planned file also has unstaged changes, abort with `abort: partially staged path in commit scope` and the count. Do not collapse staged and unstaged hunks with `git add <path>`.
+7. Stage only files that belong to the requested commit. If an unrelated staged file is already present, stop and report it instead of unstaging user work.
+8. Verify `git diff --staged --name-only` matches every file named by the message.
+9. If motivation is missing or the user indicates prior agent work, use the transcript recovery workflow below.
+10. Scan the draft message for banned vague verbs from Message Rules. Treat each match as a hard error.
+11. Commit with a single-quoted heredoc:
 
-Two effects in `SessionProvider` both subscribed to `authState`: one
-refreshed the token, the other cleared local storage on sign-out. When
-sign-out fired during a refresh window, the refresh callback wrote a
-stale token back after the clear, leaving users half-signed-in.
+   ```bash
+   git commit -F - <<'COMMIT_MSG_END'
+   <message exactly as it should read in git log>
+   COMMIT_MSG_END
+   ```
 
-Consolidating into a single effect keyed by the auth phase removes the
-ordering dependency.
-```
+   Single quotes on the terminator preserve backticks, `$`, `\`, `!`, and `"`.
 
-## Commit message rules
+   In amend mode only, replace `git commit` with `git commit --amend`.
 
-- Anchor every bullet to a specific diff hunk. Read the bullet, then name the hunk it describes. If you cannot point at one, the bullet is about a development conversation or a non-change, not the commit. Rewrite it to name the actual change, or drop it.
-- Use concrete action verbs. **Right**: `reject empty subscriber list`, `validate write access before subscribing`, `cut p99 from 200ms to 50ms`.
-- Skip vague verbs; replace each with the exact behavior, metric, bound, invariant, or threat model that changed. **Wrong**: `tighten`, `streamline`, `enhance`, `refine`, `polish`, bare `optimize` (no metric), bare `harden` (no named threat).
-- Format precedence chain. Each part of the message takes its format from one named source; do not let a source for one part bleed into another.
-  - **Dialect** (Conventional Commits / ticket-prefix / plain prose), **tense**, **subject case**: from `git log --oneline -10`.
-  - **Type** (`feat`, `fix`, `chore`, `refactor`, ...): from the intent of the change. Not from the surrounding commits' types, not from the files touched.
-  - **Scope**: take from declarative config only. Valid sources are `commitlint` / `commitizen` config (in their own files or as a `commitlint` block in `package.json`), or a Scopes section in `CONTRIBUTING.md`. Do not treat `git log` as a scope dictionary. Bot commits (e.g. Renovate's `fix(deps):`), one-off conventions, and contributor drift make history-based scope vocabulary unreliable. If config does not pin a scope, omit it even if recent commits include one.
-- Use backticks for code references; reference related commits by short hash.
-- When rewriting history (amend, rebase, force push), describe only the net effect vs the base commit the rewrite lands on. Intermediate states are erased from the remote, so the message must not reference them.
-- Format rules:
-  - Subject ≤ 50 chars, imperative present tense, no trailing period.
-  - Body wrapped at 72 chars, after one blank line below the subject.
-  - Do not refer to "this PR" or "this commit" inside the body.
-  - Never quote the commit's own hash.
+12. After commit, run `git status --short`.
 
-## Steps
+## Transcript Recovery
 
-1. Gather context in parallel (single tool-call batch):
-  - `git status --short`, `git diff HEAD`, `git branch --show-current`, `git log --oneline -10`. When amending, also `git show HEAD`.
-  - When `git log` reveals the dialect is Conventional Commits, also run `rg -l --no-ignore-vcs '"?commitlint"?|"?commitizen"?' -g '!node_modules' -g '!.git' .` and `fd CONTRIBUTING -d 3 .` to detect whether the repo pins a scope vocabulary. If both commands return nothing, no scope list exists. Per the format precedence chain above, omit the scope in that case, even if `git log` shows one.
-  - `cat .git/hooks/pre-commit` if present, so you can interpret any files the hook modifies or any failures it raises. Step 5 surfaces hook failures verbatim.
-  - If motivation is not in this conversation or a linked plan/issue, search prior session transcripts before drafting (see "Recovering motivation" below). Skip for trivial one-line changes.
-2. Stage the commit:
-  - **Tracked modifications**: `git add` the ones that belong to this commit.
-  - **Untracked files** (list with `git ls-files --others --exclude-standard`): `git add` any that the planned message references.
-  - Unstage anything unrelated. Verify the result with `git diff --staged --name-only`.
-3. Cross-check the draft message before committing:
-  - Every file path the message names must appear in `git diff --staged --name-only`. If not, `git add` it or rewrite the message.
-  - Scan for banned vague verbs from the anti-slop "Skip vague verbs" rule (`tighten`, `streamline`, `enhance`, `refine`, `polish`, bare `optimize`, bare `harden`). Replace each with the specific behavior, metric, or invariant that changed.
-  - Both are hard errors.
-4. Pipe a single-quoted heredoc straight into `git commit -F -`:
+Use transcripts to recover motivation when the final commit spans multiple agents, directories, or conversations.
 
-    ```bash
-    git commit -F - <<'COMMIT_MSG_END'
-    <message exactly as it should read in `git log`>
-    COMMIT_MSG_END
-    ```
+Search targets:
 
-    Single quotes on the terminator (`'COMMIT_MSG_END'`) disable shell expansion, so backticks, `$`, `\`, `!`, and `"` write literally.
+- Claude Code: `~/.claude/projects/**.jsonl` and `~/.claude/projects/**/subagents/*.jsonl`
+- Codex: `~/.codex/sessions/**/*.jsonl`
 
-    Use a custom terminator like `COMMIT_MSG_END` rather than `EOF`. `EOF` is common in technical prose and collides whenever the message discusses heredoc syntax or end-of-file semantics.
+Workflow:
 
-    Do not wrap the heredoc in `"$(cat <<'...' ... )"` or fall back to `git commit -m "..."`. The extra double-quoted layer reintroduces escaping bugs.
-5. After commit, run `git status --short` and return a labeled report (this skill runs in `context: fork`, so labels are the only signal back to the main session):
+1. Build search terms from changed file paths, branch names, issue IDs, function names, and user-provided context. Do not use broad terms such as `fix`, `update`, or `commit`.
+2. Search in this order:
+   - Claude current-project slug under `~/.claude/projects`
+   - Codex sessions mentioning the current repo absolute path, repo basename, active branch, or changed path
+   - Global transcript search only when the user indicates cross-agent or cross-directory work and at least two specific search terms are available
+3. List candidate transcript files with `rg -l --fixed-strings <term> <transcript-root>`. Cap broad searches with date, project slug, or another term before reading.
+4. Prefer assistant summaries, final messages, plan text, and tool-call result summaries. Avoid raw command output, environment dumps, logs, process lists, auth output, and secret-like paths.
+5. For JSONL files, use `jq` to extract bounded text fields instead of printing whole records. Keep only lines needed to identify motivation, accepted trade-offs, test results, or manual verification gaps.
+6. If the transcript evidence conflicts with the current diff, trust the current diff for what changed and use transcripts only for why the work happened.
+7. If no targeted evidence appears after one broad search plus one refinement, ask one specific motivation question rather than continuing to trawl transcripts.
 
-    - **Commit**: short hash + subject.
-    - **Auto-staged**: files this skill `git add`-ed in step 2 that weren't pre-staged. "none" if empty.
-    - **Leftover**: any untracked or modified files still around, each with a one-line note on relevance.
+## Failure Modes
 
-    Failure modes:
+- Cross-check abort: first line is `abort: <reason>`, followed by the exact mismatch.
+- Secret-like path abort: first line is `abort: secret-like path in commit scope`, followed by the count only.
+- Pre-commit hook failure: surface the hook output and stop.
+- Do not bypass failures with `--no-verify`.
 
-    - **Cross-check abort (step 3)**: first line is `abort: <reason>`, then the specific mismatch.
-    - **Pre-commit hook failure**: surface the hook output verbatim and stop.
-    - Never bypass either with `--no-verify`.
+## Output
 
-### Recovering motivation from prior sessions
+Return a labeled report:
 
-Past Claude Code sessions live at `~/.claude/projects/<slug>/*.jsonl` (and `<session>/subagents/*.jsonl` for subagent runs). The slug is the absolute cwd with `/` and `.` replaced by `-` (for example `/Users/foo/.config/proj` -> `-Users-foo--config-proj`).
-
-Use `rg -l` against the changed file paths or related identifiers across those `*.jsonl` files, then read the matched turns to recover the original motivation.
+- Commit: short hash and subject.
+- Auto-staged: files this skill staged that were not pre-staged, or `none`.
+- Leftover: modified or untracked files still present, each with a one-line relevance note.

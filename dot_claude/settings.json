@@ -32,15 +32,20 @@
   "includeGitInstructions": false,
   "permissions": {
     "allow": [
+      "Agent",
       "Bash",
-      "Bash(rm .git/review-*)",
       "Edit",
+      "Glob",
+      "Grep",
       "LSP",
+      "mcp__chrome-devtools__*",
+      "mcp__ide__*",
       "mcp__plugin_atlassian_atlassian__*",
       "mcp__plugin_context7_context7__*",
       "NotebookEdit",
       "Read",
       "Skill",
+      "ToolSearch",
       "WebFetch",
       "WebSearch",
       "Write"

@@ -30,3 +30,8 @@ brew bundle --file="$brewfile" || true
 if [[ -n "$current_locale" ]]; then
   defaults write NSGlobalDomain AppleLocale -string "$current_locale"
 fi
+
+if ! brew autoupdate status 2>/dev/null | grep -q "installed and running"; then
+  echo "Setting up brew autoupdate (daily update + upgrade + cleanup)..."
+  brew autoupdate start --upgrade --cleanup 86400
+fi

@@ -30,6 +30,7 @@ Bryan's dotfiles managed by [chezmoi](https://www.chezmoi.io/). Source directory
 - **`.chezmoi.toml.tmpl` is special — edit the template, then run `chezmoi init` to regenerate `~/.config/chezmoi/chezmoi.toml`.** Never edit the live config directly: it's a generated artifact, and chezmoi hashes the template to detect drift (warning `config file template has changed, run chezmoi init to regenerate` until `chezmoi init` is run)
 - New files: `chezmoi add <file>` (or `--encrypt` for secrets)
 - Cross-machine sync: `chezmoi update` on target machine
+- Agent skill changes: run `ruby dot_agents/skills/scripts/validate-skills.rb --include-deployed-snow --smoke` before reporting done. The validator checks Claude Code/Codex frontmatter basics, local links, fixed temp-path examples, bash blocks against `allowed-tools`, review shell syntax, and the current help path for CLI-backed skills (`gh`, `glab`, `snow`). Update `CLI_SMOKE_COMMANDS` when adding or removing a CLI skill whose behavior depends on installed help output.
 
 ## Design decisions (do not "fix")
 

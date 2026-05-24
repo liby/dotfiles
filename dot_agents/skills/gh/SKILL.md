@@ -1,25 +1,38 @@
 ---
 name: gh
-description: GitHub operations via `gh` CLI. Analyze issues/PRs/repos, and install/update/preview Agent Skills from GitHub repos (`gh skill install`). Use when user mentions GitHub URLs, issue/PR numbers (#123), GitHub content, or asks to install/update/preview a skill from a GitHub repo (e.g. a `SKILL.md` path, `owner/repo` skill reference).
+description: Operate GitHub through the `gh` CLI for GitHub issues, pull requests, repos, workflow data, comments, and GitHub-hosted Agent Skills. Use when the user gives a GitHub URL, `owner/repo#123`, asks about a GitHub issue/PR/workflow, or asks to preview/install/update a skill from GitHub. Not for GitLab URLs or local skill editing without a GitHub source.
 context: fork
 allowed-tools:
   - Bash(gh:*)
   - Bash(jq:*)
+  - Bash(ls:*)
   - Read
 ---
 
-Use `gh` CLI for all GitHub operations. Lean on your training knowledge; run `gh <command> --help` when unsure.
+Use `gh` for GitHub operations. Verify command syntax with `gh <command> --help` before relying on flags that affect writes, pagination, or Agent Skills.
 
-## URL Parsing
+## Mode Picker
 
-Extract owner/repo and number from GitHub URLs:
+| User intent | Default action | Write allowed? |
+|---|---|---|
+| View issue, PR, repo, comments, workflow data | Read with `gh ... --json` and `jq` | No |
+| Long discussion analysis | Fetch body, timeline, and high-signal comments | No |
+| Preview GitHub skill | `gh skill preview` and inspect bundled files | No |
+| Install, update, comment, label, close, merge, create | Explain target and run only after explicit user request | Yes |
+
+Do not run `gh auth status` unless a `gh` command fails with an auth or host error.
+
+## URL And Reference Parsing
+
 - `https://github.com/owner/repo/issues/123` -> `gh issue view 123 --repo owner/repo`
 - `https://github.com/owner/repo/pull/456` -> `gh pr view 456 --repo owner/repo`
-- Cross-repo shorthand: `owner/repo#123`
+- `owner/repo#123` -> ask whether it is issue or PR when the host command cannot infer it
 
-## Structured Output
+Treat bare `#123` as ambiguous unless the current repo is known to be GitHub and the user context points to GitHub.
 
-Use `--json` + `jq` for structured data. Prefer `@tsv` for tabular output:
+## Structured Reads
+
+Use `--json` plus `--jq` or `jq`. Prefer tabular extraction for chat output.
 
 ```bash
 gh issue list --repo owner/repo --json number,title,state,updatedAt --jq '
@@ -27,57 +40,64 @@ gh issue list --repo owner/repo --json number,title,state,updatedAt --jq '
   (.[] | [.number, .title, .state, .updatedAt[:10]])) | @tsv'
 ```
 
-For large API responses, redirect to temp file first:
+For large paginated responses, stream directly into `jq` and extract only needed fields:
 
 ```bash
-gh api repos/OWNER/REPO/issues/N/comments --paginate >/tmp/gh_comments.json \
-  && jq -r '(["author","date","reactions","body"],
-  (.[] | [.user.login, .created_at[:10], .reactions.total_count, .body[:80]])) | @tsv' /tmp/gh_comments.json
+gh api repos/OWNER/REPO/issues/N/comments --paginate | jq -sr '
+  add | (["author","date","reactions","body"],
+  (.[] | [.user.login, .created_at[:10], .reactions.total_count, .body[:80]])) | @tsv'
 ```
 
-## Long Discussions (100+ comments)
+## Long Discussions
 
-Don't read everything; focus on high-value content:
+For issues or PRs with many comments:
 
-1. Get the issue/PR body first
-2. Fetch most-reacted comments: `jq 'sort_by(-.reactions.total_count) | .[0:5]'`
-3. Get timeline view (first 3 + last 3) for how the discussion evolved
-4. Check timeline events for labels, assignments, cross-references
+1. Read the issue or PR body first.
+2. Fetch comments and sort by reaction count for the top five high-signal comments.
+3. Read the first three and last three comments to understand timeline.
+4. Check timeline events for labels, assignments, review states, and cross-references when they affect the answer.
 
-## Agent Skills
+## Agent Skills From GitHub
 
-`gh skill` installs Agent Skills from GitHub repos or local directories. Use it instead of manually fetching `SKILL.md`. For a local source, add `--from-local`.
+Use `gh skill` instead of manually downloading a GitHub-hosted `SKILL.md`.
 
-Preview third-party skills before installing. Read `SKILL.md` and bundled scripts because installed skills become agent instructions.
-
-For this setup, install shared personal skills into `~/.agents/skills`; `~/.claude/skills` is a symlink to that root for Claude Code. Use `--agent` and `--scope` only when the user asks for a native host path or project install.
+Read-only path:
 
 ```bash
 gh skill preview <owner/repo> <skill>
-
-gh skill install <owner/repo> <skill> --dir ~/.agents/skills
-
 gh skill update --dry-run --dir ~/.agents/skills
+```
+
+Write path, only after explicit request:
+
+```bash
+gh skill install <owner/repo> <skill> --dir ~/.agents/skills
+gh skill install <owner/repo> <skill> --agent codex --scope user
 gh skill update --all --dir ~/.agents/skills
 ```
 
-If `gh skill update --dry-run` reports duplicate skill names, verify overlapping host paths and rerun against the canonical root:
+Use `--from-local` only when the user asks to install from a local directory. Use `--allow-hidden-dirs` only when the source repo stores skills under hidden directories.
+
+For this setup, shared personal skills live under `~/.agents/skills`; `~/.claude/skills` is expected to point at the same root. Verify with:
 
 ```bash
-ls -ld ~/.claude/skills ~/.agents/skills 2>/dev/null
-gh skill update --dry-run --dir ~/.agents/skills
+ls -ld ~/.agents/skills ~/.claude/skills 2>/dev/null
 ```
+
+If `gh skill update --dry-run` reports duplicate names, verify host paths and rerun against the canonical root.
 
 If `gh skill update` prompts for missing source metadata, answer only when the original repo is known. Otherwise reinstall from a known source instead of guessing provenance.
 
-To remove a skill, delete its directory directly (e.g. `rm -rf ~/.agents/skills/<name>`).
+Local skill removal is a filesystem workflow, not a `gh skill` operation in the verified help. Do not remove local skill directories from this skill unless a current `gh skill remove --help` command exists and documents the removal mode.
 
 ## Write Operations
 
-Only perform write operations (create issues, comment, label, close, merge) when the user **explicitly** asks. Default to read-only analysis.
+GitHub writes include issue creation, comments, labels, closes, merges, releases, workflow dispatches, skill installs, and skill updates. Run them only after explicit user request.
 
-When creating issues or PRs, **always mask personal information**: replace hostnames, directory paths, email addresses, repo URLs, and other identifiable details with generic placeholders (e.g. `<hostname>`, `/path/to/project`, `example/example-repo.git`). Debug logs and error output should also be sanitized before including in public issues.
+When creating public issues, PRs, or comments, mask personal information: hostnames, local directory paths, email addresses, repo URLs that should not be public, tokens, and raw debug output.
 
 ## Troubleshooting
 
-If `gh` commands fail, check: `gh auth status`.
+- Unknown flag: run `gh <command> --help` and adjust to the installed version.
+- Auth or host error: run `gh auth status` and report the failing account or host without printing tokens.
+- Large JSON: stream to `jq` with bounded output before responding.

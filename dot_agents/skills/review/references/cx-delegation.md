@@ -13,7 +13,13 @@
 Run from the target repository root. Resolve the helper from the active skill directory.
 
 ```bash
-REVIEW_SKILL_DIR="${REVIEW_SKILL_DIR:-$HOME/.claude/skills/review}"
+if [ -z "${REVIEW_SKILL_DIR:-}" ]; then
+  if [ -d "$HOME/.agents/skills/review" ]; then
+    REVIEW_SKILL_DIR="$HOME/.agents/skills/review"
+  else
+    REVIEW_SKILL_DIR="$HOME/.claude/skills/review"
+  fi
+fi
 REVIEW_HELPER="$REVIEW_SKILL_DIR/scripts/codex-review.sh"
 [ -f "$REVIEW_HELPER" ] || REVIEW_HELPER="$REVIEW_SKILL_DIR/scripts/executable_codex-review.sh"
 

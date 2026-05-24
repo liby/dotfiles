@@ -1,3 +1,4 @@
+tap "homebrew/autoupdate"
 tap "polymarket/polymarket-cli"
 
 # Official Amazon AWS command-line interface

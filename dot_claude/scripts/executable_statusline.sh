@@ -24,11 +24,12 @@ fi
 cyan='\033[38;2;86;182;194m'
 sky='\033[38;2;200;210;235m'
 amber='\033[38;2;224;168;112m'
-red='\033[38;2;255;85;85m'
+red='\033[38;2;245;100;100m'
 coral='\033[38;2;255;127;100m'
 magenta='\033[38;2;180;140;255m'
 rose='\033[38;2;245;180;190m'
 persimmon='\033[38;2;240;108;88m'
+ruby='\033[38;2;230;100;160m'
 dim='\033[2m'
 muted='\033[38;2;120;130;150m'
 faint='\033[38;2;60;65;75m'
@@ -247,7 +248,7 @@ line1+="${sep}"
 line1+="${amber}${dir_name}${reset}"
 if [ -n "$git_branch" ]; then
   display_branch=$(truncate_middle "$git_branch" 40)
-  line1+="${muted}:${rose}${display_branch}${persimmon}${git_dirty}${reset}"
+  line1+="${muted}:${rose}${display_branch}${ruby}${git_dirty}${reset}"
 fi
 line1+="${sep}"
 case "$effort" in

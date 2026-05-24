@@ -28,7 +28,8 @@ Do not pass skipped, dropped, manual-verification, pre-existing, adjacent, post-
 Before any baseline, snapshot, or edit, list the paths the fix-orchestrator may touch. Stop without reading or adding a path when it matches:
 
 - `.env*` or any path segment under `.env*`
-- `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.crt`, `*.cer`
+- `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.crt`, `*.cer`, `*.pub`
+- `authorized_keys` or `known_hosts`
 - `id_rsa`, `id_dsa`, `id_ecdsa`, `id_ed25519`, or `.ssh/`
 - names containing `credential`, `secret`, or `token`, case-insensitive
 - `*.history` or `*.log`
@@ -49,7 +50,13 @@ P1 and P2 findings may enter automatic mutation. P3 findings enter automatic mut
 Before the first edit, write `$FIX_SCOPE_FILE` as NUL-delimited repo-relative accepted-finding paths or direct dependents. Then run:
 
 ```bash
-REVIEW_SKILL_DIR="${REVIEW_SKILL_DIR:-$HOME/.claude/skills/review}"
+if [ -z "${REVIEW_SKILL_DIR:-}" ]; then
+  if [ -d "$HOME/.agents/skills/review" ]; then
+    REVIEW_SKILL_DIR="$HOME/.agents/skills/review"
+  else
+    REVIEW_SKILL_DIR="$HOME/.claude/skills/review"
+  fi
+fi
 BASELINE_HELPER="$REVIEW_SKILL_DIR/scripts/review-fix-baseline.sh"
 [ -f "$BASELINE_HELPER" ] || BASELINE_HELPER="$REVIEW_SKILL_DIR/scripts/executable_review-fix-baseline.sh"
 BASELINE=$(bash "$BASELINE_HELPER" "$FIX_SCOPE_FILE") || exit $?

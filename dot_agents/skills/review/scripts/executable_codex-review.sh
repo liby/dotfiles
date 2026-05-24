@@ -22,11 +22,13 @@
 
 set -euo pipefail
 
+# shellcheck source=_lib.sh
+source "$(dirname "$0")/_lib.sh"
+
 OWNED_WORKTREE=""
 BROAD_PID=""
 OPINIONATED_PID=""
 cleanup_owned_worktree() {
-  # Stop delegates before removing their cwd so failure logs stay readable.
   for pid in "$BROAD_PID" "$OPINIONATED_PID"; do
     [ -n "$pid" ] && kill -TERM "$pid" 2>/dev/null || true
   done
@@ -38,113 +40,6 @@ cleanup_owned_worktree() {
     done
   fi
   [ -n "$OWNED_WORKTREE" ] && git worktree remove --force "$OWNED_WORKTREE" >/dev/null 2>&1 || true
-}
-
-is_secret_like_path() {
-  local result=1
-  local restore_nocasematch=0
-  shopt -q nocasematch || restore_nocasematch=1
-  shopt -s nocasematch
-  case "$1" in
-    .env*|.env*/*|*/.env*|*/.env*/*) result=0 ;;
-    *.pem|*.key|*.p12|*.pfx|*.crt|*.cer) result=0 ;;
-    id_rsa|id_dsa|id_ecdsa|id_ed25519|*/id_rsa|*/id_dsa|*/id_ecdsa|*/id_ed25519|*.pub) result=0 ;;
-    *credential*|*secret*|*token*) result=0 ;;
-    .ssh|*/.ssh|*/.ssh/*|.ssh/*|*.history|.*_history|*/.*_history|*.log|*.log/*|log|logs|*/log|*/logs|log/*|logs/*|*/log/*|*/logs/*) result=0 ;;
-  esac
-  [ "$restore_nocasematch" -eq 1 ] && shopt -u nocasematch
-  return "$result"
-}
-
-validate_path_file_nul() {
-  local path
-  local refused=0
-  while IFS= read -r -d '' path; do
-    [ -z "$path" ] && continue
-    if is_secret_like_path "$path"; then
-      refused=$((refused + 1))
-    fi
-  done < "$1"
-  if [ "$refused" -gt 0 ]; then
-    echo "codex-review.sh: refusing $refused secret-like review path(s)" >&2
-    echo "codex-review.sh: inspect local paths and rerun with only safe review paths in scope" >&2
-    return 4
-  fi
-}
-
-git_diff_paths_nul() {
-  local from="$1"
-  local to="$2"
-  local output="$3"
-  local status path extra
-  : > "$output"
-  while IFS= read -r -d '' status; do
-    case "$status" in
-      R*|C*)
-        IFS= read -r -d '' path || break
-        IFS= read -r -d '' extra || break
-        printf '%s\0%s\0' "$path" "$extra" >> "$output"
-        ;;
-      *)
-        IFS= read -r -d '' path || break
-        printf '%s\0' "$path" >> "$output"
-        ;;
-    esac
-  done < <(git diff -z --name-status "$from...$to" --)
-}
-
-git_dirty_paths_nul() {
-  local output="$1"
-  local status path extra
-  : > "$output"
-  while IFS= read -r -d '' status; do
-    case "$status" in
-      R*|C*)
-        IFS= read -r -d '' path || break
-        IFS= read -r -d '' extra || break
-        printf '%s\0%s\0' "$path" "$extra" >> "$output"
-        ;;
-      *)
-        IFS= read -r -d '' path || break
-        printf '%s\0' "$path" >> "$output"
-        ;;
-    esac
-  done < <(git diff -z --name-status HEAD --)
-}
-
-path_file_nul_to_literal_pathspec() {
-  local input="$1"
-  local output="$2"
-  local path
-  : > "$output"
-  while IFS= read -r -d '' path; do
-    [ -z "$path" ] && continue
-    printf ':(literal)%s\0' "$path" >> "$output"
-  done < "$input"
-}
-
-validate_git_diff_paths() {
-  local tmp_paths
-  tmp_paths=$(mktemp)
-  git_diff_paths_nul "$1" "$2" "$tmp_paths"
-  validate_path_file_nul "$tmp_paths" || { rm "$tmp_paths"; exit 4; }
-  rm "$tmp_paths"
-}
-
-normalize_repo_slug() {
-  local url="$1"
-  url="${url%.git}"
-  case "$url" in
-    http://*|https://*|ssh://*)
-      url="${url#*://}"
-      url="${url#*@}"
-      ;;
-    *@*:*)
-      url="${url#*@}"
-      url="${url/://}"
-      ;;
-  esac
-  printf '%s\n' "$url"
 }
 
 MR_URL=""
@@ -159,6 +54,14 @@ while [ $# -gt 0 ]; do
     https://*)           echo "codex-review.sh: helper supports GitLab MR URLs only; review other hosts in the main session" >&2; exit 2 ;;
     *) echo "codex-review.sh: unsupported argument; use local mode flags or an HTTPS GitLab MR URL" >&2; exit 2 ;;
   esac
+done
+
+for cmd in git jq; do
+  require_command "$cmd"
+done
+
+for cmd in claude node codex; do
+  require_command "$cmd"
 done
 
 CODEX_ROOT=$(claude plugin list --json | jq -r '.[] | select(.id == "codex@openai-codex" and .enabled == true) | .installPath')
