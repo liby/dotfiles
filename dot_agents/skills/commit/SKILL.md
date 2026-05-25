@@ -25,9 +25,14 @@ Create one git commit for: $ARGUMENTS
 ## Message Rules
 
 - The diff shows what changed. The message must explain what the diff cannot: motivation, trade-offs, user-visible behavior, and why the chosen approach fits the current constraints.
+- Build the message from an evidence ledger:
+  - `diff`: a staged hunk or committed doc proves the changed artifact, behavior, policy, path, config key, tool, spec, or external integration.
+  - `motivation`: the conversation, issue, plan, or transcript explains why a staged change exists.
+  - `report`: uncommitted local config, operator workflow, skipped tools, environment state, or rejected alternatives.
+- Use `diff` evidence for the subject, approach, named artifacts, changed behavior, and durable policy claims. Use `motivation` evidence only for why the staged change exists. Move `report` evidence to the post-commit report.
 - Bug fixes name the root cause. Features name the user-visible gap. Refactors name the constraint that forced the restructure.
 - Lead with the reason the change exists, then name the approach. A body that only says `add X`, `update Y`, or `remove Z` is inventory; rewrite it around the invariant, consequence, or decision.
-- Anchor every body bullet to a staged diff hunk. If a sentence cannot point to a staged hunk, rewrite it or remove it.
+- Anchor every body bullet to ledger entries. Rewrite or remove sentences whose source is missing or whose source category is `report`.
 - Use concrete verbs: `reject empty subscriber list`, `validate write access before subscribing`, `reduce p99 from 200ms to 50ms`.
 - Replace vague verbs with the exact behavior, metric, bound, invariant, or threat model that changed. Avoid `tighten`, `streamline`, `enhance`, `refine`, `polish`, bare `optimize`, and bare `harden`.
 - Use backticks for code references. Reference related commits by short hash only when the new commit depends on them.
@@ -65,8 +70,10 @@ Format:
 7. Stage only files that belong to the requested commit. If an unrelated staged file is already present, stop and report it instead of unstaging user work.
 8. Verify `git diff --staged --name-only` matches every file named by the message.
 9. If motivation is missing or the user indicates prior agent work, use the transcript recovery workflow below.
-10. Scan the draft message for banned vague verbs from Message Rules. Treat each match as a hard error.
-11. Commit with a single-quoted heredoc:
+10. Build an evidence ledger for the subject, lead paragraph, and each body bullet. Mark each entry as `diff`, `motivation`, or `report`, and name the staged path, hunk, issue, plan, or transcript source.
+11. Draft the message from ledger-approved entries. Each named path, tool, config key, policy, service, spec, external behavior, and changed behavior needs a `diff` source. Motivation may use conversation or transcript evidence only to explain why a staged hunk exists.
+12. Scan the draft message for banned vague verbs from Message Rules. Treat each match as a hard error.
+13. Commit with a single-quoted heredoc:
 
    ```bash
    git commit -F - <<'COMMIT_MSG_END'
@@ -78,7 +85,7 @@ Format:
 
    In amend mode only, replace `git commit` with `git commit --amend`.
 
-12. After commit, run `git status --short`.
+14. After commit, run `git status --short`.
 
 ## Transcript Recovery
 
@@ -100,7 +107,8 @@ Workflow:
 4. Prefer assistant summaries, final messages, plan text, and tool-call result summaries. Avoid raw command output, environment dumps, logs, process lists, auth output, and secret-like paths.
 5. For JSONL files, use `jq` to extract bounded text fields instead of printing whole records. Keep only lines needed to identify motivation, accepted trade-offs, test results, or manual verification gaps.
 6. If the transcript evidence conflicts with the current diff, trust the current diff for what changed and use transcripts only for why the work happened.
-7. If no targeted evidence appears after one broad search plus one refinement, ask one specific motivation question rather than continuing to trawl transcripts.
+7. Route transcript-only facts about uncommitted local config, rejected alternatives, skipped tools, or operator workflow to the post-commit report.
+8. If no targeted evidence appears after one broad search plus one refinement, ask one specific motivation question rather than continuing to trawl transcripts.
 
 ## Failure Modes
 
