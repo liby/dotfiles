@@ -20,3 +20,5 @@ fi
 
 proto install node
 proto install pnpm
+
+mkdir -p "$HOME/.npm-global"/{lib,bin}

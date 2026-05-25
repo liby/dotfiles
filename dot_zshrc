@@ -6,11 +6,7 @@ __BRYAN_HOMEBREW_ZSH_COMPLETION="${HOMEBREW_PREFIX}/share/zsh/site-functions"
 __BRYAN_ZSH_COMPLETION_SRC="${HOME}/.zsh/plugins/zsh-completions/src"
 
 # ZSH completions
-## Add Homebrew completion path if not already present,
-## usually handled by `brew shellenv` in .zprofile
-## https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh
-## https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/github/README.md#homebrew-installation-note
-## Add a check avoiding duplicated fpath
+# https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh
 if (( ! ${fpath[(I)${__BRYAN_HOMEBREW_ZSH_COMPLETION}]} && $+commands[brew] )); then
   fpath+=${__BRYAN_HOMEBREW_ZSH_COMPLETION}
 fi
@@ -30,26 +26,10 @@ autoload -Uz compinit
   fi
 }
 
-npm_global_path="$HOME/.npm-global"
-
-# Create necessary directories
-local -a dirs_to_create=(
-  "$npm_global_path"
-  "$npm_global_path/lib"
-  "$npm_global_path/bin"
-)
-
-for dir in $dirs_to_create; do
-  mkdir -p "$dir"
-done
-
 # Environment variables
-if [[ -z "$GPG_PATH" ]]; then
-  export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
-fi
+export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
-export LC_ALL="en_US.UTF-8"
-export NPM_CONFIG_PREFIX="$npm_global_path"
+export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 export PNPM_HOME="$HOME/Library/pnpm"
 export PROTO_AUTO_INSTALL_HIDE_OUTPUT=true
 export PROTO_HOME="$HOME/.proto"
@@ -79,8 +59,6 @@ alias c='open -a "Visual Studio Code"'
 alias cc='claude'
 alias ccm='claude --switch-mode'
 alias cm='chezmoi'
-alias kc='claude --api-model moonshotai/kimi-k2.6'
-alias zc='claude --api-model zai/glm-5.1'
 ## ip & ipcn
 alias ip="curl ip.sb"
 alias ipcn="curl myip.ipip.net"
@@ -111,7 +89,6 @@ source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
 # Initialize tools and configurations
-(( $+commands[direnv] )) && eval "$(direnv hook zsh)"
 (( $+commands[gpg-connect-agent] )) && setup_gpg_ssh &>/dev/null
 (( $+commands[orb] )) && source ~/.orbstack/shell/init.zsh
 (( $+commands[proto] )) && eval "$(proto activate zsh)"
