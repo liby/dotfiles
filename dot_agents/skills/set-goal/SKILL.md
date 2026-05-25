@@ -1,6 +1,6 @@
 ---
 name: set-goal
-description: Turn a brief task description into an outcome-based, verifiable goal file, then start `/goal` when available. Use when the user says or mentions "/set-goal", "set goal", or asks for a long-running task goal. Not for continuing an active goal, ordinary planning, or direct `/goal Read ...` handoffs.
+description: Turn a brief task description into an outcome-based, verifiable goal file, then call `set_goal` (Codex) or emit a `/goal` paste handoff (Claude Code). Use when the user says or mentions "/set-goal", "set goal", or asks for a long-running task goal. Not for continuing an active goal, ordinary planning, or direct `/goal Read ...` handoffs.
 when_to_use: Use when the user wants a new goal file and `/goal` handoff, including when "set goal" appears inside a longer request. Do not use to execute an existing `/goal Read ...` command.
 argument-hint: "[brief task description]"
 allowed-tools:
@@ -12,7 +12,7 @@ allowed-tools:
   - Write
 ---
 
-Create a goal file from `$ARGUMENTS` or the current user request, then start `/goal` when the runtime exposes a goal tool. If no goal tool is callable, return a compact `/goal` handoff. When invoked from natural language such as `set goal`, still generate the goal file and handoff instead of executing the requested work.
+Create a goal file from `$ARGUMENTS` or the current user request, then hand off according to Output Contract. When invoked from natural language such as `set goal`, still generate the goal file and handoff instead of executing the requested work.
 
 For long-running or subagent-heavy work, translate the request into this schema: objective, criteria, evidence, scope, and any required cross-validation. Include subagent orchestration only when the request or proof requires independent checks.
 
@@ -44,29 +44,15 @@ The goal file is the condition that `/goal` evaluates. Produce these sections in
 
 ## Output Contract
 
-After successful read-back verification, the final assistant message is an action or handoff, not a report. Do not print validation status, summaries, file paths, or instructions.
+After read-back verification succeeds, the final assistant message is either a callable goal tool invocation or a two-line paste handoff. No summaries, file path explanations, or additional commentary.
 
-If a callable goal tool is available, invoke it with this argument:
+If your runtime exposes a callable goal tool such as `set_goal`, `create_goal`, or equivalent (Codex and similar), invoke it with the argument `Read <absolute-file-path> and use its contents as the goal.` Stop here.
 
-```text
-Read <absolute-file-path> and use its contents as the goal.
-```
-
-If no callable goal tool is available, including normal Claude Code skill execution, the entire assistant message must be exactly one fenced `text` block:
-
-```text
-/goal Read <absolute-file-path> and use its contents as the goal.
-```
+Otherwise the entire assistant message is exactly two paragraphs separated by a blank line. The first paragraph is the literal string `Run next:` and the second is `/goal Read <absolute-file-path> and use its contents as the goal.` Nothing else before, between, or after these two paragraphs. This branch always applies in Claude Code, where `/goal` is a user-input-only CLI slash command and not agent-callable.
 
 ## Failure Output
 
-If file writing or read-back verification fails, reply in this shape only:
-
-```text
-file write failed: <reason>
-```
-
-Then one fenced `markdown` block containing the goal body exactly once. Do not include a `/goal` command on failure.
+If file writing or read-back verification fails, reply with `file write failed: <reason>` followed by the goal body. Do not include a `/goal` command on failure.
 
 ## Anti-Patterns
 
@@ -76,4 +62,4 @@ Then one fenced `markdown` block containing the goal body exactly once. Do not i
 - Subagent self-report as proof without master-side evidence.
 - Generic obligations in Scope: `use the existing code style`, `don't break tests`.
 - Padding for length.
-- Putting `/goal`, copy instructions, markdown fences, or surrounding prose inside the goal file.
+- Putting `/goal` or surrounding prose inside the goal file.

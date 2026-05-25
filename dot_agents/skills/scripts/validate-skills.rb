@@ -85,6 +85,7 @@ def line_command(line)
   words.shift while words.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
   cmd = words.first
   return nil if cmd.nil? || cmd.start_with?("-")
+  return nil if cmd.match?(/\A\/[A-Za-z_][A-Za-z0-9_-]*\z/)
   return nil if %w[if then else fi do done while for case esac in function local export return true false].include?(cmd)
   File.basename(cmd)
 end

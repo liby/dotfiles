@@ -30,7 +30,7 @@ autoload -Uz compinit
 export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
-export PNPM_HOME="$HOME/Library/pnpm"
+export PNPM_HOME="$HOME/Code/.pnpm"
 export PROTO_AUTO_INSTALL_HIDE_OUTPUT=true
 export PROTO_HOME="$HOME/.proto"
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"

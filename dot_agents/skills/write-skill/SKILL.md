@@ -70,18 +70,18 @@ Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool cho
 - Put the common path in `SKILL.md`; move rare branches, long examples, and lookup material out.
 - For CLIs, teach the default path and non-obvious local constraints. Let the agent load option details with `<cmd> --help` or nearby source.
 - For API, SDK, CLI, platform, or MCP claims, cite current docs, installed help, generated types, source paths, or checked-in examples. If evidence is unavailable, write a research or audit deliverable instead of guessing.
-- Keep examples only when they prove output shape, trigger boundaries, or a failure mode.
+- Keep examples only when they prove output shape, trigger boundaries, a failure mode, or a quality boundary (acceptable vs unacceptable output at the same correctness level).
 - Mask project names, hosts, private paths, clients, internal URLs, and customer data in public skills.
 
 ## Rule Hygiene
 
 Before adding a rule, find the closest existing rule. Merge when the trigger, action, or boundary overlaps; replace when the old wording is wrong. Add a standalone rule only when no existing rule covers the failure mode.
 
-Keep a rule when it changes agent behavior and names at least three of: trigger, action, boundary, evidence.
+Keep a rule when it changes agent behavior and names at least three of: trigger, action, boundary, evidence. **Formatting carries behavioral weight.** A standalone heading, a bolded imperative, or a calibration example gives a rule higher priority in the agent's reading. Merging a heading-level rule into a bullet list, removing bold from an imperative, or deleting a before/after example downgrades that priority. Before downgrading, confirm the rule's behavioral weight does not depend on its prominence.
 
 Delete or merge rules that:
 
-- repeat the description, heading, official docs, or a nearby rule
+- duplicate another rule without adding prominence or a sharper boundary (redundancy). A rule that restates a nearby rule at a higher prominence level (standalone heading, bold, example) is reinforcement, not redundancy; merge the text but preserve the prominence.
 - say to be careful, robust, high quality, concise, or thoughtful without a check
 - explain agent skills, progressive disclosure, or repo background without changing the next action
 - assume a tool, account, server, path, model, runtime, or workflow without saying how to verify it

@@ -22,16 +22,20 @@ Create one git commit for: $ARGUMENTS
 - Do not read shell history. Treat transcripts as secret surfaces: search them narrowly, do not dump raw snippets into chat, and extract only the motivation needed for the commit message.
 - Screen changed paths before reading diffs. Stop without reading or staging hard secret surfaces: `.env*`, private keys, certificates, `.ssh/`, shell history, logs, credential dumps, token files, or paths whose basename clearly names a secret. For ambiguous substring hits in source, tests, fixtures, docs, or public-key material such as `*.pub`, report the caution path count and ask for one explicit confirmation before including them.
 
-## Message Rules
+## Explain why, not what
 
-- The diff shows what changed. The message must explain what the diff cannot: motivation, trade-offs, user-visible behavior, and why the chosen approach fits the current constraints.
+The diff shows what changed. The message captures what the diff cannot: motivation, trade-offs, why this approach beat alternatives, and non-obvious consequences for future readers. **Lead with the reason the change exists, end with the chosen approach.** The body should read as a self-contained story that doubles as the PR description without rewriting. **A body that inventories changes (`add X`, `update Y`, `remove Z`) without naming motivation has zero value.**
+
+Wrong: `chore: move PNPM_HOME path` with body `Update .zshrc to use new pnpm path.`
+Right: `chore: move PNPM_HOME to case-sensitive Code volume` with body explaining that `~/Library/pnpm` sits on the case-insensitive default volume where `pnpm dlx` keeps resurrecting a cross-volume store; `~/Code/.pnpm` puts the binary dir, global installs, and store on the same case-sensitive APFS volume as the projects, and pnpm's default store-dir resolves to `$PNPM_HOME/store` so no separate config is needed.
+
+## Message Rules
 - Build the message from an evidence ledger:
   - `diff`: a staged hunk or committed doc proves the changed artifact, behavior, policy, path, config key, tool, spec, or external integration.
   - `motivation`: the conversation, issue, plan, or transcript explains why a staged change exists.
   - `report`: uncommitted local config, operator workflow, skipped tools, environment state, or rejected alternatives.
 - Use `diff` evidence for the subject, approach, named artifacts, changed behavior, and durable policy claims. Use `motivation` evidence only for why the staged change exists. Move `report` evidence to the post-commit report.
 - Bug fixes name the root cause. Features name the user-visible gap. Refactors name the constraint that forced the restructure.
-- Lead with the reason the change exists, then name the approach. A body that only says `add X`, `update Y`, or `remove Z` is inventory; rewrite it around the invariant, consequence, or decision.
 - Anchor every body bullet to ledger entries. Rewrite or remove sentences whose source is missing or whose source category is `report`.
 - Use concrete verbs: `reject empty subscriber list`, `validate write access before subscribing`, `reduce p99 from 200ms to 50ms`.
 - Replace vague verbs with the exact behavior, metric, bound, invariant, or threat model that changed. Avoid `tighten`, `streamline`, `enhance`, `refine`, `polish`, bare `optimize`, and bare `harden`.
@@ -69,11 +73,12 @@ Format:
 6. Record the pre-staged set from `git diff --cached -z --name-only`. Before any `git add`, compute the intersection of planned commit paths with `git diff -z --name-only`; if a pre-staged planned file also has unstaged changes, abort with `abort: partially staged path in commit scope` and the count. Do not collapse staged and unstaged hunks with `git add <path>`.
 7. Stage only files that belong to the requested commit. If an unrelated staged file is already present, stop and report it instead of unstaging user work.
 8. Verify `git diff --staged --name-only` matches every file named by the message.
-9. If motivation is missing or the user indicates prior agent work, use the transcript recovery workflow below.
-10. Build an evidence ledger for the subject, lead paragraph, and each body bullet. Mark each entry as `diff`, `motivation`, or `report`, and name the staged path, hunk, issue, plan, or transcript source.
-11. Draft the message from ledger-approved entries. Each named path, tool, config key, policy, service, spec, external behavior, and changed behavior needs a `diff` source. Motivation may use conversation or transcript evidence only to explain why a staged hunk exists.
-12. Scan the draft message for banned vague verbs from Message Rules. Treat each match as a hard error.
-13. Commit with a single-quoted heredoc:
+9. Search the current conversation, linked issue, plan, and project docs for motivation behind each staged change. For dotfile or config changes, check the tool's documentation or changelog for the reason the path, key, or default changed. If a search returns zero hits, verify the search syntax before concluding motivation is absent (`rg` uses `|` for alternation, not `\|`; `grep` is the opposite).
+10. If motivation is still missing or the user indicates prior agent work, use the transcript recovery workflow below.
+11. Build an evidence ledger for the subject, lead paragraph, and each body bullet. Mark each entry as `diff`, `motivation`, or `report`, and name the staged path, hunk, issue, plan, or transcript source.
+12. Draft the message from ledger-approved entries. Each named path, tool, config key, policy, service, spec, external behavior, and changed behavior needs a `diff` source. Motivation may use conversation or transcript evidence only to explain why a staged hunk exists.
+13. Scan the draft message for banned vague verbs from Message Rules. Treat each match as a hard error.
+14. Commit with a single-quoted heredoc:
 
    ```bash
    git commit -F - <<'COMMIT_MSG_END'
@@ -85,7 +90,7 @@ Format:
 
    In amend mode only, replace `git commit` with `git commit --amend`.
 
-14. After commit, run `git status --short`.
+15. After commit, run `git status --short`.
 
 ## Transcript Recovery
 
