@@ -23,7 +23,7 @@ The goal file is the condition that `/goal` evaluates. Produce these sections in
 1. Objective: one or two sentences naming the end state in user-visible or system-observable terms. Outcome, not steps.
    - Wrong: `refactor the reconnect loop`
    - Right: `the tunnel reconnects within 5s after a network blip, with exactly one active session in the server log`
-2. Proof of completion: concrete checks a reviewer can execute and observe. Use test commands, log greps, curl invocations, UI states, file diffs, metrics, or explicit artifacts. Prefer deterministic gates over model judgment. Include the evidence the agent must surface because `/goal` evaluators judge the conversation, not hidden filesystem state.
+2. Proof of completion: concrete checks a reviewer can execute and observe. Use test commands, log greps, curl invocations, UI states, file diffs, metrics, or explicit artifacts. Prefer deterministic gates over model judgment. For UI, connector, external-service, or production-runtime goals, require the final user-visible state and the source-owned state that can overwrite it; if the current environment cannot expose that state, require manual verification and name the exact observation needed. Include the evidence the agent must surface because `/goal` evaluators judge the conversation, not hidden filesystem state.
 3. Scope / constraints: include only files, modules, APIs, performance bounds, dependency limits, safety limits, compatibility requirements, subagent requirements, or cross-validation requirements that materially change what done means.
 4. Out of scope: specific related work that must stay outside the goal. Omit this section when no boundary changes completion.
 

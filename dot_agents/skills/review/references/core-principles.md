@@ -86,6 +86,8 @@ Read validation config before trusting typecheck, lint, or tests. Require tests 
 
 Treat delegate or reviewer consensus as an investigation priority until the main session verifies the cited path. Compare remote changed-file stats or resolved snapshots against the local diff before reporting.
 
+For browser, UI, hydration, cross-tab, connector, or external-service claims, verify the final user-visible state and the source-owned state that can overwrite it. URL consumption, command success, local optimistic cache, or a screenshot of an intermediate state is not completion proof when a later query, persisted cache, device, or backend session can change the result. If the current environment cannot expose that state, mark manual verification and state the exact observation required instead of passing the claim.
+
 ## Mechanical Sweep
 
 Load for every changed, deleted, or moved line.

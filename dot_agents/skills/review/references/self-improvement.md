@@ -65,4 +65,6 @@ When the user asks to evolve the public skill from recorded candidates:
 
 Promote a lesson only when it has cited evidence, a future trigger, a concrete check, a destination under an existing broader rule or a reason that broader rule is missing, and at least one regression example that should stay unchanged.
 
+When distilling an evaluator or verifier lesson, write it as a rubric entry, not a story: trigger, required evidence, FAIL or stop condition, PASS condition when useful, owner or runtime boundary, and regression examples. If the lesson depends on transcript evidence, cite the transcript or rollout summary as the evidence source but copy only the reusable failure mode into public skill text.
+
 During a normal review, the skill may record private candidates but must not edit public skill files. Public skill changes require a user request for skill evolution or supplied entries for distillation.

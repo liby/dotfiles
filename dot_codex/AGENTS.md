@@ -103,6 +103,7 @@ Use `::code-comment{...}` only for Codex app inline review findings that should 
 
 - After 3+ failed attempts, add debug logging and try different approaches.
 - Ask the user for runtime logs only when the issue requires information you cannot access: production, device-specific behavior, or unavailable private systems.
+- For production diagnosis, ground conclusions in the live runtime or source-of-truth records that can prove the claim. Mark unverifiable claims as `unverified`, and stop before production writes, deploys, service stops, data deletion, external messages, or other destructive actions unless the user explicitly confirms that action.
 - Search budget and reporting: default to one broad pass plus one targeted refinement, then stop and report findings.
 - When a search returns empty, name what you searched, for example `rg'd for foo, bar; no matches`.
 - Ground claims in current evidence.

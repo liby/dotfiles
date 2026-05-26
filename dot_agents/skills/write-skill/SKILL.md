@@ -79,6 +79,8 @@ Before adding a rule, find the closest existing rule. Merge when the trigger, ac
 
 Keep a rule when it changes agent behavior and names at least three of: trigger, action, boundary, evidence. **Formatting carries behavioral weight.** A standalone heading, a bolded imperative, or a calibration example gives a rule higher priority in the agent's reading. Merging a heading-level rule into a bullet list, removing bold from an imperative, or deleting a before/after example downgrades that priority. Before downgrading, confirm the rule's behavioral weight does not depend on its prominence.
 
+For evaluator, verifier, rubric, PASS/FAIL, completion-gate, or transcript-derived rules, require the trigger, required evidence, PASS/FAIL or manual-observation condition, action to take on failure or stop, and owner. The owner must be the project skill, target repo, user confirmation, or CLI/runtime. Keep trace stores, durable session logs, sandbox state, and automatic progress ledgers out of shared skill text unless every target runtime supports the mechanism or the skill explicitly branches by runtime. For transcript-derived rules, cite bounded evidence internally, distill the reusable failure mode, and do not copy raw transcript prose into public skills.
+
 Delete or merge rules that:
 
 - duplicate another rule without adding prominence or a sharper boundary (redundancy). A rule that restates a nearby rule at a higher prominence level (standalone heading, bold, example) is reinforcement, not redundancy; merge the text but preserve the prominence.
