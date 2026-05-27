@@ -8,8 +8,9 @@
 - Fix phase runs in a fresh write-capable fix-orchestrator subagent.
 - Fixes apply only to a local writable checkout.
 - Remote MR/PR worktrees are report-only.
-- The accepted finding set freezes before the first edit.
-- The fix-orchestrator edits only to address frozen accepted findings and regressions it introduced.
+- Initial accepted findings seed a live review frontier.
+- The fix-orchestrator edits only unresolved frontier items classified as `fix` or `rewrite`, plus regressions it introduced.
+- A new finding can enter the frontier only when it has a new trigger path, source-of-truth evidence, realistic impact, and owner, or when it is a real regression from the fix.
 
 ## Inputs
 
@@ -17,11 +18,11 @@ Pass:
 
 - repo root
 - review scope and base
-- frozen accepted findings with severity, `path:line`, root cause, allowed touch paths or direct dependents, and validation command or manual gap
+- initial accepted findings with severity, `path:line`, root cause, allowed touch paths or direct dependents, and validation command or manual gap
 - validation commands discovered during review
 - local instructions already read
 
-Do not pass skipped, dropped, manual-verification, pre-existing, adjacent, post-fix new findings, or raw delegate transcript content into the mutating context. If transcript evidence is needed, pass only the bounded citation or command result.
+Do not pass skipped, dropped, manual-verification, repeated, speculative, or raw delegate transcript content into the mutating context. If transcript evidence is needed, pass only the bounded citation or command result.
 
 ## Secret Path Denylist
 
@@ -36,18 +37,20 @@ Before any baseline, snapshot, or edit, list the paths the fix-orchestrator may 
 
 ## Triage
 
-Classify each accepted finding before editing:
+Classify each frontier item before editing:
 
 - `fix`: root cause is clear and local evidence is sufficient.
 - `rewrite`: finding is real, but the suggested fix is partly wrong.
 - `manual`: runtime evidence, product judgment, destructive action, credentials, or external access is required.
 - `drop`: trigger path no longer applies in the current checkout.
 
-P1 and P2 findings may enter automatic mutation. P3 findings enter automatic mutation only when the user explicitly asked, they block P1 or P2 validation, or they are a regression from the fix. Drop P3 polish, broad cleanup, and unrelated maintainability suggestions unless they block a frozen accepted finding.
+P1 and P2 findings may enter automatic mutation. P3 findings enter automatic mutation only when the user explicitly asked, they block P1 or P2 validation, or they are a regression from the fix. Drop P3 polish, broad cleanup, and unrelated maintainability suggestions unless they block an unresolved frontier item.
+
+A post-fix candidate can enter as `new-real` only when it has a new trigger path, new evidence, realistic impact, and belongs to the original review scope. Reworded prior issues, candidates without new evidence, and broad adjacent cleanup stay out of the mutating frontier.
 
 ## Baseline
 
-Before the first edit, write `$FIX_SCOPE_FILE` as NUL-delimited repo-relative accepted-finding paths or direct dependents. Then run:
+Before the first edit, write `$FIX_SCOPE_FILE` as NUL-delimited repo-relative paths the current review scope permits the fixer to touch. Include initial frontier paths and direct dependents likely required by fixes. Do not include unrelated dirty files. Then run:
 
 ```bash
 if [ -z "${REVIEW_SKILL_DIR:-}" ]; then
@@ -62,7 +65,7 @@ BASELINE_HELPER="$REVIEW_SKILL_DIR/scripts/review-fix-baseline.sh"
 BASELINE=$(bash "$BASELINE_HELPER" "$FIX_SCOPE_FILE") || exit $?
 ```
 
-The script snapshots only fix-scope paths and prints the baseline id. Do not use `git stash create`. Do not snapshot all tracked dirty files. Do not add untracked files unless the accepted finding cites them, the user asked to include them, and the denylist has no match.
+The script snapshots only fix-scope paths and prints the baseline id. Do not use `git stash create`. Do not snapshot all tracked dirty files. Do not add untracked files unless the frontier item cites them, the user asked to include them, and the denylist has no match.
 
 ## Edit Rules
 
@@ -71,7 +74,8 @@ The script snapshots only fix-scope paths and prints the baseline id. Do not use
 - Prefer loud failure over silent fallback when the invariant should hold.
 - Batch findings only when they share the same root cause and no unrelated module is touched.
 - Clean only orphans introduced by the fix.
-- Do not run broad refactors, format sweeps, dependency swaps, or cleanup skills unless an accepted finding requires them.
+- Do not run broad refactors, format sweeps, dependency swaps, or cleanup skills unless a frontier item requires them.
+- If a later accepted item needs a path outside the baseline fix scope, report it as scope expansion and stop before editing that path unless the user confirms.
 
 ## Validation
 
@@ -85,25 +89,31 @@ After edits, re-review changed files, direct dependents, touched generated artif
 
 Classify post-fix findings:
 
+- `resolved`: frontier item is fixed and covered by validation or named manual evidence.
 - `accepted-still-open`: accepted finding remains after the fix attempt.
 - `regression-from-fix`: introduced by the fix.
-- `new-preexisting`: existed before the fix but was not accepted.
-- `adjacent-new`: noticed nearby but not needed for the accepted finding.
+- `new-real`: newly discovered issue in the original review scope with a new trigger path, source-of-truth evidence, realistic impact, and owner.
+- `repeated-or-reworded`: same root cause or same trigger path without new evidence.
+- `speculative`: lacks observed trigger, impact, source evidence, or reachable path.
+- `manual`: requires runtime evidence, product judgment, credentials, destructive action, or external access.
 
-Only `accepted-still-open` and `regression-from-fix` can trigger automatic mutation. `regression-from-fix` is the fixer's rollback responsibility, not a new accepted finding. Report `new-preexisting` and `adjacent-new` without fixing them.
+Only `accepted-still-open`, `new-real`, and `regression-from-fix` can trigger automatic mutation. `new-real` must stay inside the baseline fix scope. `regression-from-fix` is the fixer's rollback or repair responsibility, not proof that the goal expanded. Report `repeated-or-reworded`, `speculative`, and `manual` without fixing them.
 
 ## Termination
 
 Stop when:
 
 - all `fix` and `rewrite` items are resolved and validation has run,
-- the next change would cross the frozen accepted finding boundary,
+- the next change would cross the baseline fix scope,
 - the next step requires runtime evidence, product judgment, credentials, destructive action, or external access,
 - no local writable checkout is available,
-- the same finding fails twice with the same strategy,
-- or the round budget is reached.
+- the same root cause, trigger path, or fix area repeats without new evidence,
+- the next change would undo a prior fix without a new source-of-truth reason,
+- new accepted work is mostly regressions introduced by the current fix loop,
+- the same strategy fails twice,
+- or a user-provided, harness-provided, or executor-owned safety cap is reached.
 
-Default round budget is 3. One round means triage, edit, validation, and re-review of changed files plus direct dependents. Reuse the same fix-orchestrator across rounds so baseline, diff, and validation history stay visible. Start a replacement only after scope drift, state confusion, context contamination, or crash; pass the same frozen set and remaining budget.
+Do not invent a numeric round budget. Use a numeric cap only when the user, harness, or executor skill supplies one. One round means triage, edit, validation, and re-review of changed files plus direct dependents. Reuse the same fix-orchestrator across rounds so baseline, diff, validation history, and frontier changes stay visible. Start a replacement only after scope drift, state confusion, context contamination, or crash; pass the same frontier, baseline id, and prior round summary.
 
 Return:
 
@@ -112,6 +122,7 @@ Return:
 - Drop: count and reasons
 - Manual: count, citations, and required observation
 - Not fixed: citations and reason
-- Observed outside frozen set: severity, citation, and separate follow-up direction
+- Frontier: resolved, new-real, regression-from-fix, repeated-or-reworded, speculative, manual, and still-open counts
+- Progress: what changed since the previous round, with evidence
 - Validation: commands and verdicts
 - Baseline: snapshot id when used

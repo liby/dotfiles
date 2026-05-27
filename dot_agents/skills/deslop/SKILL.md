@@ -31,6 +31,8 @@ Remove or rewrite only when the current diff introduced the issue:
 - unnecessary defensive checks, broad `try`/`catch`, or fallbacks for impossible states
 - casts to `any` or similar escapes that hide a type problem
 - helpers, config switches, or compatibility paths that only rename one caller
+- wrappers that don't add what they claim: memoization or caching around already-stable or already-cheap values, normalization of already-clean data, conversions to a form the input is already in
+- orphans created by the current diff: unused imports, unreferenced variables or types, unreachable functions, exports no longer used by any caller
 - style that conflicts with the surrounding file and is limited to the edited hunk
 
 ## Type-Driven Refactor Check
@@ -44,7 +46,7 @@ AI edits often trust type signatures over runtime data. For each diff hunk that 
 
 ## Validation
 
-Discover the cheapest existing validation from local instructions, `package.json`, `Makefile`, `justfile`, task config, or adjacent tests. Run the command that covers changed files only when it is available, non-server, and allowed by the active tool policy. If the best validation command is outside the allowed tools, report the exact command instead of running it. Do not run dev/start/serve commands unless the user explicitly asked for that environment.
+Discover the cheapest existing validation from local instructions, `package.json`, `Makefile`, `justfile`, task config, or adjacent tests. Run the command, scoped to changed files when the tool supports it. Request permission if the tool policy does not pre-approve it. Do not run dev/start/serve commands unless the user explicitly asked for that environment.
 
 If no validation command is available, say exactly what was searched.
 

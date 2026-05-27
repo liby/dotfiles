@@ -42,12 +42,12 @@ Load [references/cx-delegation.md](references/cx-delegation.md). The helper supp
 ### `--fix`
 
 1. Run the normal review first. Review delegates remain read-only.
-2. Classify findings as accepted, skipped, dropped, or manual verification, then freeze the accepted set before any mutation.
+2. Classify findings as accepted, skipped, dropped, or manual verification, then seed the live review frontier before any mutation.
 3. If `IS_TRANSIENT=1` came from [references/cx-delegation.md](references/cx-delegation.md), report accepted findings and stop. Fixes must run from the intended local branch or worktree.
-4. Launch one fresh write-capable fix-orchestrator subagent with the frozen accepted set, repo root, review scope, validation commands, and [references/fix-policy.md](references/fix-policy.md).
+4. Launch one fresh write-capable fix-orchestrator subagent with the seeded frontier, repo root, review scope, validation commands, and [references/fix-policy.md](references/fix-policy.md).
 5. If no write-capable subagent is available, report accepted findings and do not mutate files.
 6. The fix-orchestrator independently triages, edits, validates, reuses its own context for later mutation rounds, and returns a structured summary.
-7. The main session reviews that summary and reports changed, skipped, manual, and still-open items.
+7. The main session reviews that summary and reports changed, skipped, manual, still-open, new-real, regression-from-fix, repeated-or-reworded, and speculative items.
 
 The main reviewer must not edit reviewed project files. Only the fix-orchestrator may mutate, and only inside a local writable checkout.
 

@@ -27,6 +27,20 @@ The goal file is the condition that `/goal` evaluates. Produce these sections in
 3. Scope / constraints: include only files, modules, APIs, performance bounds, dependency limits, safety limits, compatibility requirements, subagent requirements, or cross-validation requirements that materially change what done means.
 4. Out of scope: specific related work that must stay outside the goal. Omit this section when no boundary changes completion.
 
+## Iterative Evaluator Goals
+
+When the request asks to repeat an evaluator, reviewer, auditor, cleanup pass, verifier, or critique until it is clean, empty, or issue-free, do not make the evaluator's empty output the objective by itself. Treat evaluator output as evidence for a live issue frontier.
+
+In the goal file, require:
+
+- the named evaluator or skill that owns issue classification
+- a live issue frontier with each accepted item carrying a trigger path, evidence, impact, and owner
+- each mutation round to report how the frontier changed: resolved, newly discovered with new trigger evidence, regression from the last fix, repeated prior issue, speculative claim without new evidence, or manual/runtime/product gap
+- progress evidence after each mutation: validation output, source evidence, runtime evidence, or explicit manual gap
+- a stop-and-report condition when the loop repeats the same root cause, the next fix would undo a prior fix, new work is mostly caused by the last fix, or the evaluator keeps producing claims without new evidence
+
+Do not require a hard round budget unless the user asks for one or the executor skill owns a runtime safety cap. Do not freeze the issue set at the first pass. New findings can enter when they add a new trigger path, source-of-truth evidence, or a real regression. If a named evaluator skill has a loop or fix policy, reference that skill as the owner instead of restating its full rules.
+
 ## Process
 
 1. Read `$ARGUMENTS`; if no slash-command arguments are available, use the current user request as the input. If both are empty, ask for one sentence describing the desired end state.
@@ -35,12 +49,13 @@ The goal file is the condition that `/goal` evaluates. Produce these sections in
    - one broad `rg` or `fd` for named symbols, files, modules, or behaviors
    - one targeted read of the most relevant file, doc, or call site
 4. Ask one specific question only if the user request lacks an observable outcome or success evidence after optional grounding.
-5. Draft the goal in the structure above. Bias toward specificity over length.
-6. Write exactly the drafted goal text with one trailing newline to a markdown file under `${SET_GOAL_OUTPUT_DIR:-/tmp}`. Create the directory first. Use `YYYYMMDD-HHMMSS-<short-slug>.md`; make the slug lowercase ASCII, hyphenated, and outcome-based.
-7. Read the file back and verify its content equals the drafted goal text after both strings are normalized to exactly one trailing newline. Verification is internal; do not output the verification result.
-8. If verification fails, use the failure output shape below.
-9. If verification succeeds, use the output contract below as the entire final assistant message.
-10. Stop.
+5. For iterative evaluator requests, apply Iterative Evaluator Goals before drafting Proof of completion and Scope.
+6. Draft the goal in the structure above. Bias toward specificity over length.
+7. Write exactly the drafted goal text with one trailing newline to a markdown file under `${SET_GOAL_OUTPUT_DIR:-/tmp}`. Create the directory first. Use `YYYYMMDD-HHMMSS-<short-slug>.md`; make the slug lowercase ASCII, hyphenated, and outcome-based.
+8. Read the file back and verify its content equals the drafted goal text after both strings are normalized to exactly one trailing newline. Verification is internal; do not output the verification result.
+9. If verification fails, use the failure output shape below.
+10. If verification succeeds, use the output contract below as the entire final assistant message.
+11. Stop.
 
 ## Output Contract
 
@@ -60,6 +75,7 @@ If file writing or read-back verification fails, reply with `file write failed: 
 - Vague success: `make the code cleaner`, `improve performance`, `fix the bug`.
 - Self-report validation: `the agent confirms the change works`.
 - Subagent self-report as proof without master-side evidence.
+- Empty evaluator output as the only completion proof for an iterative evaluator loop.
 - Generic obligations in Scope: `use the existing code style`, `don't break tests`.
 - Padding for length.
 - Putting `/goal` or surrounding prose inside the goal file.
