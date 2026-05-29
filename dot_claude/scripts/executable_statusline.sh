@@ -45,6 +45,16 @@ else
 fi
 read -r _now _month < <(date "+%s %m")
 
+# ── Terminal width (CC >= 2.1.153 passes COLUMNS/LINES as env to statusline) ──
+# Absent for older CC or non-tty -> fall back to 80. Scales the branch label and
+# rate-bar width down on narrow terminals.
+cols=${COLUMNS:-80}
+[[ "$cols" =~ ^[0-9]+$ ]] || cols=80
+if   (( cols < 60 ));  then branch_max=16; bar_width=6
+elif (( cols < 100 )); then branch_max=28; bar_width=8
+else                        branch_max=40; bar_width=10
+fi
+
 # ── Helpers ─────────────────────────────────────────────
 file_mtime() {
   if [ "$_date_flavor" = "bsd" ]; then
@@ -247,7 +257,7 @@ line1="${sky}Context${reset} ${pct_color}${pct_used}%${reset}"
 line1+="${sep}"
 line1+="${amber}${dir_name}${reset}"
 if [ -n "$git_branch" ]; then
-  display_branch=$(truncate_middle "$git_branch" 40)
+  display_branch=$(truncate_middle "$git_branch" "$branch_max")
   line1+="${muted}:${rose}${display_branch}${ruby}${git_dirty}${reset}"
 fi
 line1+="${sep}"
@@ -362,7 +372,6 @@ $needs_refresh && refresh_usage_cache
 # 5h/7d from stdin (real-time), fallback to API cache when stdin has no rate_limits
 rate_lines=""
 stale_marker=""
-bar_width=10
 
 # Fallback: before first conversation, stdin may lack rate_limits — use cached API data
 if [ -z "$five_hour_pct_raw" ] && [ -n "$usage_data" ]; then
