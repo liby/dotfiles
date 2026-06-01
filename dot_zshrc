@@ -29,30 +29,32 @@ autoload -Uz compinit
 # Environment variables
 export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
+export HOMEBREW_NO_ENV_HINTS=1
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 export PNPM_HOME="$HOME/Code/.pnpm"
-export PROTO_AUTO_INSTALL_HIDE_OUTPUT=true
+export PROTO_AUTO_INSTALL_HIDE_OUTPUT=1
 export PROTO_HOME="$HOME/.proto"
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 
 # PATH configuration
-local -a path_dirs=(
-  "$PROTO_HOME/shims"
-  "$PROTO_HOME/bin"
-  "$HOMEBREW_PREFIX/opt/curl/bin"
-  "$HOMEBREW_PREFIX/opt/uv/bin"
-  "$NPM_CONFIG_PREFIX/bin"
-  "$PNPM_HOME"
-  "./node_modules/.bin"
-  "$HOME/bin"
-  "$HOME/.cargo/bin"
-  "$HOME/.local/bin"
-  "$GPG_PATH/bin"
-  "$GPG_PATH/libexec"
-)
-
 typeset -aU path
-path=($path_dirs $path[@])
+() {
+  local -a path_dirs=(
+    # proto bootstrap: activate (below) needs the proto binary on PATH; it re-injects shims + bin itself
+    "$PROTO_HOME/bin"
+    "$HOMEBREW_PREFIX/opt/curl/bin"
+    "$HOMEBREW_PREFIX/opt/uv/bin"
+    "$NPM_CONFIG_PREFIX/bin"
+    "$PNPM_HOME"
+    "./node_modules/.bin"
+    "$HOME/bin"
+    "$HOME/.cargo/bin"
+    "$HOME/.local/bin"
+    "$GPG_PATH/bin"
+    "$GPG_PATH/libexec"
+  )
+  path=($path_dirs $path[@])
+}
 
 # Alias Set
 alias c='open -a "Visual Studio Code"'
