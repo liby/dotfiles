@@ -56,11 +56,11 @@ For waits, confirm the event cannot fire before waiting begins, or use a direct 
 
 ## Symmetry And Completeness
 
-Load for helpers, parsers, escaping logic, enums, schema splits, field renames, registry rows, capability matrices, generated files, refactors, deletions, and deprecations.
+Load for helpers, parsers, escaping logic, enums, schema splits, field renames, registry rows, capability matrices, generated files, refactors, deletions, deprecations, and any concept, value, or policy newly applied to one surface that peer surfaces should share.
 
-Grep same-class call sites and old inline implementations. For schema or enum changes, inspect writers, readers, replay or deserialization fallback, serialization defaults, and generated outputs.
+Symmetry (symbol-local): grep same-class call sites and old inline implementations. For schema or enum changes, inspect writers, readers, replay or deserialization fallback, serialization defaults, and generated outputs. For removals, search known consumers outside the touched file when practical. For refactors, list old side effects such as retry, load balancing, rate limiting, metrics, and logging, then confirm which remain.
 
-For removals, search known consumers outside the touched file when practical. For refactors, list old side effects such as retry, load balancing, rate limiting, metrics, and logging, then confirm which remain.
+Completeness (concept-level): when a change applies a cross-cutting concept (the user's identity or locale/timezone, a permission, a currency, a feature flag, a logging or audit policy) to one surface, the missing surface is usually one the diff never touched and that shares no symbol with the change, so the symmetry sweep cannot reach it. Enumerate the surfaces that should embody the concept by searching for the concept itself rather than the changed symbol, and include parallel subsystems and code-execution environments (sandboxes, workers, cron runners) whose behavior depends on it but whose source never names it. Report a surface that should embody the concept but does not as a completeness gap to confirm against intent, not a proven bug.
 
 ## Data Integrity And Silent Corruption
 

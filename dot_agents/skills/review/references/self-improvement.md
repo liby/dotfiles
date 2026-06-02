@@ -42,7 +42,7 @@ Types:
 - `Fix drift`: `--fix` crossed, or nearly crossed, the accepted finding boundary.
 - `Codified rule`: an entry became reusable skill text.
 
-Point to long evidence instead of pasting it. Write to the active private review journal when one is configured. Return a `Self-improvement candidate` section only when it does not violate the user's exact output contract. For `approve`, clean-verdict-only, verdict-only, or blocker-only contracts, skip chat output if no private journal is configured. Public skill files receive only distilled rules.
+Point to long evidence instead of pasting it. Write raw candidates to the local journal at `journal/JOURNAL.md` under this skill; never commit it, so names, internal IDs, and paths stay on this machine. Return a `Self-improvement candidate` section only when it does not violate the user's exact output contract. For `approve`, clean-verdict-only, verdict-only, or blocker-only contracts, skip chat output if no private journal is reachable. Public skill files receive only distilled rules.
 
 ## Distillation
 

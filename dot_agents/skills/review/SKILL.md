@@ -57,7 +57,7 @@ The main reviewer must not edit reviewed project files. Only the fix-orchestrato
 - No speculative support paths: guards, fallbacks, `undefined`, caches, switches, and helpers need a current caller, contract, test, or observed failure.
 - Failure must stay visible: do not turn errors, bad statuses, partial work, or terminal-state ambiguity into success.
 - Names, states, boundaries, and config are contract surfaces.
-- A changed contract needs a symmetry sweep across writers, readers, callers, generated types, generated artifacts, and direct consumers.
+- A changed contract needs a symmetry sweep across writers, readers, callers, generated types, generated artifacts, and direct consumers; a change that extends a cross-cutting concept (identity, locale, permission, currency, flag, policy) also needs a completeness sweep for peer surfaces it never touched and shares no symbol with.
 - Tests must prove the invariant, not just satisfy the fixture.
 - Changed lines still need a mechanical pass for line-local bugs.
 
