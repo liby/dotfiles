@@ -17,6 +17,7 @@ is_secret_like_path() {
     .env*|.env*/*|*/.env*|*/.env*/*) result=0 ;;
     *.pem|*.key|*.p12|*.pfx|*.crt|*.cer) result=0 ;;
     id_rsa|id_dsa|id_ecdsa|id_ed25519|*/id_rsa|*/id_dsa|*/id_ecdsa|*/id_ed25519) result=0 ;;
+    authorized_keys|*/authorized_keys|known_hosts|*/known_hosts) result=0 ;;
     *credential*|*secret*|*token*) result=0 ;;
     .ssh|*/.ssh|*/.ssh/*|.ssh/*|*.history|.*_history|*/.*_history|*.log|*.log/*|log|logs|*/log|*/logs|log/*|logs/*|*/log/*|*/logs/*) result=0 ;;
   esac

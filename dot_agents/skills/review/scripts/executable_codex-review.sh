@@ -12,6 +12,7 @@
 #   REVIEW_CWD=<path>
 #   BASE_REF=<ref or empty>
 #   SCOPE=branch|working-tree
+#   REVIEW_MODE=local|mr
 #   BROAD_OUT=<path to JSON envelope>
 #   BROAD_ERR=<path to broad path stderr>
 #   OPINIONATED_OUT=<path to codex exec stdout>
@@ -26,6 +27,7 @@ set -euo pipefail
 source "$(dirname "$0")/_lib.sh"
 
 OWNED_WORKTREE=""
+REVIEW_MODE=local
 BROAD_PID=""
 OPINIONATED_PID=""
 cleanup_owned_worktree() {
@@ -128,6 +130,7 @@ if [ -n "$MR_URL" ]; then
   fi
   OWNED_WORKTREE="$REVIEW_CWD"
   SCOPE=branch
+  REVIEW_MODE=mr
 else
   REVIEW_CWD=$(git rev-parse --show-toplevel)
   # Preserve explicit --base; rewind guards apply only to auto base.
@@ -249,12 +252,12 @@ Read-only contract: do not edit files, do not run formatters, do not run fix com
 
 if [ "$SCOPE" = "branch" ]; then
   COMPANION_SCOPE_ARGS=(--base "$BASE_REF" --scope branch)
-  EXEC_PROMPT="Review the current worktree against base $BASE_REF, following the review skill at $SKILL_PATH. Output findings per the skill's Output section.
+  EXEC_PROMPT="Review the current worktree against base $BASE_REF, following the review skill at $SKILL_PATH. Output raw candidate findings as plain text, one finding per paragraph. Include severity (P1/P2/P3), file path, line number, and the issue. Do NOT produce JSON. Do NOT invoke render-review.mjs: the main session merges both delegate paths and renders.
 
 $REVIEW_GUIDANCE"
 else
   COMPANION_SCOPE_ARGS=(--scope working-tree)
-  EXEC_PROMPT="Review the current worktree's uncommitted changes, following the review skill at $SKILL_PATH. Output findings per the skill's Output section.
+  EXEC_PROMPT="Review the current worktree's uncommitted changes, following the review skill at $SKILL_PATH. Output raw candidate findings as plain text, one finding per paragraph. Include severity (P1/P2/P3), file path, line number, and the issue. Do NOT produce JSON. Do NOT invoke render-review.mjs: the main session merges both delegate paths and renders.
 
 How to see the diff: run 'git diff HEAD' to see staged and unstaged changes together. Plain 'git diff' only shows unstaged hunks.
 
@@ -302,8 +305,8 @@ if [ -n "$OWNED_WORKTREE" ]; then
 else
   IS_TRANSIENT=0
 fi
-printf 'REVIEW_CWD=%q\nBASE_REF=%q\nSCOPE=%q\nBROAD_OUT=%q\nBROAD_ERR=%q\nOPINIONATED_OUT=%q\nIS_TRANSIENT=%q\n' \
-  "$REVIEW_CWD" "$BASE_REF" "$SCOPE" "$BROAD_OUT" "$BROAD_ERR" "$OPINIONATED_OUT" "$IS_TRANSIENT"
+printf 'REVIEW_CWD=%q\nBASE_REF=%q\nSCOPE=%q\nREVIEW_MODE=%q\nBROAD_OUT=%q\nBROAD_ERR=%q\nOPINIONATED_OUT=%q\nIS_TRANSIENT=%q\n' \
+  "$REVIEW_CWD" "$BASE_REF" "$SCOPE" "$REVIEW_MODE" "$BROAD_OUT" "$BROAD_ERR" "$OPINIONATED_OUT" "$IS_TRANSIENT"
 
 # Caller now owns any transient worktree.
 trap - EXIT

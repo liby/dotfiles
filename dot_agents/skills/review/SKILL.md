@@ -1,7 +1,7 @@
 ---
 name: review
 description: Review a remote MR/PR or local code changes, reporting real issues with evidence-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", asks for review findings, or provides an MR/PR URL. Not for prose review, skill-authoring audits, or ordinary implementation.
-argument-hint: "[--cx] [--fix] [MR/PR URL or notes]"
+argument-hint: "[--cx] [--fix] [--html] [MR/PR URL or notes]"
 allowed-tools:
   - Bash
   - Read
@@ -20,7 +20,7 @@ Read, verify, report. Clean verdicts and no-op are valid outcomes. Default revie
 ## Flow
 
 1. Resolve scope: MR/PR, branch diff, working tree, or explicit notes.
-2. Before reading any diff body, collect changed paths. Refuse secret-like names without printing raw paths: `.env*`, `.env/`, private keys, certificates, `.ssh/`, shell history, log files or directories, and names containing `credential`, `secret`, or `token`.
+2. Before reading any diff body, collect changed paths. Refuse secret-like names without printing raw paths: `.env*`, private keys and certificates (`*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.crt`, `*.cer`), `id_rsa`/`id_dsa`/`id_ecdsa`/`id_ed25519`, `authorized_keys`, `known_hosts`, `.ssh/`, `*.history`, `*.log`, and names containing `credential`, `secret`, or `token`. The same denylist is enforced for `--fix` in [references/fix-policy.md](references/fix-policy.md).
 3. List changed files before judging behavior:
    - branch: parse `git diff -z --name-status <base>...HEAD`; for `R*` and `C*`, inspect both source and destination paths before any full diff
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`
@@ -43,7 +43,7 @@ Load [references/cx-delegation.md](references/cx-delegation.md). The helper supp
 
 1. Run the normal review first. Review delegates remain read-only.
 2. Classify findings as accepted, skipped, dropped, or manual verification, then seed the live review frontier before any mutation.
-3. If `IS_TRANSIENT=1` came from [references/cx-delegation.md](references/cx-delegation.md), report accepted findings and stop. Fixes must run from the intended local branch or worktree.
+3. If `REVIEW_MODE=mr` came from [references/cx-delegation.md](references/cx-delegation.md), report accepted findings and stop: the MR is reviewed in a transient detached worktree with no writable local checkout. To fix, check out the MR branch locally and rerun `--fix`. For `REVIEW_MODE=local`, continue; the fix-orchestrator edits the real working tree (`git rev-parse --show-toplevel`), never `$REVIEW_CWD`, which may be a read-only review snapshot.
 4. Launch one fresh write-capable fix-orchestrator subagent with the seeded frontier, repo root, review scope, validation commands, and [references/fix-policy.md](references/fix-policy.md).
 5. If no write-capable subagent is available, report accepted findings and do not mutate files.
 6. The fix-orchestrator independently triages, edits, validates, reuses its own context for later mutation rounds, and returns a structured summary.
@@ -98,23 +98,32 @@ Require runtime evidence for browser or hydration behavior, cross-tab timing, li
 
 ## Output
 
-Use Chinese for review prose unless the user gives an exact output contract. Keep code identifiers, file paths, quoted code, commands, and severity tags in English.
+A review produces one JSON document, the canonical data: the agent reads it, `--cx` and `--fix` consume it, and it is the input to the HTML renderer. Default output is that raw JSON. On `--html` or an explicit report request, also render it to a single-file HTML report. Full field contract and the render command: [references/html-report.md](references/html-report.md).
 
-Respect exact output contracts: `approve`, `No blocking findings.`, verdict-only, blocker-only, or any user-provided shape.
+Respect exact output contracts first: `approve`, `No blocking findings.`, verdict-only, blocker-only, or any user-provided shape override the JSON default. With no findings, emit `"findings": []` and state the clean result in `verdict`.
 
-Open with the highest-severity finding. If there are no findings, say so plainly.
+Minimal JSON (every field and rule is in the reference):
 
-Finding format:
-
-```text
-P2 src/path/file.ts:42 conclusion in one sentence
-
-Evidence: `quoted code or exact cited behavior`
-
-Why it breaks: current sequence -> missing or wrong step -> concrete consequence.
-
-Correct fix: root-cause fix direction, including direct dependents when needed.
+```json
+{
+  "meta": { "project": "recording-center", "scope": "working tree · 9 files", "scope_slug": "wt",
+    "reviewed_sha": "15c25380", "repo_root": "Users/me/Code/recording-center",
+    "mr": { "iid": 234, "title": "标题", "url": "https://gitlab.example/x/-/merge_requests/234" },
+    "verdict": "方案合理，1 项待跟进", "validation": "仅静态验证", "manual_gap": "未做浏览器实测",
+    "rationale": { "requirement": "要解决什么", "assessment": "方案是否合理" } },
+  "findings": [ { "sev": "P2", "path": "lib/x.ts", "line": 42, "title": "一句话结论",
+    "level": "confirmed", "problem": "什么问题", "trigger": ["触发步骤", "中间步骤", "后果"],
+    "fix": "修复方向", "evidence": "证据", "impact": "影响 / 边界",
+    "mr_hunk_url": "https://gitlab.example/x/-/merge_requests/234/diffs" } ],
+  "notes": [ { "text": "weak 级别的非 finding 说明", "level": "weak" } ]
+}
 ```
+
+`sev` is uppercase `P1`/`P2`/`P3`. Order findings by severity, highest first. Omit any optional field that has no content.
+
+**Language**: write `title`, `problem`, `trigger`, `fix`, `evidence`, `impact`, `verdict`, `rationale`, and notes as Chinese prose; keep English only for code identifiers, paths, commands, severity tags, error codes, and host terms (`MR`/`PR`/`SHA`). Do not translate word for word; write native Chinese review prose.
+
+**Evidence level**: `confirmed` and `manual` can be numbered findings; a `manual` finding must name the missing runtime observation in `evidence` or `impact`. `weak` goes in `notes`, never a numbered finding.
 
 Rules:
 
@@ -123,8 +132,9 @@ Rules:
 - Explain project-specific terms on first use.
 - Prefer one concrete scenario over abstract mechanism.
 - Correct fix means root cause plus direct dependents. Flag unrelated rewrites, surrounding refactors, and adjacent cleanup separately.
+- Never fabricate an MR/PR URL: use the host CLI (`glab`/`gh`) web URL or a user-provided one, and omit `mr`/`mr_hunk_url` when unknown.
 - Do not narrate review mechanics, tool setup, worktree preparation, or skill rules.
 
 ## Evolution
 
-At the end of a review or fix run, and when the user asks to evolve the skill or record a review lesson, use [references/self-improvement.md](references/self-improvement.md). Do not output self-improvement content when the user gave an exact output contract such as `approve`, clean-verdict-only, verdict-only, or blocker-only; record privately when configured, otherwise skip output.
+At the end of a review or fix run, and when the user asks to evolve the skill or record a review lesson, use [references/self-improvement.md](references/self-improvement.md). Do not output self-improvement content when the user gave an exact output contract such as `approve`, clean-verdict-only, verdict-only, or blocker-only, unless private review-memory recording failed; then state `private review-memory unavailable: <reason>`.

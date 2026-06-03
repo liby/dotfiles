@@ -27,7 +27,7 @@ Do not edit a hunk unless it is inside the resolved diff and clearly belongs to 
 
 Remove or rewrite only when the current diff introduced the issue:
 
-- comments a human maintainer would not add, or comments inconsistent with nearby files
+- comments a human maintainer would not add: restating adjacent code, repeating what a nearby file or the cited source already states, or styling inconsistently with nearby files
 - unnecessary defensive checks, broad `try`/`catch`, or fallbacks for impossible states
 - casts to `any` or similar escapes that hide a type problem
 - helpers, config switches, or compatibility paths that only rename one caller

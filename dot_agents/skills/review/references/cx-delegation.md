@@ -13,18 +13,11 @@
 Run from the target repository root. Resolve the helper from the active skill directory.
 
 ```bash
-if [ -z "${REVIEW_SKILL_DIR:-}" ]; then
-  if [ -d "$HOME/.agents/skills/review" ]; then
-    REVIEW_SKILL_DIR="$HOME/.agents/skills/review"
-  else
-    REVIEW_SKILL_DIR="$HOME/.claude/skills/review"
-  fi
-fi
+REVIEW_SKILL_DIR="${REVIEW_SKILL_DIR:-$HOME/.agents/skills/review}"
 REVIEW_HELPER="$REVIEW_SKILL_DIR/scripts/codex-review.sh"
-[ -f "$REVIEW_HELPER" ] || REVIEW_HELPER="$REVIEW_SKILL_DIR/scripts/executable_codex-review.sh"
 
 run_review() {
-  unset REVIEW_CWD BASE_REF SCOPE BROAD_OUT BROAD_ERR OPINIONATED_OUT IS_TRANSIENT
+  unset REVIEW_CWD BASE_REF SCOPE REVIEW_MODE BROAD_OUT BROAD_ERR OPINIONATED_OUT IS_TRANSIENT
   local out
   if out=$(bash "$REVIEW_HELPER"); then
     eval "$out"
@@ -55,6 +48,7 @@ After `eval`, read:
 - `$BASE_REF`: resolved base, empty for working-tree scope
 - `$SCOPE`: `branch` or `working-tree`
 - `$IS_TRANSIENT`: `1` when `$REVIEW_CWD` is helper-created, otherwise `0`
+- `$REVIEW_MODE`: `local` (working-tree or local branch, fixable in place) or `mr` (GitLab MR, no writable local checkout). `--fix` keys its stop/continue decision off this, not off `$IS_TRANSIENT`.
 - `$BROAD_OUT`: JSON envelope. Extract prose with `jq -r .codex.stdout "$BROAD_OUT"`.
 - `$BROAD_ERR`: stderr from the broad review path.
 - `$OPINIONATED_OUT`: `codex exec` stdout. Read the whole file and extract cited findings.
@@ -68,6 +62,8 @@ fi
 ```
 
 Branch-scope snapshots include committed changes plus tracked dirty changes. Untracked files are omitted unless `--include-untracked` is passed. The helper refuses secret-like names in committed, tracked dirty, and included untracked paths.
+
+In working-tree mode, if untracked files exist and `--include-untracked` is not passed, the helper exits non-zero (`4`) instead of silently reviewing a partial set. Prune private artifacts, then pass `--include-untracked`.
 
 ## Filter
 
@@ -108,4 +104,6 @@ Do not average conflicting recommendations into a blended fix.
 
 ## Output
 
-Rewrite forwarded findings into the main skill's output shape.
+Forwarded findings are leads, not output. Verify each against the live checkout, then fill the main skill's review JSON field by field (see [html-report.md](html-report.md)): uppercase `sev`, required fields present, Chinese prose.
+
+The two delegate paths differ in format (see the read list above): `$BROAD_OUT` is a JSON envelope, `$OPINIONATED_OUT` is free text. Extract each before merging, and do not paste either delegate output straight into the JSON.

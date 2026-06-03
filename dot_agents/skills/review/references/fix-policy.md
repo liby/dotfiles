@@ -16,7 +16,7 @@
 
 Pass:
 
-- repo root
+- repo root: the real writable working tree from `git rev-parse --show-toplevel`, never `$REVIEW_CWD` (a `--cx` transient review worktree is read-only and may be removed after review)
 - review scope and base
 - initial accepted findings with severity, `path:line`, root cause, allowed touch paths or direct dependents, and validation command or manual gap
 - validation commands discovered during review
@@ -29,7 +29,7 @@ Do not pass skipped, dropped, manual-verification, repeated, speculative, or raw
 Before any baseline, snapshot, or edit, list the paths the fix-orchestrator may touch. Stop without reading or adding a path when it matches:
 
 - `.env*` or any path segment under `.env*`
-- `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.crt`, `*.cer`, `*.pub`
+- `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.crt`, `*.cer`
 - `authorized_keys` or `known_hosts`
 - `id_rsa`, `id_dsa`, `id_ecdsa`, `id_ed25519`, or `.ssh/`
 - names containing `credential`, `secret`, or `token`, case-insensitive
@@ -53,15 +53,8 @@ A post-fix candidate can enter as `new-real` only when it has a new trigger path
 Before the first edit, write `$FIX_SCOPE_FILE` as NUL-delimited repo-relative paths the current review scope permits the fixer to touch. Include initial frontier paths and direct dependents likely required by fixes. Do not include unrelated dirty files. Then run:
 
 ```bash
-if [ -z "${REVIEW_SKILL_DIR:-}" ]; then
-  if [ -d "$HOME/.agents/skills/review" ]; then
-    REVIEW_SKILL_DIR="$HOME/.agents/skills/review"
-  else
-    REVIEW_SKILL_DIR="$HOME/.claude/skills/review"
-  fi
-fi
+REVIEW_SKILL_DIR="${REVIEW_SKILL_DIR:-$HOME/.agents/skills/review}"
 BASELINE_HELPER="$REVIEW_SKILL_DIR/scripts/review-fix-baseline.sh"
-[ -f "$BASELINE_HELPER" ] || BASELINE_HELPER="$REVIEW_SKILL_DIR/scripts/executable_review-fix-baseline.sh"
 BASELINE=$(bash "$BASELINE_HELPER" "$FIX_SCOPE_FILE") || exit $?
 ```
 
