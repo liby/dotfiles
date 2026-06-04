@@ -102,19 +102,21 @@ A review produces one JSON document, the canonical data: the agent reads it, `--
 
 Respect exact output contracts first: `approve`, `No blocking findings.`, verdict-only, blocker-only, or any user-provided shape override the JSON default. With no findings, emit `"findings": []` and state the clean result in `verdict`.
 
-Minimal JSON (every field and rule is in the reference):
+Shape — file-centric (modeled on Anthropic's `03-code-review-pr` example); every field and rule is in [references/html-report.md](references/html-report.md):
 
 ```json
 {
-  "meta": { "project": "recording-center", "scope": "working tree · 9 files", "scope_slug": "wt",
-    "reviewed_sha": "15c25380", "repo_root": "Users/me/Code/recording-center",
-    "mr": { "iid": 234, "title": "标题", "url": "https://gitlab.example/x/-/merge_requests/234" },
+  "meta": { "project": "acme/web", "scope": "MR !247 · 6 files", "scope_slug": "mr247",
+    "reviewed_sha": "15c25380", "repo_root": "Users/me/Code/web",
+    "mr": { "iid": 247, "title": "标题", "url": "https://gitlab.example/x/-/merge_requests/247" },
+    "author": "Mira Okafor", "branch": "feat/x → main", "stat": { "add": 142, "del": 38, "files": 6 },
     "verdict": "方案合理，1 项待跟进", "validation": "仅静态验证", "manual_gap": "未做浏览器实测",
     "rationale": { "requirement": "要解决什么", "assessment": "方案是否合理" } },
   "findings": [ { "sev": "P2", "path": "lib/x.ts", "line": 42, "title": "一句话结论",
     "level": "confirmed", "problem": "什么问题", "trigger": ["触发步骤", "中间步骤", "后果"],
-    "fix": "修复方向", "evidence": "证据", "impact": "影响 / 边界",
-    "mr_hunk_url": "https://gitlab.example/x/-/merge_requests/234/diffs" } ],
+    "fix": "修复方向", "code_snippet": "-  旧代码行\n+  新代码行", "evidence": "证据", "impact": "影响 / 边界" } ],
+  "files": [ { "path": "lib/x.ts", "add": 19, "del": 6 },
+    { "path": "lib/clean.ts", "add": 4, "del": 1, "note": "无 finding 文件的一句话总结" } ],
   "notes": [ { "text": "weak 级别的非 finding 说明", "level": "weak" } ]
 }
 ```
@@ -132,7 +134,7 @@ Rules:
 - Explain project-specific terms on first use.
 - Prefer one concrete scenario over abstract mechanism.
 - Correct fix means root cause plus direct dependents. Flag unrelated rewrites, surrounding refactors, and adjacent cleanup separately.
-- Never fabricate an MR/PR URL: use the host CLI (`glab`/`gh`) web URL or a user-provided one, and omit `mr`/`mr_hunk_url` when unknown.
+- Never fabricate an MR/PR URL: use the host CLI (`glab`/`gh`) web URL or a user-provided one, and omit `mr` when unknown.
 - Do not narrate review mechanics, tool setup, worktree preparation, or skill rules.
 
 ## Evolution

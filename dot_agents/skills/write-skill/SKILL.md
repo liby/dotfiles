@@ -26,7 +26,7 @@ Write skills that change agent behavior. Keep routing, workflow, tool use, valid
 
 ## Routing
 
-The `description` is the routing surface. Write it before the body.
+The `description` is the routing surface for model-invocable skills. Write it before the body. For `/`-only skills (`disable-model-invocation: true`), the description is read by a human browsing the menu, not the router, so the trigger guidance below does not apply.
 
 ```yaml
 description: <capability>. Use when <specific triggers>.
@@ -44,6 +44,7 @@ description: <capability>. Use when <specific triggers>.
 Target this local Claude Code and Codex setup in one `SKILL.md`. Keep portable discovery fields (`name`, `description`) clear because both runtimes use them to route. Add `when_to_use` only when extra routing context is worth a field some clients may ignore. Treat the other fields as Claude Code-specific execution metadata; behavior required in both runtimes belongs in the body. Use the [Agent Skills frontmatter spec](https://agentskills.io/specification#frontmatter) for the portable `SKILL.md` baseline and the [Claude Code frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference) for Claude-specific fields, types, and defaults.
 
 - Use `disable-model-invocation: true` to stop Claude from auto-loading the skill. Use it for workflows that should run only when the user invokes `/name`, such as deploys, commits, external messages, or other side effects.
+- For a command-like skill (`disable-model-invocation: true`), write its `description` as a one-line human-facing `/` menu summary, not a `Use when...` trigger list. Auto-loading is off, so triggers there are dead text; keep rich triggers on model-invocable skills, where they drive selection.
 - Use `user-invocable: false` only to hide a skill from Claude Code's `/` menu; it does not block model invocation.
 - Use `context: fork` for explicit long-running tasks, independent review, or research. Do not put passive reference knowledge in a fork-only skill.
 - Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution.
@@ -58,8 +59,12 @@ Choose the smallest shape that preserves behavior:
 - Branching intent: `Mode Picker` before mode details.
 - Fragile or repeated command: script with fixed inputs and validation.
 - Rare or bulky detail: one-level `references/` file.
-- Output shape: inline template or short `examples/`.
+- Ephemeral output shape: inline template or short `examples/`.
+- Durable re-read artifact: a one-hop `<NAME>-FORMAT.md` contract, linked from `SKILL.md` and loaded before the skill writes or updates that artifact.
 - Reusable final artifacts: `assets/`.
+- Term-dense or ambiguity-sensitive workflow: a short `Glossary`, with `Avoid` synonyms only when term drift changes routing, artifact schema, or safety.
+
+Externalize an output contract into a `<NAME>-FORMAT.md` only when the skill writes a persisted artifact whose schema must hold across writes or sessions, or that another skill shares. The contract carries what an inline template can't: a filled template, a when-to-write gate, and lifecycle rules. Require loading it before writing that artifact, or it becomes dead documentation. Below that bar, keep the shape inline.
 
 Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool choice, validation, and output detail when they justify the length.
 
@@ -106,7 +111,7 @@ Run the checks that match the change and target runtime.
 
 1. Use the skill repo's existing validator, package script, test, lint, or marketplace command first.
 2. Verify YAML frontmatter, local-runtime fields, one-hop file references, and changed scripts.
-3. Exercise triggers: 3 obvious should-trigger prompts, 3 paraphrases, and 3 near-miss should-not-trigger prompts. For important skills, use 8-10 each.
+3. For model-invocable skills, exercise triggers: 3 obvious should-trigger prompts, 3 paraphrases, and 3 near-miss should-not-trigger prompts. For important skills, use 8-10 each. Skip this for `disable-model-invocation` skills the model never auto-loads.
 4. If the skill under-triggers, add user phrases, artifact types, or task verbs to `description`. If it over-triggers, narrow the trigger, add one specific `Not for...`, or split the skill.
 5. For rewrites, state what behavior stayed the same, what changed, and why.
 6. Run changed scripts with fixed inputs. Confirm clear stdout, stderr, exit codes, and failing-path messages.
