@@ -49,8 +49,6 @@ brew "zsh"
 cask "anki"
 # Application uninstaller
 cask "appcleaner"
-# Free and open-source web browser
-cask "chromium"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
 # Inconsolata LGC Nerd Font

@@ -1,0 +1,34 @@
+#!/bin/zsh
+set -uo pipefail
+
+[[ "$OSTYPE" == darwin* ]] || exit 0
+
+# Periodic dev-tool update, chezmoi-idiom style: the 3-day bucket below changes
+# every 3 days (259200s, counted from the Unix epoch), which changes this script's
+# hash and makes run_onchange re-run it. Net effect: runs at most once per 3 days,
+# and only when you run `chezmoi apply`. No background daemon.
+# 3-day bucket: {{ div (output "date" "+%s" | trim | atoi) 259200 }}
+
+# run scripts don't source .zshrc, so set up the toolchain env explicitly (same as
+# the install scripts) so npm/uv resolve regardless of how chezmoi was invoked.
+if [[ "$(uname -m)" == "arm64" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+export PROTO_HOME="$HOME/.proto"
+export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"
+export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+
+# brew formulae (incl. uv itself) are auto-updated daily by homebrew/autoupdate.
+# rust is intentionally excluded here: the default toolchain is nightly (where the
+# rust-analyzer component lives), so `rustup update` re-pulls a fresh hundreds-of-MB
+# nightly every few days and blocks apply. Run `rustup update` manually so you
+# control when nightly moves.
+# Scope updates to the LSP servers we install: a bare `npm update -g` bumps
+# every global npm package and `uv tool upgrade --all` every uv tool, not just
+# these.
+echo "[dev-tools-update] npm update -g typescript-language-server typescript"
+npm update -g typescript-language-server typescript || echo "[dev-tools-update] npm update -g typescript-language-server typescript failed"
+echo "[dev-tools-update] uv tool upgrade pyright"
+uv tool upgrade pyright || echo "[dev-tools-update] uv tool upgrade pyright failed"

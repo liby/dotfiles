@@ -20,7 +20,7 @@ Use `gh` for GitHub operations. Verify command syntax with `gh <command> --help`
 | Preview GitHub skill | `gh skill preview` and inspect bundled files | No |
 | Install, update, comment, label, close, merge, create | Explain target and run only after explicit user request | Yes |
 
-Do not run `gh auth status` unless a `gh` command fails with an auth or host error.
+Do not run `gh auth status` unless a `gh` command fails with an auth or host error. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, which unconditionally rewrites the global git credential helper to gh's absolute path and clobbers dotfile-managed git config.
 
 ## URL And Reference Parsing
 
