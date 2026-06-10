@@ -35,6 +35,8 @@ Before any baseline, snapshot, or edit, list the paths the fix-orchestrator may 
 - names containing `credential`, `secret`, or `token`, case-insensitive
 - `*.history` or `*.log`
 
+The machine copy in `scripts/_lib.sh` is authoritative for `--cx` script paths and is a superset (adds log directories and `.*_history`); update both together.
+
 ## Triage
 
 Classify each frontier item before editing:

@@ -84,6 +84,7 @@ Use for large mixed-purpose changes, stale descriptions, rollback claims, genera
 Check:
 
 - current diff against description, discussion, and tests
+- each description or discussion requirement maps to a diff change; report missing or partial implementation, and unrequested behavior beyond the description, as separate findings so one axis does not mask the other
 - semantic changes separated from renames, formatting, generated output, and unrelated cleanup
 - rollback or revert causal chain from reverted change to fixed behavior
 - generated source input and regeneration command before hand-reviewing output

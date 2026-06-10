@@ -69,9 +69,12 @@ end
 def command_allowlist(frontmatter)
   raw_tools = frontmatter["allowed-tools"]
   tools = raw_tools.is_a?(String) ? raw_tools.split(/\s+/) : Array(raw_tools)
-  return :any if tools.include?("Bash")
+  return [:any, []] if tools.include?("Bash")
 
-  tools.map { |tool| tool[/\ABash\(([^:*]+)(?::\*)?\)\z/, 1] }.compact.to_set
+  bash_entries = tools.grep(/\ABash\(/)
+  parsed = bash_entries.map { |tool| [tool, tool[/\ABash\(([^:*]+)(?::\*)?\)\z/, 1]] }
+  unparseable = parsed.select { |_, cmd| cmd.nil? }.map(&:first)
+  [parsed.map(&:last).compact.to_set, unparseable]
 end
 
 def line_command(line)
@@ -127,7 +130,10 @@ skill_files.each do |path|
 
   warnings << "#{label}: fixed /tmp JSON path example found; prefer mktemp or direct jq pipe" if text.match?(%r{/tmp/[A-Za-z0-9_.-]+\.json})
 
-  allowlist = command_allowlist(frontmatter)
+  allowlist, unparseable_entries = command_allowlist(frontmatter)
+  unparseable_entries.each do |entry|
+    warnings << "#{label}: unparseable allowed-tools entry #{entry.inspect}; it silently matches nothing"
+  end
   next if allowlist == :any
 
   text.scan(/```(?:bash|sh)\n(.*?)```/m).flatten.each do |block|

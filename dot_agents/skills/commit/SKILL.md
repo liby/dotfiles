@@ -5,14 +5,14 @@ argument-hint: "[additional context]"
 context: fork
 allowed-tools:
   - Bash(git:*)
-  - Bash(cat:.git/hooks/*)
+  - Bash(cat .git/hooks/pre-commit)
   - Bash(rg:*)
   - Bash(fd:*)
   - Bash(jq:*)
   - Read
 ---
 
-Create one git commit for: $ARGUMENTS
+Create one git commit for: $ARGUMENTS. With empty arguments, commit the work from the current conversation.
 
 ## Contract
 
@@ -34,7 +34,7 @@ Right: `chore: move PNPM_HOME to case-sensitive Code volume` with body explainin
   - `diff`: a staged hunk or committed doc proves the changed artifact, behavior, policy, path, config key, tool, spec, or external integration.
   - `motivation`: the conversation, issue, plan, or transcript explains why a staged change exists.
   - `report`: uncommitted local config, operator workflow, skipped tools, environment state, or rejected alternatives.
-- Use `diff` evidence for the subject, approach, named artifacts, changed behavior, and durable policy claims. Use `motivation` evidence only for why the staged change exists. Move `report` evidence to the post-commit report.
+- Use `diff` evidence for the subject, approach, and every named path, tool, config key, policy, service, spec, external behavior, and changed behavior. Use `motivation` evidence only for why the staged change exists. Move `report` evidence to the post-commit report.
 - Bug fixes name the root cause. Features name the user-visible gap. Refactors name the constraint that forced the restructure.
 - Anchor every body bullet to ledger entries. Rewrite or remove sentences whose source is missing or whose source category is `report`.
 - Use concrete verbs: `reject empty subscriber list`, `validate write access before subscribing`, `reduce p99 from 200ms to 50ms`.
@@ -64,7 +64,7 @@ Format:
    - `git branch --show-current`
    - `git log --oneline -10`
    - `cat .git/hooks/pre-commit` if present
-2. Refuse secret-like paths before reading file diffs.
+2. Screen changed paths against the Contract denylist. Do not read any diff until the screen passes.
 3. Decide ordinary commit mode unless the user explicitly asked to amend the previous git commit. In amend mode, read `git show --stat --patch HEAD` and treat staged changes as the net replacement relative to `HEAD^`; ordinary commit mode must not use `git commit --amend`.
 4. Read `git diff HEAD` for ordinary commit mode or the amend-mode net diff.
 5. If the log dialect is Conventional Commits, look for scope config with:
@@ -76,7 +76,7 @@ Format:
 9. Search the current conversation, linked issue, plan, and project docs for motivation behind each staged change. For dotfile or config changes, check the tool's documentation or changelog for the reason the path, key, or default changed. If a search returns zero hits, verify the search syntax before concluding motivation is absent (`rg` uses `|` for alternation, not `\|`; `grep` is the opposite).
 10. If motivation is still missing or the user indicates prior agent work, use the transcript recovery workflow below.
 11. Build an evidence ledger for the subject, lead paragraph, and each body bullet. Mark each entry as `diff`, `motivation`, or `report`, and name the staged path, hunk, issue, plan, or transcript source.
-12. Draft the message from ledger-approved entries. Each named path, tool, config key, policy, service, spec, external behavior, and changed behavior needs a `diff` source. Motivation may use conversation or transcript evidence only to explain why a staged hunk exists.
+12. Draft the message from ledger-approved entries, applying the Message Rules source categories.
 13. Scan the draft message for banned vague verbs from Message Rules. Treat each match as a hard error.
 14. Commit with a single-quoted heredoc:
 

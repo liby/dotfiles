@@ -1,6 +1,6 @@
 # Claude Code settings.json env flags
 
-Last verified against the CLI **2.1.163** native binary (diffed 2.1.160 -> 2.1.163; the 2.1.159 binary was already pruned from disk, so that step is covered by comparing this file's documented inventory against the 2.1.163 strings; previous baselines 2.1.150, 2.1.156, 2.1.159). Every flag in `dot_claude/settings.json` is present, referenced, and actively consumed; none appear in the 2.1.160 -> 2.1.163 removal set. None have graduated to unconditional defaults or have an equivalent top-level settings key (except `effortLevel`). Do not suggest removing any of them. The 2.1.160 -> 2.1.163 diff deprecated `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON` and the memory-write-survey family (see "New env flags observed" below) and graduated nothing to a default.
+Current state: CLI **2.1.170**, default model `claude-fable-5[1m]`. On 2026-06-10 the effort and adaptive-thinking sections plus the Fable-related flag names were spot-verified against the 2.1.170 binary. The last FULL flag-by-flag inventory diff was at CLI **2.1.163** (diffed 2.1.160 -> 2.1.163; the 2.1.159 binary was already pruned from disk, so that step is covered by comparing this file's documented inventory against the 2.1.163 strings; previous baselines 2.1.150, 2.1.156, 2.1.159). Every flag in `dot_claude/settings.json` is present, referenced, and actively consumed; none appear in the 2.1.160 -> 2.1.163 removal set. None have graduated to unconditional defaults or have an equivalent top-level settings key (except `effortLevel`). Do not suggest removing any of them. The 2.1.160 -> 2.1.163 diff deprecated `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON` and the memory-write-survey family (see "New env flags observed" below) and graduated nothing to a default.
 
 **What this file is for:** a guardrail against "cleaning up" `settings.json`. When you or an agent wonders whether a non-default env flag is still needed, safe to remove, or set to the wrong value, this file holds the verified answer and the why. It is not a CLI reverse-engineering encyclopedia.
 
@@ -37,19 +37,19 @@ Both are active at different layers. The env var (falsy parser, so `"0"` disable
 
 ## Effort levels: `max` is the env-only ceiling
 
-Valid levels are ordered `["low","medium","high","xhigh","max"]`: `max` is the top, one notch above `xhigh` (added with Opus 4.8 in 2.1.154). Opus 4.8 defaults to `high`. Confirmed in 2.1.159 that `max` genuinely applies to Opus 4.8: the effort capability gate whitelists `claude-opus-4-8`, so the `max` -> `high` downgrade does not fire.
+Valid levels are ordered `["low","medium","high","xhigh","max"]`: `max` is the top, one notch above `xhigh` (added with Opus 4.8 in 2.1.154). Opus 4.8 defaults to `high`. Confirmed in 2.1.159 that `max` genuinely applies to Opus 4.8: the effort capability gate whitelists `claude-opus-4-8`, so the `max` -> `high` downgrade does not fire. Re-confirmed in 2.1.170 for **Claude Fable 5**: the max gate's allow branch names `claude-fable-5` and `claude-mythos-5` alongside `claude-opus-4-8` (the deny list covers claude-3-x, opus-4-0/4-1/4-5, sonnet-4-0/4-5, haiku-4-5), and the official effort docs list all five levels for Fable 5. Fable 5's launch default is `high`, same as Opus 4.8; switching models resets session effort to the model default, which the env var then overrides.
 
 - We set `CLAUDE_CODE_EFFORT_LEVEL=max` via env. The env parser accepts `max` (alias-resolved, then validated); `unset` / `auto` map to null, everything else is parsed through.
-- `/effort` and the settings `effortLevel` field cap at `xhigh` (their schema omits `max`). `max` is reachable **only via env**. Do NOT "fix" `max` to `xhigh` thinking xhigh is the highest: `max` is higher.
-- `xhigh` effort plus standing dynamic-workflow orchestration is the new **ultracode** mode.
+- `/effort` and the settings `effortLevel` field cap at `xhigh` (their schema omits `max`, re-checked in 2.1.170). `max` is reachable **only via env**. Do NOT "fix" `max` to `xhigh` thinking xhigh is the highest: `max` is higher.
+- **ultracode** mode resolves effort to `max` on models that pass the max gate (else `high`) plus standing dynamic-workflow orchestration (corrected 2026-06-10 from the 2.1.170 effort resolver; previously recorded as `xhigh`).
 
 ## `CLAUDE_CODE_EFFORT_LEVEL` set via `env` (not `effortLevel`)
 
-Env takes precedence over `effortLevel` and over `/effort` mid-session. On the current model's first launch, `effortLevel` in settings is shadowed by the model's hardcoded launch-default (the resolver keys off specific model ids) until session state "unpins"; env sidesteps that. Accepted trade-off: `/effort` can't override live, restart to change. No other env flag has an equivalent top-level settings key.
+Env takes precedence over `effortLevel` and over `/effort` mid-session. On the current model's first launch, `effortLevel` in settings is shadowed by the model's hardcoded launch-default (the resolver keys off specific model ids) until session state "unpins"; env sidesteps that. Accepted trade-off: `/effort` can't override live, restart to change. One more env/settings twin exists as of 2.1.170: `CLAUDE_CODE_AUTO_COMPACT_WINDOW` mirrors the `autoCompactWindow` settings key (we set the settings key only); no other flag in our inventory has one.
 
 ## `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`
 
-No-op under the current model. The flag only takes effect when the active model id contains `opus-4-6` or `sonnet-4-6`; Opus 4.8 doesn't match, so it never participates. Kept for future 4.6-series use, do not remove. (Adaptive thinking is otherwise resolved per-model.)
+No-op for the MAIN model (neither Opus 4.8 nor Fable 5 contains `opus-4-6`/`sonnet-4-6`), but NOT dormant: `ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6` plus the CLAUDE.md policy of `model: "sonnet"` subagents means sonnet-4-6 subagent calls run with this flag live — adaptive thinking off, and with `alwaysThinkingEnabled: true` they get forced manual thinking. Whether that combination is intentional for cheap subagents was never recorded (noted 2026-06-10); confirm intent before changing either side. (Adaptive thinking is otherwise resolved per-model. On Fable 5 thinking cannot be disabled at all: per the model-config docs, `MAX_THINKING_TOKENS=0` and `alwaysThinkingEnabled: false` have no effect there.)
 
 ## Internal process-to-process env: do NOT put these in settings
 
@@ -58,7 +58,7 @@ These look like user flags but are set by the CLI itself when spawning child pro
 - `CLAUDE_CODE_RESUME_INTERRUPTED_TURN`: set by the CLI only on a retry / crash-respawn (attempt > 1). Read sites are in print mode and the bg crash-respawn restore path (log `[sessionRestore] Auto-resuming interrupted turn for bg crash-respawn`), none in the interactive REPL. Removed from our settings on 2026-05-29: a no-op interactively, and it risked false auto-resume on print/bg first-spawn.
 - Set alongside it in the same per-spawn cleanup: `CLAUDE_CODE_SESSION_NAME`, `CLAUDE_BG_BACKEND`, `CLAUDE_BG_SESSION_PERMISSION_RULES`, `CLAUDE_BG_MEMORY_TOGGLED_OFF`.
 
-## New env flags observed in 2.1.152 to 2.1.163 (not in our settings)
+## New env flags observed in 2.1.152 to 2.1.170 (not in our settings)
 
 For reference; add only if a concrete need appears:
 
@@ -77,5 +77,10 @@ For reference; add only if a concrete need appears:
 - `CLAUDE_CODE_DISABLE_MEMORY_BULK_INFLATE` (2.1.163, gate `tengu_memory_bulk_inflate`): auto-memory bulk-load toggle.
 - `CLAUDE_CODE_OWNERSHIP_FRAME` (2.1.163): replaced `CLAUDE_CODE_FRAME_MODE` (removed).
 - `CLAUDE_CODE_SUPPRESS_SESSION_ATTRIBUTION` (2.1.163): attribution-layer flag, distinct from `CLAUDE_CODE_ATTRIBUTION_HEADER` (which we set to `0`).
+- `ANTHROPIC_DEFAULT_FABLE_MODEL` / `ANTHROPIC_DEFAULT_OPUS_MODEL` (2.1.170, binary-verified): control what the `fable` / `opus` aliases resolve to. Per the model-config docs they are also required on Vertex/Bedrock for the Fable 5 refusal-fallback (classifier-triggered `stop_reason: "refusal"` reroutes the session to Opus 4.8) to find the right regional model ids. Relevant here because we run on Vertex (see memory `vertex-provider`); if Fable refusal-fallback misbehaves, set these before debugging deeper.
+- `VERTEX_REGION_CLAUDE_FABLE_5` (2.1.170, binary-verified): per-model Vertex region override, same family as the existing `VERTEX_REGION_*` flags.
+- `DISABLE_PROMPT_CACHING_FABLE` (2.1.170, binary-verified): disables prompt caching for Fable models only.
+- `CLAUDE_CODE_SAFE_MODE` (2.1.170, binary-verified; also `--safe-mode`): starts without CLAUDE.md/skills/hooks/MCP. Diagnostic for "Fable refuses before I even typed anything" cases where loaded context trips a safety classifier (claude-code issue #66671).
+- `CLAUDE_CODE_AUTO_COMPACT_WINDOW` / `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` (2.1.170, binary-verified during the 2026-06-10 audit): env overrides for the auto-compact window and trigger percent; they interact with our `autoCompactWindow: 400000` setting and the statusline `COMPACT_RESERVE` math, and the statusline script reads neither.
 
 Removed since the 2.1.159 baseline (do not re-add): `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON`, `CLAUDE_CODE_FRAME_MODE`, `CLAUDE_CODE_FORCE_MEMORY_WRITE_SURVEY`, `CLAUDE_CODE_MEMORY_WRITE_SURVEY_TIMEOUT_MS`. None were in our settings.

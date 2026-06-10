@@ -28,7 +28,7 @@ The script writes `/tmp/review/<project>/<scope_slug>-<timestamp>.html` (timesta
 | `repo_root` | string | for code links | absolute path WITHOUT a leading slash (`Users/me/Code/x`); the renderer prepends the slash to build `vscode://` links |
 | `mr` | object | when MR/PR | `{ "iid": 234, "title": "...", "url": "https://.../merge_requests/234" }` |
 | `author` | string | when MR/PR | PR author; renders an initials avatar + name in the header |
-| `branch` | string | when known | e.g. `feat/x → main`; a mono pill in the header |
+| `branch` | string | when known | e.g. `feat/x -> main`; a mono pill in the header |
 | `stat` | object | when known | `{ "add": 142, "del": 38, "files": 6 }`; the +/−/files line in the header |
 | `verdict` | string | yes | one-line conclusion; leads the summary block |
 | `validation` | string | recommended | what was actually checked |

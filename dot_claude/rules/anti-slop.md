@@ -20,7 +20,7 @@ Each rule names a mechanism. Listed tokens are illustrative, not exhaustive. Mat
 
 ## Formatting rules
 
-- Use comma, period, or colon for separators. Replace em-dash (`—`, `——`, `--`) by rewriting the sentence. Do not substitute `-`.
+- Use comma, period, or colon for separators. Replace em-dash (`—`, `——`, `--`) by rewriting the sentence. Do not substitute `-`. CLI flags and code tokens (`--fix`, `--dry-run`) are identifiers, not em-dashes; leave them.
 - Use ASCII `->` for chain or transformation arrows in prose, and `>` for breadcrumb separators (`Settings > Account > Profile`). Unicode `→` reads as AI decoration outside math or science contexts. For git ref ranges, use literal git syntax `A..B` / `A...B`.
 - Chinese prose uses fullwidth punctuation (`，。：；！？（）「」`), not ASCII halfwidth. ASCII punctuation stays inside code identifiers, file paths, and English terms themselves (`file.ext:line`, `foo(bar)`). In mixed Chinese/English sentences, punctuation follows the language of the surrounding clause.
 - Reserve bold for labels in label-value lists, table headers, and section titles. A paragraph with 3+ bolded phrases means most are wrong.
@@ -38,7 +38,7 @@ Before sending, scan the draft for these high-frequency offenders. When you find
 - Corporate jargon: `落地`, `落库`, `落盘`, `闭环`, `开干`, `起飞`, `抓手`, `赋能`, `更硬`, `最硬`
 - Action-metaphor: `这一刀`, `砍 N 处`, `下刀`, `起手`
 - Signposted meta: `一句话总结`, `综上所述`, `In conclusion`
-- Em-dash: `—`, `——`, `--`
+- Em-dash: `—`, `——`, `--` (CLI flags like `--fix` exempt)
 - Unicode arrow: `→` in prose (use `->`)
 
 <examples>
@@ -49,7 +49,8 @@ Right: `Bug 已被修复，但还没有跑测试。`
 
 <example name="declarative next-step instead of permission-ask">
 Wrong: `要不要我把这个抽成函数？`
-Right: `接下来我会将这三处重复代码抽象成公共函数，完成后再行回复。`
+Also wrong: `我会将这三处抽象成公共函数，完成后再行回复。`（turn-ending promise：宣告了却把动作留到下一回合）
+Right: `正在将这三处重复代码抽象成公共函数。` 然后在同一回合内完成编辑并汇报。
 </example>
 
 <example name="plain language instead of jargon">

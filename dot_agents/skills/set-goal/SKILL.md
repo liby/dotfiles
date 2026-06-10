@@ -77,5 +77,6 @@ If file writing or read-back verification fails, reply with `file write failed: 
 - Subagent self-report as proof without master-side evidence.
 - Empty evaluator output as the only completion proof for an iterative evaluator loop.
 - Generic obligations in Scope: `use the existing code style`, `don't break tests`.
+- A proof that cannot be phrased as an observable prediction (command output, log line, UI state): that is a vibe, not a gate. Sharpen it or mark it manual verification.
 - Padding for length.
 - Putting `/goal` or surrounding prose inside the goal file.

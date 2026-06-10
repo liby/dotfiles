@@ -10,7 +10,7 @@ allowed-tools:
   - Edit
 ---
 
-Clean only the resolved diff for: $ARGUMENTS
+Clean only the resolved diff for: $ARGUMENTS. With empty arguments, clean the full resolved diff.
 
 ## Resolve Scope
 
@@ -46,7 +46,7 @@ AI edits often trust type signatures over runtime data. For each diff hunk that 
 
 ## Validation
 
-Discover the cheapest existing validation from local instructions, `package.json`, `Makefile`, `justfile`, task config, or adjacent tests. Run the command, scoped to changed files when the tool supports it. Request permission if the tool policy does not pre-approve it. Do not run dev/start/serve commands unless the user explicitly asked for that environment.
+Discover the cheapest existing validation from local instructions, `package.json`, `Makefile`, `justfile`, task config, or adjacent tests. Run the command, scoped to changed files when the tool supports it. Request permission if the tool policy does not pre-approve it. Do not run dev/start/serve commands (hook-blocked); if that environment is needed, have the user run it in their own terminal.
 
 If no validation command is available, say exactly what was searched.
 

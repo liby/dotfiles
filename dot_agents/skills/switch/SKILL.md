@@ -8,7 +8,7 @@ allowed-tools:
   - Read
 ---
 
-Create one new git branch for: $ARGUMENTS
+Create one new git branch for: $ARGUMENTS. With empty arguments, derive the branch purpose from the current conversation.
 
 ## Naming Rules
 

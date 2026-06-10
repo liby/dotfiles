@@ -252,12 +252,12 @@ Read-only contract: do not edit files, do not run formatters, do not run fix com
 
 if [ "$SCOPE" = "branch" ]; then
   COMPANION_SCOPE_ARGS=(--base "$BASE_REF" --scope branch)
-  EXEC_PROMPT="Review the current worktree against base $BASE_REF, following the review skill at $SKILL_PATH. Output raw candidate findings as plain text, one finding per paragraph. Include severity (P1/P2/P3), file path, line number, and the issue. Do NOT produce JSON. Do NOT invoke render-review.mjs: the main session merges both delegate paths and renders.
+  EXEC_PROMPT="Review the current worktree against base $BASE_REF, following the Review Stance, Finding Bar, and Severity sections of the review skill at $SKILL_PATH. Output raw candidate findings as plain text, one finding per paragraph. Include severity (P1/P2/P3), file path, line number, and the issue. Do NOT produce JSON. Do NOT invoke render-review.mjs: the main session merges both delegate paths and renders.
 
 $REVIEW_GUIDANCE"
 else
   COMPANION_SCOPE_ARGS=(--scope working-tree)
-  EXEC_PROMPT="Review the current worktree's uncommitted changes, following the review skill at $SKILL_PATH. Output raw candidate findings as plain text, one finding per paragraph. Include severity (P1/P2/P3), file path, line number, and the issue. Do NOT produce JSON. Do NOT invoke render-review.mjs: the main session merges both delegate paths and renders.
+  EXEC_PROMPT="Review the current worktree's uncommitted changes, following the Review Stance, Finding Bar, and Severity sections of the review skill at $SKILL_PATH. Output raw candidate findings as plain text, one finding per paragraph. Include severity (P1/P2/P3), file path, line number, and the issue. Do NOT produce JSON. Do NOT invoke render-review.mjs: the main session merges both delegate paths and renders.
 
 How to see the diff: run 'git diff HEAD' to see staged and unstaged changes together. Plain 'git diff' only shows unstaged hunks.
 

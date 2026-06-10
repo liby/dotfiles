@@ -53,7 +53,8 @@ The main reviewer must not edit reviewed project files. Only the fix-orchestrato
 
 ## Review Stance
 
-- Evidence before claims: find the source of truth before approving or rejecting behavior.
+**Evidence before claims is the review; everything else is mechanics.** Find the source of truth before approving or rejecting behavior.
+
 - No speculative support paths: guards, fallbacks, `undefined`, caches, switches, and helpers need a current caller, contract, test, or observed failure.
 - Failure must stay visible: do not turn errors, bad statuses, partial work, or terminal-state ambiguity into success.
 - Names, states, boundaries, and config are contract surfaces.
@@ -109,7 +110,7 @@ Shape — file-centric (modeled on Anthropic's `03-code-review-pr` example); eve
   "meta": { "project": "acme/web", "scope": "MR !247 · 6 files", "scope_slug": "mr247",
     "reviewed_sha": "15c25380", "repo_root": "Users/me/Code/web",
     "mr": { "iid": 247, "title": "标题", "url": "https://gitlab.example/x/-/merge_requests/247" },
-    "author": "Mira Okafor", "branch": "feat/x → main", "stat": { "add": 142, "del": 38, "files": 6 },
+    "author": "Mira Okafor", "branch": "feat/x -> main", "stat": { "add": 142, "del": 38, "files": 6 },
     "verdict": "方案合理，1 项待跟进", "validation": "仅静态验证", "manual_gap": "未做浏览器实测",
     "rationale": { "requirement": "要解决什么", "assessment": "方案是否合理" } },
   "findings": [ { "sev": "P2", "path": "lib/x.ts", "line": 42, "title": "一句话结论",

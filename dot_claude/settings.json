@@ -78,7 +78,7 @@
       "Bash(*git push*)"
     ]
   },
-  "model": "claude-opus-4-8[1m]",
+  "model": "claude-fable-5[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -157,6 +157,6 @@
   "autoDreamEnabled": true,
   "showThinkingSummaries": true,
   "skipDangerousModePermissionPrompt": true,
-  "showTurnDuration": false,
-  "preferredNotifChannel": "ghostty"
+  "preferredNotifChannel": "ghostty",
+  "showTurnDuration": false
 }

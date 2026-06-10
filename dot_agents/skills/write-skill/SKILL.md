@@ -75,6 +75,7 @@ Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool cho
 - Put the common path in `SKILL.md`; move rare branches, long examples, and lookup material out.
 - For CLIs, teach the default path and non-obvious local constraints. Let the agent load option details with `<cmd> --help` or nearby source.
 - For API, SDK, CLI, platform, or MCP claims, cite current docs, installed help, generated types, source paths, or checked-in examples. If evidence is unavailable, write a research or audit deliverable instead of guessing.
+- Don't instruct the agent to echo, transcribe, or explain its internal reasoning in response text ("show your thinking", "explain your reasoning step by step"). Claude Fable-class models refuse these with the `reasoning_extraction` category and fall back to a weaker model; require conclusions plus evidence (paths, quotes, links) instead.
 - Keep examples only when they prove output shape, trigger boundaries, a failure mode, or a quality boundary (acceptable vs unacceptable output at the same correctness level).
 - Mask project names, hosts, private paths, clients, internal URLs, and customer data in public skills.
 
