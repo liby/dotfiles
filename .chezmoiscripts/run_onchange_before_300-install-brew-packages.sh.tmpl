@@ -31,6 +31,9 @@ if [[ -n "$current_locale" ]]; then
   defaults write NSGlobalDomain AppleLocale -string "$current_locale"
 fi
 
+# brew autoupdate ships from the third-party domt4 tap; Homebrew 6.0+ refuses to
+# load untrusted tap commands, so trust it before (re)starting the daemon.
+brew trust domt4/autoupdate 2>/dev/null || true
 if ! brew autoupdate status 2>/dev/null | grep -q "installed and running"; then
   echo "Setting up brew autoupdate (daily update + upgrade + cleanup)..."
   brew autoupdate start --upgrade --cleanup 86400

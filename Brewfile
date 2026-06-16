@@ -1,4 +1,4 @@
-tap "homebrew/autoupdate"
+tap "domt4/homebrew-autoupdate"
 tap "polymarket/polymarket-cli"
 
 # Official Amazon AWS command-line interface
@@ -63,16 +63,17 @@ cask "input-source-pro"
 cask "itsycal"
 # Privacy-first, open-source platform for knowledge sharing and management
 cask "logseq"
+# Replacement for Docker Desktop
+cask "orbstack"
 # IDE for professional Python development
 cask "pycharm"
 # Control your tools with a few keystrokes
 cask "raycast"
 # Open-source code editor
 cask "visual-studio-code"
-# Free messaging and calling application
-cask "wechat"
 mas "Bob", id: 1630034110
 mas "Hidden Bar", id: 1452453066
 mas "Slack", id: 803453959
 mas "The Unarchiver", id: 425424353
+mas "WeChat", id: 836500024
 mas "Xnip", id: 1221250572
