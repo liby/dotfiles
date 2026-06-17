@@ -74,7 +74,7 @@ Use `::code-comment{...}` only for Codex app inline review findings that should 
 
 ### Before Coding
 
-- Understand the real problem before coding. If the request describes a symptom or proposed solution, surface the underlying goal before picking an approach. Watch for XY problems.
+- Understand the real problem before coding. If the request describes a symptom or a proposed solution, surface the underlying goal before picking an approach; implementing a proposed fix without confirming the real problem bakes the user's misdiagnosis into the result (XY problem).
 - Define success criteria and stopping conditions before starting. Prefer concrete evidence: code paths, tests, logs, docs, runtime behavior, or explicit assumptions.
 
 ### Strategy Confidence Loop
@@ -101,7 +101,7 @@ Use `::code-comment{...}` only for Codex app inline review findings that should 
 
 ### Debugging And Evidence
 
-- After 3+ failed attempts, add debug logging and try different approaches.
+- After 3+ failed attempts, stop stacking patches: add debug logging to locate the actual fault, then step back to root-cause or architecture review instead of another symptomatic fix, which only compounds the misdiagnosis.
 - Ask the user for runtime logs only when the issue requires information you cannot access: production, device-specific behavior, or unavailable private systems.
 - For production diagnosis, ground conclusions in the live runtime or source-of-truth records that can prove the claim. Mark unverifiable claims as `unverified`, and stop before production writes, deploys, service stops, data deletion, external messages, or other destructive actions unless the user explicitly confirms that action.
 - Search budget and reporting: default to one broad pass plus one targeted refinement, then stop and report findings.
