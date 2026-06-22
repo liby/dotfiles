@@ -1,6 +1,6 @@
 # Claude Code settings.json env flags
 
-Current state: CLI **2.1.170**, default model `claude-fable-5[1m]`. On 2026-06-10 the effort and adaptive-thinking sections plus the Fable-related flag names were spot-verified against the 2.1.170 binary. The last FULL flag-by-flag inventory diff was at CLI **2.1.163** (diffed 2.1.160 -> 2.1.163; the 2.1.159 binary was already pruned from disk, so that step is covered by comparing this file's documented inventory against the 2.1.163 strings; previous baselines 2.1.150, 2.1.156, 2.1.159). Every flag in `dot_claude/settings.json` is present, referenced, and actively consumed; none appear in the 2.1.160 -> 2.1.163 removal set. None have graduated to unconditional defaults or have an equivalent top-level settings key (except `effortLevel`). Do not suggest removing any of them. The 2.1.160 -> 2.1.163 diff deprecated `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON` and the memory-write-survey family (see "New env flags observed" below) and graduated nothing to a default.
+Current state: CLI **2.1.185**, main model `claude-opus-4-8[1m]` (switched back from Fable 5; `settings.json` `model` and `ANTHROPIC_DEFAULT_OPUS_MODEL` both pin `claude-opus-4-8`). On 2026-06-22 the whole file was re-verified flag-by-flag against the 2.1.185 binary, cross-checked against the on-disk 2.1.181 and 2.1.183. The last FULL inventory diff was 2.1.181 -> 2.1.183 -> 2.1.185 (2.1.170 and earlier are pruned from disk, so pre-2.1.181 coverage rests on this file's existing documented inventory; prior baselines 2.1.150, 2.1.156, 2.1.159, 2.1.163). The 2.1.181 -> 2.1.183 step added `CLAUDE_CODE_CONNECT_TIMEOUT_MS`, `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`, and `CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY`, and dropped `ANTHROPIC_FOUNDRY_AUTH_TOKEN`; 2.1.183 -> 2.1.185 changed no flag-shaped strings. **One previously-set flag lost its consumer:** `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` and its gate `tengu_agent_list_attach` are gone (the agent-type list is now injected unconditionally), so the `=1` still in `settings.json` is a dead no-op and is the single flag safe to delete. Every OTHER flag in `dot_claude/settings.json` is present, referenced, and actively consumed; none has an equivalent top-level settings key (except `effortLevel`). Do not suggest removing any of them except the dead `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES`.
 
 **What this file is for:** a guardrail against "cleaning up" `settings.json`. When you or an agent wonders whether a non-default env flag is still needed, safe to remove, or set to the wrong value, this file holds the verified answer and the why. It is not a CLI reverse-engineering encyclopedia.
 
@@ -12,11 +12,12 @@ Binaries live at `~/.local/share/claude/versions/<ver>` (Mach-O; strings greppab
 
 Without the env var set to `"1"`, the feature depends on remote rollout status:
 
-- `CLAUDE_CODE_NEW_INIT` (gate `tengu_slate_harbor_experiment`): env truthy forces on, else follows the gate rollout.
-- `CLAUDE_CODE_FORK_SUBAGENT` (gate `tengu_copper_fox`): resolves to "env" when the var is truthy, else falls through to the gate rollout, then "disabled". The sibling `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON` was removed in 2.1.163 (present in 2.1.160), a sign the gate may be heading to default-on; our env `=1` forces it regardless. Re-check at next verify.
-- `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` (gate `tengu_agent_list_attach`): env truthy forces on, env falsy forces off, else gate-gated. Injects the agent-type list into the system prompt.
+- `CLAUDE_CODE_NEW_INIT` (gate `tengu_slate_harbor_experiment`): env truthy forces on, else follows the gate rollout. Gate present through 2.1.185.
+- `CLAUDE_CODE_FORK_SUBAGENT` (gate `tengu_copper_fox`): resolves to "env" when the var is truthy, else falls through to the gate rollout, then "disabled". Through 2.1.185 the gate default is still false, so env `=1` remains required; it has NOT graduated to default-on. The sibling `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON` was removed in 2.1.163 and stays absent.
+- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` (gate `tengu_amber_flint`): env truthy forces on, else gate-gated. Subject to the same `DISABLE_TELEMETRY` consequence as the others (gate fetch dead), so our env `=1` is what enables agent teams. Set in `settings.json`.
+- `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` (gate `tengu_agent_list_attach`): **removed in 2.1.185** (already absent in 2.1.181/2.1.183). The agent-type list is now injected unconditionally with no env or gate guard (event `agent_listing_delta`; the running session's system prompt shows it on). The `=1` still in `settings.json` is a dead no-op, safe to delete.
 
-**Why env-forcing is mandatory here, not optional.** `DISABLE_TELEMETRY=1` (our setting) disables the GrowthBook fetch outright, so the "gate rollout" branch above is dead for this install: the env override is the only path that reaches these gates. Runtime proof (`/doctor`, 2.1.163): `isGrowthBookEnabled=false`, `growthBookLastFetched=never`, `telemetryDisabledBy=DISABLE_TELEMETRY`. Gates fall back to the binary's bundled snapshot (`growthBookFeaturesLoaded=228`), frozen at build time; per-gate `GrowthBookEnvOverride` still applies with telemetry off, which is exactly how the three flags above are forced on. Consequence: any server-side gradual rollout we do not explicitly env-force never reaches us, so the env inventory in this file IS our feature-flag delivery mechanism. Lever: unset `DISABLE_TELEMETRY` to restore live gates and auto-receive rollouts, at the cost of sending usage telemetry to Anthropic.
+**Why env-forcing is mandatory here, not optional.** `DISABLE_TELEMETRY=1` (our setting) disables the GrowthBook fetch outright, so the "gate rollout" branch above is dead for this install: the env override is the only path that reaches these gates. Runtime proof (`/doctor`, captured on 2.1.163): `isGrowthBookEnabled=false`, `growthBookLastFetched=never`, `telemetryDisabledBy=DISABLE_TELEMETRY`. The disable-fetch wiring and the `GrowthBookEnvOverride` path were re-confirmed in the 2.1.185 binary. Gates fall back to the binary's bundled snapshot (`growthBookFeaturesLoaded=228` was the 2.1.163 count; it is build-specific and has changed across releases), frozen at build time; per-gate `GrowthBookEnvOverride` still applies with telemetry off, which is exactly how the env-forced flags above are forced on. Consequence: any server-side gradual rollout we do not explicitly env-force never reaches us, so the env inventory in this file IS our feature-flag delivery mechanism. Lever: unset `DISABLE_TELEMETRY` to restore live gates and auto-receive rollouts, at the cost of sending usage telemetry to Anthropic.
 
 ## `DISABLE_TELEMETRY=1`: deliberate keep, not a cleanup target
 
@@ -31,16 +32,24 @@ CLI parses each env flag with one of two helpers; setting the wrong format is a 
 - truthy: `"1"` / `"true"` / `"yes"` / `"on"` map to true. Used by most flags.
 - falsy: `"0"` / `"false"` / `"no"` / `"off"` map to true. Used by `CLAUDE_CODE_ATTRIBUTION_HEADER` and `ENABLE_CLAUDEAI_MCP_SERVERS`, so disabling them via `"0"` is correct.
 
+Three of our set flags do NOT use this clean two-parser model, so don't assume "not truthy means falsy":
+
+- `CLAUDE_CODE_ENABLE_CFC` is tri-state (true / false / unset are all distinct; schema `triBool`, read via `=== true` and `=== false` branches). Our `=0` parses to false and hits the disable branch, so `0` is correct; a cold reader could wrongly "normalize" it to a truthy/falsy form.
+- `DISABLE_ERROR_REPORTING` is a bare truthy read (`process.env.DISABLE_ERROR_REPORTING || ...`), not the `"0"`-aware falsy parser the other `DISABLE_*` flags use. Any non-empty value disables it, so `=0` would ALSO disable. Our `=1` is correct; never set it to `0` expecting it to re-enable.
+- `CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS` is an integer (`parseInt`, must be > 0), not a boolean.
+
+`ENABLE_PROMPT_CACHING_1H` is plain truthy and our `=1` is correct, but on Vertex only this plain flag applies; the `ENABLE_PROMPT_CACHING_1H_BEDROCK` sibling is bedrock-only, so do not add `_BEDROCK` here (see memory `vertex-provider`).
+
 ## `attribution` section vs `CLAUDE_CODE_ATTRIBUTION_HEADER`
 
 Both are active at different layers. The env var (falsy parser, so `"0"` disables) controls whether the attribution header is injected into the system prompt. The `attribution` section (`commit`, `pr` keys) controls the template strings. Keeping both is correct.
 
 ## Effort levels: `max` is the env-only ceiling
 
-Valid levels are ordered `["low","medium","high","xhigh","max"]`: `max` is the top, one notch above `xhigh` (added with Opus 4.8 in 2.1.154). Opus 4.8 defaults to `high`. Confirmed in 2.1.159 that `max` genuinely applies to Opus 4.8: the effort capability gate whitelists `claude-opus-4-8`, so the `max` -> `high` downgrade does not fire. Re-confirmed in 2.1.170 for **Claude Fable 5**: the max gate's allow branch names `claude-fable-5` and `claude-mythos-5` alongside `claude-opus-4-8` (the deny list covers claude-3-x, opus-4-0/4-1/4-5, sonnet-4-0/4-5, haiku-4-5), and the official effort docs list all five levels for Fable 5. Fable 5's launch default is `high`, same as Opus 4.8; switching models resets session effort to the model default, which the env var then overrides.
+Valid levels are ordered `["low","medium","high","xhigh","max"]`: `max` is the top, one notch above `xhigh` (added with Opus 4.8 in 2.1.154). Re-confirmed in 2.1.185 that `max` applies to the current main model **Opus 4.8**: the `max` capability gate (per-call env override `max_effort`, else a model-id list) whitelists `claude-opus-4-8`, so the `max` -> `high` downgrade does not fire. The same allow branch also names `claude-opus-4-7`, `claude-opus-4-6`, `claude-sonnet-4-6`, `claude-fable-5`, and `claude-mythos-5`; the deny list covers claude-3-x, opus-4-0/4-1/4-5, sonnet-4-0/4-5, haiku-4-5. Opus 4.8's launch default is `high`; switching models resets session effort to that model's default (Fable 5 also `high`, Opus 4.7 `xhigh`), which the env var then overrides.
 
 - We set `CLAUDE_CODE_EFFORT_LEVEL=max` via env. The env parser accepts `max` (alias-resolved, then validated); `unset` / `auto` map to null, everything else is parsed through.
-- `/effort` and the settings `effortLevel` field cap at `xhigh` (their schema omits `max`, re-checked in 2.1.170). `max` is reachable **only via env**. Do NOT "fix" `max` to `xhigh` thinking xhigh is the highest: `max` is higher.
+- `/effort` and the settings `effortLevel` field cap at `xhigh` (their schema omits `max`, re-checked in 2.1.185). `max` is reachable **only via env**. Do NOT "fix" `max` to `xhigh` thinking xhigh is the highest: `max` is higher.
 - **ultracode** mode resolves effort to `max` on models that pass the max gate (else `high`) plus standing dynamic-workflow orchestration (corrected 2026-06-10 from the 2.1.170 effort resolver; previously recorded as `xhigh`).
 
 ## `CLAUDE_CODE_EFFORT_LEVEL` set via `env` (not `effortLevel`)
@@ -49,7 +58,16 @@ Env takes precedence over `effortLevel` and over `/effort` mid-session. On the c
 
 ## `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`
 
-No-op for the MAIN model (neither Opus 4.8 nor Fable 5 contains `opus-4-6`/`sonnet-4-6`), but NOT dormant: `ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6` plus the CLAUDE.md policy of `model: "sonnet"` subagents means sonnet-4-6 subagent calls run with this flag live — adaptive thinking off, and with `alwaysThinkingEnabled: true` they get forced manual thinking. Whether that combination is intentional for cheap subagents was never recorded (noted 2026-06-10); confirm intent before changing either side. (Adaptive thinking is otherwise resolved per-model. On Fable 5 thinking cannot be disabled at all: per the model-config docs, `MAX_THINKING_TOKENS=0` and `alwaysThinkingEnabled: false` have no effect there.)
+No-op for the current MAIN model **Opus 4.8**: the flag's effect is `&&`-gated on the model id containing `opus-4-6` or `sonnet-4-6`, and `claude-opus-4-8` matches neither (Fable 5 also matches neither). But NOT dormant: `ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6` plus the CLAUDE.md policy of `model: "sonnet"` subagents means sonnet-4-6 subagent calls run with this flag live — adaptive thinking off, and with `alwaysThinkingEnabled: true` they get forced manual thinking. Whether that combination is intentional for cheap subagents was never recorded (noted 2026-06-10); confirm intent before changing either side. (Adaptive thinking is otherwise resolved per-model. Fable 5 carries a server-side constraint, not a CLI one: an explicit `thinking: {type: "disabled"}` returns HTTP 400 on Fable 5 although Opus 4.x accepts it; per the 2.1.185 model-config docs the workaround is to omit the `thinking` param or send `{type: "adaptive"}`. The CLI knobs `MAX_THINKING_TOKENS=0` / `alwaysThinkingEnabled: false` DO take effect on any model — the earlier note that they "have no effect on Fable 5" was wrong.)
+
+## `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_SONNET_MODEL`: pinned alias targets
+
+Both are SET and active. (An earlier revision listed `ANTHROPIC_DEFAULT_OPUS_MODEL` under "New env flags observed (not in our settings)" — that was stale once Opus became the main model again.) They pin what the `opus` / `sonnet` aliases resolve to, so a CLI update can't silently drift them:
+
+- `ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-8` pins the `opus` alias to an exact id. Opus 4.8 is the current main model, and on Vertex this is also the regional target the Fable 5 refusal-fallback reroutes to.
+- `ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6` pins the subagent default (CLAUDE.md mandates `model: "sonnet"` for cheap subagents); this is the id the `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` note above keys off.
+
+Do not remove either: dropping one un-pins the alias and lets a CLI update change the main / subagent model under us. The sibling `ANTHROPIC_DEFAULT_FABLE_MODEL` stays unset (Fable is not the current main model).
 
 ## Internal process-to-process env: do NOT put these in settings
 
@@ -58,7 +76,7 @@ These look like user flags but are set by the CLI itself when spawning child pro
 - `CLAUDE_CODE_RESUME_INTERRUPTED_TURN`: set by the CLI only on a retry / crash-respawn (attempt > 1). Read sites are in print mode and the bg crash-respawn restore path (log `[sessionRestore] Auto-resuming interrupted turn for bg crash-respawn`), none in the interactive REPL. Removed from our settings on 2026-05-29: a no-op interactively, and it risked false auto-resume on print/bg first-spawn.
 - Set alongside it in the same per-spawn cleanup: `CLAUDE_CODE_SESSION_NAME`, `CLAUDE_BG_BACKEND`, `CLAUDE_BG_SESSION_PERMISSION_RULES`, `CLAUDE_BG_MEMORY_TOGGLED_OFF`.
 
-## New env flags observed in 2.1.152 to 2.1.170 (not in our settings)
+## New env flags observed in 2.1.152 to 2.1.185 (not in our settings)
 
 For reference; add only if a concrete need appears:
 
@@ -77,10 +95,13 @@ For reference; add only if a concrete need appears:
 - `CLAUDE_CODE_DISABLE_MEMORY_BULK_INFLATE` (2.1.163, gate `tengu_memory_bulk_inflate`): auto-memory bulk-load toggle.
 - `CLAUDE_CODE_OWNERSHIP_FRAME` (2.1.163): replaced `CLAUDE_CODE_FRAME_MODE` (removed).
 - `CLAUDE_CODE_SUPPRESS_SESSION_ATTRIBUTION` (2.1.163): attribution-layer flag, distinct from `CLAUDE_CODE_ATTRIBUTION_HEADER` (which we set to `0`).
-- `ANTHROPIC_DEFAULT_FABLE_MODEL` / `ANTHROPIC_DEFAULT_OPUS_MODEL` (2.1.170, binary-verified): control what the `fable` / `opus` aliases resolve to. Per the model-config docs they are also required on Vertex/Bedrock for the Fable 5 refusal-fallback (classifier-triggered `stop_reason: "refusal"` reroutes the session to Opus 4.8) to find the right regional model ids. Relevant here because we run on Vertex (see memory `vertex-provider`); if Fable refusal-fallback misbehaves, set these before debugging deeper.
+- `ANTHROPIC_DEFAULT_FABLE_MODEL` (2.1.170, binary-verified; siblings `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_SONNET_MODEL` ARE set, see their own section above): controls what the `fable` alias resolves to. Left unset because Fable is not the current main model. Per the model-config docs the `ANTHROPIC_DEFAULT_*_MODEL` family is also required on Vertex/Bedrock for the Fable 5 refusal-fallback (classifier-triggered `stop_reason: "refusal"` reroutes the session to Opus 4.8) to find the right regional model ids; relevant here because we run on Vertex (see memory `vertex-provider`). If Fable refusal-fallback misbehaves, set this before debugging deeper.
 - `VERTEX_REGION_CLAUDE_FABLE_5` (2.1.170, binary-verified): per-model Vertex region override, same family as the existing `VERTEX_REGION_*` flags.
 - `DISABLE_PROMPT_CACHING_FABLE` (2.1.170, binary-verified): disables prompt caching for Fable models only.
 - `CLAUDE_CODE_SAFE_MODE` (2.1.170, binary-verified; also `--safe-mode`): starts without CLAUDE.md/skills/hooks/MCP. Diagnostic for "Fable refuses before I even typed anything" cases where loaded context trips a safety classifier (claude-code issue #66671).
 - `CLAUDE_CODE_AUTO_COMPACT_WINDOW` / `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` (2.1.170, binary-verified during the 2026-06-10 audit): env overrides for the auto-compact window and trigger percent; they interact with our `autoCompactWindow: 400000` setting and the statusline `COMPACT_RESERVE` math, and the statusline script reads neither.
+- `CLAUDE_CODE_CONNECT_TIMEOUT_MS` (2.1.183, binary-verified; numeric ms, default 60000): overrides the request connect timeout (the "no response headers after Nms" abort). Raise only on a slow or proxied link.
+- `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS` (2.1.183, binary-verified; numeric ms, default 600000): ceiling on how long print / `claude -p` / background sessions wait for running background tasks. No effect in the interactive REPL.
+- `CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY` / `CLAUDE_CODE_WEBFETCH_USE_CCR_PROXY` (truthy; WEBSEARCH new in 2.1.183, WEBFETCH present since at least 2.1.181): route WebSearch / WebFetch through the CCR proxy instead of hitting `ANTHROPIC_BASE_URL` directly.
 
 Removed since the 2.1.159 baseline (do not re-add): `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON`, `CLAUDE_CODE_FRAME_MODE`, `CLAUDE_CODE_FORCE_MEMORY_WRITE_SURVEY`, `CLAUDE_CODE_MEMORY_WRITE_SURVEY_TIMEOUT_MS`. None were in our settings.

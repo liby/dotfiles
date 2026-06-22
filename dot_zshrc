@@ -31,6 +31,7 @@ export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
 export HOMEBREW_NO_ENV_HINTS=1
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+export ORACLE_ENGINE="browser"
 export PNPM_HOME="$HOME/Code/.pnpm"
 export PROTO_AUTO_INSTALL_HIDE_OUTPUT=1
 export PROTO_HOME="$HOME/.proto"
