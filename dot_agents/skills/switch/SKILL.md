@@ -43,8 +43,15 @@ Examples:
    - no `..`, `~`, `^`, `:`, `?`, `*`, `[`, `\`, or trailing `.`
 6. Run `git check-ref-format --branch <branch-name>`. If it fails, choose a corrected name and validate again before touching git state.
 7. Check existence with `git rev-parse --verify --quiet refs/heads/<branch-name>`. If it exists, stop and report the existing branch.
-8. Run `git switch -c <branch-name>`.
+8. Create the branch without inheriting the upstream of a base ref:
+   - If no base ref is required, run `git switch -c <branch-name>`.
+   - If the user or repo instructions require a base ref such as `origin/develop`, fetch it, then run `git switch --no-track -c <branch-name> <base-ref>`. Do not use `git switch -c <branch-name> origin/develop`; Git can set the new branch to track `origin/develop`, so a later push may update the base branch.
 9. Verify `git branch --show-current` exactly equals `<branch-name>`.
+10. Verify upstream safety before any commit or push:
+   - Run `git rev-parse --abbrev-ref --symbolic-full-name @{u}`.
+   - If it reports no upstream, continue.
+   - If it reports the matching remote feature branch, continue.
+   - If it reports a base branch such as `origin/develop`, run `git branch --unset-upstream`, then verify again.
 
 ## Output
 
