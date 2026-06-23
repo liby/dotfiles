@@ -1,5 +1,6 @@
 tap "domt4/homebrew-autoupdate"
 tap "polymarket/polymarket-cli"
+tap "resend/cli"
 
 # Official Amazon AWS command-line interface
 brew "awscli"
@@ -30,7 +31,9 @@ brew "mas"
 # Pinentry for GPG on Mac
 brew "pinentry-mac"
 # CLI for Polymarket
-brew "polymarket/polymarket-cli/polymarket"
+brew "polymarket/polymarket-cli/polymarket", trusted: true
+# CLI for the Resend email API
+brew "resend/cli/resend", trusted: true
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # CLI proxy to minimize LLM token consumption
