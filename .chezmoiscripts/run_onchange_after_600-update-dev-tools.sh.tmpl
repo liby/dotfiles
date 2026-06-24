@@ -25,10 +25,10 @@ export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 # rust-analyzer component lives), so `rustup update` re-pulls a fresh hundreds-of-MB
 # nightly every few days and blocks apply. Run `rustup update` manually so you
 # control when nightly moves.
-# Scope updates to the LSP servers we install: a bare `npm update -g` bumps
+# Scope updates to the specific tools we install: a bare `npm update -g` bumps
 # every global npm package and `uv tool upgrade --all` every uv tool, not just
 # these.
-echo "[dev-tools-update] npm update -g typescript-language-server typescript"
-npm update -g typescript-language-server typescript || echo "[dev-tools-update] npm update -g typescript-language-server typescript failed"
+echo "[dev-tools-update] npm update -g typescript-language-server typescript @steipete/oracle"
+npm update -g typescript-language-server typescript @steipete/oracle || echo "[dev-tools-update] npm update -g typescript-language-server typescript @steipete/oracle failed"
 echo "[dev-tools-update] uv tool upgrade pyright"
 uv tool upgrade pyright || echo "[dev-tools-update] uv tool upgrade pyright failed"
