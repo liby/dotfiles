@@ -93,7 +93,9 @@ ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
 # Initialize tools and configurations
 (( $+commands[gpg-connect-agent] )) && setup_gpg_ssh &>/dev/null
-(( $+commands[orb] )) && source ~/.orbstack/shell/init.zsh
+# Guard on the file, not `orb`: the brew-cask CLI exists before ~/.orbstack/,
+# which OrbStack.app only creates on first run.
+[[ -r ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
 (( $+commands[proto] )) && eval "$(proto activate zsh)"
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
