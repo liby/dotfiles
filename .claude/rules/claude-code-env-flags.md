@@ -1,6 +1,6 @@
 # Claude Code settings.json env flags
 
-Current state: CLI **2.1.185**, main model `claude-opus-4-8[1m]` (switched back from Fable 5; `settings.json` `model` and `ANTHROPIC_DEFAULT_OPUS_MODEL` both pin `claude-opus-4-8`). On 2026-06-22 the whole file was re-verified flag-by-flag against the 2.1.185 binary, cross-checked against the on-disk 2.1.181 and 2.1.183. The last FULL inventory diff was 2.1.181 -> 2.1.183 -> 2.1.185 (2.1.170 and earlier are pruned from disk, so pre-2.1.181 coverage rests on this file's existing documented inventory; prior baselines 2.1.150, 2.1.156, 2.1.159, 2.1.163). The 2.1.181 -> 2.1.183 step added `CLAUDE_CODE_CONNECT_TIMEOUT_MS`, `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`, and `CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY`, and dropped `ANTHROPIC_FOUNDRY_AUTH_TOKEN`; 2.1.183 -> 2.1.185 changed no flag-shaped strings. **One previously-set flag lost its consumer:** `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` and its gate `tengu_agent_list_attach` are gone (the agent-type list is now injected unconditionally), so the `=1` still in `settings.json` is a dead no-op and is the single flag safe to delete. Every OTHER flag in `dot_claude/settings.json` is present, referenced, and actively consumed; none has an equivalent top-level settings key (except `effortLevel`). Do not suggest removing any of them except the dead `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES`.
+Current state: CLI **2.1.187**, main model `claude-opus-4-8[1m]` (switched back from Fable 5; `settings.json` `model` and `ANTHROPIC_DEFAULT_OPUS_MODEL` both pin `claude-opus-4-8`). On 2026-06-22 the whole file was re-verified flag-by-flag against the 2.1.185 binary; on 2026-06-24 the inventory was diffed 2.1.185 -> 2.1.187 (both on disk, with 2.1.186), and all set flags confirmed present. The last FULL inventory diff chain is 2.1.181 -> 2.1.183 -> 2.1.185 -> 2.1.187 (only 2.1.185 to 2.1.187 remain on disk; older coverage rests on this file's existing documented inventory; prior baselines 2.1.150, 2.1.156, 2.1.159, 2.1.163). The 2.1.181 -> 2.1.183 step added `CLAUDE_CODE_CONNECT_TIMEOUT_MS`, `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`, and `CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY`, and dropped `ANTHROPIC_FOUNDRY_AUTH_TOKEN`; 2.1.183 -> 2.1.185 changed no flag-shaped strings; 2.1.185 -> 2.1.187 added `CLAUDE_CHROME_CLASSIFIER_FLOOR`, `CLAUDE_CODE_DISABLE_LAUNCH_COMPOSER`, `CLAUDE_CODE_FORCE_STRIKETHROUGH`, and `CLAUDE_CODE_MCP_TOOL_IDLE_TIMEOUT`, and dropped `CLAUDE_CODE_CONNECT_TIMEOUT_MS` (added 2.1.183, gone by 2.1.187) plus the internal `CLAUDE_PROJECT_TOOL` — none of these in our settings. `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` and its gate `tengu_agent_list_attach` are gone (the agent-type list is now injected unconditionally); its dead `=1` has since been deleted from `settings.json`. Two flags joined `settings.json` since the last audit, `CLAUDE_CODE_NO_FLICKER` and `ENABLE_TOOL_SEARCH` (own sections below). Every flag now in `dot_claude/settings.json` is present, referenced, and actively consumed; none has an equivalent top-level settings key (except `effortLevel`). Do not suggest removing any of them.
 
 **What this file is for:** a guardrail against "cleaning up" `settings.json`. When you or an agent wonders whether a non-default env flag is still needed, safe to remove, or set to the wrong value, this file holds the verified answer and the why. It is not a CLI reverse-engineering encyclopedia.
 
@@ -15,7 +15,7 @@ Without the env var set to `"1"`, the feature depends on remote rollout status:
 - `CLAUDE_CODE_NEW_INIT` (gate `tengu_slate_harbor_experiment`): env truthy forces on, else follows the gate rollout. Gate present through 2.1.185.
 - `CLAUDE_CODE_FORK_SUBAGENT` (gate `tengu_copper_fox`): resolves to "env" when the var is truthy, else falls through to the gate rollout, then "disabled". Through 2.1.185 the gate default is still false, so env `=1` remains required; it has NOT graduated to default-on. The sibling `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON` was removed in 2.1.163 and stays absent.
 - `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` (gate `tengu_amber_flint`): env truthy forces on, else gate-gated. Subject to the same `DISABLE_TELEMETRY` consequence as the others (gate fetch dead), so our env `=1` is what enables agent teams. Set in `settings.json`.
-- `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` (gate `tengu_agent_list_attach`): **removed in 2.1.185** (already absent in 2.1.181/2.1.183). The agent-type list is now injected unconditionally with no env or gate guard (event `agent_listing_delta`; the running session's system prompt shows it on). The `=1` still in `settings.json` is a dead no-op, safe to delete.
+- `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` (gate `tengu_agent_list_attach`): **removed in 2.1.185** (already absent in 2.1.181/2.1.183). The agent-type list is now injected unconditionally with no env or gate guard (event `agent_listing_delta`; the running session's system prompt shows it on). Its dead `=1` has since been deleted from `settings.json`.
 
 **Why env-forcing is mandatory here, not optional.** `DISABLE_TELEMETRY=1` (our setting) disables the GrowthBook fetch outright, so the "gate rollout" branch above is dead for this install: the env override is the only path that reaches these gates. Runtime proof (`/doctor`, captured on 2.1.163): `isGrowthBookEnabled=false`, `growthBookLastFetched=never`, `telemetryDisabledBy=DISABLE_TELEMETRY`. The disable-fetch wiring and the `GrowthBookEnvOverride` path were re-confirmed in the 2.1.185 binary. Gates fall back to the binary's bundled snapshot (`growthBookFeaturesLoaded=228` was the 2.1.163 count; it is build-specific and has changed across releases), frozen at build time; per-gate `GrowthBookEnvOverride` still applies with telemetry off, which is exactly how the env-forced flags above are forced on. Consequence: any server-side gradual rollout we do not explicitly env-force never reaches us, so the env inventory in this file IS our feature-flag delivery mechanism. Lever: unset `DISABLE_TELEMETRY` to restore live gates and auto-receive rollouts, at the cost of sending usage telemetry to Anthropic.
 
@@ -32,13 +32,26 @@ CLI parses each env flag with one of two helpers; setting the wrong format is a 
 - truthy: `"1"` / `"true"` / `"yes"` / `"on"` map to true. Used by most flags.
 - falsy: `"0"` / `"false"` / `"no"` / `"off"` map to true. Used by `CLAUDE_CODE_ATTRIBUTION_HEADER` and `ENABLE_CLAUDEAI_MCP_SERVERS`, so disabling them via `"0"` is correct.
 
-Three of our set flags do NOT use this clean two-parser model, so don't assume "not truthy means falsy":
+Several of our set flags do NOT use this clean two-parser model, so don't assume "not truthy means falsy":
 
 - `CLAUDE_CODE_ENABLE_CFC` is tri-state (true / false / unset are all distinct; schema `triBool`, read via `=== true` and `=== false` branches). Our `=0` parses to false and hits the disable branch, so `0` is correct; a cold reader could wrongly "normalize" it to a truthy/falsy form.
 - `DISABLE_ERROR_REPORTING` is a bare truthy read (`process.env.DISABLE_ERROR_REPORTING || ...`), not the `"0"`-aware falsy parser the other `DISABLE_*` flags use. Any non-empty value disables it, so `=0` would ALSO disable. Our `=1` is correct; never set it to `0` expecting it to re-enable.
 - `CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS` is an integer (`parseInt`, must be > 0), not a boolean.
 
 `ENABLE_PROMPT_CACHING_1H` is plain truthy and our `=1` is correct, but on Vertex only this plain flag applies; the `ENABLE_PROMPT_CACHING_1H_BEDROCK` sibling is bedrock-only, so do not add `_BEDROCK` here (see memory `vertex-provider`).
+
+## `ENABLE_TOOL_SEARCH`: defer MCP tool schemas on the gateway
+
+Verified against the 2.1.187 binary (2026-06-24). Claude Code defers MCP tool definitions by default (a schema loads only when its tool is used), but only on a first-party host. On a non-first-party `ANTHROPIC_BASE_URL` it loads every MCP tool schema upfront unless this flag forces deferral, and the force only lands if the gateway forwards `tool_reference` blocks.
+
+- `sub` (first-party): deferral is already the default, so the flag is a no-op.
+- `api` (Vertex gateway): set it so deferral still happens. Confirm in an api session that MCP tools report as deferred; a proxy that strips `tool_reference` leaves it inert.
+
+Value: `1`/`true` both enable deferral (resolved identically, so `1` is fine and consistent with the other flags), `0`/`false` disable, `auto`/`auto:N` defer only when tool schemas exceed N% of context. Needs Opus 4.5+ / Sonnet 4.5+; the gateway serves Opus 4.8 / Sonnet 4.5.
+
+## `CLAUDE_CODE_NO_FLICKER=1`: force the flicker-free renderer
+
+Verified in 2.1.187 (2026-06-24). Picks the virtualized-scrollback renderer over the classic main-screen one, which removes redraw flicker. The CLI auto-disables that renderer where it misbehaves (e.g. Windows over SSH / ConPTY re-rendering); `=1` forces it on. Plain truthy.
 
 ## `attribution` section vs `CLAUDE_CODE_ATTRIBUTION_HEADER`
 
@@ -76,7 +89,7 @@ These look like user flags but are set by the CLI itself when spawning child pro
 - `CLAUDE_CODE_RESUME_INTERRUPTED_TURN`: set by the CLI only on a retry / crash-respawn (attempt > 1). Read sites are in print mode and the bg crash-respawn restore path (log `[sessionRestore] Auto-resuming interrupted turn for bg crash-respawn`), none in the interactive REPL. Removed from our settings on 2026-05-29: a no-op interactively, and it risked false auto-resume on print/bg first-spawn.
 - Set alongside it in the same per-spawn cleanup: `CLAUDE_CODE_SESSION_NAME`, `CLAUDE_BG_BACKEND`, `CLAUDE_BG_SESSION_PERMISSION_RULES`, `CLAUDE_BG_MEMORY_TOGGLED_OFF`.
 
-## New env flags observed in 2.1.152 to 2.1.185 (not in our settings)
+## New env flags observed in 2.1.152 to 2.1.187 (not in our settings)
 
 For reference; add only if a concrete need appears:
 
@@ -100,8 +113,11 @@ For reference; add only if a concrete need appears:
 - `DISABLE_PROMPT_CACHING_FABLE` (2.1.170, binary-verified): disables prompt caching for Fable models only.
 - `CLAUDE_CODE_SAFE_MODE` (2.1.170, binary-verified; also `--safe-mode`): starts without CLAUDE.md/skills/hooks/MCP. Diagnostic for "Fable refuses before I even typed anything" cases where loaded context trips a safety classifier (claude-code issue #66671).
 - `CLAUDE_CODE_AUTO_COMPACT_WINDOW` / `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` (2.1.170, binary-verified during the 2026-06-10 audit): env overrides for the auto-compact window and trigger percent; they interact with our `autoCompactWindow: 400000` setting and the statusline `COMPACT_RESERVE` math, and the statusline script reads neither.
-- `CLAUDE_CODE_CONNECT_TIMEOUT_MS` (2.1.183, binary-verified; numeric ms, default 60000): overrides the request connect timeout (the "no response headers after Nms" abort). Raise only on a slow or proxied link.
 - `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS` (2.1.183, binary-verified; numeric ms, default 600000): ceiling on how long print / `claude -p` / background sessions wait for running background tasks. No effect in the interactive REPL.
 - `CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY` / `CLAUDE_CODE_WEBFETCH_USE_CCR_PROXY` (truthy; WEBSEARCH new in 2.1.183, WEBFETCH present since at least 2.1.181): route WebSearch / WebFetch through the CCR proxy instead of hitting `ANTHROPIC_BASE_URL` directly.
+- `CLAUDE_CODE_MCP_TOOL_IDLE_TIMEOUT` (2.1.187, binary-verified; numeric ms): aborts an MCP tool call that produces no output for that long. Raise it or set `0` for a tool expected to run silent for a while; relevant to our chrome-devtools / context7 MCPs if a call ever aborts mid-run.
+- `CLAUDE_CODE_DISABLE_LAUNCH_COMPOSER` (2.1.187, truthy): disables the launch composer (the prompt-composer UI shown at startup).
+- `CLAUDE_CODE_FORCE_STRIKETHROUGH` (2.1.187, truthy): forces strikethrough text rendering on terminals that do not advertise the capability.
+- `CLAUDE_CHROME_CLASSIFIER_FLOOR` (2.1.187): numeric floor for a Chrome-integration safety classifier; exact effect not pinned, and no effect here since we do not use the Chrome integration.
 
-Removed since the 2.1.159 baseline (do not re-add): `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON`, `CLAUDE_CODE_FRAME_MODE`, `CLAUDE_CODE_FORCE_MEMORY_WRITE_SURVEY`, `CLAUDE_CODE_MEMORY_WRITE_SURVEY_TIMEOUT_MS`. None were in our settings.
+Removed since the 2.1.159 baseline (do not re-add): `CLAUDE_CODE_FORK_SUBAGENT_DEFAULT_ON`, `CLAUDE_CODE_FRAME_MODE`, `CLAUDE_CODE_FORCE_MEMORY_WRITE_SURVEY`, `CLAUDE_CODE_MEMORY_WRITE_SURVEY_TIMEOUT_MS`, and `CLAUDE_CODE_CONNECT_TIMEOUT_MS` (added 2.1.183, gone by 2.1.187). None were in our settings.
