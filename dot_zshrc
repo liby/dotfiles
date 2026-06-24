@@ -1,5 +1,7 @@
-# Must run before anything that references $HOMEBREW_PREFIX
-eval "$(/opt/homebrew/bin/brew shellenv)"
+# Must run before anything that references $HOMEBREW_PREFIX.
+# Keep the env -u: if both vars are inherited, brew reuses the stale HOMEBREW_PATH, so
+# shellenv short-circuits and never adds /opt/homebrew/bin to PATH.
+eval "$(env -u HOMEBREW_BREW_FILE -u HOMEBREW_PATH /opt/homebrew/bin/brew shellenv)"
 
 # Homebrew zsh completion path
 __BRYAN_HOMEBREW_ZSH_COMPLETION="${HOMEBREW_PREFIX}/share/zsh/site-functions"
