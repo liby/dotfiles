@@ -1,6 +1,6 @@
 # Claude Code settings.json env flags
 
-Current state: CLI **2.1.187**, main model `claude-opus-4-8[1m]` (switched back from Fable 5; `settings.json` `model` and `ANTHROPIC_DEFAULT_OPUS_MODEL` both pin `claude-opus-4-8`). On 2026-06-22 the whole file was re-verified flag-by-flag against the 2.1.185 binary; on 2026-06-24 the inventory was diffed 2.1.185 -> 2.1.187 (both on disk, with 2.1.186), and all set flags confirmed present. The last FULL inventory diff chain is 2.1.181 -> 2.1.183 -> 2.1.185 -> 2.1.187 (only 2.1.185 to 2.1.187 remain on disk; older coverage rests on this file's existing documented inventory; prior baselines 2.1.150, 2.1.156, 2.1.159, 2.1.163). The 2.1.181 -> 2.1.183 step added `CLAUDE_CODE_CONNECT_TIMEOUT_MS`, `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`, and `CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY`, and dropped `ANTHROPIC_FOUNDRY_AUTH_TOKEN`; 2.1.183 -> 2.1.185 changed no flag-shaped strings; 2.1.185 -> 2.1.187 added `CLAUDE_CHROME_CLASSIFIER_FLOOR`, `CLAUDE_CODE_DISABLE_LAUNCH_COMPOSER`, `CLAUDE_CODE_FORCE_STRIKETHROUGH`, and `CLAUDE_CODE_MCP_TOOL_IDLE_TIMEOUT`, and dropped `CLAUDE_CODE_CONNECT_TIMEOUT_MS` (added 2.1.183, gone by 2.1.187) plus the internal `CLAUDE_PROJECT_TOOL` — none of these in our settings. `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` and its gate `tengu_agent_list_attach` are gone (the agent-type list is now injected unconditionally); its dead `=1` has since been deleted from `settings.json`. Two flags joined `settings.json` since the last audit, `CLAUDE_CODE_NO_FLICKER` and `ENABLE_TOOL_SEARCH` (own sections below). Every flag now in `dot_claude/settings.json` is present, referenced, and actively consumed; none has an equivalent top-level settings key (except `effortLevel`). Do not suggest removing any of them.
+Current state: CLI **2.1.191** (running; last full flag-by-flag audit against **2.1.187**), main model `claude-opus-4-8[1m]` (switched back from Fable 5; `settings.json` `model` and `ANTHROPIC_DEFAULT_OPUS_MODEL` both pin `claude-opus-4-8`). On 2026-06-22 the whole file was re-verified flag-by-flag against the 2.1.185 binary; on 2026-06-24 the inventory was diffed 2.1.185 -> 2.1.187 (both on disk, with 2.1.186), and all set flags confirmed present. The last FULL inventory diff chain is 2.1.181 -> 2.1.183 -> 2.1.185 -> 2.1.187 (only 2.1.185 to 2.1.187 remain on disk; older coverage rests on this file's existing documented inventory; prior baselines 2.1.150, 2.1.156, 2.1.159, 2.1.163). The 2.1.181 -> 2.1.183 step added `CLAUDE_CODE_CONNECT_TIMEOUT_MS`, `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`, and `CLAUDE_CODE_WEBSEARCH_USE_CCR_PROXY`, and dropped `ANTHROPIC_FOUNDRY_AUTH_TOKEN`; 2.1.183 -> 2.1.185 changed no flag-shaped strings; 2.1.185 -> 2.1.187 added `CLAUDE_CHROME_CLASSIFIER_FLOOR`, `CLAUDE_CODE_DISABLE_LAUNCH_COMPOSER`, `CLAUDE_CODE_FORCE_STRIKETHROUGH`, and `CLAUDE_CODE_MCP_TOOL_IDLE_TIMEOUT`, and dropped `CLAUDE_CODE_CONNECT_TIMEOUT_MS` (added 2.1.183, gone by 2.1.187) plus the internal `CLAUDE_PROJECT_TOOL` — none of these in our settings. `CLAUDE_CODE_AGENT_LIST_IN_MESSAGES` and its gate `tengu_agent_list_attach` are gone (the agent-type list is now injected unconditionally); its dead `=1` has since been deleted from `settings.json`. Two flags joined `settings.json` since the last audit, `CLAUDE_CODE_NO_FLICKER` and `ENABLE_TOOL_SEARCH` (own sections below). On 2026-06-26 (running CLI 2.1.191) `CLAUDE_CODE_ENABLE_AUTO_MODE=1` was added and `CLAUDE_CODE_ATTRIBUTION_HEADER=0` was removed (both verified against the 2.1.191 binary; see their sections); no full inventory re-diff was run for 2.1.187 -> 2.1.191. Every flag now in `dot_claude/settings.json` is present, referenced, and actively consumed; none has an equivalent top-level settings key (except `effortLevel`). Do not suggest removing any of them.
 
 **What this file is for:** a guardrail against "cleaning up" `settings.json`. When you or an agent wonders whether a non-default env flag is still needed, safe to remove, or set to the wrong value, this file holds the verified answer and the why. It is not a CLI reverse-engineering encyclopedia.
 
@@ -23,14 +23,14 @@ Without the env var set to `"1"`, the feature depends on remote rollout status:
 
 Kept on purpose; do not suggest removing or toggling it. It disables Anthropic usage telemetry and, in this build, is what disables the GrowthBook fetch (mechanism in the GrowthBook-gated flags section above). Decision recorded 2026-06-05: telemetry stays off for privacy, and the cost, no automatic gradual-rollout delivery, is accepted; gated features arrive via this file's env inventory instead. The flag-maintenance burden is the chosen price, not an oversight.
 
-Not the same as `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`: that bundle adds `DISABLE_AUTOUPDATER` and would kill auto-update (kept ON), so it is not a "stronger privacy" upgrade path. See the memory on `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`.
+Not the same as `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`: that bundle adds `DISABLE_AUTOUPDATER` and would kill auto-update (kept ON), so it is not a "stronger privacy" upgrade path.
 
 ## Value format: truthy vs falsy parser
 
 CLI parses each env flag with one of two helpers; setting the wrong format is a silent no-op. To tell which a flag uses, grep its env var name and read the surrounding call.
 
 - truthy: `"1"` / `"true"` / `"yes"` / `"on"` map to true. Used by most flags.
-- falsy: `"0"` / `"false"` / `"no"` / `"off"` map to true. Used by `CLAUDE_CODE_ATTRIBUTION_HEADER` and `ENABLE_CLAUDEAI_MCP_SERVERS`, so disabling them via `"0"` is correct.
+- falsy: `"0"` / `"false"` / `"no"` / `"off"` map to true. Used by `CLAUDE_CODE_ATTRIBUTION_HEADER` and `ENABLE_CLAUDEAI_MCP_SERVERS`, so `"0"` disables. We keep `ENABLE_CLAUDEAI_MCP_SERVERS=0`; `CLAUDE_CODE_ATTRIBUTION_HEADER=0` is parser-valid but deliberately NOT set, because `=0` breaks auto mode (see its section).
 
 Several of our set flags do NOT use this clean two-parser model, so don't assume "not truthy means falsy":
 
@@ -38,7 +38,7 @@ Several of our set flags do NOT use this clean two-parser model, so don't assume
 - `DISABLE_ERROR_REPORTING` is a bare truthy read (`process.env.DISABLE_ERROR_REPORTING || ...`), not the `"0"`-aware falsy parser the other `DISABLE_*` flags use. Any non-empty value disables it, so `=0` would ALSO disable. Our `=1` is correct; never set it to `0` expecting it to re-enable.
 - `CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS` is an integer (`parseInt`, must be > 0), not a boolean.
 
-`ENABLE_PROMPT_CACHING_1H` is plain truthy and our `=1` is correct, but on Vertex only this plain flag applies; the `ENABLE_PROMPT_CACHING_1H_BEDROCK` sibling is bedrock-only, so do not add `_BEDROCK` here (see memory `vertex-provider`).
+`ENABLE_PROMPT_CACHING_1H` is plain truthy and our `=1` is correct, but on Vertex only this plain flag applies; the `ENABLE_PROMPT_CACHING_1H_BEDROCK` sibling is bedrock-only, so do not add `_BEDROCK` here.
 
 ## `ENABLE_TOOL_SEARCH`: defer MCP tool schemas on the gateway
 
@@ -53,9 +53,20 @@ Value: `1`/`true` both enable deferral (resolved identically, so `1` is fine and
 
 Verified in 2.1.187 (2026-06-24). Picks the virtualized-scrollback renderer over the classic main-screen one, which removes redraw flicker. The CLI auto-disables that renderer where it misbehaves (e.g. Windows over SSH / ConPTY re-rendering); `=1` forces it on. Plain truthy.
 
+## `CLAUDE_CODE_ENABLE_AUTO_MODE=1`: enabled (was abandoned)
+
+Set in `settings.json` on 2026-06-26. Provider-eligibility gate for auto mode (truthy, added 2.1.158): no-op on first-party / anthropicAws (auto mode is available there by default), the required opt-in on Vertex/Bedrock/Foundry, Opus 4.7/4.8 only.
+
+Previously abandoned, on a wrong diagnosis. The old note blamed the auto-mode safety classifier failing with `<model> is temporarily unavailable, so auto mode cannot determine the safety of <tool>` on a Vertex model-at-capacity hang. Per [issue #64585](https://github.com/anthropics/claude-code/issues/64585), that exact error is caused by `CLAUDE_CODE_ATTRIBUTION_HEADER=0` (which we used to set), not capacity; with the header env removed, the classifier works. Confirmed here on both subscription (first-party, where the flag is a no-op anyway) and API (Vertex, where this `=1` is the opt-in). A genuine model-at-capacity hang on Vertex, if it recurs, is a separate concern, not a reason to drop this flag.
+
 ## `attribution` section vs `CLAUDE_CODE_ATTRIBUTION_HEADER`
 
-Both are active at different layers. The env var (falsy parser, so `"0"` disables) controls whether the attribution header is injected into the system prompt. The `attribution` section (`commit`, `pr` keys) controls the template strings. Keeping both is correct.
+Two independent layers. Only the `attribution` section is now active.
+
+- `attribution` section (`commit: ""`, `pr: ""`): the layer that actually suppresses attribution. The settings schema reads *"Empty string hides attribution"*, so the empty strings blank the `Generated with [Claude Code]` / `Co-Authored-By` footer in commits and PR bodies. Kept.
+- `CLAUDE_CODE_ATTRIBUTION_HEADER` env (falsy parser): controls a separate system-prompt attribution-header block (its builder returns `""` when the flag is falsy-set). We used to set `=0` to empty that block, but `=0` breaks the auto-mode safety classifier ([issue #64585](https://github.com/anthropics/claude-code/issues/64585): `<model> is temporarily unavailable, so auto mode cannot determine the safety of <tool>`). Removed 2026-06-26; now unset.
+
+Removing the env var does NOT reintroduce attribution in commits/PRs: the empty `attribution` templates still hide the footer. Do not re-add `CLAUDE_CODE_ATTRIBUTION_HEADER=0`: it re-breaks auto mode for zero attribution-suppression benefit.
 
 ## Effort levels: `max` is the env-only ceiling
 
@@ -97,9 +108,7 @@ For reference; add only if a concrete need appears:
 - `CLAUDE_CODE_DISABLE_CLAUDE_CODE_SKILL` / `CLAUDE_CODE_DISABLE_CLAUDE_API_SKILL`: skip registering the built-in claude-code / claude-api skills.
 - `CLAUDE_CODE_FORCE_MID_CONVERSATION_SYSTEM`: forces mid-conversation system injection (renamed from `CLAUDE_CODE_MID_CONVERSATION_SYSTEM`; disabled under hipaa). Lean system prompt is the default for Opus 4.8 as of 2.1.154.
 - `CLAUDE_PTY_ORPHAN_CHECK_MS`: PTY orphan-check interval in milliseconds, default 2000, non-windows only.
-- `CLAUDE_CODE_ALWAYS_ENABLE_EFFORT`: force the effort param on models that don't support it. `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE` is deprecated (removed 06/01).
-- `CLAUDE_CODE_ENABLE_AUTO_MODE` (2.1.158): provider-eligibility gate for auto mode (truthy). No-op on first-party / anthropicAws (auto mode is already available there); on Vertex/Bedrock/Foundry it is the required opt-in, Opus 4.7/4.8 only. Tested and abandoned here: the safety classifier runs on the same Opus model and hangs Bash on Vertex when the model is at capacity (claude-code issues #63873, #38537, #39259). Do not enable. See memory `vertex-provider`.
-- `OTEL_LOG_TOOL_DETAILS` (2.1.157): adds tool-call detail to OTEL logs. Moot here (`DISABLE_TELEMETRY=1`).
+- `CLAUDE_CODE_ALWAYS_ENABLE_EFFORT`: force the effort param on models that don't support it. `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE` is deprecated (removed 06/01).- `OTEL_LOG_TOOL_DETAILS` (2.1.157): adds tool-call detail to OTEL logs. Moot here (`DISABLE_TELEMETRY=1`).
 - `CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY`: caps parallel tool execution, default 10. Raise only if agent-teams / parallel-subagent runs feel throttled.
 - `CLAUDE_CODE_ENABLE_APPEND_SUBAGENT_PROMPT` (truthy): propagates a custom `appendSubagentSystemPrompt` suffix to nested subagents. Add only with a standing subagent instruction.
 - `CLAUDE_CODE_INVESTIGATE_FIRST` (`additive` / `compact` / `off`): injects a root-cause-first behavior, gate `tengu_slate_harrier` (default off), hard-forced off for opus-4-7. Experimental and model-gated.
@@ -107,8 +116,8 @@ For reference; add only if a concrete need appears:
 - `CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK` (2.1.163, gate `tengu_refusal_fallback_entry_recorded`): disables the model-refusal fallback path.
 - `CLAUDE_CODE_DISABLE_MEMORY_BULK_INFLATE` (2.1.163, gate `tengu_memory_bulk_inflate`): auto-memory bulk-load toggle.
 - `CLAUDE_CODE_OWNERSHIP_FRAME` (2.1.163): replaced `CLAUDE_CODE_FRAME_MODE` (removed).
-- `CLAUDE_CODE_SUPPRESS_SESSION_ATTRIBUTION` (2.1.163): attribution-layer flag, distinct from `CLAUDE_CODE_ATTRIBUTION_HEADER` (which we set to `0`).
-- `ANTHROPIC_DEFAULT_FABLE_MODEL` (2.1.170, binary-verified; siblings `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_SONNET_MODEL` ARE set, see their own section above): controls what the `fable` alias resolves to. Left unset because Fable is not the current main model. Per the model-config docs the `ANTHROPIC_DEFAULT_*_MODEL` family is also required on Vertex/Bedrock for the Fable 5 refusal-fallback (classifier-triggered `stop_reason: "refusal"` reroutes the session to Opus 4.8) to find the right regional model ids; relevant here because we run on Vertex (see memory `vertex-provider`). If Fable refusal-fallback misbehaves, set this before debugging deeper.
+- `CLAUDE_CODE_SUPPRESS_SESSION_ATTRIBUTION` (2.1.163): attribution-layer flag, distinct from `CLAUDE_CODE_ATTRIBUTION_HEADER` (which we now leave unset, see its section).
+- `ANTHROPIC_DEFAULT_FABLE_MODEL` (2.1.170, binary-verified; siblings `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_SONNET_MODEL` ARE set, see their own section above): controls what the `fable` alias resolves to. Left unset because Fable is not the current main model. Per the model-config docs the `ANTHROPIC_DEFAULT_*_MODEL` family is also required on Vertex/Bedrock for the Fable 5 refusal-fallback (classifier-triggered `stop_reason: "refusal"` reroutes the session to Opus 4.8) to find the right regional model ids; relevant here because we run on Vertex. If Fable refusal-fallback misbehaves, set this before debugging deeper.
 - `VERTEX_REGION_CLAUDE_FABLE_5` (2.1.170, binary-verified): per-model Vertex region override, same family as the existing `VERTEX_REGION_*` flags.
 - `DISABLE_PROMPT_CACHING_FABLE` (2.1.170, binary-verified): disables prompt caching for Fable models only.
 - `CLAUDE_CODE_SAFE_MODE` (2.1.170, binary-verified; also `--safe-mode`): starts without CLAUDE.md/skills/hooks/MCP. Diagnostic for "Fable refuses before I even typed anything" cases where loaded context trips a safety classifier (claude-code issue #66671).
