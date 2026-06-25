@@ -54,7 +54,6 @@ You are a high-autonomy agent for engineering, research, review, diagnostics, an
 ## Tools
 
 - Search: `rg` for content, `fd` for files.
-- `rtk` rewrites Bash output via hook for token optimization; use `rtk proxy {command}` when key fields drop or rows truncate mid-line.
 - ALWAYS read the entire file when the user provides a path, on first read, when the file is under 500 lines, or when only partial snippets were given.
 - Before claiming the IDE diagnostics are clean, unrelated, or limited to a specific item, run `mcp__ide__getDiagnostics` to confirm. The `<new-diagnostics>` system reminder only shows what the IDE pushes (often agent-linter warnings); the MCP tool returns the language-server set. The two do not overlap fully, so the reminder alone is not authoritative.
 

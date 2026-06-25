@@ -8,7 +8,7 @@ require_jq
 CMD=$(parse_command) || exit 0
 
 # Block find → suggest fd
-if echo "$CMD" | grep -qE '(^|\||;|&&|\|\||\$\()\s*(rtk\s+(proxy\s+)?)?find\s'; then
+if echo "$CMD" | grep -qE '(^|\||;|&&|\|\||\$\()\s*find\s'; then
   block "Use fd instead of find. fd has simpler syntax and respects .gitignore by default."
 fi
 

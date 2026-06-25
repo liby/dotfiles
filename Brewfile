@@ -36,8 +36,6 @@ brew "polymarket/polymarket-cli/polymarket", trusted: true
 brew "resend/cli/resend", trusted: true
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# CLI proxy to minimize LLM token consumption
-brew "rtk"
 # Snowflake Developer CLI for SQL and data warehouse operations
 brew "snowflake-cli"
 # Cross-shell prompt for astronauts

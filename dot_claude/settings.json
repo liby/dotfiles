@@ -96,11 +96,6 @@
             "type": "command",
             "command": "~/.claude/hooks/pre-bash-guard-secrets.sh",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/rtk-rewrite.sh",
-            "timeout": 30
           }
         ]
       }
