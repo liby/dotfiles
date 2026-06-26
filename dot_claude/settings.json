@@ -32,10 +32,9 @@
   },
   "includeGitInstructions": false,
   "permissions": {
-    "defaultMode": "bypassPermissions",
+    "defaultMode": "auto",
     "allow": [
       "Agent",
-      "Bash",
       "Edit",
       "Glob",
       "Grep",
@@ -155,6 +154,8 @@
   "autoDreamEnabled": true,
   "showThinkingSummaries": true,
   "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "skipAutoPermissionPrompt": true,
   "preferredNotifChannel": "ghostty",
   "showTurnDuration": false
 }
