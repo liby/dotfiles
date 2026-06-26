@@ -1,41 +1,47 @@
-# Fix Policy
+# Fix Workflow
 
-`--fix` runs after normal review. It does not change what counts as a finding.
+Load only when `--fix` was requested, after the normal review has produced accepted findings, and before any mutation.
+
+`--fix` does not change what counts as a finding.
 
 ## Contract
 
 - Review phase is read-only.
 - Fix phase runs in a fresh write-capable fix-orchestrator subagent.
 - Fixes apply only to a local writable checkout.
-- Remote MR/PR worktrees are report-only.
+- A host-only MR/PR review is report-only.
+- A local writable checkout of an MR/PR branch is eligible for `--fix`.
 - Initial accepted findings seed a live review frontier.
 - The fix-orchestrator edits only unresolved frontier items classified as `fix` or `rewrite`, plus regressions it introduced.
 - A new finding can enter the frontier only when it has a new trigger path, source-of-truth evidence, realistic impact, and owner, or when it is a real regression from the fix.
+
+## Vocabulary
+
+- Review disposition: `accepted`, `manual`, or `dropped`.
+- Fixer action: `fix`, `rewrite`, `manual`, or `drop`.
+- Post-fix status: `resolved`, `still-open`, `regression-from-fix`, `new-real`, `repeated`, `speculative`, or `manual`.
+- `new-real`: newly discovered issue in the original review scope with a new trigger path, new evidence, realistic impact, and owner.
+- `manual`: requires runtime evidence, product judgment, credentials, destructive action, or external access.
+
+Do not use `skipped` unless a caller supplies a distinct meaning.
 
 ## Inputs
 
 Pass:
 
-- repo root: the real writable working tree from `git rev-parse --show-toplevel`, never `$REVIEW_CWD` (a `--cx` transient review worktree is read-only and may be removed after review)
+- repo root: the real writable working tree from `git rev-parse --show-toplevel`
 - review scope and base
 - initial accepted findings with severity, `path:line`, root cause, allowed touch paths or direct dependents, and validation command or manual gap
 - validation commands discovered during review
 - local instructions already read
 
-Do not pass skipped, dropped, manual-verification, repeated, speculative, or raw delegate transcript content into the mutating context. If transcript evidence is needed, pass only the bounded citation or command result.
+Do not pass dropped, manual, repeated, speculative, weak, or raw second-opinion transcript content into the mutating context. If transcript evidence is needed, pass only the bounded citation or command result.
 
 ## Secret Path Denylist
 
-Before any baseline, snapshot, or edit, list the paths the fix-orchestrator may touch. Stop without reading or adding a path when it matches:
+Before any baseline, snapshot, or edit, list the paths the fix-orchestrator may touch and validate them with the helper-backed denylist in `scripts/_lib.sh`. On a match, stop without printing the raw path.
 
-- `.env*` or any path segment under `.env*`
-- `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.crt`, `*.cer`
-- `authorized_keys` or `known_hosts`
-- `id_rsa`, `id_dsa`, `id_ecdsa`, `id_ed25519`, or `.ssh/`
-- names containing `credential`, `secret`, or `token`, case-insensitive
-- `*.history` or `*.log`
-
-The machine copy in `scripts/_lib.sh` is authoritative for `--cx` script paths and is a superset (adds log directories and `.*_history`); update both together.
+`scripts/_lib.sh` is the machine authority. Keep prose behavioral and avoid maintaining a second Markdown denylist.
 
 ## Triage
 
@@ -47,8 +53,6 @@ Classify each frontier item before editing:
 - `drop`: trigger path no longer applies in the current checkout.
 
 P1 and P2 findings may enter automatic mutation. P3 findings enter automatic mutation only when the user explicitly asked, they block P1 or P2 validation, or they are a regression from the fix. Drop P3 polish, broad cleanup, and unrelated maintainability suggestions unless they block an unresolved frontier item.
-
-A post-fix candidate can enter as `new-real` only when it has a new trigger path, new evidence, realistic impact, and belongs to the original review scope. Reworded prior issues, candidates without new evidence, and broad adjacent cleanup stay out of the mutating frontier.
 
 ## Baseline
 
@@ -80,19 +84,19 @@ If validation cannot cover the finding, state the remaining manual observation.
 
 ## Re-Review
 
-After edits, re-review changed files, direct dependents, touched generated artifacts, and validation output. If `--cx` was used and another mutation round depends on more evidence, the main session may rerun `/review --cx` against the same original scope. The fix-orchestrator must not broaden the review target.
+After edits, re-review changed files, direct dependents, touched generated artifacts, and validation output. The fix-orchestrator must not broaden the review target.
 
 Classify post-fix findings:
 
 - `resolved`: frontier item is fixed and covered by validation or named manual evidence.
-- `accepted-still-open`: accepted finding remains after the fix attempt.
+- `still-open`: accepted finding remains after the fix attempt.
 - `regression-from-fix`: introduced by the fix.
 - `new-real`: newly discovered issue in the original review scope with a new trigger path, source-of-truth evidence, realistic impact, and owner.
-- `repeated-or-reworded`: same root cause or same trigger path without new evidence.
+- `repeated`: same root cause or same trigger path without new evidence.
 - `speculative`: lacks observed trigger, impact, source evidence, or reachable path.
 - `manual`: requires runtime evidence, product judgment, credentials, destructive action, or external access.
 
-Only `accepted-still-open`, `new-real`, and `regression-from-fix` can trigger automatic mutation. `new-real` must stay inside the baseline fix scope. `regression-from-fix` is the fixer's rollback or repair responsibility, not proof that the goal expanded. Report `repeated-or-reworded`, `speculative`, and `manual` without fixing them.
+Only `still-open`, `new-real`, and `regression-from-fix` can trigger automatic mutation. `new-real` must stay inside the baseline fix scope. `regression-from-fix` is the fixer's rollback or repair responsibility, not proof that the goal expanded.
 
 ## Termination
 
@@ -108,16 +112,16 @@ Stop when:
 - the same strategy fails twice,
 - or a user-provided, harness-provided, or executor-owned safety cap is reached.
 
-Do not invent a numeric round budget. Use a numeric cap only when the user, harness, or executor skill supplies one. One round means triage, edit, validation, and re-review of changed files plus direct dependents. Reuse the same fix-orchestrator across rounds so baseline, diff, validation history, and frontier changes stay visible. Start a replacement only after scope drift, state confusion, context contamination, or crash; pass the same frontier, baseline id, and prior round summary.
+Do not invent a numeric round budget. Use a numeric cap only when the user, harness, or executor skill supplies one. One round means triage, edit, validation, and re-review of changed files plus direct dependents.
 
-Return:
+## Return
 
 - Applied Fix: count and citations
 - Applied Rewrite: count and citations
 - Drop: count and reasons
 - Manual: count, citations, and required observation
 - Not fixed: citations and reason
-- Frontier: resolved, new-real, regression-from-fix, repeated-or-reworded, speculative, manual, and still-open counts
+- Frontier: resolved, new-real, regression-from-fix, repeated, speculative, manual, and still-open counts
 - Progress: what changed since the previous round, with evidence
 - Validation: commands and verdicts
 - Baseline: snapshot id when used
