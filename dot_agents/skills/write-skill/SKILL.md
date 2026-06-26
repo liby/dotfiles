@@ -10,23 +10,25 @@ allowed-tools:
 
 # Write Skill
 
-Write skills that change agent behavior. Keep routing, workflow, tool use, validation, and examples that affect the next action. Delete documentation that only explains skills, repeats best practices, or restates the heading.
+Write skills that change agent behavior. Keep routing, workflow, tool use, validation, and examples that affect the next action. Cut anything that only explains skills, repeats best practice, restates a heading, or states what a competent agent already knows.
 
 ## Process
 
-1. Classify the request:
+1. Classify the request, and produce the smallest artifact it needs (a one-off standard, phrasing, or lesson belongs in your reply as prose, not a new `SKILL.md`):
    - New or rewrite: edit the skill.
    - Trigger audit: report findings first; do not edit until asked.
    - Split or merge: change structure only when it improves routing or loaded context.
-   - Distilled lesson: add a rule only when it has a trigger, action, boundary, and evidence.
-2. If a skill path was given, read `SKILL.md` fully before judging. Read linked files only when they affect the requested change.
-3. For non-trivial new skills, inspect 2-4 comparable local or public skills. Use actual `SKILL.md` files or current runtime docs, not README claims.
-4. Preserve working trigger behavior unless the task is to change it.
-5. Ask one question only when the requested behavior still has multiple valid interpretations after reading the relevant files.
+   - Distilled lesson: add a rule only if it clears Rule Hygiene.
+2. If a skill path was given, read `SKILL.md` fully before judging; read linked files only when they affect the change. Re-read right before any full-file rewrite, because an edit since your last read (including the user's own manual trim) is silently lost; prefer targeted edits over rewriting the whole file.
+3. Diagnose at the whole-skill altitude, not just where the request points: when one symptom is reported, check whether the same root cause sits elsewhere and fix it once. Before adding, scan the existing wording for a vague or overlapping rule to sharpen or merge; a new rule is the last resort (Rule Hygiene).
+4. For non-trivial new skills, inspect 2-4 comparable local or public skills. Use actual `SKILL.md` files or current runtime docs, not README claims.
+5. Preserve working trigger behavior unless the task is to change it.
+6. Ask one question only when the requested behavior still has multiple valid interpretations after reading the relevant files.
+7. Before finishing, run a subtraction pass: merge what you duplicated, relocate what drifted from its section, move rare detail to a reference. Rewrite existing wording only when the change is a clear win, shorter without losing information; leave a dense sentence alone when every clause carries weight. The edit should leave the skill net flat or shorter unless it added genuinely new behavior.
 
 ## Routing
 
-The `description` is the routing surface for model-invocable skills. Write it before the body. For `/`-only skills (`disable-model-invocation: true`), the description is read by a human browsing the menu, not the router, so the trigger guidance below does not apply.
+The `description` is the routing surface for model-invocable skills. Write it before the body. For `/`-only skills (`disable-model-invocation: true`) it is a human-facing menu line, not a router trigger, so the trigger guidance below does not apply; see Frontmatter for how to word it.
 
 ```yaml
 description: <capability>. Use when <specific triggers>.
@@ -34,6 +36,7 @@ description: <capability>. Use when <specific triggers>.
 
 - Include task verbs, artifact types, file extensions, user phrases, or contexts that should trigger the skill.
 - Add `Not for...` only when a realistic nearby task would otherwise select the wrong skill. Name the competing task or alternate route.
+- For paired or tiered surfaces, name the boundary in the description: lightweight search/read connector vs advanced API connector, read-only browse vs write/manage, local CLI vs remote host, public source vs private workspace.
 - Do not exclude a broader user request that can legitimately include this skill as a step, such as using a commit step inside a requested push. Put write, push, delete, or credential safety limits in the body workflow instead.
 - Keep it under 1024 characters. If that feels hard, split the skill or narrow scope.
 - Bad: `Helps with documents.`
@@ -58,13 +61,12 @@ Choose the smallest shape that preserves behavior:
 - Repeated workflow: short `Process` with numbered steps.
 - Branching intent: `Mode Picker` before mode details.
 - Fragile or repeated command: script with fixed inputs and validation.
+- Tool-rich API/MCP surface: short lookup workflow that caches or splits the tool schema, reads only the relevant tool docs, then calls the tool.
 - Rare or bulky detail: one-level `references/` file.
 - Ephemeral output shape: inline template or short `examples/`.
-- Durable re-read artifact: a one-hop `<NAME>-FORMAT.md` contract, linked from `SKILL.md` and loaded before the skill writes or updates that artifact.
+- Durable cross-session or shared artifact: a one-hop `<NAME>-FORMAT.md` contract carrying a filled template, a when-to-write gate, and lifecycle rules. Link it from `SKILL.md` and load it before writing that artifact, or it becomes dead documentation. Use it only when the schema must hold across writes or sessions or another skill shares it; below that bar keep the shape inline.
 - Reusable final artifacts: `assets/`.
 - Term-dense or ambiguity-sensitive workflow: a short `Glossary`, with `Avoid` synonyms only when term drift changes routing, artifact schema, or safety.
-
-Externalize an output contract into a `<NAME>-FORMAT.md` only when the skill writes a persisted artifact whose schema must hold across writes or sessions, or that another skill shares. The contract carries what an inline template can't: a filled template, a when-to-write gate, and lifecycle rules. Require loading it before writing that artifact, or it becomes dead documentation. Below that bar, keep the shape inline.
 
 Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool choice, validation, and output detail when they justify the length.
 
@@ -73,27 +75,31 @@ Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool cho
 - Start with what the loaded skill must do, not why the skill exists.
 - Use imperative sentences. One sentence should produce one behavior.
 - Put the common path in `SKILL.md`; move rare branches, long examples, and lookup material out.
-- For CLIs, teach the default path and non-obvious local constraints. Let the agent load option details with `<cmd> --help` or nearby source.
+- Keep runtime context lean, not just `SKILL.md` itself: narrow reads with filters, time windows, limits, explicit fields, or exact IDs; request structured output when available; save a bulky raw response to a temp file instead of into context; then project only the needed fields as TSV, a small table, or a field summary. If a CLI defaults to a human table, show the machine-readable flags and field selection path.
+- Prefer values the runtime or code can derive over counts, paths, or amounts hardcoded into prose. A literal like "the four flags" or an absolute path is a maintenance hazard the moment the underlying value changes; point at the source of truth or how to read it.
 - For API, SDK, CLI, platform, or MCP claims, cite current docs, installed help, generated types, source paths, or checked-in examples. If evidence is unavailable, write a research or audit deliverable instead of guessing.
 - Don't instruct the agent to echo, transcribe, or explain its internal reasoning in response text ("show your thinking", "explain your reasoning step by step"). Claude Fable-class models refuse these with the `reasoning_extraction` category and fall back to a weaker model; require conclusions plus evidence (paths, quotes, links) instead.
 - Keep examples only when they prove output shape, trigger boundaries, a failure mode, or a quality boundary (acceptable vs unacceptable output at the same correctness level).
-- Mask project names, hosts, private paths, clients, internal URLs, and customer data in public skills.
+- In public or shared skills, mask project names, hosts, private paths, clients, internal URLs, credential variable names, token variables, repo paths, and customer data; use them only in a skill explicitly scoped to that private environment.
 
 ## Rule Hygiene
 
-Before adding a rule, find the closest existing rule. Merge when the trigger, action, or boundary overlaps; replace when the old wording is wrong. Add a standalone rule only when no existing rule covers the failure mode.
+Before adding a rule, find the closest existing rule. Merge when the trigger, action, or boundary overlaps; replace when the old wording is wrong. When several problems share one root cause, write one rule that covers them all rather than one per problem. Add a standalone rule only when no existing rule covers the failure mode.
 
-Keep a rule when it changes agent behavior and names at least three of: trigger, action, boundary, evidence. **Formatting carries behavioral weight.** A standalone heading, a bolded imperative, or a calibration example gives a rule higher priority in the agent's reading. Merging a heading-level rule into a bullet list, removing bold from an imperative, or deleting a before/after example downgrades that priority. Before downgrading, confirm the rule's behavioral weight does not depend on its prominence.
+Keep a rule when it changes agent behavior and names at least three of: trigger, action, boundary, evidence.
 
-For evaluator, verifier, rubric, PASS/FAIL, completion-gate, or transcript-derived rules, require the trigger, required evidence, PASS/FAIL or manual-observation condition, action to take on failure or stop, and owner. The owner must be the project skill, target repo, user confirmation, or CLI/runtime. Keep trace stores, durable session logs, sandbox state, and automatic progress ledgers out of shared skill text unless every target runtime supports the mechanism or the skill explicitly branches by runtime. For transcript-derived rules, cite bounded evidence internally, distill the reusable failure mode, and do not copy raw transcript prose into public skills.
+**Formatting carries behavioral weight.** A standalone heading, a bolded imperative, or a calibration example gives a rule higher priority in the agent's reading. Merging a heading-level rule into a bullet, unbolding an imperative, or deleting a before/after example downgrades it, so a rule that restates a nearby one at higher prominence is reinforcement, not redundancy: merge the text but keep the prominence. Before downgrading, confirm the weight does not depend on the prominence.
+
+For evaluator, verifier, rubric, PASS/FAIL, completion-gate, or transcript-derived rules, require the trigger, evidence, PASS/FAIL or manual-observation condition, action to take on failure or stop, and owner. The owner must be the project skill, target repo, user confirmation, or CLI/runtime. Keep trace stores, durable session logs, sandbox state, and automatic progress ledgers out of shared skill text unless every target runtime supports the mechanism or the skill explicitly branches by runtime. For transcript-derived rules, cite bounded evidence internally, distill the reusable failure mode, and do not copy raw transcript prose into public skills.
 
 Delete or merge rules that:
 
-- duplicate another rule without adding prominence or a sharper boundary (redundancy). A rule that restates a nearby rule at a higher prominence level (standalone heading, bold, example) is reinforcement, not redundancy; merge the text but preserve the prominence.
+- duplicate another rule without adding a sharper boundary or higher prominence (redundancy).
 - say to be careful, robust, high quality, concise, or thoughtful without a check
 - explain agent skills, progressive disclosure, or repo background without changing the next action
 - assume a tool, account, server, path, model, runtime, or workflow without saying how to verify it
-- copy a project-specific incident or user correction instead of extracting the reusable failure mode
+- copy a project-specific incident, user correction, or a rule that only fits the example skills you studied, instead of extracting the reusable pattern
+- state what a competent agent would already do unprompted (filler). Test each line: if cutting it doesn't change the next action, cut it (e.g. a security skill explaining that leaked credentials are dangerous).
 
 ## Negative Wording
 
