@@ -1,26 +1,18 @@
 #!/usr/bin/env bash
 # Shared utilities for review scripts. Source, don't execute.
 
-require_command() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "${0##*/}: required command not found: $1" >&2
-    exit 3
-  fi
-}
-
 is_secret_like_path() {
   local result=1
   local restore_nocasematch=0
   shopt -q nocasematch || restore_nocasematch=1
   shopt -s nocasematch
-  case "$1" in
-    .env*|.env*/*|*/.env*|*/.env*/*) result=0 ;;
-    *.pem|*.key|*.p12|*.pfx|*.crt|*.cer) result=0 ;;
-    id_rsa|id_dsa|id_ecdsa|id_ed25519|*/id_rsa|*/id_dsa|*/id_ecdsa|*/id_ed25519) result=0 ;;
-    authorized_keys|*/authorized_keys|known_hosts|*/known_hosts) result=0 ;;
-    *credential*|*secret*|*token*) result=0 ;;
-    .ssh|*/.ssh|*/.ssh/*|.ssh/*|*.history|.*_history|*/.*_history|*.log|*.log/*|log|logs|*/log|*/logs|log/*|logs/*|*/log/*|*/logs/*) result=0 ;;
-  esac
+	case "$1" in
+		.env*|.env*/*|*/.env*|*/.env*/*) result=0 ;;
+		*.pem|*.key|*.p12|*.pfx|*.crt|*.cer) result=0 ;;
+		id_rsa|id_dsa|id_ecdsa|id_ed25519|*/id_rsa|*/id_dsa|*/id_ecdsa|*/id_ed25519) result=0 ;;
+		authorized_keys|*/authorized_keys|known_hosts|*/known_hosts) result=0 ;;
+		.ssh|*/.ssh|*/.ssh/*|.ssh/*|*.history|.*_history|*/.*_history|*.log|*.log/*|log|logs|*/log|*/logs|log/*|logs/*|*/log/*|*/logs/*) result=0 ;;
+	esac
   [ "$restore_nocasematch" -eq 1 ] && shopt -u nocasematch
   return "$result"
 }
@@ -62,26 +54,6 @@ git_diff_paths_nul() {
   done < <(git diff -z --name-status "$from...$to" --)
 }
 
-# Parse working-tree dirty paths (staged + unstaged vs HEAD).
-git_dirty_paths_nul() {
-  local output="$1"
-  local status path extra
-  : > "$output"
-  while IFS= read -r -d '' status; do
-    case "$status" in
-      R*|C*)
-        IFS= read -r -d '' path || break
-        IFS= read -r -d '' extra || break
-        printf '%s\0%s\0' "$path" "$extra" >> "$output"
-        ;;
-      *)
-        IFS= read -r -d '' path || break
-        printf '%s\0' "$path" >> "$output"
-        ;;
-    esac
-  done < <(git diff -z --name-status HEAD --)
-}
-
 # Convert a NUL-delimited path file to git literal pathspec format.
 path_file_nul_to_literal_pathspec() {
   local input="$1" output="$2"
@@ -100,20 +72,4 @@ validate_git_diff_paths() {
   git_diff_paths_nul "$1" "$2" "$tmp_paths"
   validate_path_file_nul "$tmp_paths" || { rm "$tmp_paths"; exit 4; }
   rm "$tmp_paths"
-}
-
-normalize_repo_slug() {
-  local url="$1"
-  url="${url%.git}"
-  case "$url" in
-    http://*|https://*|ssh://*)
-      url="${url#*://}"
-      url="${url#*@}"
-      ;;
-    *@*:*)
-      url="${url#*@}"
-      url="${url/://}"
-      ;;
-  esac
-  printf '%s\n' "$url"
 }

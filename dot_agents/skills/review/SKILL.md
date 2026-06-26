@@ -1,7 +1,7 @@
 ---
 name: review
-description: Review a remote MR/PR or local code changes, reporting real issues with evidence-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR", asks for review findings, or provides an MR/PR URL. Not for prose review, skill-authoring audits, or ordinary implementation.
-argument-hint: "[--cx] [--fix] [--html] [MR/PR URL or notes]"
+description: Review a remote MR/PR or local code changes, reporting real issues with evidence-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR/改动/diff", asks to look over a branch, commit, or diff for problems before merging, asks for review findings, or provides an MR/PR URL. Not for prose review, skill-authoring audits, or ordinary implementation.
+argument-hint: "[--fix] [--html] [MR/PR URL or notes]"
 allowed-tools:
   - Bash
   - Read
@@ -17,10 +17,17 @@ allowed-tools:
 
 Read, verify, report. Clean verdicts and no-op are valid outcomes. Default review is read-only for the reviewed project: do not edit reviewed files, post comments, start dev servers, or apply fixes in the main reviewer context.
 
+## Outcome Contract
+
+- Outcome: real repository-impact findings, or a clean verdict.
+- Done when: changed paths, direct contracts, relevant review rules, and cheapest validation have been checked.
+- Evidence: each finding names a trigger path, source evidence, impact, and fix direction.
+- Output: exact user contract first; otherwise a concise Markdown review summary. Use canonical JSON only as an internal contract for `--html`, `--fix`, or an explicit machine-readable report.
+
 ## Flow
 
 1. Resolve scope: MR/PR, branch diff, working tree, or explicit notes.
-2. Before reading any diff body, collect changed paths. Refuse secret-like names without printing raw paths: `.env*`, private keys and certificates (`*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.crt`, `*.cer`), `id_rsa`/`id_dsa`/`id_ecdsa`/`id_ed25519`, `authorized_keys`, `known_hosts`, `.ssh/`, `*.history`, `*.log`, and names containing `credential`, `secret`, or `token`. The same denylist is enforced for `--fix` in [references/fix-policy.md](references/fix-policy.md).
+2. Before reading any diff body, collect changed paths and screen each through the machine denylist in `scripts/_lib.sh`, the same authority `--fix` enforces, rather than matching names by hand: source `_lib.sh` from the skill directory and run `is_secret_like_path` per path (or `validate_git_diff_paths <base> <head>` for a branch). Refuse a matched path without printing it; the denylist covers env files, private keys and certificates, SSH material, and history or log files. Do not refuse ordinary source code merely because a path contains `credential`, `secret`, or `token`; review it as security-sensitive code and avoid quoting secret values.
 3. List changed files before judging behavior:
    - branch: parse `git diff -z --name-status <base>...HEAD`; for `R*` and `C*`, inspect both source and destination paths before any full diff
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`
@@ -29,38 +36,67 @@ Read, verify, report. Clean verdicts and no-op are valid outcomes. Default revie
 5. Read the MR/PR description and discussions when available.
 6. Read touched files, adjacent code, direct call sites, and relevant tests before final severity.
 7. For exported identifiers, deleted symbols, schema fields, event names, and shared helpers, `rg` callers, readers, writers, and tests.
-8. Load [references/core-principles.md](references/core-principles.md) for matching triggers. Load [references/responsibility-checks.md](references/responsibility-checks.md) only when the diff touches that responsibility.
-9. Verify each candidate with code, docs, tests, runtime output, or the cheapest existing validation command that covers the changed path.
-10. Report only findings with a concrete trigger path and realistic repository impact.
+8. Load the surface rule file(s) whose changed path or runtime matches, from `references/rules/`:
+   - [TypeScript](references/rules/typescript.md): TypeScript API boundaries, exported identifiers, generated types, discriminated unions, and serialization.
+   - [React](references/rules/react.md): React components, hooks, client state, streaming or optimistic UI, and disabled controls.
+   - [Next.js](references/rules/next.js.md): App or Pages Router, route handlers, server actions, middleware, cache, cookies, and the server/client boundary.
+   - [Python](references/rules/python.md): Python ingestion, loaders, dataframes, and scripts that write files or warehouse tables.
+   - [SQL](references/rules/sql.md): SQL models, migrations, warehouse schema, joins, aggregates, and grants.
+   - [CLI](references/rules/cli.md): CLI behavior, installers, packaging, generated wrappers, runtime readiness, and source-to-package mapping.
+   - [Async](references/rules/async.md): queues, jobs, retries, waiters, durable steps, and worker lifecycle.
+   - [Agent](references/rules/agent.md): model routing, tools, connectors, provider wrappers, sandboxed execution, and protocol clients.
+   - [ELT](references/rules/elt.md): extract/load/transform jobs, dbt models, reverse ETL, backfills, and grants.
+9. Apply the Universal Review Lenses to every review, and load the `references/concerns/*.md` file each lens names when the change exercises it.
+10. Verify each candidate with code, docs, tests, runtime output, or the cheapest existing validation command that covers the changed path.
+11. Report only findings with a concrete trigger path and realistic repository impact.
 
-## Modes
+## Rule Precedence
 
-### `--cx`
+1. Observed runtime, security, data, and product contracts.
+2. Specific distilled rules in `references/concerns/*.md` and `references/rules/*.md` when their `Load when` and trigger match.
+3. Repo-local conventions and personal preferences.
+4. Generic review heuristics.
 
-Load [references/cx-delegation.md](references/cx-delegation.md). The helper supports local changes and GitLab MR URLs only; review other hosts in the main session. Delegates return cited candidates; the main session verifies before forwarding. Delegate agreement is a lead, not proof.
+Treat a repo-local instruction as a level-1 contract only when it documents an actual runtime, product, security, migration, or deployment constraint. Otherwise, when it conflicts with a matching distilled rule, prefer the rule only when its trigger and evidence match and no repo-owned contract disproves it.
 
-### `--fix`
+Do not treat people, teams, specific projects, or past incidents as review authority in shared skill text. Convert them into trigger, action, boundary, and evidence requirements.
 
-1. Run the normal review first. Review delegates remain read-only.
-2. Classify findings as accepted, skipped, dropped, or manual verification, then seed the live review frontier before any mutation.
-3. If `REVIEW_MODE=mr` came from [references/cx-delegation.md](references/cx-delegation.md), report accepted findings and stop: the MR is reviewed in a transient detached worktree with no writable local checkout. To fix, check out the MR branch locally and rerun `--fix`. For `REVIEW_MODE=local`, continue; the fix-orchestrator edits the real working tree (`git rev-parse --show-toplevel`), never `$REVIEW_CWD`, which may be a read-only review snapshot.
-4. Launch one fresh write-capable fix-orchestrator subagent with the seeded frontier, repo root, review scope, validation commands, and [references/fix-policy.md](references/fix-policy.md).
-5. If no write-capable subagent is available, report accepted findings and do not mutate files.
-6. The fix-orchestrator independently triages, edits, validates, reuses its own context for later mutation rounds, and returns a structured summary.
-7. The main session reviews that summary and reports changed, skipped, manual, still-open, new-real, regression-from-fix, repeated-or-reworded, and speculative items.
+A lower-priority rule may narrow a higher-priority rule by supplying a concrete boundary. It may not silently turn an observed failure, authority violation, or data-corruption path into an accepted convention.
 
-The main reviewer must not edit reviewed project files. Only the fix-orchestrator may mutate, and only inside a local writable checkout.
+## Reference Routing
 
-## Review Stance
+- The Universal Review Lenses are the concern axis: apply all of them, and load a `references/concerns/*.md` file for the full check when the change exercises that lens.
+- The `references/rules/*.md` files are the surface axis: load one when the changed path or runtime matches its `Load when` trigger.
+- A change usually loads a few concerns and a few surfaces. A surface file holds only language- and runtime-specific deltas and points up to the concern that owns each cross-cutting rule; do not restate a concern rule inside a surface.
+- Rule files identify review candidates. A checklist item is not reportable until it satisfies the Finding Bar with a concrete trigger path, evidence, impact, and fix direction.
+- Load [result](references/contracts/result.md) before producing canonical review JSON, before handing findings to `--fix`, or before rendering HTML.
+- Load [fix](references/workflows/fix.md) only when `--fix` was requested, after the normal review has produced accepted findings, and before any mutation.
+- Load [html](references/workflows/html.md) only when an HTML artifact was requested and the canonical review result already exists.
 
-**Evidence before claims is the review; everything else is mechanics.** Find the source of truth before approving or rejecting behavior.
+## Review Variants
 
-- No speculative support paths: guards, fallbacks, `undefined`, caches, switches, and helpers need a current caller, contract, test, or observed failure.
-- Failure must stay visible: do not turn errors, bad statuses, partial work, or terminal-state ambiguity into success.
-- Names, states, boundaries, and config are contract surfaces.
-- A changed contract needs a symmetry sweep across writers, readers, callers, generated types, generated artifacts, and direct consumers; a change that extends a cross-cutting concept (identity, locale, permission, currency, flag, policy) also needs a completeness sweep for peer surfaces it never touched and shares no symbol with.
-- Tests must prove the invariant, not just satisfy the fixture.
-- Changed lines still need a mechanical pass for line-local bugs.
+| Variant | Trigger | Extra handling |
+| --- | --- | --- |
+| Default | Local diff, branch, MR/PR URL, or explicit notes | Read-only concise Markdown review summary unless the user gives an exact output contract. |
+| Remote MR/PR | Host URL or MR/PR reference | Compare host changed files with local checkout or diff; never fabricate URLs. |
+| `--html` | `--html`, report, artifact, or visual view | Load [result](references/contracts/result.md), produce the same review JSON, then render with [html](references/workflows/html.md). |
+| `--fix` | `--fix` after review | Run the normal review first. If accepted findings exist and a writable local checkout is available, load [fix](references/workflows/fix.md) before mutation. |
+| Spec-backed review | MR/PR description, issue, Jira, PRD, or explicit requirements exist | Map each requirement to a diff change; report missing or partial implementation and unrequested behavior beyond the spec as separate findings so one axis does not mask the other. |
+| Large or high-risk review | Broad contract, security, automation, release, migration, or cross-runtime change | Use optional independent reviewers only when they can inspect distinct risk areas; verify their citations before forwarding. |
+
+The main reviewer must not edit reviewed project files. Only the fix-orchestrator may mutate, and only inside a local writable checkout. A host-only MR/PR review is report-only. A local writable checkout of that MR/PR branch is eligible for `--fix`.
+
+## Universal Review Lenses
+
+Apply all of these to every review. Each names the concern file that owns the full check; load it from `references/concerns/` when the change exercises that lens.
+
+- Establish the source-owned contract, names, and generated shapes before judging the implementation: [contract](references/concerns/contract.md).
+- Trace ownership and authority through wrappers, runtimes, and deployment boundaries, require an observed caller for each guard, fallback, and abstraction, and filter any value before it reaches a client: [boundaries](references/concerns/boundaries.md).
+- Keep expected absence, business rejection, retryable failure, waiting, partial work, and success observably distinct, and write final markers only after durable effects complete: [failure-states](references/concerns/failure-states.md).
+- Prove DB and API round trips stay bounded and each write keeps grain, scope, and meaning: [data-integrity](references/concerns/data-integrity.md).
+- Classify every config and request value, and prove a lower-trust input cannot become higher-trust authority: [security](references/concerns/security.md).
+- Require tests to fail when the changed invariant breaks, not merely exercise a fixture: [tests](references/concerns/tests.md).
+- Mechanically inspect every changed, deleted, or moved line, then sweep peer surfaces by concept: [mechanical](references/concerns/mechanical.md).
 
 ## Finding Bar
 
@@ -69,13 +105,16 @@ Prioritize:
 1. Contract and source-of-truth mismatch
 2. Semantic mismatch in names, fields, states, events, or API shape
 3. Ownership boundary violation
-4. Hidden failure, false success, or silent data corruption
+4. Hidden failure, false success, partial-work masking, or silent data corruption
 5. Security, permission, identity, exposure, or environment-isolation risk
 6. Incomplete symmetry across writers, readers, sibling cases, schema variants, generated output, or removed consumers
-7. Mechanical bugs in changed lines
-8. Tests and docs, only when they prove or hide one of the risks above
+7. Unbounded DB/API fan-out in backend paths that scale with rows, events, users, tools, or retries
+8. Mechanical bugs in changed lines
+9. Tests and docs, only when they prove or hide one of the risks above
 
 Skip pure style, speculative guards, broad maintainability advice, and pattern matches without a concrete trigger path.
+
+Completeness gaps become numbered findings only when a requirement, peer contract, or reachable behavior proves the omitted behavior. Otherwise put them in `manual` or `notes`.
 
 ## Severity
 
@@ -95,49 +134,14 @@ Downshift when the project does not run in the required mode. Upshift when bad s
 
 Discover validation commands from local instructions, `package.json`, `Makefile`, `justfile`, task config, CI workflow, and adjacent tests. Use the cheapest existing command that covers the changed path. Do not run dev/start/serve commands during review.
 
-Require runtime evidence for browser or hydration behavior, cross-tab timing, live identifier equality, DB migration state, UI enablement, external service paging, and terminal states not encoded locally.
+Require runtime evidence for browser or hydration behavior, cross-tab timing, live identifier equality, DB migration state, UI enablement, external service paging, sandbox lifecycle, provider payload shape, and terminal states not encoded locally.
 
 ## Output
 
-A review produces one JSON document, the canonical data: the agent reads it, `--cx` and `--fix` consume it, and it is the input to the HTML renderer. Default output is that raw JSON. On `--html` or an explicit report request, also render it to a single-file HTML report. Full field contract and the render command: [references/html-report.md](references/html-report.md).
+Respect exact output contracts first: `approve`, `No blocking findings.`, verdict-only, blocker-only, or any user-provided shape override the default chat review.
 
-Respect exact output contracts first: `approve`, `No blocking findings.`, verdict-only, blocker-only, or any user-provided shape override the JSON default. With no findings, emit `"findings": []` and state the clean result in `verdict`.
+For normal chat output, give a concise Markdown summary. Start with findings when any exist. For each finding include severity, `path:line`, title, trigger or evidence, impact, and fix direction. If there are no findings, say `No blocking findings.` and name only material validation gaps.
 
-Shape — file-centric (modeled on Anthropic's `03-code-review-pr` example); every field and rule is in [references/html-report.md](references/html-report.md):
+For `--html`, `--fix`, or explicit machine-readable reports, load `references/contracts/result.md` and produce canonical JSON for that workflow. For `--html`, render that same result using `references/workflows/html.md`.
 
-```json
-{
-  "meta": { "project": "acme/web", "scope": "MR !247 · 6 files", "scope_slug": "mr247",
-    "reviewed_sha": "15c25380", "repo_root": "Users/me/Code/web",
-    "mr": { "iid": 247, "title": "标题", "url": "https://gitlab.example/x/-/merge_requests/247" },
-    "author": "Mira Okafor", "branch": "feat/x -> main", "stat": { "add": 142, "del": 38, "files": 6 },
-    "verdict": "方案合理，1 项待跟进", "validation": "仅静态验证", "manual_gap": "未做浏览器实测",
-    "rationale": { "requirement": "要解决什么", "assessment": "方案是否合理" } },
-  "findings": [ { "sev": "P2", "path": "lib/x.ts", "line": 42, "title": "一句话结论",
-    "level": "confirmed", "problem": "什么问题", "trigger": ["触发步骤", "中间步骤", "后果"],
-    "fix": "修复方向", "code_snippet": "-  旧代码行\n+  新代码行", "evidence": "证据", "impact": "影响 / 边界" } ],
-  "files": [ { "path": "lib/x.ts", "add": 19, "del": 6 },
-    { "path": "lib/clean.ts", "add": 4, "del": 1, "note": "无 finding 文件的一句话总结" } ],
-  "notes": [ { "text": "weak 级别的非 finding 说明", "level": "weak" } ]
-}
-```
-
-`sev` is uppercase `P1`/`P2`/`P3`. Order findings by severity, highest first. Omit any optional field that has no content.
-
-**Language**: write `title`, `problem`, `trigger`, `fix`, `evidence`, `impact`, `verdict`, `rationale`, and notes as Chinese prose; keep English only for code identifiers, paths, commands, severity tags, error codes, and host terms (`MR`/`PR`/`SHA`). Do not translate word for word; write native Chinese review prose.
-
-**Evidence level**: `confirmed` and `manual` can be numbered findings; a `manual` finding must name the missing runtime observation in `evidence` or `impact`. `weak` goes in `notes`, never a numbered finding.
-
-Rules:
-
-- Use repo-relative `path:line`, not a basename.
-- Quote only the code needed to prove the claim.
-- Explain project-specific terms on first use.
-- Prefer one concrete scenario over abstract mechanism.
-- Correct fix means root cause plus direct dependents. Flag unrelated rewrites, surrounding refactors, and adjacent cleanup separately.
-- Never fabricate an MR/PR URL: use the host CLI (`glab`/`gh`) web URL or a user-provided one, and omit `mr` when unknown.
-- Do not narrate review mechanics, tool setup, worktree preparation, or skill rules.
-
-## Evolution
-
-At the end of a review or fix run, and when the user asks to evolve the skill or record a review lesson, use [references/self-improvement.md](references/self-improvement.md). Do not output self-improvement content when the user gave an exact output contract such as `approve`, clean-verdict-only, verdict-only, or blocker-only, unless private review-memory recording failed; then state `private review-memory unavailable: <reason>`.
+Do not narrate review mechanics, tool setup, worktree preparation, or skill rules.

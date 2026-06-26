@@ -10,9 +10,8 @@
 // Usage:
 //   node render-review.mjs <data.json>     # or pipe JSON via stdin
 //
-// The agent's only job is to produce the JSON (see references/html-report.md).
-// All HTML structure, escaping, colors, and the diff/risk-map live here, so
-// Codex and Claude Code produce byte-identical reports.
+// The agent's only job is to produce the JSON (see references/contracts/result.md).
+// All HTML structure, escaping, colors, and the diff/risk-map live here.
 //
 // JSDoc typedefs document the JSON contract without a TS toolchain; no @ts-check.
 //
@@ -24,14 +23,15 @@ import { platform } from 'node:os';
 
 /**
  * @typedef {'P1'|'P2'|'P3'} Sev
- * @typedef {'confirmed'|'manual'|'weak'} Level
+ * @typedef {'confirmed'|'manual'} FindingLevel
+ * @typedef {'weak'} NoteLevel
  * @typedef {{ iid: number|string, title?: string, url: string }} MR
  * @typedef {{ requirement?: string, assessment?: string }} Rationale
  * @typedef {{ add?: number, del?: number, files?: number }} Stat
  * @typedef {{ project?: string, scope?: string, scope_slug?: string, reviewed_sha?: string, repo_root?: string, mr?: MR, verdict?: string, validation?: string, manual_gap?: string, rationale?: Rationale, author?: string, branch?: string, stat?: Stat }} Meta
- * @typedef {{ sev: Sev, path: string, line?: number, title: string, level?: Level, problem: string, trigger?: string[], fix: string, fix_code?: string, code_snippet?: string, evidence?: string, impact?: string }} Finding
+ * @typedef {{ sev: Sev, path: string, line?: number, title: string, level?: FindingLevel, problem: string, trigger?: string[], fix: string, fix_code?: string, code_snippet?: string, evidence?: string, impact?: string }} Finding
  * @typedef {{ path: string, add?: number, del?: number, note?: string }} FileEntry
- * @typedef {{ text: string, level?: Level }} Note
+ * @typedef {{ text: string, level?: NoteLevel }} Note
  * @typedef {{ meta?: Meta, findings?: Finding[], files?: FileEntry[], notes?: Note[] }} ReviewData
  */
 
@@ -118,22 +118,93 @@ try {
 /** @type {Meta} */
 const m = data.meta || {};
 /** @type {Finding[]} */
-const findings = data.findings || [];
+const findings = Array.isArray(data.findings) ? data.findings : [];
 /** @type {FileEntry[]} */
-const files = data.files || [];
+const files = Array.isArray(data.files) ? data.files : [];
 /** @type {Note[]} */
-const notes = data.notes || [];
+const notes = Array.isArray(data.notes) ? data.notes : [];
 const repoRoot = m.repo_root || '';
 
-// Required fields render blank silently when missing; warn so a malformed JSON
-// (e.g. a merge that dropped a field) is visible instead of an empty card.
+// Required fields render blank or miscolored when missing; fail before HTML so
+// the JSON contract is enforced at the same boundary that consumes it.
+const VALID_SEV = new Set(['P1', 'P2', 'P3']);
+const VALID_FINDING_LEVEL = new Set(['confirmed', 'manual']);
+const VALID_NOTE_LEVEL = new Set(['weak']);
+/** @param {unknown} v @returns {boolean} */
+const blank = (v) => typeof v !== 'string' || v.trim() === '';
+/** @type {string[]} */
+const contractErrors = [];
+
+if (!data.meta || typeof data.meta !== 'object' || Array.isArray(data.meta)) {
+  contractErrors.push('meta missing required object');
+} else {
+  for (const key of ['project', 'verdict']) {
+    if (blank(/** @type {Record<string, unknown>} */ (data.meta)[key])) {
+      contractErrors.push(`meta.${key} missing required field`);
+    }
+  }
+}
+
+if (!Array.isArray(data.findings)) {
+  contractErrors.push('findings must be an array; use [] for a clean review');
+}
+
+if (data.files != null && !Array.isArray(data.files)) {
+  contractErrors.push('files must be an array when present');
+}
+
+if (data.notes != null && !Array.isArray(data.notes)) {
+  contractErrors.push('notes must be an array when present');
+}
+
 /** @type {(keyof Finding)[]} */
-const REQUIRED = ['sev', 'title', 'problem', 'fix', 'path'];
+const REQUIRED_FINDING = ['sev', 'title', 'problem', 'fix', 'path'];
 findings.forEach((f, i) => {
-  const missing = REQUIRED.filter((k) => !f[k]);
-  if (missing.length)
-    console.error(`render-review: finding[${i}] missing required field(s): ${missing.join(', ')}`);
+  if (!f || typeof f !== 'object' || Array.isArray(f)) {
+    contractErrors.push(`finding[${i}] must be an object`);
+    return;
+  }
+  const missing = REQUIRED_FINDING.filter((k) => blank(f[k]));
+  if (missing.length) {
+    contractErrors.push(`finding[${i}] missing required field(s): ${missing.join(', ')}`);
+  }
+  if (!blank(f.sev) && !VALID_SEV.has(f.sev)) {
+    contractErrors.push(`finding[${i}].sev must be P1, P2, or P3`);
+  }
+  if (f.level != null && !VALID_FINDING_LEVEL.has(f.level)) {
+    contractErrors.push(`finding[${i}].level must be confirmed or manual; move weak items to notes[]`);
+  }
 });
+
+files.forEach((f, i) => {
+  if (!f || typeof f !== 'object' || Array.isArray(f)) {
+    contractErrors.push(`files[${i}] must be an object`);
+    return;
+  }
+  if (blank(f.path)) {
+    contractErrors.push(`files[${i}].path missing required field`);
+  }
+});
+
+notes.forEach((n, i) => {
+  if (!n || typeof n !== 'object' || Array.isArray(n)) {
+    contractErrors.push(`notes[${i}] must be an object`);
+    return;
+  }
+  if (blank(n.text)) {
+    contractErrors.push(`notes[${i}].text missing required field`);
+  }
+  if (n.level != null && !VALID_NOTE_LEVEL.has(n.level)) {
+    contractErrors.push(`notes[${i}].level must be weak when present`);
+  }
+});
+
+if (contractErrors.length) {
+  for (const error of contractErrors) {
+    console.error(`render-review: ${error}`);
+  }
+  process.exit(1);
+}
 
 // Group findings by file; a file's risk tag = the highest severity it carries.
 /** @type {Map<string, Finding[]>} */
@@ -306,7 +377,7 @@ const notesBlock = notes.length
   <section class="notes"><h2>Notes（weak）</h2>${notes.map((n) => `<p>${inline(n.text)}</p>`).join('')}</section>`
   : '';
 
-// --- template (structure fixed; :root colors are the only theming surface) --
+// --- template (structure fixed; :root colors are the only theming entry point) --
 const CSS = `
   /* Anthropic html-effectiveness palette (03-code-review-pr): ivory canvas,
      serif headings, hairline cards, dark diff. Severity is the multi-hue
