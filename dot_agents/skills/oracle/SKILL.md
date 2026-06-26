@@ -11,32 +11,33 @@ name: oracle
 
 Oracle bundles your prompt + selected files into one “one-shot” request so another model can answer with real repo context (API or browser automation). Treat outputs as advisory: verify against the codebase + tests.
 
-## Main use case (browser, GPT‑5.5 Pro)
+## Main use case (browser, GPT Pro)
 
-Default workflow here: `--engine browser` with GPT‑5.5 Pro in ChatGPT. This is the “human in the loop” path: it can take ~10 minutes to ~1 hour; expect a stored session you can reattach to.
+Default workflow here: `--engine browser` with GPT Pro in ChatGPT. This is the “human in the loop” path: it can take ~10 minutes to ~1 hour; expect a stored session you can reattach to.
 
 Recommended defaults:
 
-- Engine: browser (`--engine browser`)
-- Model: GPT‑5.5 Pro (either `--model gpt-5.5-pro` or a ChatGPT picker label like `--model "5.5 Pro"`)
-- Browser profile: use `--copy-profile "$HOME/Library/Application Support/Google/Chrome"` for ChatGPT browser consults on Bryan's machine.
+- Engine + browser: `--engine browser --browser-attach-running --browser-tab current`
+- Model: `--browser-model-strategy current` leaves the picker alone, so the run uses whatever the ChatGPT tab already shows. Pick GPT Pro + Pro extended in the tab before running; the `--model` flag is inert here (only the default `select` strategy reads it).
+- ChatGPT target: reuses the active tab; pass `--chatgpt-url "<project-url>"` only to force a specific Project.
+- Fallback: `--copy-profile` when no running Chrome is attachable (see Engines).
 - Attachments: directories/globs + excludes; avoid secrets.
 
-## Bryan local authorization
+## Local authorization
 
-Bryan has explicitly authorized this skill to use Oracle browser mode and `--copy-profile "$HOME/Library/Application Support/Google/Chrome"` when the requested task is to consult ChatGPT Web, GPT Pro, or Deep Research from Codex or Claude Code.
+The user has explicitly authorized this skill to use Oracle browser mode against the running Chrome (`--browser-attach-running`, `--browser-tab`, `--browser-model-strategy current`, `--chatgpt-url`) and `--copy-profile "$HOME/Library/Application Support/Google/Chrome"` as fallback, when the requested task is to consult ChatGPT Web, GPT Pro, or Deep Research from Codex or Claude Code.
 
-- Do not ask for separate permission just to use `--engine browser` or `--copy-profile` on Bryan's machine.
+- Do not ask for separate permission just to use `--engine browser`, `--browser-attach-running`, `--browser-tab current`, or `--copy-profile` on this machine.
 - Still preview attached file sets with `--dry-run` and `--files-report` when files or globs are involved.
 - Still avoid secrets, private key files, credential files, shell history, browser storage dumps, and broad home-directory uploads.
-- If ChatGPT requires login, captcha, SSO, workspace selection, or manual verification, stop and ask Bryan to complete that step in the visible browser.
+- If ChatGPT requires login, captcha, SSO, workspace selection, or manual verification, stop and ask the user to complete that step in the visible browser.
 - API runs still require explicit user consent because they use API billing rather than the ChatGPT Web subscription.
 
 ## Golden path (fast + reliable)
 
 1. Pick a tight file set (fewest files that still contain the truth).
 2. Preview what you’re about to send (`--dry-run` + `--files-report` when needed).
-3. Run in browser mode for the usual GPT‑5.5 Pro ChatGPT workflow; use API only when you explicitly want it.
+3. Run in browser mode (attach to the running Chrome; preflight first) for the usual GPT Pro ChatGPT workflow; use API only when you explicitly want it.
 4. If the run detaches/timeouts: reattach to the stored session (don’t re-run).
 
 ## Commands (preferred)
@@ -55,8 +56,12 @@ Bryan has explicitly authorized this skill to use Oracle browser mode and `--cop
   - `npx -y @steipete/oracle --perf-trace --perf-trace-path /tmp/oracle-perf.json --dry-run summary -p "<task>" --file "src/**"`
   - Use when CLI startup or time-to-first-output feels slow; inspect `first-output` and `exit`.
 
+- Preflight the attach target (Chrome DevTools port up?):
+  - `lsof -nP -iTCP:9222 -sTCP:LISTEN` (empty output means use the `--copy-profile` fallback instead).
 - Browser run (main path; long-running is normal):
-  - `npx -y @steipete/oracle --engine browser --model gpt-5.5-pro --copy-profile "$HOME/Library/Application Support/Google/Chrome" -p "<task>" --file "src/**"`
+  - `npx -y @steipete/oracle --engine browser --browser-attach-running --browser-tab current --browser-model-strategy current -p "<task>" --file "src/**"`
+  - Fallback when nothing is listening (launches a throwaway signed-in Chrome and switches the picker via `--model`; pass the current Pro model id, e.g. `gpt-5.5-pro`):
+    - `npx -y @steipete/oracle --engine browser --model gpt-5.5-pro --copy-profile "$HOME/Library/Application Support/Google/Chrome" -p "<task>" --file "src/**"`
 
 - Manual paste fallback (assemble bundle, copy to clipboard):
   - `npx -y @steipete/oracle --render --copy -p "<task>" --file "src/**"`
@@ -92,7 +97,9 @@ Bryan has explicitly authorized this skill to use Oracle browser mode and `--cop
 
 - Auto-pick: uses `api` when `OPENAI_API_KEY` is set, otherwise `browser`.
 - Browser engine supports GPT + Gemini only; use `--engine api` for Claude/Grok/Codex or multi-model runs.
-- `--copy-profile <chrome-user-data-dir>`: reuse your **already signed-in** Chrome session with no manual login — copies the profile to a throwaway dir, launches with the real Keychain so its cookies decrypt, runs, then always deletes the copy. Failed/incomplete runs are deleted too, so they cannot be kept, reattached, or sent to an existing/remote browser. e.g. `oracle --engine browser --copy-profile "$HOME/Library/Application Support/Google/Chrome" -p "<task>"`. macOS/Linux; needs `rsync`.
+- `--browser-attach-running` (default browser path here): attaches to an already-running Chrome instead of launching one (defaults to `127.0.0.1:9222`; `--remote-chrome <host:port>` hints a different host). Pair with `--browser-tab current` to drive the live ChatGPT tab (a ref can also be a target id, full URL, or title substring). Preflight the port (see Commands); if nothing listens, fall back to `--copy-profile`.
+- `--browser-model-strategy select|current|ignore`: `select` (Oracle's default) switches the picker to `--model`; `current` keeps whatever model the tab has selected, which is how a hand-set GPT Pro + Pro extended survives (`--model` is then ignored); `ignore` skips the picker entirely.
+- `--copy-profile <chrome-user-data-dir>` (fallback): reuse your **already signed-in** Chrome session with no manual login — copies the profile to a throwaway dir, launches with the real Keychain so its cookies decrypt, runs, then always deletes the copy. Failed/incomplete runs are deleted too, so they cannot be kept, reattached, or sent to an existing/remote browser. e.g. `oracle --engine browser --copy-profile "$HOME/Library/Application Support/Google/Chrome" -p "<task>"`. macOS/Linux; needs `rsync`.
 - **API runs require explicit user consent** before starting because they incur usage costs.
 - Browser attachments:
   - `--browser-attachments auto|never|always` (auto pastes inline up to ~60k chars then uploads).
@@ -123,7 +130,7 @@ Bryan has explicitly authorized this skill to use Oracle browser mode and `--cop
 
 - Stored under `~/.oracle/sessions` (override with `ORACLE_HOME_DIR`).
 - Browser runs save durable files under `~/.oracle/sessions/<id>/artifacts/`, including `transcript.md`, Deep Research reports, and downloaded ChatGPT-generated images when available.
-- Runs may detach or take a long time (browser/API + GPT‑5.5 Pro often does). If the CLI times out: don’t re-run; reattach.
+- Runs may detach or take a long time (browser/API + GPT Pro often does). If the CLI times out: don’t re-run; reattach.
   - List: `oracle status --hours 72`
   - Attach: `oracle session <id> --render`
 - Use `--slug "<3-5 words>"` to keep session IDs readable.
