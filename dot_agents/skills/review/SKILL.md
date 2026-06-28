@@ -5,12 +5,7 @@ argument-hint: "[--fix] [--html] [MR/PR URL or notes]"
 allowed-tools:
   - Bash
   - Read
-  - TaskCreate
-  - TaskGet
-  - TaskList
-  - TaskOutput
-  - TaskStop
-  - TaskUpdate
+  - Agent
 ---
 
 # Review
