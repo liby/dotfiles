@@ -7,7 +7,7 @@ metadata:
     github-tree-sha: c89f61005e0156cc0c106de1e2f0bbdd309c9a5c
 name: oracle
 ---
-# Oracle (CLI) — best use
+# Oracle (CLI): best use
 
 Oracle bundles your prompt + selected files into one “one-shot” request so another model can answer with real repo context (API or browser automation). Treat outputs as advisory: verify against the codebase + tests.
 
@@ -17,17 +17,19 @@ Default workflow here: `--engine browser` with GPT Pro in ChatGPT. This is the �
 
 Recommended defaults:
 
-- Engine + browser: `--engine browser --browser-attach-running --browser-tab current`
-- Model: `--browser-model-strategy current` leaves the picker alone, so the run uses whatever the ChatGPT tab already shows. Pick GPT Pro + Pro extended in the tab before running; the `--model` flag is inert here (only the default `select` strategy reads it).
-- ChatGPT target: reuses the active tab; pass `--chatgpt-url "<project-url>"` only to force a specific Project.
+- Engine + browser: `--engine browser --browser-attach-running`
+- Model: `--browser-model-strategy current` leaves the picker alone on the fresh ChatGPT tab Oracle opens. A model hand-picked in another tab right before the run does not carry to that fresh tab, so make GPT Pro + Pro extended your standing ChatGPT default. The `--model` flag is inert here (only the default `select` strategy reads it).
+- ChatGPT target: Oracle attaches to the running Chrome over the browser WebSocket and opens a fresh ChatGPT tab; pass `--chatgpt-url "<project-url>"` only to force a specific Project.
+- Existing tab reuse: skip it for normal runs. See Known Pitfalls only when the user explicitly wants Oracle CLI to reuse an already-open ChatGPT tab.
 - Fallback: `--copy-profile` when no running Chrome is attachable (see Engines).
 - Attachments: directories/globs + excludes; avoid secrets.
 
 ## Local authorization
 
-The user has explicitly authorized this skill to use Oracle browser mode against the running Chrome (`--browser-attach-running`, `--browser-tab`, `--browser-model-strategy current`, `--chatgpt-url`) and `--copy-profile "$HOME/Library/Application Support/Google/Chrome"` as fallback, when the requested task is to consult ChatGPT Web, GPT Pro, or Deep Research from Codex or Claude Code.
+The user has explicitly authorized this skill to use Oracle browser mode against the running Chrome (`--browser-attach-running`, `--browser-model-strategy current`, `--chatgpt-url`) and `--copy-profile "$HOME/Library/Application Support/Google/Chrome"` as fallback, when the requested task is to consult ChatGPT Web, GPT Pro, or Deep Research from Codex or Claude Code.
 
-- Do not ask for separate permission just to use `--engine browser`, `--browser-attach-running`, `--browser-tab current`, or `--copy-profile` on this machine.
+- Do not ask for separate permission just to use `--engine browser`, `--browser-attach-running`, or `--copy-profile` on this machine.
+- Treat `--browser-tab current` as authorized only when the user explicitly wants existing-tab reuse and the Known Pitfalls check passes.
 - Still preview attached file sets with `--dry-run` and `--files-report` when files or globs are involved.
 - Still avoid secrets, private key files, credential files, shell history, browser storage dumps, and broad home-directory uploads.
 - If ChatGPT requires login, captcha, SSO, workspace selection, or manual verification, stop and ask the user to complete that step in the visible browser.
@@ -37,8 +39,8 @@ The user has explicitly authorized this skill to use Oracle browser mode against
 
 1. Pick a tight file set (fewest files that still contain the truth).
 2. Preview what you’re about to send (`--dry-run` + `--files-report` when needed).
-3. Run in browser mode (attach to the running Chrome; preflight first) for the usual GPT Pro ChatGPT workflow; use API only when you explicitly want it.
-4. If the run detaches/timeouts: reattach to the stored session (don’t re-run).
+3. Run in browser mode (attach to the running Chrome; preflight the port first) for the usual GPT Pro ChatGPT workflow; use API only when you explicitly want it.
+4. If the run detaches/timeouts: reattach to the stored session; do not answer from your own inference while the Oracle run may still be working.
 
 ## Commands (preferred)
 
@@ -59,7 +61,7 @@ The user has explicitly authorized this skill to use Oracle browser mode against
 - Preflight the attach target (Chrome DevTools port up?):
   - `lsof -nP -iTCP:9222 -sTCP:LISTEN` (empty output means use the `--copy-profile` fallback instead).
 - Browser run (main path; long-running is normal):
-  - `npx -y @steipete/oracle --engine browser --browser-attach-running --browser-tab current --browser-model-strategy current -p "<task>" --file "src/**"`
+  - `npx -y @steipete/oracle --engine browser --browser-attach-running --browser-model-strategy current -p "<task>" --file "src/**"`
   - Fallback when nothing is listening (launches a throwaway signed-in Chrome and switches the picker via `--model`; pass the current Pro model id, e.g. `gpt-5.5-pro`):
     - `npx -y @steipete/oracle --engine browser --model gpt-5.5-pro --copy-profile "$HOME/Library/Application Support/Google/Chrome" -p "<task>" --file "src/**"`
 
@@ -97,9 +99,9 @@ The user has explicitly authorized this skill to use Oracle browser mode against
 
 - Auto-pick: uses `api` when `OPENAI_API_KEY` is set, otherwise `browser`.
 - Browser engine supports GPT + Gemini only; use `--engine api` for Claude/Grok/Codex or multi-model runs.
-- `--browser-attach-running` (default browser path here): attaches to an already-running Chrome instead of launching one (defaults to `127.0.0.1:9222`; `--remote-chrome <host:port>` hints a different host). Pair with `--browser-tab current` to drive the live ChatGPT tab (a ref can also be a target id, full URL, or title substring). Preflight the port (see Commands); if nothing listens, fall back to `--copy-profile`.
+- `--browser-attach-running` (default browser path here): attaches to an already-running Chrome instead of launching one (defaults to `127.0.0.1:9222`; `--remote-chrome <host:port>` hints a different host). Omit `--browser-tab` by default so Oracle can use the browser WebSocket to create a new ChatGPT tab. Existing-tab lookup is a separate Oracle CLI path and still requires `/json/list`.
 - `--browser-model-strategy select|current|ignore`: `select` (Oracle's default) switches the picker to `--model`; `current` keeps whatever model the tab has selected, which is how a hand-set GPT Pro + Pro extended survives (`--model` is then ignored); `ignore` skips the picker entirely.
-- `--copy-profile <chrome-user-data-dir>` (fallback): reuse your **already signed-in** Chrome session with no manual login — copies the profile to a throwaway dir, launches with the real Keychain so its cookies decrypt, runs, then always deletes the copy. Failed/incomplete runs are deleted too, so they cannot be kept, reattached, or sent to an existing/remote browser. e.g. `oracle --engine browser --copy-profile "$HOME/Library/Application Support/Google/Chrome" -p "<task>"`. macOS/Linux; needs `rsync`.
+- `--copy-profile <chrome-user-data-dir>` (fallback): reuse your **already signed-in** Chrome session with no manual login. Oracle copies the profile to a throwaway dir, launches with the real Keychain so its cookies decrypt, runs, then always deletes the copy. Failed/incomplete runs are deleted too, so they cannot be kept, reattached, or sent to an existing/remote browser. e.g. `oracle --engine browser --copy-profile "$HOME/Library/Application Support/Google/Chrome" -p "<task>"`. macOS/Linux; needs `rsync`.
 - **API runs require explicit user consent** before starting because they incur usage costs.
 - Browser attachments:
   - `--browser-attachments auto|never|always` (auto pastes inline up to ~60k chars then uploads).
@@ -130,12 +132,21 @@ The user has explicitly authorized this skill to use Oracle browser mode against
 
 - Stored under `~/.oracle/sessions` (override with `ORACLE_HOME_DIR`).
 - Browser runs save durable files under `~/.oracle/sessions/<id>/artifacts/`, including `transcript.md`, Deep Research reports, and downloaded ChatGPT-generated images when available.
-- Runs may detach or take a long time (browser/API + GPT Pro often does). If the CLI times out: don’t re-run; reattach.
+- Runs may detach or take a long time (browser/API + GPT Pro, especially Pro extended, often does). A timeout, quiet terminal, or missing final answer is not evidence that Oracle has no useful result.
+  - Completion gate: keep checking or reattaching until Oracle returns an answer, a clear terminal error, or the user explicitly stops the run. Do not substitute your own judgment for the pending Oracle answer.
   - List: `oracle status --hours 72`
   - Attach: `oracle session <id> --render`
 - Use `--slug "<3-5 words>"` to keep session IDs readable.
 - Duplicate prompt guard exists; use `--force` only when you truly want a fresh run.
 - CLI guardrails: root runs without a prompt exit nonzero; `--dry-run` conflicts with `--render` / `--render-markdown`; Ctrl-C exits foreground API runs with code 130 while browser cleanup/reattach still runs.
+
+## Known Pitfalls
+
+- Existing-tab reuse is not the default Oracle CLI path. Other browser-control agents may find and drive an already-open Chrome tab through a different extension or automation surface, but Oracle 0.15.0 uses `CDP.List` for `--browser-tab current`.
+- On newer approved remote-debugging Chrome flows, the browser WebSocket can work while HTTP `/json/list` returns 404. In that case, omit `--browser-tab` so Oracle opens a fresh ChatGPT tab through the browser WebSocket.
+- Check `/json/list` only when deliberately trying existing-tab reuse or debugging attach behavior:
+  - `/usr/bin/curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9222/json/list`
+  - If it returns 200, `--browser-tab current` can be tried. If it returns 404, do not spend another run on that path.
 
 ## Prompt template (high signal)
 
@@ -151,7 +162,7 @@ Oracle starts with **zero** project knowledge. Assume the model cannot infer you
 
 When you know this will be a long investigation, write a prompt that can stand alone later:
 
-- Top: 6–30 sentence project briefing + current goal.
+- Top: 6 to 30 sentence project briefing + current goal.
 - Middle: concrete repro steps + exact errors + what you already tried.
 - Bottom: attach _all_ context files needed so a fresh model can fully understand (entrypoints, configs, key modules, docs).
 
