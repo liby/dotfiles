@@ -13,18 +13,20 @@ Create one new git branch for: $ARGUMENTS. With empty arguments, derive the bran
 ## Naming Rules
 
 - Use an explicit user-provided branch name when it is valid and unambiguous.
-- If local instructions or the active agent runtime require a specific prefix, use that prefix.
-- Otherwise choose `feature/`, `bugfix/`, or `hotfix/` from the requested change.
+- If local instructions, the user, or the active agent runtime explicitly require one fixed prefix, use that prefix.
+- Otherwise choose `feature/`, `bugfix/`, or `hotfix/` from the requested change. Treat runtime default prefixes such as `codex/` as fallbacks, not requirements.
 - If a ticket number is provided, include it immediately after the prefix.
 - Use lowercase letters, numbers, and hyphens in the descriptive slug. Preserve uppercase ticket prefixes such as `PROJ-1234`.
 - Use `.` only inside version numbers.
 - Use 3 to 8 descriptive words after the prefix or ticket.
-- Use concrete verbs such as `add`, `fix`, `validate`, `reject`, `expose`, or `migrate`. Avoid `tighten`, `streamline`, `enhance`, `refine`, and `polish`.
+- When the slug needs an action, use concrete verbs such as `add`, `validate`, `reject`, `expose`, or `migrate`.
+- Avoid adding a verb that only repeats the prefix meaning, such as `bugfix/fix-login-redirect`.
+- Avoid `tighten`, `streamline`, `enhance`, `refine`, and `polish`.
 
 Examples:
 
 - `feature/upgrade-react-to-version-18`
-- `bugfix/PROJ-3456-fix-login-redirect`
+- `bugfix/PROJ-3456-restore-login-redirect-state`
 - `hotfix/1.2.3-reject-empty-token`
 
 ## Process
@@ -50,7 +52,7 @@ Examples:
 10. Verify upstream safety before any commit or push:
    - Run `git rev-parse --abbrev-ref --symbolic-full-name @{u}`.
    - If it reports no upstream, continue.
-   - If it reports the matching remote feature branch, continue.
+   - If it reports the matching remote branch for the new branch name, continue.
    - If it reports a base branch such as `origin/develop`, run `git branch --unset-upstream`, then verify again.
 
 ## Output
