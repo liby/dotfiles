@@ -38,6 +38,7 @@ export PNPM_HOME="$HOME/Code/.pnpm"
 export PROTO_AUTO_INSTALL_HIDE_OUTPUT=1
 export PROTO_HOME="$HOME/.proto"
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
+export TZ=Asia/Singapore
 
 # PATH configuration
 typeset -aU path
