@@ -84,6 +84,10 @@ Use `::code-comment{...}` only for Codex app inline review findings that should 
 - Update the strategy until it is factually defensible. If uncertainty remains, state the exact gap before proceeding.
 - Do not present the full loop by default. Report only material risks, plan changes, and remaining uncertainty unless the user asks for the full reasoning.
 
+### Reasoning Reliability
+
+- For tasks involving arithmetic, combinatorics, ordering, wording traps, minimum/maximum guarantees, or causal/root-cause claims, do a private solve-then-check pass before any optional commentary or final answer: identify the exact requirement, solve from first principles, look for the likely trap or counterexample, and verify the answer against the original wording. Keep reasoning private; report only the conclusion and essential evidence.
+
 ### Implementation
 
 - Fix root causes. When the architecture conflicts with the change you need, restructure first, then rewrite implementations to fit.
