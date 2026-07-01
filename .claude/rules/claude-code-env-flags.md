@@ -88,16 +88,12 @@ Valid levels are ordered `["low","medium","high","xhigh","max"]`: `max` is the t
 
 Env takes precedence over `effortLevel` and over `/effort` mid-session. On the current model's first launch, `effortLevel` in settings is shadowed by the model's hardcoded launch-default (the resolver keys off specific model ids) until session state "unpins"; env sidesteps that. Accepted trade-off: `/effort` can't override live, restart to change. One more env/settings twin exists as of 2.1.170: `CLAUDE_CODE_AUTO_COMPACT_WINDOW` mirrors the `autoCompactWindow` settings key (we set the settings key only); no other flag in our inventory has one.
 
-## `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING=1`
-
-No-op for the current MAIN model **Opus 4.8**: the flag's effect is `&&`-gated on the model id containing `opus-4-6` or `sonnet-4-6`, and `claude-opus-4-8` matches neither (Fable 5 also matches neither). But NOT dormant: `ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6` plus the CLAUDE.md policy of `model: "sonnet"` subagents means sonnet-4-6 subagent calls run with this flag live — adaptive thinking off, and with `alwaysThinkingEnabled: true` they get forced manual thinking. Whether that combination is intentional for cheap subagents was never recorded (noted 2026-06-10); confirm intent before changing either side. (Adaptive thinking is otherwise resolved per-model. Fable 5 carries a server-side constraint, not a CLI one: an explicit `thinking: {type: "disabled"}` returns HTTP 400 on Fable 5 although Opus 4.x accepts it; per the 2.1.185 model-config docs the workaround is to omit the `thinking` param or send `{type: "adaptive"}`. The CLI knobs `MAX_THINKING_TOKENS=0` / `alwaysThinkingEnabled: false` DO take effect on any model — the earlier note that they "have no effect on Fable 5" was wrong.)
-
 ## `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_SONNET_MODEL`: pinned alias targets
 
 Both are SET and active. (An earlier revision listed `ANTHROPIC_DEFAULT_OPUS_MODEL` under "New env flags observed (not in our settings)" — that was stale once Opus became the main model again.) They pin what the `opus` / `sonnet` aliases resolve to, so a CLI update can't silently drift them:
 
 - `ANTHROPIC_DEFAULT_OPUS_MODEL=claude-opus-4-8` pins the `opus` alias to an exact id. Opus 4.8 is the current main model, and on Vertex this is also the regional target the Fable 5 refusal-fallback reroutes to.
-- `ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-4-6` pins the subagent default (CLAUDE.md mandates `model: "sonnet"` for cheap subagents); this is the id the `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` note above keys off.
+- `ANTHROPIC_DEFAULT_SONNET_MODEL=claude-sonnet-5` pins the subagent default (CLAUDE.md mandates `model: "sonnet"` for cheap subagents).
 
 Do not remove either: dropping one un-pins the alias and lets a CLI update change the main / subagent model under us. The sibling `ANTHROPIC_DEFAULT_FABLE_MODEL` stays unset (Fable is not the current main model).
 
