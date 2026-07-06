@@ -4,7 +4,6 @@ description: Create a new git branch with the repository's branch naming convent
 argument-hint: "[ticket-number] [additional context]"
 allowed-tools:
   - Bash(git:*)
-  - Bash(rg:*)
   - Read
 ---
 
@@ -36,7 +35,7 @@ Examples:
    - `git branch --show-current`
    - `git status --short`
    - `git diff HEAD --stat`
-3. Read local branch-naming instructions when present: `AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `CONTRIBUTING.md`, or `README.md`. Keep this lookup bounded to the repo root and direct instruction files.
+3. Read local branch-naming instructions when present: `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or `README.md`. Keep this lookup bounded to the repo root and direct instruction files.
 4. Generate the branch name from `$ARGUMENTS`, prior conversation context, local instructions, and the current diff summary.
 5. Validate the name:
    - no spaces

@@ -38,7 +38,7 @@ glab mr list -R group/project -F json | jq -r '
   (.[] | [.iid, .title, .author.username, .updated_at[:10]])) | @tsv'
 ```
 
-For API endpoints, use placeholders that `glab api --help` supports. Use `:fullpath` for the current project and literal IID values from the user URL or `glab mr view`.
+For API endpoints, use placeholders that `glab api --help` supports. Use `:fullpath` for the current project and literal IID values from the user URL or `glab mr view`. For raw `glab api` paths, percent-encode the project path and any ref containing `/` (`group%2Fproject`, `feature%2Fbranch`), or use `:fullpath`/`-R` instead.
 
 ```bash
 glab api projects/:fullpath/merge_requests/<iid>/notes | jq -r '

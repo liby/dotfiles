@@ -29,6 +29,7 @@ CLAUDE_CODE_FIELDS = Set[
   "disable-model-invocation",
   "user-invocable",
   "allowed-tools",
+  "disallowed-tools",
   "model",
   "effort",
   "context",
@@ -148,6 +149,22 @@ end
 if options[:smoke]
   Dir.glob(root.join("review/scripts/*.sh").to_s).sort.each do |script|
     errors << "#{rel(script, repo)}: bash -n failed" unless system("bash", "-n", script)
+  end
+
+  # _lib.sh has two consumers: the bash-shebang helper scripts source it, and
+  # agents source it from their zsh Bash tool. Parse checks (-n) cannot catch
+  # the zsh runtime-only failures (read-only $status, tied $path, missing
+  # shopt), so exercise it in both shells.
+  lib = root.join("review/scripts/_lib.sh")
+  if lib.exist?
+    smoke = "source #{lib.to_s.shellescape} && is_secret_like_path '.ENV.production' && ! is_secret_like_path 'src/app.ts'"
+    %w[bash zsh].each do |shell|
+      if system("which", shell, out: File::NULL, err: File::NULL)
+        errors << "#{rel(lib.to_s, repo)}: #{shell} runtime smoke failed" unless system(shell, "-c", smoke, out: File::NULL, err: File::NULL)
+      else
+        warnings << "smoke: #{shell} not found, skipped _lib.sh runtime smoke"
+      end
+    end
   end
 
   CLI_SMOKE_COMMANDS.each do |label, command|

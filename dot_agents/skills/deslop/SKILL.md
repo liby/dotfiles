@@ -1,6 +1,6 @@
 ---
 name: deslop
-description: Run a closing cleanup pass after AI-generated edits, especially after `/review --fix`, to remove generated-code artifacts and catch type-driven refactors that are wrong at runtime. Use when the user says "/deslop", "deslop", or asks for final generated-code cleanup before validation.
+description: Run a closing cleanup pass after AI-generated edits, especially after `/review --fix`, to remove generated-code artifacts and catch type-driven refactors that are wrong at runtime. Use when the user says "/deslop", "deslop", "帮我收尾", or asks for final generated-code cleanup before validation.
 context: fork
 allowed-tools:
   - Bash(git:*)
@@ -16,7 +16,7 @@ Clean only the resolved diff for: $ARGUMENTS. With empty arguments, clean the fu
 
 Build the cleanup scope from both sources, then de-duplicate paths:
 
-1. Branch-relative diff against upstream when set, otherwise remote default branch when available. This catches committed but unmerged work.
+1. Branch-relative diff against upstream when set, otherwise remote default branch when available, using merge-base three-dot semantics (`git diff <base>...HEAD`). This catches committed but unmerged work.
 2. Working-tree diff against `HEAD`, including staged and unstaged tracked files. This catches local edits made after the branch diff.
 
 If branch-relative diff setup fails because no upstream or remote default branch is available, continue with the working-tree diff and report that branch scope was skipped. If a working-tree diff command fails, report the command and stderr summary before stopping. If both scopes are empty, report `no changes to review` and stop.
@@ -52,7 +52,9 @@ If no validation command is available, say exactly what was searched.
 
 ## Output
 
-Return:
+Before returning, re-run `git status --short` and compare it against the scope resolved at start plus your own edits; report anything new or missing as its own line; do not silently reconcile (peer agents may have edited the same tree).
+
+Return the three labels below even when deslop runs alongside other asks in the same turn; do not fold them into a combined prose summary:
 
 - Changed: files and one-line reason for each edit, or `none`
 - Candidates left: ownership-unclear or runtime-unverified items

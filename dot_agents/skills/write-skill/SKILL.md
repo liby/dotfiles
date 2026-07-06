@@ -19,7 +19,7 @@ Write skills that change agent behavior. Keep routing, workflow, tool use, valid
    - Trigger audit: report findings first; do not edit until asked.
    - Split or merge: change structure only when it improves routing or loaded context.
    - Distilled lesson: add a rule only if it clears Rule Hygiene.
-2. If a skill path was given, read `SKILL.md` fully before judging; read linked files only when they affect the change. Re-read right before any full-file rewrite, because an edit since your last read (including the user's own manual trim) is silently lost; prefer targeted edits over rewriting the whole file.
+2. If a skill path was given, read `SKILL.md` fully before judging; read linked files only when they affect the change. Re-read right before any full-file rewrite, and Read before Edit/Write when resuming after compaction, because an edit since your last read (including the user's own manual trim) is silently lost; prefer targeted edits over rewriting the whole file. When the edit tool rejects a stale or unread file ("File has not been read yet" in Claude Code), read the file once and retry; never repeat the identical edit call.
 3. Diagnose at the whole-skill altitude, not just where the request points: when one symptom is reported, check whether the same root cause sits elsewhere and fix it once. Before adding, scan the existing wording for a vague or overlapping rule to sharpen or merge; a new rule is the last resort (Rule Hygiene).
 4. For non-trivial new skills, inspect 2-4 comparable local or public skills. Use actual `SKILL.md` files or current runtime docs, not README claims.
 5. Preserve working trigger behavior unless the task is to change it.
@@ -46,12 +46,13 @@ description: <capability>. Use when <specific triggers>.
 
 Target this local Claude Code and Codex setup in one `SKILL.md`. Keep portable discovery fields (`name`, `description`) clear because both runtimes use them to route. Add `when_to_use` only when extra routing context is worth a field some clients may ignore. Treat the other fields as Claude Code-specific execution metadata; behavior required in both runtimes belongs in the body. Use the [Agent Skills frontmatter spec](https://agentskills.io/specification#frontmatter) for the portable `SKILL.md` baseline and the [Claude Code frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference) for Claude-specific fields, types, and defaults.
 
+- Prefer a short, easy-to-type `name`/directory slug; drop category nouns the description already carries (a platform word in the name duplicates the description and invites renames).
 - Use `disable-model-invocation: true` to stop Claude from auto-loading the skill. Use it for workflows that should run only when the user invokes `/name`, such as deploys, commits, external messages, or other side effects.
 - For a command-like skill (`disable-model-invocation: true`), write its `description` as a one-line human-facing `/` menu summary, not a `Use when...` trigger list. Auto-loading is off, so triggers there are dead text; keep rich triggers on model-invocable skills, where they drive selection.
 - Use `user-invocable: false` only to hide a skill from Claude Code's `/` menu; it does not block model invocation.
 - Use `context: fork` for explicit long-running tasks, independent review, or research. Do not put passive reference knowledge in a fork-only skill.
-- Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution.
-- Treat `allowed-tools` as Claude Code pre-approval metadata, not a deny-list. For bash examples, include command-scoped entries that match the fenced commands. Use deny rules, not `allowed-tools`, to block tools.
+- Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution. `$ARGUMENTS` substitution is Claude Code-only (Codex injects the literal token), so never let dual-runtime behavior depend on it; word the instruction to fall back to the user's accompanying message.
+- Treat `allowed-tools` as Claude Code pre-approval metadata, not a deny-list. For bash examples, include command-scoped entries that match the fenced commands. Use `disallowed-tools` to remove tools from the model while the skill is active (cleared when the user sends the next message); reserve permission deny rules for blocking a tool globally.
 
 ## Structure
 
@@ -60,7 +61,7 @@ Choose the smallest shape that preserves behavior:
 - One durable instruction: frontmatter plus one imperative paragraph.
 - Repeated workflow: short `Process` with numbered steps.
 - Branching intent: `Mode Picker` before mode details.
-- Fragile or repeated command: script with fixed inputs and validation.
+- Fragile or repeated command: script with fixed inputs and validation. Reference bundled scripts as relative links from `SKILL.md`, resolved against the skill's own directory: derivable in both runtimes, unlike Claude Code-only `${CLAUDE_SKILL_DIR}` or a hardcoded install path. Keep an overridable env var (`"${VAR:-<default>}"`) only when a script must also run from outside the skill tree.
 - Tool-rich API/MCP surface: short lookup workflow that caches or splits the tool schema, reads only the relevant tool docs, then calls the tool.
 - Rare or bulky detail: one-level `references/` file.
 - Ephemeral output shape: inline template or short `examples/`.
@@ -68,7 +69,7 @@ Choose the smallest shape that preserves behavior:
 - Reusable final artifacts: `assets/`.
 - Term-dense or ambiguity-sensitive workflow: a short `Glossary`, with `Avoid` synonyms only when term drift changes routing, artifact schema, or safety.
 
-Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool choice, validation, and output detail when they justify the length.
+Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool choice, validation, and output detail when they justify the length. After compaction Claude Code re-attaches only the first ~5,000 tokens per skill (25,000 combined) and Codex drops the body entirely, so put routing, safety, and critical rules near the top of the file.
 
 ## Writing Rules
 
@@ -80,7 +81,7 @@ Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool cho
 - For API, SDK, CLI, platform, or MCP claims, cite current docs, installed help, generated types, source paths, or checked-in examples. If evidence is unavailable, write a research or audit deliverable instead of guessing.
 - Don't instruct the agent to echo, transcribe, or explain its internal reasoning in response text ("show your thinking", "explain your reasoning step by step"). Claude Fable-class models refuse these with the `reasoning_extraction` category and fall back to a weaker model; require conclusions plus evidence (paths, quotes, links) instead.
 - Keep examples only when they prove output shape, trigger boundaries, a failure mode, or a quality boundary (acceptable vs unacceptable output at the same correctness level).
-- In public or shared skills, mask project names, hosts, private paths, clients, internal URLs, credential variable names, token variables, repo paths, and customer data; use them only in a skill explicitly scoped to that private environment.
+- In every skill edit, mask project names, personal names, hosts, private paths, clients, internal URLs, credential variable names, token variables, repo paths, and customer data; use them only in a skill explicitly scoped to that private environment.
 
 ## Rule Hygiene
 
@@ -116,13 +117,13 @@ Give each negative rule a recovery path: what to do instead, when to stop, or wh
 
 Run the checks that match the change and target runtime.
 
-1. Use the skill repo's existing validator, package script, test, lint, or marketplace command first.
+1. Use the skill repo's existing validator, package script, test, lint, or marketplace command first. For skills in this tree, run the [skills validator](../scripts/validate-skills.rb) with `ruby`, resolving the link against this skill's own directory, not the cwd (see `--help` for smoke and deployed-file flags); do not hand-roll frontmatter or reference-link checks.
 2. Verify YAML frontmatter, local-runtime fields, one-hop file references, and changed scripts.
 3. For model-invocable skills, exercise triggers: 3 obvious should-trigger prompts, 3 paraphrases, and 3 near-miss should-not-trigger prompts. For important skills, use 8-10 each. Skip this for `disable-model-invocation` skills the model never auto-loads.
 4. If the skill under-triggers, add user phrases, artifact types, or task verbs to `description`. If it over-triggers, narrow the trigger, add one specific `Not for...`, or split the skill.
 5. For rewrites, state what behavior stayed the same, what changed, and why.
 6. Run changed scripts with fixed inputs. Confirm clear stdout, stderr, exit codes, and failing-path messages.
-7. For public skills, scan for private repo names, machine paths, hostnames, clients, credentials, and internal URLs.
+7. For any skill edit, scan the current diff for private repo names, personal names, machine paths, hostnames, clients, credentials, internal URLs, and hardcoded-but-derivable literals.
 
 ## Output
 

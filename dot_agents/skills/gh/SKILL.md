@@ -40,6 +40,8 @@ gh issue list --repo owner/repo --json number,title,state,updatedAt --jq '
   (.[] | [.number, .title, .state, .updatedAt[:10]])) | @tsv'
 ```
 
+`gh search issues`/`gh search prs` accept only `--state open|closed` (no `all`, unlike `gh issue list --state all`); omit `--state` to get both.
+
 For large paginated responses, stream directly into `jq` and extract only needed fields:
 
 ```bash
@@ -75,6 +77,8 @@ gh skill install <owner/repo> <skill> --dir ~/.agents/skills
 gh skill install <owner/repo> <skill> --agent codex --scope user
 gh skill update --all --dir ~/.agents/skills
 ```
+
+Applying `gh skill update` requires `--all` (or interactive confirmation) even when skill names are given.
 
 Use `--from-local` only when the user asks to install from a local directory. Use `--allow-hidden-dirs` only when the source repo stores skills under hidden directories.
 

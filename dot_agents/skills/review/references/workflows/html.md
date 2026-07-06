@@ -11,7 +11,7 @@ DATA=$(mktemp)   # write the review JSON to this file, or pipe it on stdin
 node "$RENDER" "$DATA"
 ```
 
-The script writes `/tmp/review/<project>/<scope_slug>-<timestamp>.html`, opens it, and prints the path. Timestamp is local time at minute precision, for example `202606031019`.
+The script writes `/tmp/review/<project>/<scope_slug>-<timestamp>.html`, opens it, and prints the path. Timestamp is local time at minute precision, for example `202606031019`. Opening is a side effect via `open`/`xdg-open`; if the Bash call is denied, do not retry: report the JSON and HTML paths plus the render command for the user to run manually.
 
 The JSON is the same canonical review data used by structured review workflows. The HTML workflow only adds rendering.
 

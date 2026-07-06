@@ -1,4 +1,12 @@
-{
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Partial management of ~/.claude/settings.json. The Claude Code CLI
+      writes runtime state into this file (/model and /effort defaults,
+      one-time dialog acks, keys added by future CLI versions); a plain
+      source file made every unscoped `chezmoi apply` silently revert them.
+      Semantics: every top-level key in $managed is enforced from source
+      (whole subtree replaced); $seeds are written only when absent, then
+      owned by the CLI; everything else in the target passes through. */ -}}
+{{- $managed := `{
   "cleanupPeriodDays": 99999,
   "env": {
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-8",
@@ -79,8 +87,6 @@
       "Bash(*git push*)"
     ]
   },
-  "model": "claude-sonnet-5[1m]",
-  "effortLevel": "high",
   "hooks": {
     "PreToolUse": [
       {
@@ -156,9 +162,20 @@
   "awaySummaryEnabled": false,
   "autoDreamEnabled": true,
   "showThinkingSummaries": true,
-  "skipDangerousModePermissionPrompt": true,
-  "skipWorkflowUsageWarning": true,
-  "skipAutoPermissionPrompt": true,
   "preferredNotifChannel": "ghostty",
-  "showTurnDuration": false
-}
+  "showTurnDuration": false,
+  "skipAutoPermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "skipDangerousModePermissionPrompt": true
+}` | fromJson -}}
+{{- $seeds := `{
+  "model": "claude-sonnet-5[1m]",
+  "effortLevel": "high"
+}` | fromJson -}}
+{{- $out := dict -}}
+{{- if .chezmoi.stdin -}}{{- $out = fromJson .chezmoi.stdin -}}{{- end -}}
+{{- range $k, $v := $managed -}}{{- $out = set $out $k $v -}}{{- end -}}
+{{- range $k, $v := $seeds -}}
+{{-   if not (hasKey $out $k) -}}{{- $out = set $out $k $v -}}{{- end -}}
+{{- end -}}
+{{ toPrettyJson $out }}

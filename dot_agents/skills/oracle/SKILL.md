@@ -19,7 +19,7 @@ Recommended defaults:
 
 - Engine + browser: `--engine browser --browser-attach-running`
 - Model: `--browser-model-strategy current` leaves the picker alone on the fresh ChatGPT tab Oracle opens. A model hand-picked in another tab right before the run does not carry to that fresh tab, so make GPT Pro + Pro extended your standing ChatGPT default. The `--model` flag is inert here (only the default `select` strategy reads it).
-- ChatGPT target: Oracle attaches to the running Chrome over the browser WebSocket and opens a fresh ChatGPT tab; pass `--chatgpt-url "<project-url>"` only to force a specific Project.
+- ChatGPT target: Oracle attaches to the running Chrome over the browser WebSocket and opens a fresh ChatGPT tab; pass `--chatgpt-url "<project-url>"` to force a specific Project (a `--followup` run also passes it; see Sessions + slugs).
 - Existing tab reuse: skip it for normal runs. See Known Pitfalls only when the user explicitly wants Oracle CLI to reuse an already-open ChatGPT tab.
 - Fallback: `--copy-profile` when no running Chrome is attachable (see Engines).
 - Attachments: directories/globs + excludes; avoid secrets.
@@ -91,7 +91,7 @@ The user has explicitly authorized this skill to use Oracle browser mode against
 ## Budget + observability
 
 - Target: keep total input under ~196k tokens.
-- Use `--files-report` (and/or `--dry-run json`) to spot the token hogs before spending.
+- Use `--files-report` (and/or `--dry-run json`) to spot the token hogs before spending. `--dry-run json` prints banner lines before the JSON body, so don't pipe it straight to `jq`; extract from the first `{` (e.g. `sed -n '/^{/,$p'`) or use `--dry-run summary --files-report` instead.
 - Use `--perf-trace` / `ORACLE_PERF_TRACE=1` for startup and first-output timing. Traces redact prompts, tokens, keys, cookies, and inline cookie payloads; detached API children write a session-suffixed sidecar trace.
 - If you need hidden/advanced knobs: `npx -y @steipete/oracle --help --verbose`.
 
@@ -137,6 +137,7 @@ The user has explicitly authorized this skill to use Oracle browser mode against
   - List: `oracle status --hours 72`
   - Attach: `oracle session <id> --render`
 - Use `--slug "<3-5 words>"` to keep session IDs readable.
+- Before `--followup` with `--engine browser`, capture the chatgpt.com conversation URL from the first run's output/session artifacts and pass it explicitly via `--chatgpt-url`; do not rely on `--browser-attach-running` to find the right tab (it can attach to an unrelated open ChatGPT tab and silently post there).
 - Duplicate prompt guard exists; use `--force` only when you truly want a fresh run.
 - CLI guardrails: root runs without a prompt exit nonzero; `--dry-run` conflicts with `--render` / `--render-markdown`; Ctrl-C exits foreground API runs with code 130 while browser cleanup/reattach still runs.
 

@@ -56,7 +56,7 @@ P1 and P2 findings may enter automatic mutation. P3 findings enter automatic mut
 
 ## Baseline
 
-Before the first edit, write `$FIX_SCOPE_FILE` as NUL-delimited repo-relative paths the current review scope permits the fixer to touch. Include initial frontier paths and direct dependents likely required by fixes. Do not include unrelated dirty files. Then run:
+Before the first edit, create `FIX_SCOPE_FILE=$(mktemp)` and fill it with NUL-delimited repo-relative paths the current review scope permits the fixer to touch. Include initial frontier paths and direct dependents likely required by fixes. Do not include unrelated dirty files. Only after the file is written, run:
 
 ```bash
 REVIEW_SKILL_DIR="${REVIEW_SKILL_DIR:-$HOME/.agents/skills/review}"

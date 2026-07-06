@@ -8,6 +8,10 @@ Records only the `dot_claude/settings.json` values a cold reader would misjudge 
 - Re-check or delete an entry after a CC upgrade changes what it records (gate removed, parser flipped, default changed). Verify against the current binary: `rg -a -o '<name>' ~/.local/share/claude/versions/<ver>`; drop it if it no longer holds.
 - Record the conclusion and the trap, not the changelog; git history and the docs carry provenance.
 
+## The source is `modify_settings.json`, not a plain file
+
+`dot_claude/modify_settings.json` is a chezmoi modify-template: apply enforces its inline managed JSON (env, permissions, hooks, `skip*` dialog acks, ...) and passes every other key through from the live file. `model`, `effortLevel`, and `ultracode` are runtime-owned (the CLI writes them via /model and /effort; the template only seeds model/effortLevel on a fresh machine), so those keys never show drift and apply never reverts them; a plain source file did exactly that, silently rolling back a /model default. Traps: `chezmoi re-add ~/.claude/settings.json` is a silent no-op on this target; editing the live file only sticks for runtime-owned keys, and a managed-key edit reverts on the next apply: change those via `chezmoi edit ~/.claude/settings.json`, which opens the template. Do not "simplify" it back to a plain source file.
+
 ## `DISABLE_TELEMETRY=1` freezes feature gates
 
 It kills the GrowthBook fetch, so gates resolve from the binary's build-time snapshot and server rollouts never reach this install. The per-gate env override still works, making the `env` block our only feature-delivery lever. Three flags are force-on this way (env -> gate): `CLAUDE_CODE_NEW_INIT` (`tengu_slate_harbor_experiment`), `CLAUDE_CODE_FORK_SUBAGENT` (`tengu_copper_fox`), `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` (`tengu_amber_flint`). Not the same as `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, which also kills auto-update (kept ON here).

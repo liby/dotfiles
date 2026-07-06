@@ -144,6 +144,12 @@ Use `::code-comment{...}` only for Codex app inline review findings that should 
 - Subagent findings must include concrete evidence (file paths, line numbers, source links, or quoted snippets); dismiss findings that lack it.
 - Wait for all subagents to complete before yielding.
 
+## Runtime Traps
+
+- Quote any shell argument containing `?`, `*`, or `[` (API paths, URLs, query strings): this exec shell is zsh with NOMATCH on, so an unquoted glob character aborts the command with `no matches found` before it runs. Quote `{` too; unquoted `{a,b}` silently brace-expands into multiple arguments instead of failing.
+- If a pre-commit hook fails with `Unsupported engine`, compare `node -v` against the repo's declared engine first: this shell's PATH can resolve a stale Node/pnpm instead of the version-manager shim the interactive terminal uses.
+- After context compaction, an invoked skill's body is dropped and only its `[$name](path)` link survives: re-read the `SKILL.md` before acting on its instructions.
+
 ## Tools
 
 - Search: `rg` for content, `fd` for files. Prefer these over `grep`/`find` for speed and saner defaults.

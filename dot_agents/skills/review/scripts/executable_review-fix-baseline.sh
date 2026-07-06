@@ -18,6 +18,12 @@ if [ ! -f "$FIX_SCOPE_FILE" ]; then
   echo "${0##*/}: fix scope file does not exist" >&2
   exit 2
 fi
+# An empty scope would snapshot zero paths yet print a plausible baseline id;
+# a later rollback against it would overwrite scope files with HEAD content.
+if [ ! -s "$FIX_SCOPE_FILE" ]; then
+  echo "${0##*/}: empty fix scope file" >&2
+  exit 2
+fi
 
 validate_path_file_nul "$FIX_SCOPE_FILE" || exit 4
 
