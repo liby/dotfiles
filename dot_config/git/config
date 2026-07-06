@@ -60,7 +60,8 @@
 
 [fetch]
   prune = true
-  pruneTags = true
+  pruneTags = false
+  writeCommitGraph = true
 
 [filter "lfs"]
   clean = git-lfs clean -- %f
@@ -84,14 +85,19 @@
 
 [push]
   autoSetupRemote = true
+  useForceIfIncludes = true
 
 [rebase]
   autosquash = true
   autostash = true
-  updateRefs = true
+  missingCommitsCheck = warn
+  updateRefs = false
 
 [rerere]
   enabled = true
+
+[status]
+  showStash = true
 
 [includeIf "gitdir:~/Code/GitHub/"]
   path = github.config
