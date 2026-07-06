@@ -92,6 +92,9 @@ Use `::code-comment{...}` only for Codex app inline review findings that should 
 
 - Fix root causes. When the architecture conflicts with the change you need, restructure first, then rewrite implementations to fit.
 - Code for observed reality.
+- For stateful lifecycle or concurrency work, model durable outcomes explicitly in the system of record when callers must distinguish missing, active, retryable, needs-action, or terminal states. Do not rely only on missing records, logs, or exceptions for actionable states.
+- When more than one writer can mutate the same logical resource, including concurrent executions of one path, put the transition in the owning layer and coordinate writers with the simplest real boundary: single writer, transaction, compare-and-set/update predicate, lock, queue, or idempotency key. If that boundary waits across external I/O, set a timeout and state why blocking is acceptable.
+- Commit durable state before best-effort side effects; log and reconcile those failures unless the side effect is part of the success contract.
 - When a guard is needed, throw a hard assertion that exposes the failure.
 - Let errors propagate through business logic. Catch only at API, route, or job boundaries where recovery is defined.
 - Do not return `null`, `undefined`, `false`, or `[]` from a guard to hide a failure.
