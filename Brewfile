@@ -29,6 +29,8 @@ brew "git-lfs"
 brew "glab"
 # GNU Privacy Guard (OpenPGP)
 brew "gnupg"
+# Agent multiplexer that lives in your terminal
+brew "herdr"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Mac App Store command-line interface

@@ -1,0 +1,29 @@
+onboarding = false
+
+[experimental]
+switch_ascii_input_source_in_prefix = true
+
+pane_history = true
+
+[keys]
+split_vertical = ["prefix+v", "alt+v"]
+split_horizontal = ["prefix+minus", "alt+shift+v"]
+
+new_tab = ["prefix+c", "alt+t"]
+new_workspace = ["prefix+shift+n", "alt+w"]
+goto = ["prefix+g", "alt+g"]
+
+close_pane = ["prefix+x", "alt+x"]
+close_tab = ["prefix+shift+x", "alt+shift+x"]
+
+settings = ["prefix+s", "alt+comma"]
+
+[theme]
+name = "one-dark"
+auto_switch = false
+
+[ui.sound]
+enabled = false
+
+[ui.toast]
+delivery = "terminal"
