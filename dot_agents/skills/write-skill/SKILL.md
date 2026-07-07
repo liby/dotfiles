@@ -19,12 +19,14 @@ Write skills that change agent behavior. Keep routing, workflow, tool use, valid
    - Trigger audit: report findings first; do not edit until asked.
    - Split or merge: change structure only when it improves routing or loaded context.
    - Distilled lesson: add a rule only if it clears Rule Hygiene.
+
+   When a step sequence keeps finishing early, sharpen that step's done-condition first (local and cheap); split into a separate skill only when the condition cannot be sharpened further and the rush is actually observed in real runs. Splitting pays off only across a real context boundary (a `context: fork` skill, a subagent dispatch, or a user `/name` invocation hand-off): an inline model-invoked skill call leaves the later steps in the same window and clears nothing. When renaming, splitting, merging, or deleting a skill, `rg` sibling skills' `description`, `when_to_use`, and body routing lines and update every pointer.
 2. If a skill path was given, read `SKILL.md` fully before judging; read linked files only when they affect the change. Re-read right before any full-file rewrite, and Read before Edit/Write when resuming after compaction, because an edit since your last read (including the user's own manual trim) is silently lost; prefer targeted edits over rewriting the whole file. When the edit tool rejects a stale or unread file ("File has not been read yet" in Claude Code), read the file once and retry; never repeat the identical edit call.
 3. Diagnose at the whole-skill altitude, not just where the request points: when one symptom is reported, check whether the same root cause sits elsewhere and fix it once. Before adding, scan the existing wording for a vague or overlapping rule to sharpen or merge; a new rule is the last resort (Rule Hygiene).
 4. For non-trivial new skills, inspect 2-4 comparable local or public skills. Use actual `SKILL.md` files or current runtime docs, not README claims.
 5. Preserve working trigger behavior unless the task is to change it.
 6. Ask one question only when the requested behavior still has multiple valid interpretations after reading the relevant files.
-7. Before finishing, run a subtraction pass: merge what you duplicated, relocate what drifted from its section, move rare detail to a reference. Rewrite existing wording only when the change is a clear win, shorter without losing information; leave a dense sentence alone when every clause carries weight. The edit should leave the skill net flat or shorter unless it added genuinely new behavior.
+7. Before finishing, run a subtraction pass: merge what you duplicated, delete what went stale, relocate what drifted from its section, disclose rare detail into a reference. Rewrite existing wording only when the change is a clear win, shorter without losing information; leave a dense sentence alone when every clause carries weight. The edit should leave the skill net flat or shorter unless it added genuinely new behavior.
 
 ## Routing
 
@@ -35,6 +37,7 @@ description: <capability>. Use when <specific triggers>.
 ```
 
 - Include task verbs, artifact types, file extensions, user phrases, or contexts that should trigger the skill.
+- Source trigger words from phrases you have actually typed and from vocabulary already living in your prompts, docs, and repos, not invented synonyms. Cross-language and register variants ("排查", "debug", "used to work and now fails") are distinct recall surfaces, not duplication. Before collapsing same-language, same-branch synonyms, run Verification's paraphrase prompts against the shortened description and delete a word only when every paraphrase still triggers; if one stops triggering, put it back.
 - Add `Not for...` only when a realistic nearby task would otherwise select the wrong skill. Name the competing task or alternate route.
 - For paired or tiered surfaces, name the boundary in the description: lightweight search/read connector vs advanced API connector, read-only browse vs write/manage, local CLI vs remote host, public source vs private workspace.
 - Do not exclude a broader user request that can legitimately include this skill as a step, such as using a commit step inside a requested push. Put write, push, delete, or credential safety limits in the body workflow instead.
@@ -48,6 +51,7 @@ Target this local Claude Code and Codex setup in one `SKILL.md`. Keep portable d
 
 - Prefer a short, easy-to-type `name`/directory slug; drop category nouns the description already carries (a platform word in the name duplicates the description and invites renames).
 - Use `disable-model-invocation: true` to stop Claude from auto-loading the skill. Use it for workflows that should run only when the user invokes `/name`, such as deploys, commits, external messages, or other side effects.
+- Do not set `disable-model-invocation` on a skill that other skills load: a skill-from-skill load is a model invocation, so the flag also removes the skill from their reach. A shared reference skill loaded by downstream skills stays model-invocable, with a `description` that names that downstream role; content shared between two `/`-only skills can only live in a plain linked file. Before setting the flag, `rg` sibling skills for the skill's name.
 - For a command-like skill (`disable-model-invocation: true`), write its `description` as a one-line human-facing `/` menu summary, not a `Use when...` trigger list. Auto-loading is off, so triggers there are dead text; keep rich triggers on model-invocable skills, where they drive selection.
 - Use `user-invocable: false` only to hide a skill from Claude Code's `/` menu; it does not block model invocation.
 - Use `context: fork` for explicit long-running tasks, independent review, or research. Do not put passive reference knowledge in a fork-only skill.
@@ -63,13 +67,15 @@ Choose the smallest shape that preserves behavior:
 - Branching intent: `Mode Picker` before mode details.
 - Fragile or repeated command: script with fixed inputs and validation. Reference bundled scripts as relative links from `SKILL.md`, resolved against the skill's own directory: derivable in both runtimes, unlike Claude Code-only `${CLAUDE_SKILL_DIR}` or a hardcoded install path. Keep an overridable env var (`"${VAR:-<default>}"`) only when a script must also run from outside the skill tree.
 - Tool-rich API/MCP surface: short lookup workflow that caches or splits the tool schema, reads only the relevant tool docs, then calls the tool.
-- Rare or bulky detail: one-level `references/` file.
+- Rare or bulky detail: one-level `references/` file. State each link's load condition ("Load when <trigger>", not a bare "see X"); the pointer's wording, not its target, decides whether the file gets read.
 - Ephemeral output shape: inline template or short `examples/`.
 - Durable cross-session or shared artifact: a one-hop `<NAME>-FORMAT.md` contract carrying a filled template, a when-to-write gate, and lifecycle rules. Link it from `SKILL.md` and load it before writing that artifact, or it becomes dead documentation. Use it only when the schema must hold across writes or sessions or another skill shares it; below that bar keep the shape inline.
 - Reusable final artifacts: `assets/`.
 - Term-dense or ambiguity-sensitive workflow: a short `Glossary`, with `Avoid` synonyms only when term drift changes routing, artifact schema, or safety.
 
-Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool choice, validation, and output detail when they justify the length. After compaction Claude Code re-attaches only the first ~5,000 tokens per skill (25,000 combined) and Codex drops the body entirely, so put routing, safety, and critical rules near the top of the file.
+Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool choice, validation, and output detail when they justify the length. Past the threshold, diagnose which disease the length is before picking a cure. Stale accumulation gets deleted, not moved into `references/` where the rot keeps living. The same meaning written in several places merges back to a single home. Only when every line is alive and the file is still long is it structural surgery: push material that only some paths need down into `references/`, keep the common path inline; deleting lines cannot cure this one.
+
+After compaction Claude Code re-attaches only the first ~5,000 tokens per skill (25,000 combined) and Codex drops the body entirely, so put routing, safety, and critical rules near the top of the file.
 
 ## Writing Rules
 
@@ -91,7 +97,7 @@ Keep a rule when it changes agent behavior and names at least three of: trigger,
 
 **Formatting carries behavioral weight.** A standalone heading, a bolded imperative, or a calibration example gives a rule higher priority in the agent's reading. Merging a heading-level rule into a bullet, unbolding an imperative, or deleting a before/after example downgrades it, so a rule that restates a nearby one at higher prominence is reinforcement, not redundancy: merge the text but keep the prominence. Before downgrading, confirm the weight does not depend on the prominence.
 
-For evaluator, verifier, rubric, PASS/FAIL, completion-gate, or transcript-derived rules, require the trigger, evidence, PASS/FAIL or manual-observation condition, action to take on failure or stop, and owner. The owner must be the project skill, target repo, user confirmation, or CLI/runtime. Keep trace stores, durable session logs, sandbox state, and automatic progress ledgers out of shared skill text unless every target runtime supports the mechanism or the skill explicitly branches by runtime. For transcript-derived rules, cite bounded evidence internally, distill the reusable failure mode, and do not copy raw transcript prose into public skills.
+For evaluator, verifier, rubric, PASS/FAIL, completion-gate, or transcript-derived rules, require the trigger, evidence, PASS/FAIL or manual-observation condition, action to take on failure or stop, and owner. The owner must be the project skill, target repo, user confirmation, or CLI/runtime. The completion bar reaches past evaluator rules: in any skill with a Process, end each numbered step on a checkable done-condition, its demand graded to the coverage the step must force ("every changed file accounted for" forces digging; "produce a change list" does not; "understanding reached" is not even checkable). A flat rules-only skill carries one exhaustiveness bar instead, such as "apply every loaded rule to every hunk"; a single-paragraph skill is exempt. Keep trace stores, durable session logs, sandbox state, and automatic progress ledgers out of shared skill text unless every target runtime supports the mechanism or the skill explicitly branches by runtime. For transcript-derived rules, cite bounded evidence internally, distill the reusable failure mode, and do not copy raw transcript prose into public skills.
 
 Delete or merge rules that:
 
@@ -120,7 +126,7 @@ Run the checks that match the change and target runtime.
 1. Use the skill repo's existing validator, package script, test, lint, or marketplace command first. For skills in this tree, run the [skills validator](../scripts/validate-skills.rb) with `ruby`, resolving the link against this skill's own directory, not the cwd (see `--help` for smoke and deployed-file flags); do not hand-roll frontmatter or reference-link checks.
 2. Verify YAML frontmatter, local-runtime fields, one-hop file references, and changed scripts.
 3. For model-invocable skills, exercise triggers: 3 obvious should-trigger prompts, 3 paraphrases, and 3 near-miss should-not-trigger prompts. For important skills, use 8-10 each. Skip this for `disable-model-invocation` skills the model never auto-loads.
-4. If the skill under-triggers, add user phrases, artifact types, or task verbs to `description`. If it over-triggers, narrow the trigger, add one specific `Not for...`, or split the skill.
+4. If the skill under-triggers, add user phrases, artifact types, or task verbs to `description`. If it over-triggers, narrow the trigger, add one specific `Not for...`, or split the skill. When the agent skips a linked file in a real run, sharpen the pointer's wording (state its trigger) before inlining the material back.
 5. For rewrites, state what behavior stayed the same, what changed, and why.
 6. Run changed scripts with fixed inputs. Confirm clear stdout, stderr, exit codes, and failing-path messages.
 7. For any skill edit, scan the current diff for private repo names, personal names, machine paths, hostnames, clients, credentials, internal URLs, and hardcoded-but-derivable literals.

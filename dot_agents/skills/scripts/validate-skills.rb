@@ -9,9 +9,8 @@ require "shellwords"
 require "timeout"
 require "yaml"
 
-options = { include_deployed_snow: false, smoke: false }
+options = { smoke: false }
 OptionParser.new do |opts|
-  opts.on("--include-deployed-snow", "Also validate ~/.agents/skills/snow") { options[:include_deployed_snow] = true }
   opts.on("--smoke", "Run local CLI help and shell syntax checks") { options[:smoke] = true }
 end.parse!
 
@@ -51,11 +50,14 @@ CLI_SMOKE_COMMANDS = [
 ].freeze
 
 skill_files = Dir.glob(root.join("*/SKILL.md").to_s).sort
-deployed_snow = File.expand_path("~/.agents/skills/snow/SKILL.md")
-skill_files << deployed_snow if options[:include_deployed_snow] && File.file?(deployed_snow)
+encrypted_names = Dir.glob(root.join("*/encrypted_SKILL.md.asc").to_s).map { |path| File.basename(File.dirname(path)) }.to_set
+source_names = skill_files.map { |path| File.basename(File.dirname(path)) }.to_set | encrypted_names
+DEPLOYED_ROOT = File.expand_path("~/.agents/skills")
 
 def rel(path, base)
-  Pathname.new(path).relative_path_from(base).to_s
+  relative = Pathname.new(path).relative_path_from(base).to_s
+  return relative unless relative.start_with?("..")
+  path.to_s.sub(/\A#{Regexp.escape(Dir.home)}(?=\/)/, "~")
 rescue ArgumentError
   path.to_s
 end
@@ -94,6 +96,32 @@ def line_command(line)
   File.basename(cmd)
 end
 
+# Deployed pass over ~/.agents/skills (skipped silently when absent, e.g. CI).
+# Encrypted sources (snow/pm/pcop) are ciphertext in this repo, so the deployed
+# plaintext is the only validatable copy; dirs without a SKILL.md (scripts/) are
+# not skills. Deployed-only skills get provenance warnings, not content checks.
+deployed_names = Set.new
+pointer_scan = []
+Dir.glob(File.join(DEPLOYED_ROOT, "*/SKILL.md")).sort.each do |path|
+  dir_name = File.basename(File.dirname(path))
+  deployed_names << dir_name
+  if encrypted_names.include?(dir_name)
+    skill_files << path
+    next
+  end
+  next if source_names.include?(dir_name)
+
+  frontmatter, = parse_skill(path)
+  frontmatter = {} unless frontmatter.is_a?(Hash)
+  metadata = frontmatter["metadata"].is_a?(Hash) ? frontmatter["metadata"] : {}
+  if metadata.key?("github-repo") || metadata.key?("source") || frontmatter.key?("source")
+    warnings << "~/.agents/skills/#{dir_name}: vendored, not backed up in git"
+  else
+    warnings << "~/.agents/skills/#{dir_name}: unmanaged, no provenance"
+  end
+  pointer_scan << ["~/.agents/skills/#{dir_name}/SKILL.md", frontmatter]
+end
+
 skill_files.each do |path|
   frontmatter, text = parse_skill(path)
   label = rel(path, repo)
@@ -101,10 +129,13 @@ skill_files.each do |path|
     errors << "#{label}: missing or malformed YAML frontmatter"
     next
   end
+  pointer_scan << [label, frontmatter]
 
   name = frontmatter["name"].to_s.strip
   desc = frontmatter["description"].to_s.strip
+  dir_name = File.basename(File.dirname(path))
   errors << "#{label}: missing name" if name.empty?
+  errors << "#{label}: name #{name.inspect} does not match directory #{dir_name.inspect}" unless name.empty? || name == dir_name
   errors << "#{label}: name exceeds 64 chars" if name.length > 64
   warnings << "#{label}: name uses a reserved Claude term" if name.match?(/(?:claude|anthropic)/i)
   warnings << "#{label}: name contains XML angle brackets" if name.match?(/[<>]/)
@@ -142,6 +173,27 @@ skill_files.each do |path|
       cmd = line_command(line)
       next unless cmd && !allowlist.include?(cmd)
       warnings << "#{label}: bash block uses #{cmd.inspect} but allowed-tools does not list Bash(#{cmd}:*)"
+    end
+  end
+end
+
+# Catches retired-skill leftovers: each smoke label starts with the skill name.
+known_names = source_names | deployed_names
+CLI_SMOKE_COMMANDS.each do |smoke_label, _command|
+  skill = smoke_label.split(/\s+/).first
+  warnings << "CLI_SMOKE_COMMANDS: #{smoke_label.inspect} does not match any known skill" unless known_names.include?(skill)
+end
+
+# Routing pointers like "(use pm first)" rot silently when the target skill is
+# renamed or retired. Deployed-only skills are legitimate targets, so without
+# the deployed tree (CI) the known-name set is incomplete and any warning could
+# be a false positive; only warn when the deployed tree exists.
+if Dir.exist?(DEPLOYED_ROOT)
+  pointer_scan.each do |scan_label, frontmatter|
+    %w[description when_to_use].each do |field|
+      frontmatter[field].to_s.scan(/\(use ([A-Za-z0-9_-]+)(?: first)?\)/).flatten.each do |target|
+        warnings << "#{scan_label}: routing pointer to unknown skill #{target.inspect}" unless known_names.include?(target)
+      end
     end
   end
 end

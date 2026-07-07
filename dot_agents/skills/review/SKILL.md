@@ -28,7 +28,7 @@ Read, verify, report. Clean verdicts and no-op are valid outcomes. Default revie
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`
    - MR/PR: compare host changed files with the local checkout or diff
 4. Read local instructions that can change review rules: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`, `README.md`, `REVIEW.md`, `CODE_REVIEW.md`, project review commands, and project review skills.
-5. Read the MR/PR description and discussions when available.
+5. Read the MR/PR description and discussions when available. Treat prior review rounds, own or others', as review state: a finding the maintainer dismissed with a load-bearing reason is mentioned as one "previously dismissed" line, not re-reported as a numbered finding, unless a new commit or new evidence changes the conclusion; prior open questions that were answered fold into the current judgment instead of being re-asked. Exception: a `P1` security or data-integrity finding re-verified on equal-or-stronger evidence is still reported, labeled "previously dismissed, re-raised because X".
 6. Read touched files, adjacent code, direct call sites, and relevant tests before final severity.
 7. For exported identifiers, deleted symbols, schema fields, event names, and shared helpers, `rg` callers, readers, writers, and tests.
 8. Load the surface rule file(s) whose changed path or runtime matches, from `references/rules/`:
@@ -66,6 +66,7 @@ A lower-priority rule may narrow a higher-priority rule by supplying a concrete 
 - Rule files identify review candidates. A checklist item is not reportable until it satisfies the Finding Bar with a concrete trigger path, evidence, impact, and fix direction.
 - Load [result](references/contracts/result.md) before producing canonical review JSON, before handing findings to `--fix`, or before rendering HTML.
 - Load [fix](references/workflows/fix.md) only when `--fix` was requested, after the normal review has produced accepted findings, and before any mutation.
+- Load [second-opinion](references/workflows/second-opinion.md) when dispatching independent reviewers in a large or high-risk review, before composing their briefs.
 - Load [html](references/workflows/html.md) only when an HTML artifact was requested and the canonical review result already exists.
 
 ## Review Variants
@@ -77,7 +78,7 @@ A lower-priority rule may narrow a higher-priority rule by supplying a concrete 
 | `--html` | `--html`, report, artifact, or visual view | Load [result](references/contracts/result.md), produce the same review JSON, then render with [html](references/workflows/html.md). |
 | `--fix` | `--fix` after review | Run the normal review first. If accepted findings exist and a writable local checkout is available, load [fix](references/workflows/fix.md) before mutation. |
 | Spec-backed review | MR/PR description, issue, Jira, PRD, or explicit requirements exist | Map each requirement to a diff change; report missing or partial implementation and unrequested behavior beyond the spec as separate findings so one axis does not mask the other. |
-| Large or high-risk review | Broad contract, security, automation, release, migration, or cross-runtime change | Use optional independent reviewers only when they can inspect distinct risk areas; verify their citations before forwarding. |
+| Large or high-risk review | Broad contract, security, automation, release, migration, or cross-runtime change | Use optional independent reviewers only when they can inspect distinct risk areas; load [second-opinion](references/workflows/second-opinion.md) when dispatching them, and verify their citations before forwarding. |
 
 The main reviewer must not edit reviewed project files. Only the fix-orchestrator may mutate, and only inside a local writable checkout. A host-only MR/PR review is report-only. A local writable checkout of that MR/PR branch is eligible for `--fix`.
 

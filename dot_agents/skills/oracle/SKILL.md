@@ -55,7 +55,7 @@ The user has explicitly authorized this skill to use Oracle browser mode against
   - `npx -y @steipete/oracle --dry-run summary --files-report -p "<task>" --file "src/**"`
 
 - Startup/perf trace:
-  - `npx -y @steipete/oracle --perf-trace --perf-trace-path /tmp/oracle-perf.json --dry-run summary -p "<task>" --file "src/**"`
+  - `npx -y @steipete/oracle --perf-trace --perf-trace-path "$(mktemp)" --dry-run summary -p "<task>" --file "src/**"`
   - Use when CLI startup or time-to-first-output feels slow; inspect `first-output` and `exit`.
 
 - Preflight the attach target (Chrome DevTools port up?):
