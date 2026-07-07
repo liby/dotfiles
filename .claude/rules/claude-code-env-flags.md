@@ -14,7 +14,7 @@ Records only the `dot_claude/settings.json` values a cold reader would misjudge 
 
 ## `DISABLE_TELEMETRY=1` freezes feature gates
 
-It kills the GrowthBook fetch, so gates resolve from the binary's build-time snapshot and server rollouts never reach this install. The per-gate env override still works, making the `env` block our only feature-delivery lever. Three flags are force-on this way (env -> gate): `CLAUDE_CODE_NEW_INIT` (`tengu_slate_harbor_experiment`), `CLAUDE_CODE_FORK_SUBAGENT` (`tengu_copper_fox`), `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` (`tengu_amber_flint`). Not the same as `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, which also kills auto-update (kept ON here).
+It kills the GrowthBook fetch, so gates resolve from the binary's build-time snapshot and server rollouts never reach this install. The per-gate env override still works, making the `env` block our only feature-delivery lever. Three flags are force-on this way (env -> gate): `CLAUDE_CODE_NEW_INIT` (`tengu_slate_harbor_experiment`), `CLAUDE_CODE_FORK_SUBAGENT` (`tengu_copper_fox`), `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` (`tengu_amber_flint`). Not the same as the similarly-named `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` (see Deliberately absent, below).
 
 ## Value formats: a "cleaner" form silently no-ops
 
