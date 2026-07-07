@@ -20,7 +20,7 @@ export PROTO_HOME="$HOME/.proto"
 export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"
 export NPM_CONFIG_PREFIX="$HOME/.npm-global"
 
-# brew formulae (incl. uv itself) are auto-updated daily by brew autoupdate (domt4 tap).
+# brew formulae (incl. uv itself) are auto-updated daily by brew autoupdate (homebrew/autoupdate tap).
 # rust is intentionally excluded here: the default toolchain is nightly (where the
 # rust-analyzer component lives), so `rustup update` re-pulls a fresh hundreds-of-MB
 # nightly every few days and blocks apply. Run `rustup update` manually so you

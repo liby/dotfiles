@@ -1,19 +1,24 @@
-tap "domt4/homebrew-autoupdate"
-tap "polymarket/polymarket-cli"
+tap "homebrew/autoupdate", trusted: true
 tap "resend/cli"
 
+# Simple, modern, secure file encryption
+brew "age"
 # Official Amazon AWS command-line interface
 brew "awscli"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
 # Cross-platform make
 brew "cmake"
+# Get a file from an HTTP, HTTPS or FTP server
+brew "curl"
 # Diff that understands syntax
 brew "difftastic"
 # Modern, maintained replacement for ls
 brew "eza"
 # Simple, fast and user-friendly alternative to find
 brew "fd"
+# Play, record, convert, and stream select audio and video codecs
+brew "ffmpeg"
 # GitHub command-line tool
 brew "gh"
 # Distributed revision control system
@@ -30,8 +35,6 @@ brew "jq"
 brew "mas"
 # Pinentry for GPG on Mac
 brew "pinentry-mac"
-# CLI for Polymarket
-brew "polymarket/polymarket-cli/polymarket", trusted: true
 # CLI for the Resend email API
 brew "resend/cli/resend", trusted: true
 # Search tool like grep and The Silver Searcher
