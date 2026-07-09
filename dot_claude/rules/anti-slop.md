@@ -31,7 +31,7 @@ Each rule names a mechanism. Listed tokens are illustrative, not exhaustive. Mat
 
 ## Final output check
 
-Before sending, scan the draft for these high-frequency offenders. When you find one, rewrite the surrounding sentence around its underlying intent. Do not just delete the token.
+Before sending, scan the draft for these high-frequency offenders. When you find one, rewrite the surrounding sentence around its underlying intent. Do not delete the token while leaving the rest of the sentence intact.
 
 - Trailing restatement: `这说明`, `也就是说`, `可以看出`, `In other words`
 - Pedagogical opener: `让我分析`, `让我一步步`, `让我们来看`, `Let me break`
