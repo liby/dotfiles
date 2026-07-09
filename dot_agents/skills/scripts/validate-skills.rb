@@ -97,7 +97,7 @@ def line_command(line)
 end
 
 # Deployed pass over ~/.agents/skills (skipped silently when absent, e.g. CI).
-# Encrypted sources (snow/pm/pcop) are ciphertext in this repo, so the deployed
+# Encrypted sources (snow) are ciphertext in this repo, so the deployed
 # plaintext is the only validatable copy; dirs without a SKILL.md (scripts/) are
 # not skills. Deployed-only skills get provenance warnings, not content checks.
 deployed_names = Set.new
