@@ -7,6 +7,7 @@ is_secret_like_path() {
   local lowered
   lowered=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
 	case "$lowered" in
+		.env.example|*/.env.example) result=1 ;;
 		.env*|.env*/*|*/.env*|*/.env*/*) result=0 ;;
 		*.pem|*.key|*.p12|*.pfx|*.crt|*.cer) result=0 ;;
 		id_rsa|id_dsa|id_ecdsa|id_ed25519|*/id_rsa|*/id_dsa|*/id_ecdsa|*/id_ed25519) result=0 ;;
