@@ -1,6 +1,6 @@
 # Claude Code settings.json guardrail
 
-Records only the `dot_claude/settings.json` values a cold reader would misjudge or "fix" and break: parser traps, non-defaults chosen for a reason, and our own decisions. Anything recoverable from the flag name, the [settings docs](https://code.claude.com/docs/en/settings), or a binary grep is deliberately NOT here.
+Records only the `dot_claude/modify_settings.json` and `.chezmoitemplates/claude-settings.json` values a cold reader would misjudge or "fix" and break: parser traps, non-defaults chosen for a reason, and our own decisions. Anything recoverable from the flag name, the [settings docs](https://code.claude.com/docs/en/settings), or a binary grep is deliberately NOT here.
 
 ## When to touch this file
 
@@ -8,9 +8,9 @@ Records only the `dot_claude/settings.json` values a cold reader would misjudge 
 - Re-check or delete an entry after a CC upgrade changes what it records (gate removed, parser flipped, default changed). Verify against the current binary: `rg -a -o '<name>' ~/.local/share/claude/versions/<ver>`; drop it if it no longer holds.
 - Record the conclusion and the trap, not the changelog; git history and the docs carry provenance.
 
-## The source is `modify_settings.json`, not a plain file
+## Settings ownership
 
-`dot_claude/modify_settings.json` is a chezmoi modify-template: apply enforces the managed JSON in `.chezmoitemplates/claude-settings.json` (env, permissions, hooks, `skip*` dialog acks, ...) and passes every other key through from the live file. `model`, `effortLevel`, and `ultracode` are runtime-owned (the CLI writes them via /model and /effort; the template only seeds model/effortLevel on a fresh machine), so those keys never show drift and apply never reverts them; a plain source file did exactly that, silently rolling back a /model default. Traps: `chezmoi re-add ~/.claude/settings.json` is a silent no-op on this target; editing the live file only sticks for runtime-owned keys, and a managed-key edit reverts on the next apply: change those in the managed fragment (`chezmoi edit ~/.claude/settings.json` opens only the template shell). Do not "simplify" it back to a plain source file.
+Before changing `dot_claude/modify_settings.json`, `.chezmoitemplates/claude-settings.json`, or the live target, read the modify-template header; it owns merge, seed, and key-retirement semantics. Change managed keys in the fragment and leave runtime-owned model/effort state to the CLI. `chezmoi re-add ~/.claude/settings.json` is a no-op on this target; do not convert it back to a plain source file.
 
 ## `DISABLE_TELEMETRY=1` freezes feature gates
 
@@ -34,6 +34,21 @@ It kills the GrowthBook fetch, so gates resolve from the binary's build-time sna
 ## Model alias pins
 
 `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_SONNET_MODEL` pin what the `opus` / `sonnet` aliases resolve to, so a CLI update can't drift the main or subagent model (the sonnet pin is where CLAUDE.md's `model: "sonnet"` subagents land). On Vertex they also supply the regional ids the refusal-fallback reroute needs.
+
+### Context budget is provider-dependent
+
+`[1m]` selects an effective context budget; `autoCompactWindow` sets a threshold inside that budget. Sonnet 5 is natively 1M on the Anthropic API, Amazon Bedrock, Google Cloud's Agent Platform, and Microsoft Foundry, but a custom `ANTHROPIC_BASE_URL` gateway is budgeted at 200K unless the 1M picker entry (`sonnet[1m]`) is selected because Claude Code cannot verify gateway support ([model configuration](https://code.claude.com/docs/en/model-config#sonnet-5-context-window)). Before changing either control, verify the active budget with `/status`, the model picker, or the statusline's `context_window_size` without inspecting gateway credentials. Never infer it from the model name or change one control to reconcile it with the other.
+
+## Managed feature disables
+
+- `ENABLE_CLAUDEAI_MCP_SERVERS=0` and `disableClaudeAiConnectors=true` are alternative gates for the same connector eligibility path in current Claude Code; do not describe them as different surfaces. Retire one only after deciding whether compatibility with versions before `disableClaudeAiConnectors` is required.
+- `disableBundledSkills=true` removes bundled skills and workflows entirely. Only built-in commands such as `/init` remain typable; use a `skillOverrides: {"<name>": "user-invocable-only"}` entry when the intended behavior is explicit-only invocation.
+- Keep `disableWorkflows` unset because `ultracode` needs the `Workflow` tool.
+- Expand `skillOverrides` only from measured usage; source search and schema inspection cannot prove non-usage.
+
+## Statusline compact math
+
+Before changing statusline compact parsing or math, read the `COMPACT_RESERVE` comment block in `dot_claude/scripts/executable_statusline.sh`; the script owns its settings parser and denominator derivation. It intentionally ignores `CLAUDE_CODE_AUTO_COMPACT_WINDOW` and `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`, so its display can diverge when either is set; update the parser and math together if support is added.
 
 ## `ENABLE_TOOL_SEARCH=1`
 

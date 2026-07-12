@@ -15,6 +15,16 @@ OptionParser.new do |opts|
 end.parse!
 
 root = Pathname.new(__dir__).parent
+# The script also runs from its deployed copy (~/.agents/skills/scripts), where
+# root would be the deployed tree and third-party skills would wrongly get full
+# content checks. Ask chezmoi to map root back to its source so both entry
+# points behave identically; in the source tree (or without chezmoi) the lookup
+# fails and root is already correct.
+begin
+  source_path, _stderr, status = Open3.capture3("chezmoi", "source-path", root.to_s)
+  root = Pathname.new(source_path.strip) if status.success? && !source_path.strip.empty?
+rescue Errno::ENOENT
+end
 repo = root.parent.parent
 errors = []
 warnings = []

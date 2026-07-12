@@ -213,6 +213,8 @@ if [ -f "$settings_path" ]; then
   if [ "$effort" = "default" ]; then
     [[ "$_settings" =~ \"effortLevel\"[[:space:]]*:[[:space:]]*\"(low|medium|high|xhigh)\" ]] && effort="${BASH_REMATCH[1]}"
   fi
+  # This display reads settings.json only and intentionally ignores CC's existing
+  # auto-compact env overrides; add their precedence and denominator math together.
   [[ "$_settings" =~ \"autoCompactWindow\"[[:space:]]*:[[:space:]]*([0-9]+) ]] && auto_compact="${BASH_REMATCH[1]}"
   [[ "$_settings" =~ \"autoCompactEnabled\"[[:space:]]*:[[:space:]]*false ]] && auto_compact_enabled=0
 fi
@@ -231,7 +233,7 @@ _is_truthy() {
 # CC triggers auto-compact at min(model_capacity, autoCompactWindow) - COMPACT_RESERVE.
 # 33000 = nAK(20000, max-output reserve) + BAK(13000, compact buffer).
 # Reverse-engineered from CLI 2.1.150 e6H()/LG_(). May change across versions.
-# Do NOT "fix" the denominator to uncap past autoCompactWindow — see .claude/CLAUDE.md.
+# Keep the denominator capped at autoCompactWindow; it mirrors CC's trigger threshold.
 COMPACT_RESERVE=33000
 effective_size=$size
 (( auto_compact_enabled && auto_compact > 0 && auto_compact < effective_size )) && effective_size=$auto_compact
