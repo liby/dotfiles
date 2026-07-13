@@ -2,6 +2,7 @@
 
 ## Claude Code local settings (e.g. settings.local.json)
 *.local.*
+**/.claude/.cc-writes/
 **/.claude/worktrees/
 
 ## General

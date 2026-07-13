@@ -10,7 +10,7 @@ allowed-tools:
 
 # Write Skill
 
-Write skills that change agent behavior. Keep routing, workflow, tool use, validation, and examples that affect the next action. Cut anything that only explains skills, repeats best practice, restates a heading, or states what a competent agent already knows.
+Write skills that change agent behavior. Use established domain terms when they preserve the intended trigger and boundary. Keep routing, workflow, tool use, validation, examples, and rationale only when they change the next action or choice. Cut explanatory restatements, intermediate history, repeated best practice, and competent-agent defaults.
 
 ## Process
 

@@ -55,7 +55,7 @@ Safety overrides autonomy, implementation, and subagent guidance.
 - When callers must distinguish actionable lifecycle outcomes, record those states explicitly in the system of record. For multiple writers, own the transition in one layer and use an atomic concurrency mechanism; use idempotency for duplicate or retried operations, and time-bound waits across external I/O.
 - Commit durable state before best-effort side effects. Log and reconcile side-effect failures unless the side effect is part of the success contract.
 - Do not suppress unexpected failures with sentinel values. Propagate or translate errors at an established recovery boundary while preserving the caller's documented contract.
-- Reuse before adding. Do not abstract by call-site count alone. Add configuration, caches, fallbacks, compatibility layers, or abstractions only for an observed caller, deployment, migration, or external contract.
+- Reuse before adding. Improve readability through direct naming, types, and control flow; do not add helpers, wrappers, or abstractions whose only contract is to make the implementation look self-explanatory. Add configuration, caches, fallbacks, compatibility layers, or abstractions only for an observed caller, deployment, migration, or external contract; call-site count alone is not evidence.
 - Trace before tuning. Before changing a config constant, business threshold, or risk parameter, locate its read sites and state the direction of effect, such as `larger = more aggressive`.
 
 ## Evidence And Debugging
@@ -66,10 +66,10 @@ Safety overrides autonomy, implementation, and subagent guidance.
 - Before claiming current behavior or completion, inspect the relevant current source or runtime and run the cheapest validation that covers the change. Treat memory, prior context, and model recall as hypotheses; report anything that still requires manual verification.
 - When a change invalidates or creates a documented contract, update the owning project document in the same change.
 
-## Comments And Tests
+## Documentation, Comments, And Tests
 
-- Comment non-obvious rationale, constraints, and trade-offs rather than restating code; follow the repository's existing comment and doc-comment conventions.
-- Tests assert concrete behavior and fail when the implementation or invariant is removed. Use existence matchers only when existence is the behavior under test.
+- Keep code responsible for implementation behavior. Comments and documentation carry information code cannot express or that an independent audience needs, such as rationale, rejected alternatives, domain language, public or user contracts, operational constraints, and cross-boundary navigation. Do not restate code or preserve superseded attempts; follow repository conventions.
+- Each test protects a distinct behavior partition, regression, or interaction contract and fails when the implementation or invariant is removed. Do not duplicate a test with the same input partition, production path, observations, and failure modes. Use existence matchers only when existence is the behavior under test.
 - Exercise real logic and values beyond the original examples, including values that expose hardcoded branches. For bug fixes, when reproducible, demonstrate that the regression test fails against pre-fix behavior and passes after the fix; otherwise report the unverified gap.
 
 ## Runtime Traps
