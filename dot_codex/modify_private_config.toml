@@ -1,0 +1,14 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Overlay the managed Codex fragment, replace plugins as a whole, and
+      preserve undeclared live values. Return unchanged input when managed
+      values already match to avoid formatting-only drift. */ -}}
+{{- $managed := includeTemplate "codex-config.toml" . | fromToml -}}
+{{- $stdin := .chezmoi.stdin -}}
+{{- $current := $stdin | fromToml -}}
+{{- $out := mergeOverwrite (deepCopy $current) $managed -}}
+{{- $out = setValueAtPath (list "plugins") (index $managed "plugins") $out -}}
+{{- if deepEqual $current $out -}}
+  {{- $stdin -}}
+{{- else -}}
+  {{- $out | toToml -}}
+{{- end -}}

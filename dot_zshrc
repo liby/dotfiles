@@ -65,6 +65,7 @@ alias c='open -a "Visual Studio Code"'
 alias cc='claude'
 alias ccm='claude --switch-mode'
 alias cm='chezmoi'
+alias cx='open -a /Applications/ChatGPT.app'
 alias hr='herdr'
 alias ip="curl ip.sb"
 alias ipcn="curl myip.ipip.net"
