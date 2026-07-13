@@ -1,0 +1,13 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Partially manage ~/.codex/config.toml without copying project trust,
+      machine-local MCP environment, marketplace state, or other local data
+      into the source repository. Values declared by codex-config.toml
+      recursively overwrite matching target values. The plugins table is
+      enforced as a whole so removed plugins do not survive locally. */ -}}
+{{- $managed := includeTemplate "codex-config.toml" . | fromToml -}}
+{{- $out := dict -}}
+{{- if .chezmoi.stdin -}}{{- $out = fromToml .chezmoi.stdin -}}{{- end -}}
+{{- $out = mergeOverwrite $out $managed -}}
+{{- $out = setValueAtPath (list "plugins") (index $managed "plugins") $out -}}
+
+{{ $out | toToml }}

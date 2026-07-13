@@ -1,0 +1,71 @@
+# Cross-machine Codex settings managed by chezmoi. The modify template owns
+# every value declared here and the complete plugins table.
+approval_policy = "never"
+experimental_compact_prompt_file = "compact-prompt.md"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "xhigh"
+personality = "pragmatic"
+project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
+sandbox_mode = "danger-full-access"
+web_search = "live"
+
+[desktop]
+ambient-suggestions-enabled = false
+enabled-reasoning-efforts = ["low", "medium", "high", "xhigh", "ultra"]
+# Keep the selected UI behavior when the desktop default writes queue.
+followUpQueueMode = "steer"
+mac-menu-bar-enabled = false
+reduced-motion-preference = "on"
+show-context-window-usage = true
+
+[features]
+# Removed and ignored by the CLI, but Codex App restores false when absent.
+# Keep it managed to prevent recurring target drift. See AGENTS.md.
+js_repl = false
+memories = true
+prevent_idle_sleep = true
+
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+
+[mcp_servers.node_repl]
+args = []
+# Keep the desktop-provided ChatGPT runtime path.
+command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.computer-use]
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+enabled = false
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."chrome@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."openai-templates@openai-curated-remote"]
+enabled = false
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = false
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = false
+
+[plugins."visualize@openai-bundled"]
+enabled = false
