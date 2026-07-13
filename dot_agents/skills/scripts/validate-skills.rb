@@ -4,6 +4,7 @@
 require "open3"
 require "optparse"
 require "pathname"
+require "rbconfig"
 require "set"
 require "shellwords"
 require "timeout"
@@ -192,6 +193,17 @@ known_names = source_names | deployed_names
 CLI_SMOKE_COMMANDS.each do |smoke_label, _command|
   skill = smoke_label.split(/\s+/).first
   warnings << "CLI_SMOKE_COMMANDS: #{smoke_label.inspect} does not match any known skill" unless known_names.include?(skill)
+end
+
+# Prompt skills can own small contract tripwires where instruction structure is
+# the behavior under test. Run them in normal validation so canonical output
+# blocks and known bad variants cannot hide behind valid frontmatter.
+Dir.glob(root.join("*/scripts/check-contract.rb").to_s).sort.each do |script|
+  stdout, stderr, status = Open3.capture3(RbConfig.ruby, script)
+  next if status.success?
+
+  detail = [stdout, stderr].join.lines.map(&:strip).reject(&:empty?).first(8).join(" | ")
+  errors << "#{rel(script, repo)}: contract check failed#{detail.empty? ? "" : ": #{detail}"}"
 end
 
 # Routing pointers like "(use pm first)" rot silently when the target skill is
