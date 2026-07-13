@@ -1,61 +1,54 @@
 ---
 name: deslop
-description: Run a closing cleanup pass after AI-generated edits, especially after `/review --fix`, to remove generated-code artifacts and catch type-driven refactors that are wrong at runtime. Use when the user says "/deslop", "deslop", "帮我收尾", or asks for final generated-code cleanup before validation.
-context: fork
+description: 'Clean changed code before final validation: reuse established mechanisms, reduce accidental complexity and cost, remove AI artifacts, and verify type-driven refactors against runtime evidence. Use when the user invokes /deslop or asks to run deslop. Not for correctness review; use /review.'
+argument-hint: "[<target>]"
 allowed-tools:
   - Bash(git:*)
   - Bash(rg:*)
   - Bash(fd:*)
+  - Agent
   - Read
   - Edit
 ---
 
-Clean only the resolved diff for: $ARGUMENTS. With empty arguments, clean the full resolved diff.
+Clean the resolved change surface as one workflow. Preserve intended behavior and scope. Treat runtime evidence as a refactor gate, not a bug hunt.
 
-## Resolve Scope
+## Process
 
-Build the cleanup scope from both sources, then de-duplicate paths:
+1. **Resolve the change surface.** Use a concrete invocation target when present; otherwise use the current change set. Treat an unexpanded dollar-prefixed `ARGUMENTS` placeholder as absent. Read repository instructions and snapshot `git status --short`. For an explicit target, build the narrowest representative diff. Otherwise use the de-duplicated union of the resolved upstream-or-default `base...HEAD` diff, staged diff, and tracked unstaged diff. Screen untracked names before content; never read `.env*`, private keys, or credential stores. Include safe, target-owned source files as whole-file scope; report unclear or secret-like paths under `Candidates left`. If no branch base resolves, use the working tree and report the omitted branch scope. If a working-tree diff fails, report the command and stderr summary, then stop. For empty scope, skip reviewers and return `no changes to review`, `Changed: none`, `Candidates left: none`, and `Validation: skipped, no changes`.
 
-1. Branch-relative diff against upstream when set, otherwise remote default branch when available, using merge-base three-dot semantics (`git diff <base>...HEAD`). This catches committed but unmerged work.
-2. Working-tree diff against `HEAD`, including staged and unstaged tracked files. This catches local edits made after the branch diff.
+   Done when every path and hunk has a known source, every untracked path has a disposition, and the initial status is recorded.
 
-If branch-relative diff setup fails because no upstream or remote default branch is available, continue with the working-tree diff and report that branch scope was skipped. If a working-tree diff command fails, report the command and stderr summary before stopping. If both scopes are empty, report `no changes to review` and stop.
+2. **Classify before mutation.** The invoking session is the sole writer. When independent agents are available, assign one read-only reviewer to each of the four quality lenses below, in as few concurrent batches as capacity allows. If a reviewer is unavailable or fails, the invoking session covers that lens and records `independent quality review unavailable` under `Candidates left`. The invoking session checks AI artifacts and runtime-contract risks; all findings enter the same frontier before mutation.
 
-Do not edit a hunk unless it is inside the resolved diff and clearly belongs to the current AI-generated change. If ownership is unclear, report it as a candidate instead of changing it.
+   - **Reuse:** Find duplicates of an existing helper or mechanism. Compare input, output, side-effect, and error contracts before reusing it.
+   - **Complexity:** Find derivable state, copied variants, deep nesting, dead code, and Speculative Generality. Name the smaller behavior-equivalent form.
+   - **Cost:** Find repeated computation or I/O, unnecessary sequencing, startup or hot-path blocking, and closures retaining excess state. Name the cheaper form.
+   - **Abstraction boundary:** Find local special cases or Shotgun Surgery caused by fixing symptoms outside the component that owns the behavior. Name the narrowest fix at the owning boundary inside scope.
+   - **AI artifacts, checked by the invoking session:** Find restating or style-divergent comments; impossible guards, blanket catches, and speculative fallbacks; type escapes; contract-free one-caller helpers, configuration toggles, compatibility paths, and Middle Men; redundant caching, normalization, or conversion; orphaned symbols; and edited-hunk style drift.
 
-## Cleanup Checks
+   Judge tests and comments by contract value. Remove comments that restate code or narrate superseded attempts; consolidate rationale at its owning boundary and rewrite live constraints in present tense. Delete a test only when a named survivor covers the same input partition, production path, observations, and failure modes, establishing exact duplication, a strict assertion subset, or zero marginal fault-detection contribution; prefer representative production mutants, and never treat a green suite as evidence. Rewrite vacuous or over-mocked tests when a contract remains. Preserve unique regressions and behavior partitions, characterization/conformance tests, interaction/order/no-throw/registration contracts, public documentation, tool directives, security/concurrency rationale, dirty-data sources, and active workarounds. If evidence is absent, leave unchanged and record the exact gap.
 
-Remove or rewrite only when the current diff introduced the issue:
+   For any refactor whose safety depends on static types matching runtime data, including removal of a guard, fallback, optional chain, default, coercion, normalization, or branch, inspect relevant fixtures, samples, generated data, schema documentation, or adjacent parser tests. Keep it only when runtime evidence supports the assumed shape. If data violates the type, restore the behavior and add a short comment naming the dirty-data source. If evidence is absent, leave the code unchanged and record the exact manual observation.
 
-- comments a human maintainer would not add: restating adjacent code, repeating what a nearby file or the cited source already states, or styling inconsistently with nearby files
-- unnecessary defensive checks, broad `try`/`catch`, or fallbacks for impossible states
-- casts to `any` or similar escapes that hide a type problem
-- helpers, config switches, or compatibility paths that only rename one caller
-- wrappers that don't add what they claim: memoization or caching around already-stable or already-cheap values, normalization of already-clean data, conversions to a form the input is already in
-- orphans created by the current diff: unused imports, unreferenced variables or types, unreachable functions, exports no longer used by any caller
-- style that conflicts with the surrounding file and is limited to the edited hunk
+   Done when all four lenses and the AI-artifact checks have been applied, every finding has evidence, and every runtime-sensitive refactor has runtime evidence or a manual gap.
 
-## Type-Driven Refactor Check
+3. **Triage one finding frontier.** Record each finding with path and line, trigger evidence, impact, and disposition. De-duplicate by mechanism. Resolve conflicts by scope and ownership, runtime evidence, intended behavior, structural quality, then comments and style. AI-artifact fixes require ownership by the current change; unclear ownership remains a candidate. Reject behavior-changing, out-of-scope, runtime-unverified, and false-positive fixes.
 
-AI edits often trust type signatures over runtime data. For each diff hunk that removes a guard, fallback, optional chain, derived value, or normalization because the type appears stricter:
+   Done when every finding has one disposition and accepted fixes do not conflict.
 
-1. Inspect the actual data source when locally available: fixtures, JSON samples, generated API output, schema comments, or adjacent parsing tests.
-2. Keep the refactor only when runtime evidence matches the type contract.
-3. If runtime data violates the type contract, restore the guard or derivation and add a short comment naming the source of dirty data.
-4. If runtime evidence is unavailable, report a manual verification candidate instead of guessing.
+4. **Close the frontier.** Apply accepted fixes as one coherent patch. Without resolving scope again, recheck affected final hunks against the four quality lenses, the AI-artifact checks, and the runtime-contract gate; merge newly evidenced findings into the same frontier. Reclassify only when a mutation or validation result adds trigger evidence. Stop and report on oscillation: the same root cause recurs without new evidence, the next fix would undo a prior fix, or fixes repeatedly create accepted findings in the same mechanism.
 
-## Validation
+   Done when no accepted finding remains and every unresolved item has a concrete candidate reason.
 
-Discover the cheapest existing validation from local instructions, `package.json`, `Makefile`, `justfile`, task config, or adjacent tests. Run the command, scoped to changed files when the tool supports it. Request permission if the tool policy does not pre-approve it. Do not run dev/start/serve commands (hook-blocked); if that environment is needed, have the user run it in their own terminal.
+5. **Validate the final state.** Discover the cheapest relevant validation from repository instructions, package or task configuration, build files, and adjacent tests. Run it after the last mutation, scoped to changed files when supported; any later validation-relevant edit invalidates the result. If validation fails, reopen the frontier for failures attributable to this workflow, fix them, and rerun validation. Do not label a failure pre-existing or unattributed without evidence; if attribution requires unavailable external state, record the exact gap under `Candidates left` and stop without unrelated fixes. Do not run dev, start, or serve commands; request the exact runtime observation instead. If no command exists, name the sources searched.
 
-If no validation command is available, say exactly what was searched.
+   Done when validation passes on the final state or a precise external, pre-existing, or manual gap is recorded.
 
-## Output
+6. **Reconcile and report.** Re-run `git status --short` and compare it with the initial scope plus this workflow's edits. Report unexpected new or missing paths under `Candidates left`; do not reconcile them silently. Always return:
 
-Before returning, re-run `git status --short` and compare it against the scope resolved at start plus your own edits; report anything new or missing as its own line; do not silently reconcile (peer agents may have edited the same tree).
+   - `Changed:` each edited file and one-line reason, or `none`
+   - `Candidates left:` ownership, evidence, scope, or stop gaps, or `none`
+   - `Validation:` command and result, or skipped reason
 
-Return the three labels below even when deslop runs alongside other asks in the same turn; do not fold them into a combined prose summary:
-
-- Changed: files and one-line reason for each edit, or `none`
-- Candidates left: ownership-unclear or runtime-unverified items
-- Validation: command and pass/fail, or skipped reason
+   Done when all three labels describe the final working tree after the last validation-relevant mutation.
