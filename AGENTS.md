@@ -5,12 +5,12 @@ Dotfiles managed by [chezmoi](https://www.chezmoi.io/) from `~/.local/share/chez
 - After editing `.chezmoi.toml.tmpl`, run `chezmoi init` to regenerate `~/.config/chezmoi/chezmoi.toml`; never edit that generated file directly.
 - Edit `Brewfile` in source. It is ignored for deployment and consumed by a `run_onchange` script whose template hash retriggers on content changes.
 - On a fresh `chezmoi init`, `R` status for every `run_once` script is expected.
-- Before committing, run `chezmoi status --exclude=encrypted`; plain `chezmoi status` generates encrypted target state and can expose decrypted content. For each changed non-secret target in scope, run `chezmoi diff <dest-path>`; never run bare `chezmoi diff`. Read `-` as destination-only and `+` as rendered-target-only. Re-add destination-only drift only when it belongs to the requested change; report unrelated drift without modifying it. When both destination and target changed, show the scoped diff and ask which to keep.
+- Before committing, run `chezmoi status --exclude=encrypted`; plain `chezmoi status` generates encrypted target state and can expose decrypted content. For each changed non-secret target in scope, run `chezmoi diff <dest-path>`; never run bare `chezmoi diff`. Read `-` as destination-only and `+` as rendered-target-only. Re-add destination-only drift only when it belongs to the requested change; report unrelated drift without modifying it. When both destination and target changed, show the scoped diff. Use `chezmoi merge <dest-path>` only for an explicitly selected non-secret, non-`modify_` target; a templated target requires manual review to preserve template directives.
 - For agent skill changes, run `ruby dot_agents/skills/scripts/validate-skills.rb --smoke`. Keep `CLI_SMOKE_COMMANDS` in sync only for skills whose instructions depend on current CLI help.
 
 ## Encrypted Files
 
-Agents may handle encrypted non-secret files. Hand every secret-bearing add, edit, diff, re-add, and decrypt operation to the user without reading deployed plaintext.
+Agents may handle encrypted non-secret files. Hand every secret-bearing add, edit, diff, merge, re-add, and decrypt operation to the user without reading deployed plaintext. Never run `chezmoi merge` for an encrypted target.
 
 - Add a non-secret encrypted file with `chezmoi add --encrypt <file>`.
 - Edit encrypted non-secret content through `chezmoi edit <dest-path>` or edit its deployed plaintext and run `chezmoi re-add`; never edit an `encrypted_*.asc` source directly. Decryption requires a Yubikey.

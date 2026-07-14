@@ -7,3 +7,10 @@ encryption = "gpg"
 [gpg]
   args = ["--quiet"]
   recipients = ["36F97A0999999999", "4700E3BE99999999"]
+
+[merge]
+  command = "bash"
+  args = [
+    "-c",
+    {{ printf "%q" `cp {{ .Target | quote }} {{ printf "%s.base" .Target | quote }} && code --new-window --wait --merge {{ .Destination | quote }} {{ .Target | quote }} {{ printf "%s.base" .Target | quote }} {{ .Source | quote }}` }},
+  ]

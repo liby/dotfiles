@@ -56,7 +56,8 @@ chezmoi apply
 ```sh
 chezmoi add <file>          # Add a file to chezmoi management
 chezmoi edit <file>         # Edit the source file
-chezmoi diff                # Show differences between source and target
+chezmoi status --exclude=encrypted  # Show a safe change overview
+chezmoi diff <dest-path>    # Inspect one non-secret target
 chezmoi apply               # Apply all changes to $HOME
 chezmoi cd                  # Enter the source directory
 chezmoi git status          # Run Git commands on the source directory from anywhere
@@ -76,20 +77,23 @@ Bootstrap scripts are located in `.chezmoiscripts/` and run in listed order:
 
 | Phase | Script | Notes |
 |-------|--------|-------|
-| before | [Xcode CLI Tools](../.chezmoiscripts/run_once_before_10-install-xcode-cli-tools.sh) | Required for Git and compilation |
-| before | [Homebrew](../.chezmoiscripts/run_once_before_20-install-homebrew.sh) | |
-| before | [Brewfile packages](../.chezmoiscripts/run_onchange_before_30-install-brew-packages.sh.tmpl) | |
-| before | [Case-sensitive volume](../.chezmoiscripts/run_once_before_40-setup-case-sensitive-volume.sh) | For the `~/Code` directory |
-| before | [Node.js](../.chezmoiscripts/run_once_before_50-install-nodejs.sh) | Via proto; includes pnpm |
-| before | [Rust](../.chezmoiscripts/run_once_before_60-install-rust.sh) | |
-| before | [Claude Code](../.chezmoiscripts/run_once_before_70-install-claude-code.sh) | |
-| before | [zsh plugins](../.chezmoiscripts/run_once_before_80-setup-zsh-plugins.sh) | |
-| after | [GPG agent](../.chezmoiscripts/run_once_after_300-setup-gpg-agent.sh) | Includes YubiKey setup |
-| after | [Git config](../.chezmoiscripts/run_once_after_310-setup-gitconfig.sh) | Generated from templates |
-| after | [macOS defaults](../.chezmoiscripts/run_onchange_after_320-setup-macos-defaults.sh) | |
-| after | [zsh completions](../.chezmoiscripts/run_once_after_330-reload-zsh-completions.sh) | |
+| before | [Xcode CLI Tools](../.chezmoiscripts/run_once_before_100-install-xcode-cli-tools.sh) | Required for Git and compilation |
+| before | [Homebrew](../.chezmoiscripts/run_once_before_200-install-homebrew.sh) | |
+| before | [Brewfile packages](../.chezmoiscripts/run_onchange_before_300-install-brew-packages.sh.tmpl) | |
+| before | [Case-sensitive volume](../.chezmoiscripts/run_once_before_400-setup-case-sensitive-volume.sh) | For the `~/Code` directory |
+| before | [Node.js](../.chezmoiscripts/run_once_before_500-install-nodejs.sh) | Via proto; includes pnpm |
+| before | [uv tools](../.chezmoiscripts/run_onchange_before_600-install-uv-tools.sh) | |
+| before | [Rust](../.chezmoiscripts/run_once_before_700-install-rust.sh) | |
+| before | [Claude Code](../.chezmoiscripts/run_once_before_800-install-claude-code.sh) | |
+| after | [GPG agent](../.chezmoiscripts/run_once_after_100-setup-gpg-agent.sh) | Includes YubiKey setup |
+| after | [Git config](../.chezmoiscripts/run_once_after_200-setup-gitconfig.sh) | Generated from templates |
+| after | [macOS defaults](../.chezmoiscripts/run_onchange_after_300-setup-macos-defaults.sh) | |
+| after | [zsh completions](../.chezmoiscripts/run_once_after_400-reload-zsh-completions.sh) | |
+| after | [Developer tools](../.chezmoiscripts/run_onchange_after_600-update-dev-tools.sh.tmpl) | Periodic CLI updates |
 
 `before` scripts run before file sync, `after` scripts run after file sync.
+
+Zsh plugins are pinned to exact upstream commits in [`.chezmoiexternal.toml`](../.chezmoiexternal.toml). Chezmoi reconciles these archives declaratively instead of cloning whichever branch head exists during first setup.
 
 ## Contribution Guidelines
 
