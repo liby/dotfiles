@@ -11,7 +11,7 @@ allowed-tools:
   - Write
 ---
 
-Create a goal file from slash-command arguments or the current user request, then follow the Output Contract. An explicit invocation always wins, including when the request audits or edits this skill: finish the goal snapshot and Output Contract before starting that work. A discussion that only quotes or mentions `set goal` is not an invocation.
+Create a goal file from the slash-command arguments or accompanying request. A direct `/set-goal` invocation always runs this workflow, even when the requested task is to audit or edit the skill itself. Merely quoting or mentioning `set goal` does not invoke it. By default, write the file and follow the Output Contract before starting the requested work. If the user explicitly requires research or requirements gathering to finish before the Goal is drafted, created, or started, first use the deferred read-only grounding path in Process. This delays Goal creation, not skill invocation.
 
 Translate the request into the Goal Structure below. Include subagent orchestration only when the request or proof requires independent checks.
 
@@ -22,7 +22,7 @@ The goal file is the condition that `/goal` evaluates. Map every material user c
 1. Objective: one or two sentences naming the end state in user-visible or system-observable terms. Outcome, not steps.
    - Wrong: `refactor the reconnect loop`
    - Right: `the tunnel reconnects within 5s after a network blip, with exactly one active session in the server log`
-2. Proof of completion: concrete checks a reviewer can execute and observe. Each item names the material completion claim it proves, the check, expected observation, and current evidence to surface after the final relevant mutation because `/goal` evaluators judge the conversation, not hidden filesystem state; rerun a check when a later change could invalidate its evidence. Use test commands, log greps, curl invocations, UI states, file diffs, metrics, or explicit artifacts. Prefer deterministic gates over model judgment. Cover every material completion claim, not every work item; require item-by-item evidence only when the user or a source of truth defines a bounded set whose complete coverage changes acceptance. For UI, connector, external-service, or production-runtime goals, require the final user-visible state and the source-owned state that can overwrite it; if the current environment cannot expose that state, require manual verification and name the exact observation needed.
+2. Proof of completion: concrete checks a reviewer can execute and observe. Each item names the material completion claim, check, and expected observation. Require fresh evidence to be surfaced after the final relevant mutation because `/goal` evaluators judge the conversation, not hidden filesystem state; rerun any check a later change could invalidate. Use test commands, log greps, curl invocations, UI states, file diffs, metrics, or explicit artifacts. Prefer deterministic gates over model judgment. Cover every material completion claim, not every work item; require item-by-item evidence only when the user or a source of truth defines a bounded set whose complete coverage changes acceptance. For UI, connector, external-service, or production-runtime goals, require the final user-visible state and the source-owned state that can overwrite it; if the current environment cannot expose that state, require manual verification and name the exact observation needed.
 3. Scope / constraints: include only files, modules, APIs, performance bounds, dependency limits, safety limits, compatibility requirements, subagent requirements, or cross-validation requirements that materially change what done means.
 4. Out of scope: specific related work that must stay outside the goal. Omit this section when no boundary changes completion.
 
@@ -43,16 +43,18 @@ Do not require a hard round budget unless the user asks for one or the executor 
 ## Process
 
 1. Use slash-command arguments when the runtime supplies them; otherwise use the user's accompanying request. Do not treat a literal `$ARGUMENTS` token as input. If both are empty, ask for one sentence describing the desired end state.
-2. Decide whether Objective and Proof can be drafted from the input. Do not treat length alone or missing repo matches as ambiguity.
-3. If named symbols, files, modules, or behaviors would make the proof sharper, do one read-only grounding pass before asking: one search-only `rg` or `fd` lookup, then read the most relevant file, doc, or call site. Do not use preprocessors, exec actions, command substitution, or shell operators, and do not mutate state during grounding.
-4. Ask one specific question only if the user request lacks an observable outcome or success evidence after optional grounding.
-5. For iterative evaluator requests, apply Iterative Evaluator Goals before drafting Proof of completion and Scope.
-6. Draft the goal in the structure above. Bias toward specificity over length.
-7. Resolve `${SET_GOAL_OUTPUT_DIR:-/tmp}` and the resulting file path to absolute paths, create the directory, then write exactly the drafted goal text with one trailing newline. Use `YYYYMMDD-HHMMSS-<short-slug>.md`; make the slug lowercase ASCII, hyphenated, and outcome-based.
-8. Read the file back and verify its content equals the drafted goal text after both strings are normalized to exactly one trailing newline. Verification is internal; do not output the verification result.
-9. If verification fails, use the failure output shape below.
-10. If verification succeeds, follow the output contract below.
-11. Stop after the paste handoff; the callable-tool branch continues executing the goal instead.
+2. Use the deferred pre-Goal grounding path only when the user explicitly orders requirements gathering or research to finish before the Goal is drafted, created, or started. Do not infer it because the Goal itself is to research, investigate, discover, or gather requirements; keep that work inside the Goal.
+3. In the deferred path, use available read-only tools and applicable research skills only to resolve acceptance questions derived from the request. Follow a source only while it directly informs an unresolved acceptance question needed to state the Objective, every material constraint, or Proof. Stop when every such question has current source-of-truth evidence or is recorded in Proof or Scope as an exact manual check or unverified gap. Do not mutate state or execute the Goal. Map only material findings into the existing Goal Structure as drafting input, not completion evidence; do not add a research section or dossier. Record unavailable, stale, or conflicting material evidence as an unverified gap in Proof or Scope. For mutable sources, add a completion check that rereads them after the final relevant mutation.
+4. On the immediate path, decide whether Objective and Proof can be drafted from the input. Do not treat length alone or missing repo matches as ambiguity.
+5. On the immediate path, if named symbols, files, modules, or behaviors would make the proof sharper, do one read-only grounding pass before asking: one search-only `rg` or `fd` lookup, then read the most relevant file, doc, or call site. Do not use preprocessors, exec actions, command substitution, or shell operators, and do not mutate state during grounding.
+6. Ask at most one specific question. In the deferred path, ask only if an unresolved choice would materially change acceptance; in the immediate path, ask only if the user request lacks an observable outcome or success evidence after optional grounding.
+7. For iterative evaluator requests, apply Iterative Evaluator Goals before drafting Proof of completion and Scope.
+8. Draft the goal in the structure above. Bias toward specificity over length.
+9. Resolve `${SET_GOAL_OUTPUT_DIR:-/tmp}` and the resulting file path to absolute paths, create the directory, then write exactly the drafted goal text with one trailing newline. Use `YYYYMMDD-HHMMSS-<short-slug>.md`; make the slug lowercase ASCII, hyphenated, and outcome-based.
+10. Read the file back and verify its content equals the drafted goal text after both strings are normalized to exactly one trailing newline. Verification is internal; do not output the verification result.
+11. If verification fails, use the failure output shape below.
+12. If verification succeeds, follow the output contract below.
+13. Stop after the paste handoff; the callable-tool branch continues executing the goal instead.
 
 ## Output Contract
 
