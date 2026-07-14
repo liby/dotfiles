@@ -1,5 +1,9 @@
 encryption = "gpg"
 
+[data.private]
+  gitlabHost = {{ promptStringOnce . "private.gitlabHost" "Private GitLab host" | quote }}
+  npmHost = {{ promptStringOnce . "private.npmHost" "Private npm registry host" | quote }}
+
 [edit]
   args = ["--wait"]
   command = "code"

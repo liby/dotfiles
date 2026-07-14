@@ -5,24 +5,18 @@
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
     "CLAUDE_AUTO_BACKGROUND_TASKS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
-    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1",
     "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1",
-    "CLAUDE_CODE_ENABLE_AUTO_MODE": "1",
     "CLAUDE_CODE_ENABLE_CFC": "0",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS": "125000",
     "CLAUDE_CODE_FORK_SUBAGENT": "1",
-    "CLAUDE_CODE_NEW_INIT": "1",
     "CLAUDE_CODE_RETRY_WATCHDOG": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_EXTRA_USAGE_COMMAND": "1",
     "DISABLE_FEEDBACK_COMMAND": "1",
-    "DISABLE_INSTALLATION_CHECKS": "1",
     "DISABLE_TELEMETRY": "1",
-    "ENABLE_CLAUDEAI_MCP_SERVERS": "0",
     "ENABLE_PROMPT_CACHING_1H": "1",
-    "ENABLE_TOOL_SEARCH": "1",
-    "MCP_CONNECTION_NONBLOCKING": "1"
+    "ENABLE_TOOL_SEARCH": "1"
   },
   "attribution": {
     "commit": "",
@@ -52,6 +46,7 @@
       "Write"
     ],
     "deny": [
+      "Bash(*.claude/.credentials.json*)",
       "Bash(*.npmrc*)",
       "Bash(*.ssh/id_*)",
       "Bash(*.zprofile*)",
@@ -63,6 +58,7 @@
       "CronDelete",
       "CronList",
       "DesignSync",
+      "Edit(~/.claude/.credentials.json*)",
       "Edit(~/.gnupg/private-keys-v1.d/**)",
       "Edit(~/.ssh/id_*)",
       "Edit(~/.zprofile*)",
@@ -73,24 +69,65 @@
       "Grep",
       "NotebookEdit",
       "PushNotification",
+      "Read(**/.env.*.local)",
       "Read(**/.env.local*)",
       "Read(**/.env)",
+      "Read(~/.aws/credentials*)",
+      "Read(~/.claude/.credentials.json*)",
       "Read(~/.gnupg/private-keys-v1.d/**)",
       "Read(~/.npmrc*)",
       "Read(~/.ssh/id_*)",
-      "Read(~/.zprofile*)",
       "Read(~/.zsh_history*)",
       "Read(~/*/auth.json*)",
       "RemoteTrigger",
-      "ReportFindings",
-      "Write(~/.gnupg/private-keys-v1.d/**)",
-      "Write(~/.ssh/id_*)",
-      "Write(~/.zprofile*)",
-      "Write(~/*/auth.json*)"
-    ],
-    "ask": [
-      "Bash(*git push*)"
+      "ReportFindings"
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "excludedCommands": [
+      "chezmoi:*",
+      "docker:*",
+      "git:*"
+    ],
+    "filesystem": {
+      "allowWrite": [
+        "{{ output "getconf" "DARWIN_USER_TEMP_DIR" | trim | trimSuffix "/" }}",
+        "/private/tmp/.pnpm-store",
+        "~/.bun",
+        "~/.cache",
+        "~/.cargo",
+        "~/.local/share/uv",
+        "~/.npm",
+        "~/.pnpm-store",
+        "~/.proto",
+        "~/.rustup",
+        "~/.snowflake/logs",
+        "~/Code/.pnpm",
+        "~/Library/Caches"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "*.github.com",
+        "*.githubusercontent.com",
+        "*.claude.com",
+        "{{ .private.gitlabHost | trimPrefix "https://" | trimSuffix "/" }}",
+        "nodejs.org",
+        "{{ .private.npmHost | trimPrefix "https://" | trimSuffix "/" }}",
+        "registry.npmjs.org"
+      ],
+      "allowLocalBinding": true,
+      "allowMachLookup": [
+        "com.apple.trustd.agent"
+      ],
+      "allowUnixSockets": [
+        "~/.gnupg/S.gpg-agent",
+        "~/.gnupg/S.gpg-agent.ssh"
+      ]
+    }
   },
   "hooks": {
     "PreToolUse": [

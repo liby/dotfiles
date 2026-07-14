@@ -1,12 +1,13 @@
 # Cross-machine Codex settings managed by chezmoi. The modify template owns
 # every value declared here and the complete plugins table.
-approval_policy = "never"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+default_permissions = "development"
 experimental_compact_prompt_file = "compact-prompt.md"
 model = "gpt-5.6-sol"
 model_reasoning_effort = "xhigh"
 model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
-sandbox_mode = "danger-full-access"
 web_search = "live"
 
 [desktop]
@@ -23,7 +24,32 @@ show-context-window-usage = true
 # Keep it managed to prevent recurring target drift. See AGENTS.md.
 js_repl = false
 memories = true
+# Keep direct networking while the permission profile controls filesystem access.
+network_proxy = false
 prevent_idle_sleep = true
+
+[permissions.development.filesystem]
+# Run commands inside a write-capable sandbox while keeping known credential
+# paths unavailable.
+":root" = "write"
+"~/.claude/.credentials.json*" = "deny"
+"~/.codex/auth.json*" = "deny"
+"~/.gnupg/private-keys-v1.d" = "deny"
+"~/.npmrc*" = "deny"
+"~/.ssh/id_*" = "deny"
+"~/.zprofile*" = "deny"
+"~/.zsh_history*" = "deny"
+
+[permissions.development.filesystem.":workspace_roots"]
+"**/.env.*.local" = "deny"
+"**/.env.local*" = "deny"
+"**/.env" = "deny"
+
+[permissions.development.network]
+enabled = true
+
+[permissions.development.network.unix_sockets]
+"{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh" = "allow"
 
 [mcp_servers.context7]
 url = "https://mcp.context7.com/mcp"

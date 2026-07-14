@@ -14,7 +14,7 @@ CMD=$(parse_command) || exit 0
 # \t inside [] as literal '\' and 't', which would let backslash-prefixed
 # strings (e.g. 'process\.env' inside source code) bypass the leading boundary.
 READ_CMDS='cat|head|tail|less|more|bat|grep|rg|ag|ack|sed|awk|base64|xxd|od|openssl|cp|tee|tar|source'
-SENSITIVE_FILES='\.npmrc|\.zsh_history|\.zprofile|private-keys-v1\.d|\.pem|\.key|auth\.json'
+SENSITIVE_FILES='\.npmrc|\.zsh_history|\.zprofile|private-keys-v1\.d|\.pem|\.key|auth\.json|\.credentials\.json|\.aws/credentials'
 # Trailing path boundary: end-of-string or shell token separator. Backtick and
 # `)` matter for command-substitution (`$(cat .env)`, `` `cat .env` ``).
 PATH_END='($|[[:space:]/"'"'"'>;|&)`])'

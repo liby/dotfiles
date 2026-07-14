@@ -1,12 +1,17 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Overlay the managed Codex fragment, replace plugins as a whole, and
-      preserve undeclared live values. Return unchanged input when managed
-      values already match to avoid formatting-only drift. */ -}}
+{{- /* Overlay the managed Codex fragment, replace plugins as a whole, keep the
+      selected permission-profile system mutually exclusive with legacy sandbox
+      settings, and preserve other undeclared live values. Return unchanged
+      input when managed values already match to avoid formatting-only drift. */ -}}
 {{- $managed := includeTemplate "codex-config.toml" . | fromToml -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := $stdin | fromToml -}}
 {{- $out := mergeOverwrite (deepCopy $current) $managed -}}
 {{- $out = setValueAtPath (list "plugins") (index $managed "plugins") $out -}}
+{{- if hasKey $out "default_permissions" -}}
+  {{- $out = deleteValueAtPath "sandbox_mode" $out -}}
+  {{- $out = deleteValueAtPath "sandbox_workspace_write" $out -}}
+{{- end -}}
 {{- if deepEqual $current $out -}}
   {{- $stdin -}}
 {{- else -}}
