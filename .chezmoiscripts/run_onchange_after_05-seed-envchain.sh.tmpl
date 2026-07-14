@@ -1,0 +1,46 @@
+#!/bin/zsh
+# Seeds envchain namespaces in the macOS Keychain from the gpg-encrypted
+# seed file at .secrets/seed.asc in the chezmoi source. Its plaintext format is
+# documented in AGENTS.md. Decrypted content flows through the uv-managed
+# Python process and envchain stdin only: values never enter shell words,
+# argv, or the filesystem, so xtrace on this script cannot print them.
+# Re-runs when the ciphertext changes:
+# seed hash: {{ if stat (joinPath .chezmoi.sourceDir ".secrets/seed.asc") }}{{ include ".secrets/seed.asc" | sha256sum }}{{ else }}absent{{ end }}
+
+set -euo pipefail
+
+seed="{{ .chezmoi.sourceDir }}/.secrets/seed.asc"
+python="$(uv python find --no-project --managed-python '>=3.11')"
+
+chezmoi decrypt "$seed" | "$python" -c '
+import subprocess
+import sys
+import tomllib
+
+try:
+    namespaces = tomllib.load(sys.stdin.buffer)
+except tomllib.TOMLDecodeError as error:
+    sys.exit(f"seed-envchain: invalid TOML: {error}")
+
+entries = []
+
+for namespace, variables in namespaces.items():
+    if not isinstance(variables, dict):
+        sys.exit(f"seed-envchain: {namespace!r} must be a table")
+    for variable, value in variables.items():
+        if not isinstance(value, str):
+            sys.exit(f"seed-envchain: {namespace}.{variable} must be a quoted string")
+        if "\n" in value or "\r" in value:
+            sys.exit(f"seed-envchain: {namespace}.{variable} must be a single line")
+        entries.append((namespace, variable, value))
+
+for namespace, variable, value in entries:
+    subprocess.run(
+        ["envchain", "--set", namespace, variable],
+        input=value + "\n",
+        text=True,
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+    print(f"seed-envchain: seeded {namespace}.{variable}", file=sys.stderr)
+'

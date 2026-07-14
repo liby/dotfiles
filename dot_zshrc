@@ -63,7 +63,7 @@ typeset -aU path
 # Alias Set
 alias c='open -a "Visual Studio Code"'
 alias cc='claude'
-alias ccm='claude --switch-mode'
+alias ccm='claude --switch-provider'
 alias cm='chezmoi'
 alias cx='open -a /Applications/ChatGPT.app'
 alias hr='herdr'

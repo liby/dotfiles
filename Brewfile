@@ -13,6 +13,8 @@ brew "cmake"
 brew "curl"
 # Diff that understands syntax
 brew "difftastic"
+# Environment variables meet macOS Keychain and gnome-keyring
+brew "envchain"
 # Modern, maintained replacement for ls
 brew "eza"
 # Simple, fast and user-friendly alternative to find

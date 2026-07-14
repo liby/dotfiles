@@ -6,9 +6,7 @@
       Semantics: every top-level key in .chezmoitemplates/claude-settings.json
       is enforced from source (whole subtree replaced); $seeds are written
       only when absent, then owned by the CLI; everything else in the target
-      passes through. Do not add tombstone or unset machinery. Retire a key by
-      removing it from the fragment AND deleting it from the live file in the
-      same change (apply never deletes). */ -}}
+      passes through. */ -}}
 {{- $managed := includeTemplate "claude-settings.json" . | fromJson -}}
 {{- $seeds := `{
   "model": "sonnet",

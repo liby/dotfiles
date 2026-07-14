@@ -1,0 +1,9 @@
+export LAST30DAYS_MEMORY_DIR="$HOME/.local/share/last30days"
+
+# Non-interactive shells (Codex exec_command, CC sandbox) inherit launchd's
+# SSH_AUTH_SOCK, which lacks the signing key; point at gpg-agent's socket.
+if [[ -z "$SSH_AUTH_SOCK" || "$SSH_AUTH_SOCK" == *apple.launchd* ]]; then
+  _gpg_sock="$(gpgconf --list-dirs agent-ssh-socket 2>/dev/null)"
+  [[ -S "$_gpg_sock" ]] && export SSH_AUTH_SOCK="$_gpg_sock"
+  unset _gpg_sock
+fi

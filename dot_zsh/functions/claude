@@ -1,26 +1,22 @@
-# claude — mode-aware launcher wrapping the claude binary.
+# claude: provider-aware launcher wrapping the Claude Code binary.
 #
 # claude [args...]                       Launch in the current mode.
-# claude --switch-mode [args...]         Interactive picker to switch mode, then launch.
-# claude --api-model <model> [args...]   Force API mode for this call and override ANTHROPIC_MODEL.
+# claude --switch-provider [args...]     Pick a provider, save it, then launch.
+# claude --gateway [args...]             Use the gateway for this call.
 
 emulate -L zsh
 
 local pick=0
-local api_model=
+local force_gateway=0
 while (( $# )); do
   case $1 in
-    --switch-mode)
+    --switch-provider)
       pick=1
       shift
       ;;
-    --api-model)
-      if (( $# < 2 )) || [[ -z $2 || $2 == -* ]]; then
-        print -u2 "claude: --api-model requires a model name"
-        return 2
-      fi
-      api_model=$2
-      shift 2
+    --gateway)
+      force_gateway=1
+      shift
       ;;
     *)
       break
@@ -30,21 +26,21 @@ done
 
 local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/claude-code"
 local mode_file="$config_dir/mode"
-local env_file="$config_dir/.env"
+local gateway_settings="$config_dir/gateway-settings.json"
+local gateway_namespace=claude-gateway
 
-local mode=sub
+local mode=subscription
 [[ -f $mode_file ]] && mode=$(< $mode_file)
-# --api-model implies API mode (the only mode it works in), single-invocation override.
-[[ -n $api_model ]] && mode=api
+(( force_gateway )) && mode=gateway
 
 if (( pick )); then
-  [[ -t 0 && -t 1 ]] || { print -u2 "claude: --switch-mode requires an interactive terminal"; return 1 }
+  [[ -t 0 && -t 1 ]] || { print -u2 "claude: --switch-provider requires an interactive terminal"; return 1 }
 
   local selected=1
-  [[ $mode == api ]] && selected=0
+  [[ $mode == gateway ]] && selected=0
 
   local cursor=$selected
-  local -a labels=(API Subscription) modes=(api sub)
+  local -a labels=(Gateway Subscription) modes=(gateway subscription)
   local key seq first=1
   local teardown=$'\e[2A\e[J\e[?25h'
   local i marker line
@@ -93,18 +89,12 @@ if (( pick )); then
   print -n $mode > $mode_file
 fi
 
-# Subshell + exec: env vars don't leak into the parent shell.
-if [[ $mode == api ]]; then
-  [[ -f $env_file ]] || { print -u2 "claude: $env_file not found"; return 1 }
-  (
-    set -a
-    source "$env_file" || exit 2
-    [[ -n $api_model ]] && ANTHROPIC_MODEL=$api_model
-    exec command claude "$@"
-  )
-  local rc=$?
-  (( rc == 2 )) && { print -u2 "claude: failed to source $env_file"; return 1 }
-  return $rc
+# envchain warns but still runs the command when a namespace is missing.
+if [[ $mode == gateway ]]; then
+  (( $+commands[envchain] )) || { print -u2 "claude: envchain not found"; return 1 }
+  [[ -r $gateway_settings ]] || { print -u2 "claude: $gateway_settings not found"; return 1 }
+  envchain --list | grep -qx "$gateway_namespace" || { print -u2 "claude: envchain namespace $gateway_namespace not found"; return 1 }
+  envchain "$gateway_namespace" claude --settings "$gateway_settings" "$@"
 else
   command claude "$@"
 fi
