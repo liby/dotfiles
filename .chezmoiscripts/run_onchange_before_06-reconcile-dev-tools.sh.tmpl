@@ -1,0 +1,55 @@
+#!/bin/zsh
+set -euo pipefail
+
+[[ "$OSTYPE" == darwin* ]] || exit 0
+
+{{- $manifest := include ".github/dev-tools/package.json" | fromJson -}}
+{{- $tools := index $manifest "devDependencies" }}
+
+if [[ "$(uname -m)" == "arm64" ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# Chezmoi scripts do not load the interactive shell configuration.
+export PROTO_HOME="$HOME/.proto"
+export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+npm_prefix="$HOME/.npm-global"
+
+npm_tools=(
+{{ range $name := keys $tools | sortAlpha -}}
+  "{{ $name }}@{{ index $tools $name }}"
+{{ end -}}
+)
+
+# Other machine-local globals may coexist in this prefix.
+npm_tree="$(npm ls --global --depth=0 --json --prefix "$npm_prefix" 2>/dev/null || true)"
+npm_pending=()
+for spec in "${npm_tools[@]}"; do
+  name="${spec%@*}"
+  version="${spec##*@}"
+  current="$(
+    jq -r --arg name "$name" '.dependencies[$name].version // empty' \
+      <<< "$npm_tree"
+  )"
+  [[ "$current" == "$version" ]] || npm_pending+=("$spec")
+done
+
+if (( ${#npm_pending[@]} )); then
+  npm install --global \
+    --prefix "$npm_prefix" \
+    --ignore-scripts \
+    -- "${npm_pending[@]}"
+fi
+
+pyright_requirement="{{ include ".github/dev-tools/requirements.txt" | trim }}"
+pyright_version="${pyright_requirement#pyright==}"
+current_pyright="$(
+  uv tool list |
+    awk '$1 == "pyright" && $2 ~ /^v/ { sub(/^v/, "", $2); print $2; exit }'
+)"
+
+if [[ "$current_pyright" != "$pyright_version" ]]; then
+  uv tool install --force "$pyright_requirement"
+fi

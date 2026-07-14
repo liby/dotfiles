@@ -1,0 +1,79 @@
+name: validate-zsh-plugins
+
+on:
+  pull_request:
+    paths:
+      - ".chezmoiexternal.toml"
+      - ".github/workflows/validate-zsh-plugins.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".chezmoiexternal.toml"
+      - ".github/workflows/validate-zsh-plugins.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      # renovate: datasource=github-releases depName=twpayne/chezmoi
+      CHEZMOI_VERSION: v2.71.0
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Install smoke-test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends zsh
+          installer="$RUNNER_TEMP/install-chezmoi.sh"
+          curl --fail --location --retry 5 --retry-all-errors \
+            --silent --show-error \
+            --output "$installer" \
+            https://get.chezmoi.io
+          for attempt in 1 2 3; do
+            if sh "$installer" \
+              -b "$RUNNER_TEMP/bin" \
+              -t "$CHEZMOI_VERSION"; then
+              break
+            fi
+            if ((attempt == 3)); then
+              exit 1
+            fi
+          done
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Apply pinned plugin archives
+        run: |
+          set -euo pipefail
+          source_dir="$RUNNER_TEMP/source"
+          home_dir="$RUNNER_TEMP/home"
+          mkdir -p "$source_dir" "$home_dir/.zsh/plugins"
+          cp .chezmoiexternal.toml "$source_dir/"
+          for attempt in 1 2 3; do
+            if chezmoi apply \
+              --config /dev/null \
+              --config-format toml \
+              --persistent-state "$RUNNER_TEMP/chezmoi-state" \
+              --source "$source_dir" \
+              --destination "$home_dir" \
+              --include externals \
+              --refresh-externals=always \
+              --no-tty; then
+              break
+            fi
+            if ((attempt == 3)); then
+              exit 1
+            fi
+          done
+      - name: Load Zsh plugins
+        shell: zsh {0}
+        env:
+          HOME: ${{ runner.temp }}/home
+          TERM: xterm-256color
+        run: |
+          set -euo pipefail
+          fpath=("$HOME/.zsh/plugins/zsh-completions/src" $fpath)
+          autoload -Uz compinit
+          compinit -u -d "$HOME/.zcompdump"
+          source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
+          source "$HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh"

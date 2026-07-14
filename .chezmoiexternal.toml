@@ -1,0 +1,24 @@
+# GitHub guarantees the contents of fixed-commit archives, but not their
+# compressed bytes. Pin commits without raw-archive checksums so a future
+# compression change cannot break a fresh install.
+
+[".zsh/plugins/zsh-autosuggestions"]
+type = "archive"
+# renovate: currentValue=master
+url = "https://github.com/zsh-users/zsh-autosuggestions/archive/85919cd1ffa7d2d5412f6d3fe437ebdbeeec4fc5.tar.gz"
+exact = true
+stripComponents = 1
+
+[".zsh/plugins/zsh-completions"]
+type = "archive"
+# renovate: currentValue=master
+url = "https://github.com/zsh-users/zsh-completions/archive/9903bae60284072de3fa0e3e20965f22368c5694.tar.gz"
+exact = true
+stripComponents = 1
+
+[".zsh/plugins/fsh"]
+type = "archive"
+# renovate: currentValue=master
+url = "https://github.com/zdharma-continuum/fast-syntax-highlighting/archive/3d574ccf48804b10dca52625df13da5edae7f553.tar.gz"
+exact = true
+stripComponents = 1

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    "schedule:daily"
+  ],
+  "timezone": "Asia/Singapore",
+  "description": "platformAutomerge stays false: main has no required status checks, so GitHub-native automerge would merge before (or without) CI; Renovate-side automerge waits for every present check to pass.",
+  "automerge": true,
+  "platformAutomerge": false,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update fixed-commit GitHub archives from their declared branches",
+      "managerFilePatterns": ["/^\\.chezmoiexternal\\.toml$/"],
+      "matchStrings": [
+        "# renovate: currentValue=(?<currentValue>\\S+)\\s+url\\s*=\\s*\"https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+)/archive/(?<currentDigest>[a-f0-9]{40})\\.tar\\.gz\""
+      ],
+      "packageNameTemplate": "https://github.com/{{{depName}}}",
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "customType": "regex",
+      "description": "Update standalone tools pinned in GitHub Actions workflows",
+      "managerFilePatterns": ["/^\\.github\\/workflows\\/.*\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+_VERSION:\\s*(?<currentValue>\\S+)"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Update Zsh plugin commits together",
+      "matchDatasources": ["git-refs"],
+      "matchFileNames": [".chezmoiexternal.toml"],
+      "groupName": "Zsh plugins"
+    },
+    {
+      "description": "Update global npm tools and Python tools together; no workflow runs on this path, and automerge without ignoreTests waits forever for a check that never appears",
+      "matchFileNames": [".github/dev-tools/**"],
+      "groupName": "Global developer tools",
+      "separateMajorMinor": false,
+      "ignoreTests": true
+    }
+  ]
+}

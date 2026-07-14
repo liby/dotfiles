@@ -56,7 +56,8 @@ chezmoi apply
 ```sh
 chezmoi add <file>          # 将文件加入 chezmoi 管理
 chezmoi edit <file>         # 编辑源文件
-chezmoi diff                # 查看源目录与目标的差异
+chezmoi status --exclude=encrypted  # 安全查看变更概览
+chezmoi diff <dest-path>    # 检查单个非敏感目标文件
 chezmoi apply               # 应用所有变更到 $HOME
 chezmoi cd                  # 进入源目录
 chezmoi git status          # 在任意目录下操作源目录的 Git
@@ -76,20 +77,24 @@ Bootstrap 脚本位于 `.chezmoiscripts/` 目录下，按以下顺序执行：
 
 | 阶段 | 脚本 | 备注 |
 |------|------|------|
-| before | [Xcode CLI Tools](../.chezmoiscripts/run_once_before_10-install-xcode-cli-tools.sh) | Git 和编译依赖 |
-| before | [Homebrew](../.chezmoiscripts/run_once_before_20-install-homebrew.sh) | |
-| before | [Brewfile packages](../.chezmoiscripts/run_onchange_before_30-install-brew-packages.sh.tmpl) | |
-| before | [Case-sensitive volume](../.chezmoiscripts/run_once_before_40-setup-case-sensitive-volume.sh) | 供 `~/Code` 使用 |
-| before | [Node.js](../.chezmoiscripts/run_once_before_50-install-nodejs.sh) | 包含 proto 和 pnpm |
-| before | [Rust](../.chezmoiscripts/run_once_before_60-install-rust.sh) | |
-| before | [Claude Code](../.chezmoiscripts/run_once_before_70-install-claude-code.sh) | |
-| before | [zsh plugins](../.chezmoiscripts/run_once_before_80-setup-zsh-plugins.sh) | |
-| after | [GPG agent](../.chezmoiscripts/run_once_after_300-setup-gpg-agent.sh) | 含 YubiKey 配置 |
-| after | [Git config](../.chezmoiscripts/run_once_after_310-setup-gitconfig.sh) | 从模板生成 |
-| after | [macOS defaults](../.chezmoiscripts/run_onchange_after_320-setup-macos-defaults.sh) | Dock、Finder 等 |
-| after | [zsh completions](../.chezmoiscripts/run_once_after_330-reload-zsh-completions.sh) | |
+| before | [Xcode CLI Tools](../.chezmoiscripts/run_once_before_01-install-xcode-cli-tools.sh) | Git 和编译依赖 |
+| before | [Homebrew](../.chezmoiscripts/run_once_before_02-install-homebrew.sh) | |
+| before | [Brewfile packages](../.chezmoiscripts/run_onchange_before_03-install-brew-packages.sh.tmpl) | |
+| before | [Case-sensitive volume](../.chezmoiscripts/run_once_before_04-setup-case-sensitive-volume.sh) | 供 `~/Code` 使用 |
+| before | [Node.js](../.chezmoiscripts/run_once_before_05-install-nodejs.sh) | 包含 proto 和 pnpm |
+| before | [全局开发工具](../.chezmoiscripts/run_onchange_before_06-reconcile-dev-tools.sh.tmpl) | 全局 npm 工具和 Pyright 的版本声明见 [`package.json`](dev-tools/package.json) 与 [`requirements.txt`](dev-tools/requirements.txt) |
+| before | [Rust](../.chezmoiscripts/run_once_before_07-install-rust.sh) | |
+| before | [Claude Code](../.chezmoiscripts/run_once_before_08-install-claude-code.sh) | |
+| after | [GPG agent](../.chezmoiscripts/run_once_after_01-setup-gpg-agent.sh) | 含 YubiKey 配置 |
+| after | [Git config](../.chezmoiscripts/run_once_after_02-setup-gitconfig.sh) | 从模板生成 |
+| after | [macOS defaults](../.chezmoiscripts/run_onchange_after_03-setup-macos-defaults.sh) | Dock、Finder 等 |
+| after | [zsh completions](../.chezmoiscripts/run_once_after_04-reload-zsh-completions.sh) | |
 
 `before` 脚本在文件同步前执行，`after` 脚本在文件同步后执行。
+
+[Renovate](renovate.json) 按 `Asia/Singapore` 时区每日检查 GitHub Actions、已声明的全局 npm 工具和 Pyright。下一次 `chezmoi apply` 只安装缺失或版本不符的工具。
+
+Zsh 插件通过 [`.chezmoiexternal.toml`](../.chezmoiexternal.toml) 固定到上游 commit。Renovate 将 pin 更新归入同一个 PR，[CI](workflows/validate-zsh-plugins.yml) 验证每个 archive 可应用且入口可加载。
 
 ## 贡献指南
 

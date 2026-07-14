@@ -1,16 +1,24 @@
 name: validate-skills
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/validate-skills.yml"
+      - "dot_agents/skills/**"
   push:
     branches: [main]
     paths:
+      - ".github/workflows/validate-skills.yml"
       - "dot_agents/skills/**"
+
+permissions:
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       # Static mode only: no ~/.agents tree on the runner (deployed pass skips
       # silently) and no GPG, so encrypted skills are not validated here.
       - run: ruby dot_agents/skills/scripts/validate-skills.rb
