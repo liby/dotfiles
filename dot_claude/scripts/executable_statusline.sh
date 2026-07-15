@@ -8,7 +8,7 @@
 #
 # Verify after editing (CC sets CLAUDE_CODE_EFFORT_LEVEL from settings.env; pass
 # it explicitly here to exercise the same effort-resolution path the runtime uses):
-#   echo '{"context_window":{"context_window_size":200000,"current_usage":{"input_tokens":50000,"output_tokens":10000}},"cwd":"/tmp"}' \
+#   echo '{"model":{"display_name":"Fable 5"},"context_window":{"context_window_size":200000,"current_usage":{"input_tokens":50000,"output_tokens":10000}},"cwd":"/tmp"}' \
 #   | CLAUDE_CODE_EFFORT_LEVEL=high bash ~/.claude/scripts/statusline.sh
 
 set -f
@@ -24,18 +24,17 @@ fi
 cyan='\033[38;2;86;182;194m'
 sky='\033[38;2;200;210;235m'
 amber='\033[38;2;224;168;112m'
-red='\033[38;2;245;100;100m'
+red='\033[38;2;255;82;82m'
 coral='\033[38;2;255;127;100m'
-magenta='\033[38;2;180;140;255m'
 rose='\033[38;2;245;180;190m'
-persimmon='\033[38;2;240;108;88m'
 ruby='\033[38;2;230;100;160m'
+claude='\033[38;2;215;119;87m' # CLI theme "claude" brand orange
 dim='\033[2m'
 muted='\033[38;2;120;130;150m'
 faint='\033[38;2;60;65;75m'
 reset='\033[0m'
 
-sep=" ${dim}│${reset} "
+sep=" ${dim}∙${reset} " # U+2219 bullet operator: lower profile than │, distinct from the effort circle glyphs
 
 # ── Platform detection + epoch (single fork) ───────────
 if [[ "$OSTYPE" == darwin* ]]; then
@@ -176,6 +175,7 @@ render_extra_rate_row() {
   read -r seven_day_pct_raw
   read -r seven_day_reset_epoch
   read -r stdin_effort
+  read -r model_name
 } < <(jq -r '
   (.context_window.context_window_size // 200000),
   (.context_window.current_usage.input_tokens // 0),
@@ -187,7 +187,8 @@ render_extra_rate_row() {
   (.rate_limits.five_hour.resets_at // ""),
   (.rate_limits.seven_day.used_percentage // ""),
   (.rate_limits.seven_day.resets_at // ""),
-  (.effort.level // "")
+  (.effort.level // ""),
+  (.model.display_name // "")
 ' <<< "$input")
 
 : "${size:=200000}"
@@ -244,7 +245,7 @@ compact_at=$(( effective_size - COMPACT_RESERVE ))
 pct_used=$(( current * 100 / compact_at ))
 (( pct_used > 100 )) && pct_used=100
 
-# ── LINE 1: Context % │ Dir:branch │ Effort ──
+# ── LINE 1: Context % │ Dir:branch │ Model │ Effort ──
 pct_color=$(color_for_pct "$pct_used")
 { [ -z "$cwd" ] || [ "$cwd" = "null" ]; } && cwd=$(pwd)
 dir_name="${cwd##*/}"
@@ -263,13 +264,20 @@ if [ -n "$git_branch" ]; then
   line1+="${muted}:${rose}${display_branch}${ruby}${git_dirty}${reset}"
 fi
 line1+="${sep}"
+if [ -n "$model_name" ]; then
+  line1+="${claude}${model_name}${reset}"
+  line1+="${sep}"
+fi
+# Symbols mirror the CLI's own effort ladder (○ ◐ ● ◉ ◈); colors run cold-to-hot
+# like color_for_pct. No ultracode display: stdin only carries effort.level, which
+# reads "xhigh" while ultracode is active; session state never reaches this script.
 case "$effort" in
-  max)    line1+="${red}✦ ${effort}${reset}" ;;
-  xhigh)  line1+="${coral}● ${effort}${reset}" ;;
-  high)   line1+="${magenta}◉ ${effort}${reset}" ;;
+  max)    line1+="${red}◈ ${effort}${reset}" ;;
+  xhigh)  line1+="${coral}◉ ${effort}${reset}" ;;
+  high)   line1+="${amber}● ${effort}${reset}" ;;
   medium) line1+="${cyan}◐ ${effort}${reset}" ;;
-  low)    line1+="${dim}◔ ${effort}${reset}" ;;
-  *)      line1+="${dim}◑ ${effort}${reset}" ;;
+  low)    line1+="${muted}○ ${effort}${reset}" ;;
+  *)      line1+="${dim}◌ ${effort}${reset}" ;;
 esac
 
 # ── OAuth token resolution ──────────────────────────────
