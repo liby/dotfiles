@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Create a scoped baseline object for /review --fix.
 # Input is a NUL-delimited file of repo-relative paths the fixer may touch.
-# Stdout prints the baseline commit id. Stderr prints refusal or usage errors.
+# Stdout prints the baseline commit id. Stderr prints refusal, ambiguity, or usage errors.
 
 set -euo pipefail
 
@@ -25,17 +25,17 @@ if [ ! -s "$FIX_SCOPE_FILE" ]; then
   exit 2
 fi
 
-validate_path_file_nul "$FIX_SCOPE_FILE" || exit 4
+# set -e propagates the validator's real exit status: 4 raw secret, 5 ambiguous.
+validate_path_file_nul "$FIX_SCOPE_FILE"
 
 TMP_INDEX=$(mktemp)
-FIX_SCOPE_NUL=$(mktemp)
-cleanup() { rm -f "$TMP_INDEX" "$FIX_SCOPE_NUL"; }
+cleanup() { rm -f "$TMP_INDEX"; }
 trap cleanup EXIT
 
-path_file_nul_to_literal_pathspec "$FIX_SCOPE_FILE" "$FIX_SCOPE_NUL"
-
 GIT_INDEX_FILE="$TMP_INDEX" git read-tree HEAD
-GIT_INDEX_FILE="$TMP_INDEX" git add --pathspec-from-file="$FIX_SCOPE_NUL" --pathspec-file-nul
+GIT_INDEX_FILE="$TMP_INDEX" git --literal-pathspecs add \
+  --pathspec-from-file="$FIX_SCOPE_FILE" \
+  --pathspec-file-nul
 BASELINE_TREE=$(GIT_INDEX_FILE="$TMP_INDEX" git write-tree)
 BASELINE=$(git commit-tree "$BASELINE_TREE" -p HEAD -m "review-fix-baseline")
 printf '%s\n' "$BASELINE"

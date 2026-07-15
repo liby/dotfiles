@@ -20,7 +20,10 @@ Create one git commit for: $ARGUMENTS. With empty arguments, commit the work fro
 - Do not push, reset, checkout, rebase, or rewrite history unless the user explicitly asked for that operation.
 - Recover motivation from the current conversation, linked issue or plan, project docs, current diff, and targeted agent transcript search when the user wants one commit for work spread across prior conversations or agents.
 - Do not read shell history. Treat transcripts as secret surfaces: search them narrowly, do not dump raw snippets into chat, and extract only the motivation needed for the commit message.
-- Screen changed paths before reading diffs. Stop without reading or staging hard secret surfaces: `.env*`, private keys, certificates, `.ssh/`, shell history, logs, credential dumps, token files, or paths whose basename clearly names a secret. For ambiguous substring hits in source, tests, fixtures, docs, or public-key material such as `*.pub`, report the caution path count and ask for one explicit confirmation before including them.
+- Screen changed paths before reading bodies, then classify them by exposure risk rather than name alone:
+  - Raw secret surfaces include real `.env*` files, private keys, credential stores or dumps, shell history, and logs that may contain secrets. Stop without reading or staging them.
+  - Opaque ciphertext is established by repository instructions or an encryption marker, not by extension alone. Keep its body out of diffs, but allow metadata inspection and Git stage, commit, rename, or delete operations. Use project or user-supplied change classification as motivation, never infer plaintext, and keep ciphertext-only messages generic.
+  - Ambiguous paths include names that suggest secrets without proving plaintext or ciphertext, PEM bundles, unknown SSH material, and source or fixture names containing `credential`, `secret`, or `token`. Report only the caution count and ask for one explicit classification before reading or staging them. Public certificates, public keys, `authorized_keys`, `known_hosts`, and SSH client configuration are not secret by type.
 
 ## Explain why, not what
 
@@ -34,6 +37,7 @@ Right: `chore: move PNPM_HOME to case-sensitive Code volume` with body explainin
   - `diff`: a staged hunk or committed doc proves the changed artifact, behavior, policy, path, config key, tool, spec, or external integration.
   - `motivation`: the conversation, issue, plan, or transcript explains why a staged change exists.
   - `report`: uncommitted local config, operator workflow, skipped tools, environment state, or rejected alternatives.
+- For opaque ciphertext, `diff` evidence proves only path, status, and encrypted format. Derive no plaintext claim from it; use the ordinary changed files for behavior evidence and the user's classification only for motivation.
 - Use `diff` evidence for the subject, approach, and every named path, tool, config key, policy, service, spec, external behavior, and changed behavior. Use `motivation` evidence only for why the staged change exists. Move `report` evidence to the post-commit report.
 - Bug fixes name the root cause. Features name the user-visible gap. Refactors name the constraint that forced the restructure.
 - Anchor every body bullet to ledger entries. Rewrite or remove sentences whose source is missing or whose source category is `report`.
@@ -64,9 +68,9 @@ Format:
    - `git branch --show-current`
    - `git log --oneline -10`
    - `cat .git/hooks/pre-commit` if present
-2. Screen changed paths against the Contract denylist. Do not read any diff until the screen passes.
+2. Classify every changed path under the Contract. Abort on raw secret surfaces. Record opaque ciphertext separately, exclude its body from every later diff, and continue with ordinary paths once every ambiguous path is classified.
 3. Decide ordinary commit mode unless the user explicitly asked to amend the previous git commit. In amend mode, read `git show --stat --patch HEAD` and treat staged changes as the net replacement relative to `HEAD^`; ordinary commit mode must not use `git commit --amend`.
-4. Read `git diff HEAD` for ordinary commit mode or the amend-mode net diff.
+4. Read `git diff HEAD` for ordinary commit mode or the amend-mode net diff, limited to ordinary paths. Inspect opaque ciphertext through `--name-status`, `--stat`, or encryption markers only.
 5. If the log dialect is Conventional Commits, look for scope config with:
    - `rg -l --no-ignore-vcs '"?commitlint"?|"?commitizen"?' -g '!node_modules' -g '!.git' .`
    - `fd CONTRIBUTING -d 3 .`
@@ -118,7 +122,7 @@ Workflow:
 ## Failure Modes
 
 - Cross-check abort: first line is `abort: <reason>`, followed by the exact mismatch.
-- Secret-like path abort: first line is `abort: secret-like path in commit scope`, followed by the count only.
+- Raw-secret path abort: first line is `abort: raw secret path in commit scope`, followed by the count only.
 - Pre-commit hook failure: surface the hook output and stop.
 - Do not bypass failures with `--no-verify`.
 

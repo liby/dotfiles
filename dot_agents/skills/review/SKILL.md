@@ -22,7 +22,13 @@ Read, verify, report. Clean verdicts and no-op are valid outcomes. Default revie
 ## Flow
 
 1. Resolve scope: MR/PR, branch diff, working tree, or explicit notes.
-2. Before reading any diff body, collect changed paths and screen each through the machine denylist in `scripts/_lib.sh`, the same authority `--fix` enforces, rather than matching names by hand: source `_lib.sh` from the skill directory and run `is_secret_like_path` per path (or `validate_git_diff_paths <base> <head>` for a branch). Refuse a matched path without printing it; the denylist covers env files, private keys and certificates, SSH material, and history or log files. Do not refuse ordinary source code merely because a path contains `credential`, `secret`, or `token`; review it as security-sensitive code and avoid quoting secret values.
+2. Classify changed paths before reading any diff body. Source `scripts/_lib.sh` from the skill directory and use its machine classifier, the same authority `--fix` enforces: run `validate_git_diff_paths <base> <head>` for a branch, `validate_working_tree_paths` for the working tree, or pass an MR/PR host file list as a NUL-delimited file to `validate_path_file_nul` in the same Bash invocation.
+   - Keep path transport NUL-delimited. Never copy a path from an earlier response into a later Bash command, because a plain-looking filename can collide with an unrelated Bash permission rule.
+   - Refuse raw secret surfaces without printing them. Stop on ambiguous sensitive paths until the host, project instructions, or user classifies them.
+   - Treat encrypted-name matches only as ciphertext candidates. Once project instructions or an encryption marker confirms one, account for path and status, keep its body out of every diff, and continue reviewing ordinary paths.
+   - Public certificates, public keys, `authorized_keys`, `known_hosts`, and SSH client configuration are not secret by type. Source code is not secret merely because its path contains `credential`, `secret`, or `token`; review it as security-sensitive code and avoid quoting secret values.
+
+   Done when every changed path is classified as ordinary, opaque ciphertext, ambiguous, or raw secret before any body is read.
 3. List changed files before judging behavior:
    - branch: parse `git diff -z --name-status <base>...HEAD`; for `R*` and `C*`, inspect both source and destination paths before any full diff
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`

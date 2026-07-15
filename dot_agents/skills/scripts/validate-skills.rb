@@ -231,12 +231,30 @@ if options[:smoke]
   # shopt), so exercise it in both shells.
   lib = root.join("review/scripts/_lib.sh")
   if lib.exist?
-    smoke = "source #{lib.to_s.shellescape} && is_secret_like_path '.ENV.production' && ! is_secret_like_path 'src/app.ts'"
+    # exit codes: 0 allow, 4 raw secret, 5 ambiguous
+    smoke_cases = {
+      ".ENV.production" => 4,
+      ".secrets/plain.toml" => 4,
+      "identity.pem" => 5,
+      ".secrets/seed.asc" => 0,
+      "encrypted_private_dot_env.asc" => 0,
+      ".env.age" => 0,
+      "certificate.crt" => 0,
+      ".ssh/config" => 0,
+      ".ssh/id_ed25519.pub" => 0,
+      "src/app.ts" => 0
+    }
     %w[bash zsh].each do |shell|
-      if system("which", shell, out: File::NULL, err: File::NULL)
-        errors << "#{rel(lib.to_s, repo)}: #{shell} runtime smoke failed" unless system(shell, "-c", smoke, out: File::NULL, err: File::NULL)
-      else
+      unless system("which", shell, out: File::NULL, err: File::NULL)
         warnings << "smoke: #{shell} not found, skipped _lib.sh runtime smoke"
+        next
+      end
+      smoke_cases.each do |entry, expected|
+        cmd = "source #{lib.to_s.shellescape} && " \
+              "printf '%s\\0' #{entry.shellescape} | validate_path_file_nul /dev/stdin"
+        _out, _err, status = Open3.capture3(shell, "-c", cmd)
+        next if status.exitstatus == expected
+        errors << "#{rel(lib.to_s, repo)}: #{shell} smoke #{entry.inspect} exited #{status.exitstatus}, expected #{expected}"
       end
     end
   end
