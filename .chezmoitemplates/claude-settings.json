@@ -1,3 +1,5 @@
+{{- /* Before editing, read paired dot_claude/modify_settings.json and the
+      AGENTS.md files governing both paths. */ -}}
 {
   "cleanupPeriodDays": 99999,
   "env": {

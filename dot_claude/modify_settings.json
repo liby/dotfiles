@@ -1,12 +1,9 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Partial management of ~/.claude/settings.json. The Claude Code CLI
-      writes runtime state into this file (/model and /effort defaults,
-      one-time dialog acks, keys added by future CLI versions); a plain
-      source file made every unscoped `chezmoi apply` silently revert them.
-      Semantics: every top-level key in .chezmoitemplates/claude-settings.json
-      is enforced from source (whole subtree replaced); $seeds are written
-      only when absent, then owned by the CLI; everything else in the target
-      passes through. */ -}}
+{{- /* Partially manage ~/.claude/settings.json so CLI-written defaults, acks,
+      and future keys survive apply. claude-settings.json replaces whole
+      top-level subtrees: nested removals apply on render; removing a top-level
+      key only stops managing it, so retire it from source and live. Seed
+      missing model and effort defaults once; preserve other live keys. */ -}}
 {{- $managed := includeTemplate "claude-settings.json" . | fromJson -}}
 {{- $seeds := `{
   "model": "sonnet",

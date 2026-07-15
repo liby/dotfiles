@@ -1,5 +1,5 @@
-# Cross-machine Codex settings managed by chezmoi. The modify template owns
-# every value declared here and the complete plugins table.
+# Before editing, read paired dot_codex/modify_private_config.toml and the
+# AGENTS.md files governing both paths.
 approval_policy = "on-request"
 approvals_reviewer = "auto_review"
 default_permissions = "development"
