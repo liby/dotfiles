@@ -9,10 +9,16 @@
   "model": "sonnet",
   "effortLevel": "xhigh"
 }` | fromJson -}}
-{{- $out := dict -}}
-{{- if .chezmoi.stdin -}}{{- $out = fromJson .chezmoi.stdin -}}{{- end -}}
+{{- $stdin := .chezmoi.stdin -}}
+{{- $current := dict -}}
+{{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
+{{- $out := deepCopy $current -}}
 {{- range $k, $v := $managed -}}{{- $out = set $out $k $v -}}{{- end -}}
 {{- range $k, $v := $seeds -}}
 {{-   if not (hasKey $out $k) -}}{{- $out = set $out $k $v -}}{{- end -}}
 {{- end -}}
-{{ toPrettyJson $out }}
+{{- if deepEqual $current $out -}}
+  {{- $stdin -}}
+{{- else -}}
+  {{ toPrettyJson $out }}
+{{- end -}}
