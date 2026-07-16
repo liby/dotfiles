@@ -1,13 +1,14 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Deep-overlay codex-config.toml, replace plugins, and preserve other live
-      values. Removing an overlaid key only stops managing it; retire it from
-      source and live. Plugin removals apply on render. Emit unchanged input
-      when equal to avoid formatting-only drift. */ -}}
+{{- /* Deep-overlay codex-config.toml while replacing fully managed subtrees
+      and preserving other live values. Clean one-time destination drift
+      directly; persistent deletion requires evidence of a recurring writer.
+      Emit unchanged input when equal to avoid formatting-only drift. */ -}}
 {{- $managed := includeTemplate "codex-config.toml" . | fromToml -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := $stdin | fromToml -}}
 {{- $out := mergeOverwrite (deepCopy $current) $managed -}}
 {{- $out = setValueAtPath (list "plugins") (index $managed "plugins") $out -}}
+{{- $out = setValueAtPath (list "permissions" "development") (index (index $managed "permissions") "development") $out -}}
 {{- /* Persistent absence: legacy sandbox selectors can override
       default_permissions. Do not add one-time retirements here. */ -}}
 {{- if hasKey $out "default_permissions" -}}

@@ -5,14 +5,13 @@ approvals_reviewer = "auto_review"
 default_permissions = "development"
 experimental_compact_prompt_file = "compact-prompt.md"
 model = "gpt-5.6-sol"
-model_reasoning_effort = "xhigh"
 model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
 web_search = "live"
 
 [desktop]
 ambient-suggestions-enabled = false
-enabled-reasoning-efforts = ["low", "medium", "high", "xhigh", "ultra"]
+enabled-reasoning-efforts = ["low", "medium", "high", "xhigh", "ultra", "max"]
 # Keep the selected UI behavior when the desktop default writes queue.
 followUpQueueMode = "steer"
 mac-menu-bar-enabled = false
@@ -20,9 +19,6 @@ reduced-motion-preference = "on"
 show-context-window-usage = true
 
 [features]
-# Removed and ignored by the CLI, but Codex App restores false when absent.
-# Keep it managed to prevent recurring target drift. See AGENTS.md.
-js_repl = false
 memories = true
 # Keep direct networking while the permission profile controls filesystem access.
 network_proxy = false
