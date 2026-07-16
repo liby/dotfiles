@@ -14,8 +14,9 @@ fi
 
 # Chezmoi scripts do not load the interactive shell configuration.
 export PROTO_HOME="$HOME/.proto"
+export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
 export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
-npm_prefix="$HOME/.npm-global"
+npm_prefix="$NPM_CONFIG_PREFIX"
 
 npm_tools=(
 {{ range $name := keys $tools | sortAlpha -}}
