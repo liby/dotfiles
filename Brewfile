@@ -69,12 +69,8 @@ cask "google-chrome"
 cask "input-source-pro"
 # Menu bar calendar
 cask "itsycal"
-# Privacy-first, open-source platform for knowledge sharing and management
-cask "logseq"
 # Replacement for Docker Desktop
 cask "orbstack"
-# IDE for professional Python development
-cask "pycharm"
 # Control your tools with a few keystrokes
 cask "raycast"
 # Open-source code editor
