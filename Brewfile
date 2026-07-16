@@ -57,8 +57,8 @@ brew "zsh"
 cask "anki"
 # Application uninstaller
 cask "appcleaner"
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
+# OpenAI's official ChatGPT desktop app
+cask "chatgpt"
 # Inconsolata LGC Nerd Font
 cask "font-inconsolata-lgc-nerd-font"
 # Terminal emulator that uses platform-native UI and GPU acceleration
