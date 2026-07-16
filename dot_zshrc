@@ -18,11 +18,11 @@ fpath+=$HOME/.zsh/functions
 ## Initialize the completion system
 ## This must be done after all fpath modifications
 autoload -Uz compinit
-# Only regenerate .zcompdump once a day
+# Run the full compinit check once a day
 () {
   setopt local_options extendedglob
   if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
-    compinit
+    compinit && touch ~/.zcompdump
   else
     compinit -C
   fi
@@ -35,7 +35,6 @@ export HOMEBREW_NO_ENV_HINTS=1
 export ORACLE_ENGINE="browser"
 export PROTO_AUTO_INSTALL_HIDE_OUTPUT=1
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
-export TZ=Asia/Singapore
 
 # PATH configuration
 typeset -aU path
