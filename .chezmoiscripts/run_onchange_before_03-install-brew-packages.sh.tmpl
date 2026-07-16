@@ -40,7 +40,12 @@ brew bundle --file="$brewfile"
 # Homebrew 6.0+ refuses to load untrusted tap commands; the Brewfile's
 # `trusted: true` has `brew bundle` (above) write the trust-store entry on
 # every run, so no manual `brew trust` is needed before the daemon loads.
-if ! brew autoupdate status 2>/dev/null | grep -q "installed and running"; then
+autoupdate_status="$(brew autoupdate status)"
+if [[ "$autoupdate_status" != *"installed and running"* ]]; then
   echo "Setting up brew autoupdate (daily update + upgrade + cleanup)..."
-  brew autoupdate start --upgrade --cleanup 86400
+  if [[ "$autoupdate_status" == *"installed and stopped"* ]]; then
+    brew autoupdate delete
+  fi
+  PATH="$(brew --prefix)/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    brew autoupdate start 86400 --upgrade --cleanup
 fi
