@@ -37,6 +37,11 @@ Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONES
 - `Read`, `Edit`, and `Write` stay broadly allowed for routine file work, so their path deny rules are the file-tool boundary. The Bash secret hook supplies the command-layer checks; keep both surfaces aligned when adding sensitive paths.
 - Empty `attribution.commit` and `attribution.pr` values suppress generated Git attribution. `attribution.sessionUrl` stays the boolean `false` to suppress session links.
 
+## Search tools
+
+- `Grep` stays out of `permissions.deny` while `Glob` stays in: the structured Grep tool has no CLI flag or shell-quoting surface, which is where the corrupted `rg --replace` output and silent zero-result searches came from, while `fd` remains the file-discovery route. `pre-bash-policy.sh` blocks the `rg` flag misuse that survives on the Bash path.
+- `USE_BUILTIN_RIPGREP=0` points the Grep tool at the system ripgrep so it and Bash `rg` share one engine version.
+
 ## Models, context, and statusline
 
 - `ANTHROPIC_DEFAULT_OPUS_MODEL` and `ANTHROPIC_DEFAULT_SONNET_MODEL` pin the aliases used by the main session and `model: "sonnet"` subagents, preventing CLI upgrades from moving either workload implicitly.
