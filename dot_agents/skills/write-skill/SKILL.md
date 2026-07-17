@@ -50,9 +50,8 @@ description: <capability>. Use when <specific triggers>.
 Target this local Claude Code and Codex setup in one `SKILL.md`. Keep portable discovery fields (`name`, `description`) clear because both runtimes use them to route. Add `when_to_use` only when extra routing context is worth a field some clients may ignore. Treat the other fields as Claude Code-specific execution metadata; behavior required in both runtimes belongs in the body. Use the [Agent Skills frontmatter spec](https://agentskills.io/specification#frontmatter) for the portable `SKILL.md` baseline and the [Claude Code frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference) for Claude-specific fields, types, and defaults.
 
 - Prefer a short, easy-to-type `name`/directory slug; drop category nouns the description already carries (a platform word in the name duplicates the description and invites renames).
-- Use `disable-model-invocation: true` to stop Claude from auto-loading the skill. Use it for workflows that should run only when the user invokes `/name`, such as deploys, commits, external messages, or other side effects.
+- Use `disable-model-invocation: true` to stop Claude from auto-loading the skill; reserve it for workflows that should run only when the user invokes `/name`, such as deploys, commits, external messages, or other side effects. Write such a skill's `description` as a one-line human-facing `/` menu summary: auto-loading is off, so a `Use when...` trigger list there is dead text.
 - Do not set `disable-model-invocation` on a skill that other skills load: a skill-from-skill load is a model invocation, so the flag also removes the skill from their reach. A shared reference skill loaded by downstream skills stays model-invocable, with a `description` that names that downstream role; content shared between two `/`-only skills can only live in a plain linked file. Before setting the flag, `rg` sibling skills for the skill's name.
-- For a command-like skill (`disable-model-invocation: true`), write its `description` as a one-line human-facing `/` menu summary, not a `Use when...` trigger list. Auto-loading is off, so triggers there are dead text; keep rich triggers on model-invocable skills, where they drive selection.
 - Use `user-invocable: false` only to hide a skill from Claude Code's `/` menu; it does not block model invocation.
 - Use `context: fork` for explicit long-running tasks, independent review, or research. Do not put passive reference knowledge in a fork-only skill.
 - Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution. `$ARGUMENTS` substitution is Claude Code-only (Codex injects the literal token), so never let dual-runtime behavior depend on it; word the instruction to fall back to the user's accompanying message.
@@ -65,7 +64,7 @@ Choose the smallest shape that preserves behavior:
 - One durable instruction: frontmatter plus one imperative paragraph.
 - Repeated workflow: short `Process` with numbered steps.
 - Branching intent: `Mode Picker` before mode details.
-- Fragile or repeated command: script with fixed inputs and validation. Reference bundled scripts as relative links from `SKILL.md`, resolved against the skill's own directory: derivable in both runtimes, unlike Claude Code-only `${CLAUDE_SKILL_DIR}` or a hardcoded install path. Keep an overridable env var (`"${VAR:-<default>}"`) only when a script must also run from outside the skill tree.
+- Fragile or repeated command: script with fixed inputs and validation. Reference bundled scripts as relative links from `SKILL.md`, resolved against the skill's own directory: derivable in both runtimes, unlike Claude Code-only `${CLAUDE_SKILL_DIR}` or a hardcoded install path. Keep an overridable env var (`"${VAR:-<default>}"`) only when a script must also run from outside the skill tree. Derive script output paths from the runtime (`tmpdir()`, `$TMPDIR`) instead of hardcoding `/tmp/...`: hosting agents sandbox different temp directories, and a hardcoded path fails with a write denial under one of them.
 - Tool-rich API/MCP surface: short lookup workflow that caches or splits the tool schema, reads only the relevant tool docs, then calls the tool.
 - Rare or bulky detail: one-level `references/` file. State each link's load condition ("Load when <trigger>", not a bare "see X"); the pointer's wording, not its target, decides whether the file gets read.
 - Ephemeral output shape: inline template or short `examples/`.
@@ -97,11 +96,15 @@ Keep a rule when it changes agent behavior and names at least three of: trigger,
 
 **Formatting carries behavioral weight.** A standalone heading, a bolded imperative, or a calibration example gives a rule higher priority in the agent's reading. Merging a heading-level rule into a bullet, unbolding an imperative, or deleting a before/after example downgrades it, so a rule that restates a nearby one at higher prominence is reinforcement, not redundancy: merge the text but keep the prominence. Before downgrading, confirm the weight does not depend on the prominence.
 
-For evaluator, verifier, rubric, PASS/FAIL, completion-gate, or transcript-derived rules, require the trigger, evidence, PASS/FAIL or manual-observation condition, action to take on failure or stop, and owner. The owner must be the project skill, target repo, user confirmation, or CLI/runtime. The completion bar reaches past evaluator rules: in any skill with a Process, end each numbered step on a checkable done-condition, its demand graded to the coverage the step must force ("every changed file accounted for" forces digging; "produce a change list" does not; "understanding reached" is not even checkable). A flat rules-only skill carries one exhaustiveness bar instead, such as "apply every loaded rule to every hunk"; a single-paragraph skill is exempt. Keep trace stores, durable session logs, sandbox state, and automatic progress ledgers out of shared skill text unless every target runtime supports the mechanism or the skill explicitly branches by runtime. For transcript-derived rules, cite bounded evidence internally, distill the reusable failure mode, and do not copy raw transcript prose into public skills.
+For evaluator, verifier, rubric, PASS/FAIL, completion-gate, or transcript-derived rules, require the trigger, evidence, PASS/FAIL or manual-observation condition, action to take on failure or stop, and owner. The owner must be the project skill, target repo, user confirmation, or CLI/runtime. For transcript-derived rules, cite bounded evidence internally, distill the reusable failure mode, and do not copy raw transcript prose into public skills.
+
+The completion bar reaches past evaluator rules: in any skill with a Process, end each numbered step on a checkable done-condition, its demand graded to the coverage the step must force ("every changed file accounted for" forces digging; "produce a change list" does not; "understanding reached" is not even checkable). A flat rules-only skill carries one exhaustiveness bar instead, such as "apply every loaded rule to every hunk"; a single-paragraph skill is exempt.
+
+Keep trace stores, durable session logs, sandbox state, and automatic progress ledgers out of shared skill text unless every target runtime supports the mechanism or the skill explicitly branches by runtime.
 
 Delete or merge rules that:
 
-- duplicate another rule without adding a sharper boundary or higher prominence (redundancy).
+- duplicate another rule without adding a sharper boundary or higher prominence
 - say to be careful, robust, high quality, concise, or thoughtful without a check
 - explain agent skills, progressive disclosure, or repo background without changing the next action
 - assume a tool, account, server, path, model, runtime, or workflow without saying how to verify it
@@ -129,7 +132,7 @@ Run the checks that match the change and target runtime.
 4. If the skill under-triggers, add user phrases, artifact types, or task verbs to `description`. If it over-triggers, narrow the trigger, add one specific `Not for...`, or split the skill. When the agent skips a linked file in a real run, sharpen the pointer's wording (state its trigger) before inlining the material back.
 5. For rewrites, state what behavior stayed the same, what changed, and why.
 6. Run changed scripts with fixed inputs. Confirm clear stdout, stderr, exit codes, and failing-path messages.
-7. For any skill edit, scan the current diff for private repo names, personal names, machine paths, hostnames, clients, credentials, internal URLs, and hardcoded-but-derivable literals.
+7. For any skill edit, scan the current diff against the masking rule in Writing Rules, plus hardcoded-but-derivable literals.
 
 ## Output
 
