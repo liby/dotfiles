@@ -19,7 +19,8 @@
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFile } from 'node:child_process';
-import { platform } from 'node:os';
+import { platform, tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 /**
  * @typedef {'P1'|'P2'|'P3'} Sev
@@ -552,7 +553,9 @@ const slugName = m.scope_slug || 'review';
 const d = new Date();
 const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
 const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}`;
-const dir = `/tmp/review/${(m.project || 'review').replace(/[^\w.-]/g, '_')}`;
+// tmpdir() honors $TMPDIR, so the path lands in whatever temp dir the hosting
+// agent (Claude sandbox, Codex, plain shell) has made writable.
+const dir = join(tmpdir(), 'review', (m.project || 'review').replace(/[^\w.-]/g, '_'));
 mkdirSync(dir, { recursive: true });
 const out = `${dir}/${slugName}-${stamp}.html`;
 writeFileSync(out, html);

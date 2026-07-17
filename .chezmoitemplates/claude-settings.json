@@ -90,8 +90,12 @@
     "failIfUnavailable": true,
     "excludedCommands": [
       "chezmoi:*",
+      "codex:*",
       "docker:*",
-      "git:*"
+      "git:*",
+      "node *codex-companion.mjs*",
+      "oracle:*",
+      "snow:*"
     ],
     "filesystem": {
       "allowWrite": [
@@ -100,6 +104,7 @@
         "~/.bun",
         "~/.cache",
         "~/.cargo",
+        "~/.codex",
         "~/.local/share/uv",
         "~/.npm",
         "~/.pnpm-store",
