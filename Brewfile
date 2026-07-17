@@ -39,6 +39,8 @@ brew "jq"
 brew "mas"
 # Pinentry for GPG on Mac
 brew "pinentry-mac"
+# Pluggable multi-language version manager
+brew "proto"
 # CLI for the Resend email API
 brew "resend/cli/resend", trusted: true
 # Search tool like grep and The Silver Searcher
