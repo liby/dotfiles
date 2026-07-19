@@ -1,0 +1,26 @@
+name: validate-hooks
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/validate-hooks.yml"
+      - "dot_claude/hooks/**"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/validate-hooks.yml"
+      - "dot_claude/hooks/**"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - run: |
+          for t in dot_claude/hooks/tests/*.test.sh; do
+            echo "== $t"
+            bash "$t"
+          done

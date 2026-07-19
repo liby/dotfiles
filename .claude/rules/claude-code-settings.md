@@ -2,7 +2,7 @@
 paths:
   - ".chezmoitemplates/claude-settings.json"
   - "dot_config/claude-code/gateway-settings.json"
-  - "dot_claude/modify_settings.json"
+  - "dot_claude/modify_private_settings.json"
   - "dot_claude/CLAUDE.md"
   - "dot_claude/hooks/**/*"
   - "dot_claude/scripts/executable_statusline.sh"
@@ -17,7 +17,7 @@ Add an entry only when a value would otherwise look removable, its literal form 
 
 ## Ownership
 
-`.chezmoitemplates/claude-settings.json` owns each top-level subtree it declares. `dot_claude/modify_settings.json` preserves undeclared live state and seeds `model` and `effortLevel` only when absent. `chezmoi re-add ~/.claude/settings.json` is a no-op; do not convert this target back to a plain source file.
+`.chezmoitemplates/claude-settings.json` owns its declared top-level subtrees. `dot_claude/modify_private_settings.json` preserves undeclared state, seeds missing `model` and `effortLevel` values, and keeps the target at `0600`. Keep this target partially managed; `chezmoi re-add ~/.claude/settings.json` is a no-op.
 
 ## Session retention and unattended runs
 
@@ -60,12 +60,12 @@ Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONES
 ## Sandbox
 
 - Keep `sandbox.enabled` and `sandbox.failIfUnavailable` enabled so a missing sandbox fails at startup instead of silently running every Bash command on the host.
-- Exclusions are an accepted convenience trade-off. The sandbox exists to contain unknown behavior, but the everyday CLIs listed here cannot finish a sandboxed run without an open-ended series of write-path, domain, and Mach-service holes that is never exhaustive and not worth the upkeep. For these trusted daily tools we give up sandbox protection and let their own guardrails take over. `git:*` is the exception: it works sandboxed and is excluded only to keep Git on the regular auto-mode decision path.
-- excludedCommands pattern grammar (verified against the 2.1.212 binary; docs show only examples): `cmd:*` is a prefix match on the command plus arguments; a pattern with a bare `*` is a whitespace-normalized glob over the whole command string; anything else is exact. Compound commands are split into subcommands with env-assignment and wrapper prefixes stripped, and one matching subcommand unsandboxes the entire command — so the companion filename glob is spoofable by any script named `codex-companion.mjs` (accepted trade-off to cover both its literal `${CLAUDE_PLUGIN_ROOT}` and expanded invocations with one entry).
+- `excludedCommands` bypasses the sandbox for trusted CLIs that would otherwise need broad, unstable exceptions. `git:*` keeps direct Git commands on the regular auto-mode path.
+- `excludedCommands` uses prefix matching for `cmd:*`, a whitespace-normalized whole-command glob for a bare `*`, and exact matching otherwise. In 2.1.214, direct `git ...` and leading `NAME=value git ...` match `git:*`; `env ... git ...`, loops, wrappers, and Claude-internal calls can remain sandboxed. The companion filename glob intentionally accepts spoofable names to match literal and expanded plugin paths.
 - Extra write paths are limited to development tool caches and stores, plus `~/.codex`, which sandboxed tools that manage Codex state (e.g. `gh skill update --agent codex --scope user`) write into; codex itself runs excluded and no longer needs it. Sandboxed writes to `~/.codex/config.toml` are a side effect of this entry; the file stays chezmoi-managed, so treat unexplained drift there as suspect. Add a path only after an observed sandbox denial, and do not widen access to a whole home or source tree.
 - Keep the rendered `getconf DARWIN_USER_TEMP_DIR` entry in `sandbox.filesystem.allowWrite`. The sandbox write allowlist covers only built-in static paths, Claude's own session temp directory, and configured entries, and nothing in it resolves the Darwin per-user temp directory ([sandbox-runtime defaults](https://github.com/anthropic-experimental/sandbox-runtime/blob/cf24a43eba92c9ab4140c380d11ca55771be9db2/src/sandbox/sandbox-utils.ts#L360-L375), [hardening decision](https://github.com/anthropic-experimental/sandbox-runtime/pull/182)), while bare macOS `mktemp` resolves `_CS_DARWIN_USER_TEMP_DIR` before `$TMPDIR` ([`mktemp(1)`](https://keith.github.io/xcode-man-pages/mktemp.1.html)); removing the entry therefore fails bare `mktemp` with `Operation not permitted`. Re-verify only with the entry absent from every loaded settings scope, e.g. a child `claude` with an isolated `CLAUDE_CONFIG_DIR` and explicit `--settings`; user-scope settings merge into a child session's sandbox even under `--setting-sources project,local`, so an in-place check false-passes. Keep only the rendered per-machine `T/` path; never widen it to a `/var/folders` ancestor.
 - Allowed domains cover the source hosts, package registries, and Claude endpoints used by local development. Add domains from observed traffic, not anticipated convenience, and only for consumers that actually run sandboxed: entries here widen egress for every sandboxed command, and tools running via excludedCommands never consult this list.
-- `allowLocalBinding=true` permits local test servers. The two GPG agent sockets permit signing and SSH authentication. `com.apple.trustd.agent` permits macOS certificate verification used by Go-based CLIs; add another Mach service only after an observed sandbox failure requires it.
+- `allowUnixSockets` permits the two GPG agent sockets and `~/Code`, where `core.fsmonitor` is enabled. `~/Code` covers per-repository `.git/fsmonitor--daemon.ipc` sockets for wrapped Git without opening Docker or SSH agent sockets. `allowLocalBinding=true` supports local test servers; `com.apple.trustd.agent` supports macOS certificate verification. Add entries only after an observed failure.
 
 ## Worktrees and runtime-owned state
 
