@@ -1,5 +1,4 @@
-{{- /* Before editing, read paired dot_claude/modify_settings.json and the
-      AGENTS.md files governing both paths. */ -}}
+{{- /* Read dot_claude/modify_private_settings.json and applicable AGENTS.md before editing. */ -}}
 {
   "cleanupPeriodDays": 99999,
   "env": {
@@ -132,7 +131,8 @@
       ],
       "allowUnixSockets": [
         "~/.gnupg/S.gpg-agent",
-        "~/.gnupg/S.gpg-agent.ssh"
+        "~/.gnupg/S.gpg-agent.ssh",
+        "~/Code"
       ]
     }
   },

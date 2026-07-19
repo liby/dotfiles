@@ -1,9 +1,8 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Partially manage ~/.claude/settings.json so CLI-written defaults, acks,
-      and future keys survive apply. claude-settings.json replaces whole
-      top-level subtrees: nested removals apply on render; removing a top-level
-      key only stops managing it, so retire it from source and live. Seed
-      missing model and effort defaults once; preserve other live keys. */ -}}
+{{- /* Partially manage ~/.claude/settings.json. Managed top-level subtrees
+      replace live values, so nested removals apply; removing a top-level key
+      only stops ownership and requires separate live cleanup. Preserve
+      undeclared keys; seed model and effort only when missing. */ -}}
 {{- $managed := includeTemplate "claude-settings.json" . | fromJson -}}
 {{- $seeds := `{
   "model": "sonnet",

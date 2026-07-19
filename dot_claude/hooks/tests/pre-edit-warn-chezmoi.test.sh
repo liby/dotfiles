@@ -60,24 +60,26 @@ run_case() {
   REPLY=$output
 }
 
-run_case "managed absolute target" ask "$FIXTURE/home/managed.txt"
+run_case "managed absolute target" deny "$FIXTURE/home/managed.txt"
 jq -e --arg source "$FIXTURE/source/dot_managed.txt" \
   '.hookSpecificOutput.permissionDecisionReason | contains($source)' <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
 
 run_case "partially managed target" ask "$FIXTURE/home/partial.json"
-jq -e '.hookSpecificOutput.permissionDecisionReason | contains("partially managed")' \
+jq -e '.hookSpecificOutput
+  | (.permissionDecisionReason | contains("partially managed"))
+    and (.additionalContext == .permissionDecisionReason)' \
   <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
 run_case "source path" allow "$FIXTURE/source/dot_managed.txt"
 run_case "unmanaged path" allow "$FIXTURE/home/unmanaged.txt"
-run_case "encrypted target" ask "$FIXTURE/home/encrypted.txt"
+run_case "encrypted target" deny "$FIXTURE/home/encrypted.txt"
 jq -e '.hookSpecificOutput.permissionDecisionReason
   | contains("encrypted chezmoi source") and (contains("encrypted_dot_encrypted") | not)' \
   <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
-run_case "encrypted create target" ask "$FIXTURE/home/encrypted-create.txt"
+run_case "encrypted create target" deny "$FIXTURE/home/encrypted-create.txt"
 jq -e '.hookSpecificOutput.permissionDecisionReason
   | contains("encrypted chezmoi source") and (contains("create_encrypted_dot_encrypted-create") | not)' \
   <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
-run_case "encrypted partial target" ask "$FIXTURE/home/encrypted-partial.txt"
+run_case "encrypted partial target" deny "$FIXTURE/home/encrypted-partial.txt"
 jq -e '.hookSpecificOutput.permissionDecisionReason
   | contains("encrypted chezmoi source") and (contains("modify_encrypted_dot_encrypted-partial") | not)' \
   <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
