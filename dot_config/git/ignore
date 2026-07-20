@@ -9,6 +9,9 @@
 *.log
 ._*
 
+## proto per-project tool pins
+.prototools
+
 ## JetBrains
 .idea
 
