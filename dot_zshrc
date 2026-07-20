@@ -91,6 +91,8 @@ ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 # Guard on the file, not `orb`: the brew-cask CLI exists before ~/.orbstack/,
 # which OrbStack.app only creates on first run.
 [[ -r ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
+# Work around moonrepo/proto#1054 until a fixed release is installed.
+export PROTO_REPORTER=text
 (( $+commands[proto] )) && eval "$(proto activate zsh)"
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
