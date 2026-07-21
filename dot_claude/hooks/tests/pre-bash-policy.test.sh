@@ -77,11 +77,29 @@ run_case PASS  "echo 'rg -rn is misparsed as replace'"
 run_case PASS  'git commit -m "block rg -rn misuse in hook"'
 run_case PASS  $'git commit -m "fix hook\n\nmention rg -rn in body"'
 run_case PASS  $'cat <<EOF\nrg -rn foo\nEOF'
+run_case BLOCK $'cat <<EOF\nbody\nEOF\nrg -rn foo src/'
 run_case PASS  'rg -e "-rn" file.py'
 
 section "rg --include"
 run_case BLOCK 'rg --include="*.ts" MIN_ORDER src/'
 run_case BLOCK 'rg pattern src --include "*.py"'
+
+section "rg BRE alternation"
+run_case BLOCK "rg 'a\|b' src/"
+run_case BLOCK 'rg "a\|b" src/'
+run_case BLOCK 'rg "a\\|b" src/'
+run_case BLOCK "rg -e 'foo\|bar' ."
+run_case BLOCK "rg -- '-a\|b' ."
+run_case PASS  'rg a\|b src/'
+run_case PASS  "rg 'a|b' src/"
+run_case PASS  "rg '\\\\|' file.txt"
+run_case PASS  'rg -F "a\|b" src/'
+run_case PASS  "rg 'a\|b' -F ."
+run_case PASS  "rg --fixed-strings 'a\|b' src/"
+run_case BLOCK "rg -F 'a\|b' . ; rg 'x\|y' ."
+run_case PASS  "grep 'a\|b' file"
+run_case PASS  "git commit -m 'fix rg a\|b usage'"
+run_case PASS  "rg 'foo' src | grep 'a\|b'"
 
 printf '\n=== %d passed, %d failed ===\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

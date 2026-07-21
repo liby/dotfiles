@@ -32,7 +32,7 @@ parse_command() {
   # gsub strips only surrounding quote chars — never hyphens.
   echo "$cmd" | awk '
     /<<-?[ ]*[\x27"]?[A-Za-z_][A-Za-z0-9_.-]*[\x27"]?[ ]*$/ {
-      delim=$NF; gsub(/[\x27"]/, "", delim);
+      delim=$NF; sub(/^<<-?[ ]*/, "", delim); gsub(/[\x27"]/, "", delim);
       sub(/<<-?[ ]*[\x27"]?[A-Za-z_][A-Za-z0-9_.-]*[\x27"]?[ ]*$/, "");
       print; skip=1; next
     }
