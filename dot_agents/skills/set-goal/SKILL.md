@@ -62,7 +62,7 @@ After read-back verification succeeds, emit either a callable goal tool invocati
 
 If the runtime exposes a callable goal tool such as `create_goal` or equivalent, invoke it with the argument `Read <absolute-file-path> and use its contents as the goal.` Pass only this short pointer, never the drafted goal body: goal objective fields can be length-capped. If creation reports an unfinished goal, report the conflict once and include status output only when a callable status tool is exposed; do not retry. For any other creation failure, report the non-sensitive error once and stop without blind retries. After the call succeeds, continue executing the goal in the same thread.
 
-Otherwise, when the harness exposes `/goal` only as user input and has no callable goal tool, the entire assistant message is exactly two paragraphs separated by a blank line. The first paragraph is the literal string `Run next:` and the second is `/goal Read <absolute-file-path> before acting. Use its contents as the goal. Completion requires every Proof of completion item in that file to have current evidence surfaced in this conversation and every material constraint to hold. Reading or restating the file is not completion.` Nothing else appears before, between, or after these paragraphs.
+Otherwise, when the harness exposes `/goal` only as user input and has no callable goal tool, the entire assistant message is exactly two paragraphs separated by a blank line. The first paragraph is the literal string `Run next:` and the second is `/goal Read <absolute-file-path> and use its contents as the goal.` Nothing else appears before, between, or after these paragraphs.
 
 ## Failure Output
 
