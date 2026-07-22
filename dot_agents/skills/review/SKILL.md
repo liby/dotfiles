@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review a remote MR/PR or local code changes, reporting real issues with evidence-first severity. Use when the user says "review", "code review", "帮我 review", "看看这个 MR/改动/diff", asks to look over a branch, commit, or diff for problems before merging, asks for review findings, or provides an MR/PR URL. Not for prose review, skill-authoring audits, or ordinary implementation.
+description: Review remote merge requests or pull requests, branches, commits, diffs, and uncommitted code changes for correctness and regression risk, reporting only evidence-backed findings. Use for pre-merge code review, review findings, and MR/PR URLs. Not for prose review, skill-authoring audits, or implementation requests.
 argument-hint: "[--fix] [--html] [MR/PR URL or notes]"
 allowed-tools:
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Create or amend a local git commit after the user explicitly asks to commit, `/commit`, amend, save changes, or needs committed work before a requested git action such as push. Use to stage relevant files, write a repository-matching message, and run `git commit`. Not for message-only drafts or branch creation.
+description: Create or amend a local Git commit from the relevant changes. Use only when the user asks to commit, amend, or complete a requested Git action such as push that first requires a commit. Stage only in-scope files and write a repository-matching message. Not for message drafts or branch creation.
 argument-hint: "[additional context]"
 context: fork
 allowed-tools:
@@ -29,8 +29,8 @@ Create one git commit for: $ARGUMENTS. With empty arguments, commit the work fro
 
 The diff shows what changed. The message captures what the diff cannot: motivation, trade-offs, why this approach beat alternatives, and non-obvious consequences for future readers. **Lead with the reason the change exists, end with the chosen approach.** The body should read as a self-contained story that doubles as the PR description without rewriting. **A body that inventories changes (`add X`, `update Y`, `remove Z`) without naming motivation has zero value.**
 
-Wrong: `chore: move PNPM_HOME path` with body `Update .zshrc to use new pnpm path.`
-Right: `chore: move PNPM_HOME to case-sensitive Code volume` with body explaining that `~/Library/pnpm` sits on the case-insensitive default volume where `pnpm dlx` keeps resurrecting a cross-volume store; `~/Code/.pnpm` puts the binary dir, global installs, and store on the same case-sensitive APFS volume as the projects, and pnpm's default store-dir resolves to `$PNPM_HOME/store` so no separate config is needed.
+Wrong: `chore: update package manager path` with body `Move the package manager home to the new directory.`
+Right: `chore: keep package binaries and store on one volume` with body explaining that cross-volume installs recreated the store, and colocating the binary directory, global installs, and store removes that mismatch without extra configuration.
 
 ## Message Rules
 - Build the message from an evidence ledger:

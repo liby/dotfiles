@@ -1,6 +1,6 @@
 ---
 name: set-goal
-description: Turn an explicitly requested task into an outcome-based, verifiable goal file, then start it through a callable goal tool or emit an exact `/goal` paste handoff. Use when the user invokes `/set-goal`, asks to set, create, or start a goal, or explicitly requests long-running goal mode. Not for discussing goal-setting, continuing an active goal, ordinary planning, or direct `/goal Read ...` handoffs.
+description: Create and start an outcome-based, verifiable goal from an explicitly requested task. Use for `/set-goal`, requests to set or start a goal, or long-running goal mode. Not for goal-setting discussion, ordinary planning, continuing an active goal, or direct `/goal Read ...` handoffs.
 argument-hint: "[brief task description]"
 allowed-tools:
   - Bash(rg:*)

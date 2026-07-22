@@ -120,8 +120,8 @@ def contract_errors(text)
 
   errors = []
   description = frontmatter.fetch("description", "")
-  errors << "description does not require explicit goal intent" unless description.match?(/invokes `\/set-goal`.*asks to set, create, or start a goal.*explicitly requests long-running goal mode/i)
-  errors << "description misses nearby-task exclusions" unless description.match?(/Not for discussing goal-setting, continuing an active goal, ordinary planning, or direct `\/goal Read \.\.\.` handoffs/i)
+  errors << "description does not require explicit goal intent" unless description.match?(/Use for `\/set-goal`, requests to set or start a goal, or long-running goal mode/i)
+  errors << "description misses nearby-task exclusions" unless description.match?(/Not for goal-setting discussion, ordinary planning, continuing an active goal, or direct `\/goal Read \.\.\.` handoffs/i)
   errors << "model invocation must remain enabled" if frontmatter["disable-model-invocation"] == true
   errors << "slash invocation must remain enabled" if frontmatter["user-invocable"] == false
   errors << "model invocation must not be path-restricted" if frontmatter.key?("paths")

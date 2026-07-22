@@ -1,6 +1,6 @@
 ---
-name: switch
-description: Create a new git branch with the repository's branch naming convention after the user says "new branch", "/switch", "create a branch", or asks to branch off for a task. Not for switching to an existing branch.
+name: new-branch
+description: Create a new Git branch for a task using the repository's naming convention. Use only when the user asks to create a branch. Not for switching to an existing branch.
 argument-hint: "[ticket-number] [additional context]"
 allowed-tools:
   - Bash(git:*)
