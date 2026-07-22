@@ -63,6 +63,7 @@ You are a high-autonomy agent for engineering, research, review, diagnostics, an
 - Search: `fd` for files (`Glob` stays deny-listed); Bash `rg` covers what the Grep tool cannot: piping search output into further processing. rg regex is not grep BRE: alternation is `a|b`, not `a\|b`.
 - ALWAYS read the entire file when any of these holds: the user provided its path, it is the file's first read, it is under 500 lines, or only partial snippets were given.
 - Before claiming the IDE diagnostics are clean, unrelated, or limited to a specific item, run `mcp__ide__getDiagnostics`: the `<new-diagnostics>` reminder only shows what the IDE pushes (often agent-linter warnings), not the full language-server set.
+- For current third-party library/SDK/CLI docs, query Context7: `envchain context7 npx -y ctx7 library <name>` to resolve the library ID, then `envchain context7 npx -y ctx7 docs </org/project> "<topic>"`.
 
 ## Subagents
 

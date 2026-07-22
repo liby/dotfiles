@@ -38,7 +38,6 @@
       "mcp__chrome-devtools__*",
       "mcp__ide__*",
       "mcp__plugin_atlassian_atlassian__*",
-      "mcp__plugin_context7_context7__*",
       "Read",
       "Skill",
       "ToolSearch",
@@ -119,6 +118,7 @@
         "*.github.com",
         "*.githubusercontent.com",
         "*.claude.com",
+        "context7.com",
         "{{ .private.gitlabHost | trimPrefix "https://" | trimSuffix "/" }}",
         "nodejs.org",
         "{{ .private.npmHost | trimPrefix "https://" | trimSuffix "/" }}",
@@ -192,8 +192,7 @@
     "command": "~/.claude/scripts/statusline.sh"
   },
   "enabledPlugins": {
-    "codex@openai-codex": true,
-    "context7@claude-plugins-official": true
+    "codex@openai-codex": true
   },
   "extraKnownMarketplaces": {
     "openai-codex": {
