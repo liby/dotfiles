@@ -95,7 +95,9 @@ Keep a rule when it changes agent behavior and names at least three of: trigger,
 
 Use headings, bold imperatives, and examples only to expose a distinct routing, safety, recovery, completion, or quality boundary. Formatting does not justify duplicate wording. Keep a calibration example when it proves a difference that prose alone does not make testable.
 
-For evaluator, verifier, rubric, PASS/FAIL, completion-gate, or transcript-derived rules, require the trigger, evidence, PASS/FAIL or manual-observation condition, action to take on failure or stop, and owner. The owner must be the project skill, target repo, user confirmation, or CLI/runtime. For transcript-derived rules, cite bounded evidence internally, distill the reusable failure mode, and do not copy raw transcript prose into public skills.
+For evaluator, verifier, rubric, PASS/FAIL, or completion-gate rules, require trigger, evidence, an acceptance or manual-observation condition, failure action or stop, and owner: project skill, target repo, user confirmation, or CLI/runtime.
+
+For transcript-derived rules, exclude duplicated forked or replayed material from independent counts, and treat quoted, pasted, or carried-forward material as context rather than independent preference evidence unless the user explicitly adopts it; count the explicit adoption, not the duplicated source. Pair a rejection with the rejected output and an accepted successor when available, separate repeated behavior from artifact-local or one-off corrections, and write the reusable failure mode in its narrowest existing owner without copying raw transcript prose.
 
 The completion bar reaches past evaluator rules: in any skill with a Process, end each numbered step on a checkable done-condition, its demand graded to the coverage the step must force ("every changed file accounted for" forces digging; "produce a change list" does not; "understanding reached" is not even checkable). A flat rules-only skill carries one exhaustiveness bar instead, such as "apply every loaded rule to every hunk"; a single-paragraph skill is exempt.
 
