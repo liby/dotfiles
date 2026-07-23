@@ -124,16 +124,22 @@ run_case BLOCK 'result=$(cat .env.production)'
 run_case BLOCK 'echo `cat .env`'
 run_case BLOCK 'echo `cat ~/.ssh/id_rsa`'
 
-section "Heredoc body stripping"
-# Body of a heredoc is not executable — parse_command must strip it so the
-# rule engine does not scan literal lines like "cat .env".
-run_case PASS  $'cat <<EOF\ncat .env\nEOF'
-run_case PASS  $'cat <<END-1\ncat .env\nEND-1'
-run_case PASS  $'cat <<EOF_1\nprintenv\nEOF_1'
-run_case PASS  $'cat <<\'END\'\ncat .env\nEND'
-run_case PASS  $'cat <<-END\n\tcat .env\nEND'
+section "Heredoc bodies (intentional fail-closed)"
+# Heredoc bodies are scanned as command text: no heuristic parser can
+# safely tell a real `<<DELIM` opener from lookalike text, and misreading
+# one deletes executable lines from the inspected command — a fail-open
+# deny bypass. False-blocking a body that quotes a deny signature is the
+# accepted trade (see parse_command in _lib.sh).
+run_case BLOCK $'cat <<EOF\ncat .env\nEOF'
+run_case BLOCK $'git commit -m "$(cat <<\'EOF\'\ndocs mention cat .env here\nEOF\n)"'
+# Benign heredoc bodies still pass — only signature-bearing lines block.
+run_case PASS  $'cat <<EOF\nhello world\nEOF'
 # Opening heredoc itself with secret in the command line still blocks
 run_case BLOCK $'cat .env <<EOF\nsome body\nEOF'
+# Lookalike <<WORD text must never swallow a real command that follows it
+# (the fail-open direction this design rules out).
+run_case BLOCK $'rg \'<<TOKEN\' src/\ncat .env\nTOKEN'
+run_case BLOCK $'echo "<<EOF is the marker"\ncat .env\nEOF'
 
 section "echo/printf referencing secret variables"
 run_case BLOCK 'echo "$API_KEY"'

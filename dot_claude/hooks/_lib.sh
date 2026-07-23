@@ -16,28 +16,19 @@ block() {
   exit 2
 }
 
-# parse_command — read stdin, extract .tool_input.command, strip heredoc content.
+# parse_command — read stdin, extract .tool_input.command verbatim.
 # Returns 1 if command is empty. Usage: CMD=$(parse_command) || exit 0
+# Deliberately NO heredoc stripping: consumers are deny hooks, where a
+# heuristic parser that mistakes lookalike `<<TOKEN` text for an opener
+# deletes executable lines from the inspected text — a fail-open deny
+# bypass. Scanning heredoc bodies as if they were commands only false-
+# blocks (fail-closed), which is the accepted trade.
 parse_command() {
   local input cmd
   input=$(cat)
-  cmd=$(echo "$input" | jq -r '.tool_input.command // empty') || return 1
-  [ -z "$cmd" ] && return 1
-  # Heredoc stripping: recognise `<<DELIM` / `<<-DELIM` openings and skip the
-  # body until the matching closing DELIM line. The opener line itself still
-  # executes the command portion (e.g. `cat .env <<EOF` reads .env even though
-  # stdin is ignored), so strip only the `<<DELIM` suffix and emit the rest
-  # to the rule engine. Bash permits digits, hyphens, dots in unquoted
-  # delimiters (e.g. END-1, EOF_1), so the class is broader than [A-Za-z_].
-  # gsub strips only surrounding quote chars — never hyphens.
-  echo "$cmd" | awk '
-    /<<-?[ ]*[\x27"]?[A-Za-z_][A-Za-z0-9_.-]*[\x27"]?[ ]*$/ {
-      delim=$NF; sub(/^<<-?[ ]*/, "", delim); gsub(/[\x27"]/, "", delim);
-      sub(/<<-?[ ]*[\x27"]?[A-Za-z_][A-Za-z0-9_.-]*[\x27"]?[ ]*$/, "");
-      print; skip=1; next
-    }
-    skip && $0 == delim { skip=0; next }
-    !skip'
+  cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty') || return 1
+  [ -n "$cmd" ] || return 1
+  printf '%s\n' "$cmd"
 }
 
 # require_jq — exit 0 (allow through) if jq is not available.
@@ -47,9 +38,8 @@ require_jq() {
 
 # split_segments — read a shell command from stdin and emit one top-level
 # segment per line, splitting on unquoted `;`, `&&`, `||`. Respects single
-# and double quotes plus backslash escapes. Command substitution is treated
-# opaquely (outer regex still scans its contents). Callers should first run
-# parse_command to strip heredocs.
+# and double quotes plus backslash escapes. Parens are not tracked, so a
+# separator inside `$( )` splits like any other.
 split_segments() {
   awk '
   {

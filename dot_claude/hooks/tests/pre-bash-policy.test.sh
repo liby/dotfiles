@@ -76,9 +76,19 @@ section "quoted mentions and heredocs"
 run_case PASS  "echo 'rg -rn is misparsed as replace'"
 run_case PASS  'git commit -m "block rg -rn misuse in hook"'
 run_case PASS  $'git commit -m "fix hook\n\nmention rg -rn in body"'
-run_case PASS  $'cat <<EOF\nrg -rn foo\nEOF'
+# Unquoted heredoc bodies are scanned as command text — false-blocking a
+# body line that looks like rg misuse is the accepted fail-closed trade
+# (see parse_command in _lib.sh).
+run_case BLOCK $'cat <<EOF\nrg -rn foo\nEOF'
+run_case PASS  $'cat <<EOF\nplain body text\nEOF'
 run_case BLOCK $'cat <<EOF\nbody\nEOF\nrg -rn foo src/'
 run_case PASS  'rg -e "-rn" file.py'
+# Lookalike <<WORD text must never swallow a real command that follows it
+# (the fail-open direction this design rules out).
+run_case BLOCK $'rg \'<<TOKEN\' src/\nfind . -name x\nTOKEN'
+# Commit-via-heredoc body sits inside the "$( — the rg tokenizer carries
+# quote state across newlines, so a quoted body mention still passes.
+run_case PASS  $'git commit -m "$(cat <<\'EOF\'\nfix hook\nrg -rn foo mentioned\nEOF\n)"'
 
 section "rg --include"
 run_case BLOCK 'rg --include="*.ts" MIN_ORDER src/'

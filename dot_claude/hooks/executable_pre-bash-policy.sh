@@ -28,10 +28,11 @@ fi
 # is one record so quote state spans newlines, detection arms only at a
 # command-position rg (wrapper/prefix forms like xargs rg pass), and -- ends
 # flag checks while the \| check stays armed for the pattern operand. Quoted
-# mentions (commit messages), other commands' flags (sort -rn), \\| escaped-
-# backslash patterns, and heredoc bodies (stripped by parse_command) pass.
-# Known fail-closed edge, accepted as rare: quoted \| inside a trailing
-# comment or herestring of an rg command still blocks.
+# mentions (commit messages), other commands' flags (sort -rn), and \\|
+# escaped-backslash patterns pass. Fail-closed edges, accepted as rare:
+# quoted \| inside a trailing comment or herestring of an rg command still
+# blocks, and unquoted heredoc bodies are scanned as command text (see
+# parse_command in _lib.sh).
 RG_MISUSE=$(printf '%s' "$CMD" | awk '
   BEGIN { RS = "\x01"; cmdpos = 1 }
   function finish() {
