@@ -47,15 +47,26 @@ enabled = true
 [permissions.development.network.unix_sockets]
 "{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh" = "allow"
 
+[mcp_servers.computer-use]
+enabled = true
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+
 [mcp_servers.context7]
 enabled = true
 command = "/opt/homebrew/bin/envchain"
 args = ["context7", "npx", "-y", "@upstash/context7-mcp"]
 
+[mcp_servers.openaiDeveloperDocs]
+enabled = true
+url = "https://developers.openai.com/mcp"
+
 [mcp_servers.node_repl]
-args = []
+enabled = true
 # Keep the desktop-provided ChatGPT runtime path.
 command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
+args = []
 startup_timeout_sec = 120
 
 [plugins."browser@openai-bundled"]
