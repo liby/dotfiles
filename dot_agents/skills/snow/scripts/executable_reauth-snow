@@ -1,0 +1,92 @@
+#!/bin/bash -p
+
+set -u
+set +x
+unset BASH_ENV ENV
+umask 077
+
+readonly marker_prefix="SNOW_REAUTH_V1"
+child_pid=""
+
+emit_marker() {
+  printf '%s=%s\n' "$marker_prefix" "$1"
+}
+
+handle_signal() {
+  local exit_code="$1"
+  local pid="${child_pid:-}"
+
+  if [[ -z "$pid" ]]; then
+    set +u
+    pid=$!
+    set -u
+  fi
+
+  trap - HUP INT TERM
+  emit_marker "INTERRUPTED"
+  if [[ -n "$pid" ]]; then
+    kill -KILL "$pid" 2>/dev/null || true
+    wait "$pid" 2>/dev/null || true
+  fi
+  exit "$exit_code"
+}
+
+if (( $# > 1 )); then
+  emit_marker "INVALID_ARGS"
+  exit 64
+fi
+if (( $# == 1 )) && [[
+  -z "$1" ||
+  "$1" == *://* ||
+  "$1" == */* ||
+  "$1" == *'?'* ||
+  "$1" == *'#'* ||
+  "$1" == *$'\r'* ||
+  "$1" == *$'\n'*
+]]; then
+  emit_marker "INVALID_ARGS"
+  exit 64
+fi
+
+PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+export PATH
+
+snow_bin="$(command -v snow 2>/dev/null)"
+if [[ "$snow_bin" != /* || ! -x "$snow_bin" ]]; then
+  emit_marker "UNAVAILABLE"
+  exit 69
+fi
+
+trap 'handle_signal 129' HUP
+trap 'handle_signal 130' INT
+trap 'handle_signal 143' TERM
+
+if (( $# == 0 )); then
+  "$snow_bin" connection test </dev/null >/dev/null 2>&1 &
+else
+  "$snow_bin" connection test "--connection=$1" </dev/null >/dev/null 2>&1 &
+fi
+child_pid=$!
+
+if wait "$child_pid" 2>/dev/null; then
+  child_status=0
+else
+  child_status=$?
+fi
+trap - HUP INT TERM
+child_pid=""
+
+case "$child_status" in
+  0)
+    emit_marker "OK"
+    exit 0
+    ;;
+  129|130|143)
+    emit_marker "INTERRUPTED"
+    exit "$child_status"
+    ;;
+  *)
+    emit_marker "FAILED"
+    exit 75
+    ;;
+esac
