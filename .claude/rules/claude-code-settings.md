@@ -1,12 +1,10 @@
 ---
 paths:
   - ".chezmoitemplates/claude-settings.json"
-  - "dot_config/claude-code/gateway-settings.json"
   - "dot_claude/modify_private_settings.json"
   - "dot_claude/CLAUDE.md"
   - "dot_claude/hooks/**/*"
   - "dot_claude/scripts/executable_statusline.sh"
-  - "dot_zsh/functions/claude"
 ---
 
 # Claude Code settings
@@ -48,9 +46,8 @@ Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONES
 - `autoCompactWindow` is a compaction threshold, not evidence of the active model's context size. Verify the effective budget from runtime status or the model picker before changing the model or threshold.
 - `dot_claude/scripts/executable_statusline.sh` owns its compact-window parser and denominator calculation. Update and test both when changing `autoCompactWindow` or adding support for another compact override.
 
-## Integrations and gateway behavior
+## Integrations
 
-- `dot_config/claude-code/gateway-settings.json` is loaded only for gateway sessions. Keep `apiKeyHelper` out of the shared settings because it takes precedence over subscription authentication. The `claude-gateway` envchain namespace supplies the gateway configuration, while the helper reads the token directly from the macOS Keychain so it does not enter the Claude process environment.
 - `CLAUDE_CODE_ENABLE_CFC=0` explicitly disables automatic Claude in Chrome wiring; it does not govern the separately permitted `chrome-devtools` MCP tools. Keep the explicit false value because unset restores automatic eligibility.
 - `disableClaudeAiConnectors=true` is the source of truth for blocking auto-fetched claude.ai connectors; explicitly configured MCP servers remain available.
 - `disableBundledSkills=true` keeps the repository-managed skill registry authoritative. Keep the separate `disableWorkflows` setting unset because `ultracode` depends on dynamic workflows.

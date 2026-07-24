@@ -26,7 +26,6 @@ done
 
 local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/claude-code"
 local mode_file="$config_dir/mode"
-local gateway_settings="$config_dir/gateway-settings.json"
 local gateway_namespace=claude-gateway
 
 local mode=subscription
@@ -92,9 +91,8 @@ fi
 # envchain warns but still runs the command when a namespace is missing.
 if [[ $mode == gateway ]]; then
   (( $+commands[envchain] )) || { print -u2 "claude: envchain not found"; return 1 }
-  [[ -r $gateway_settings ]] || { print -u2 "claude: $gateway_settings not found"; return 1 }
   envchain --list | grep -qx "$gateway_namespace" || { print -u2 "claude: envchain namespace $gateway_namespace not found"; return 1 }
-  envchain "$gateway_namespace" claude --settings "$gateway_settings" "$@"
+  envchain "$gateway_namespace" claude "$@"
 else
   command claude "$@"
 fi
