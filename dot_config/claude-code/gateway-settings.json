@@ -1,3 +1,0 @@
-{
-  "apiKeyHelper": "security find-generic-password -s anthropic-auth-token -a default -w"
-}
