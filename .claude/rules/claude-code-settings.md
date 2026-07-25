@@ -1,6 +1,7 @@
 ---
 paths:
   - ".chezmoitemplates/claude-settings.json"
+  - "modify_dot_claude.json"
   - "dot_claude/modify_private_settings.json"
   - "dot_claude/CLAUDE.md"
   - "dot_claude/hooks/**/*"
@@ -15,7 +16,7 @@ Add an entry only when a value would otherwise look removable, its literal form 
 
 ## Ownership
 
-`.chezmoitemplates/claude-settings.json` owns its declared top-level subtrees. `dot_claude/modify_private_settings.json` preserves undeclared state, seeds missing `model` and `effortLevel` values, and keeps the target at `0600`. Keep this target partially managed; `chezmoi re-add ~/.claude/settings.json` is a no-op.
+`.chezmoitemplates/claude-settings.json` owns its declared top-level subtrees. `dot_claude/modify_private_settings.json` preserves undeclared state, seeds missing `model` and `effortLevel` values, and keeps the target at `0600`. `modify_dot_claude.json` preserves all other `~/.claude.json` state and owns only `leftArrowOpensAgents=false` and `autoConnectIde=true`. Keep both targets partially managed; `chezmoi re-add` is a no-op for them.
 
 ## Session retention and unattended runs
 
@@ -49,6 +50,8 @@ Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONES
 ## Integrations
 
 - `CLAUDE_CODE_ENABLE_CFC=0` explicitly disables automatic Claude in Chrome wiring; it does not govern the separately permitted `chrome-devtools` MCP tools. Keep the explicit false value because unset restores automatic eligibility.
+- `leftArrowOpensAgents=false` removes the left-arrow shortcut into Agent View without disabling Agent View or background agents.
+- `autoConnectIde=true` lets sessions launched from an external terminal discover a running IDE; extension installation remains a separate setting.
 - `disableClaudeAiConnectors=true` is the source of truth for blocking auto-fetched claude.ai connectors; explicitly configured MCP servers remain available.
 - `disableBundledSkills=true` keeps the repository-managed skill registry authoritative. Keep the separate `disableWorkflows` setting unset because `ultracode` depends on dynamic workflows.
 - `ENABLE_PROMPT_CACHING_1H=1` requests the one-hour cache used by this provider setup.

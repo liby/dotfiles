@@ -1,0 +1,16 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Partially manage ~/.claude.json and preserve undeclared state. */ -}}
+{{- $managed := `{
+  "leftArrowOpensAgents": false,
+  "autoConnectIde": true
+}` | fromJson -}}
+{{- $stdin := .chezmoi.stdin -}}
+{{- $current := dict -}}
+{{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
+{{- $out := deepCopy $current -}}
+{{- range $k, $v := $managed -}}{{- $out = set $out $k $v -}}{{- end -}}
+{{- if deepEqual $current $out -}}
+  {{- $stdin -}}
+{{- else -}}
+  {{ toPrettyJson $out }}
+{{- end -}}
