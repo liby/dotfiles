@@ -2,7 +2,7 @@
 {
   "cleanupPeriodDays": 99999,
   "env": {
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-8",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
     "CLAUDE_AUTO_BACKGROUND_TASKS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
@@ -212,6 +212,7 @@
   },
   "alwaysThinkingEnabled": true,
   "autoCompactWindow": 400000,
+  "precomputeCompactionEnabled": true,
   "worktree": {
     "baseRef": "head"
   },
