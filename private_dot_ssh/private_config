@@ -1,5 +1,6 @@
 Include ~/.orbstack/ssh/config
 Include config.aws
+Include config.vmiss
 
 Host *
   AddKeysToAgent yes
