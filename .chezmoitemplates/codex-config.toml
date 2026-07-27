@@ -25,13 +25,13 @@ network_proxy = false
 prevent_idle_sleep = true
 
 [permissions.development.filesystem]
-# Run commands inside a write-capable sandbox while keeping known credential
-# paths unavailable.
+# Run commands inside a write-capable sandbox. Keep credentials denied except
+# ~/.npmrc, which package managers may read but not modify.
 ":root" = "write"
 "~/.claude/.credentials.json*" = "deny"
 "~/.codex/auth.json*" = "deny"
 "~/.gnupg/private-keys-v1.d" = "deny"
-"~/.npmrc*" = "deny"
+"~/.npmrc" = "read"
 "~/.ssh/id_*" = "deny"
 "~/.zprofile*" = "deny"
 "~/.zsh_history*" = "deny"
