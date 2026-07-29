@@ -5,8 +5,8 @@
 # Run: bash pre-bash-guard-secrets.test.sh
 
 set -u
-HOOK="$(cd "$(dirname "$0")/.." && pwd)/pre-bash-guard-secrets.sh"
-[ -x "$HOOK" ] || HOOK="$(cd "$(dirname "$0")/.." && pwd)/executable_pre-bash-guard-secrets.sh"
+HOOK="$(cd "$(dirname "$0")" && pwd)/pre-bash-guard-secrets.sh"
+[ -x "$HOOK" ] || HOOK="$(cd "$(dirname "$0")" && pwd)/executable_pre-bash-guard-secrets.sh"
 
 if [ ! -r "$HOOK" ]; then
   echo "cannot find hook script at $HOOK" >&2

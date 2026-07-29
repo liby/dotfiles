@@ -1,0 +1,40 @@
+import { expect, test } from "bun:test";
+
+const hook = new URL(
+  "./executable_require-claude-envchain.ts",
+  import.meta.url,
+).pathname;
+
+const cases: Array<[string, number]> = [
+  ["claude -p x", 2],
+  ['"claude" -p x', 2],
+  ["/path/to/claude -p x", 2],
+  ['envchain wrong "/path with space/claude" -p x', 2],
+  ["envchain 'claude-gateway' claude -p x", 0],
+  ['"envchain" "claude-gateway" "claude" -p x', 0],
+  ["envchain claude-gateway,context7 claude -p x", 0],
+  [
+    "/path/to/envchain claude-gateway /path/to/claude -p x",
+    0,
+  ],
+  ["envchain", 0],
+  ["echo claude", 0],
+];
+
+for (const [command, exitCode] of cases) {
+  test(command, () => {
+    const result = Bun.spawnSync([process.execPath, hook], {
+      stdin: new Blob([JSON.stringify({ tool_input: { command } })]),
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    expect(result.exitCode).toBe(exitCode);
+    expect(result.stdout.toString()).toBe("");
+    expect(result.stderr.toString()).toBe(
+      exitCode === 2
+        ? "Run Claude as `envchain claude-gateway claude ...`.\n"
+        : "",
+    );
+  });
+}

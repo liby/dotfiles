@@ -3,3 +3,17 @@ default_permissions = "development"
 [allowed_permission_profiles]
 ":danger-full-access" = true
 development = true
+
+[features]
+hooks = true
+
+[hooks]
+managed_dir = "{{ .chezmoi.homeDir }}/.codex/managed-hooks"
+
+[[hooks.PreToolUse]]
+matcher = "^Bash$"
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/require-claude-envchain.ts"
+timeout = 5
