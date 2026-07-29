@@ -1,0 +1,5 @@
+default_permissions = "development"
+
+[allowed_permission_profiles]
+":danger-full-access" = true
+development = true
