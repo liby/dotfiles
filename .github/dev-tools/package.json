@@ -2,7 +2,7 @@
   "name": "chezmoi-global-tools",
   "private": true,
   "devDependencies": {
-    "@openai/codex": "0.145.0",
+    "@openai/codex": "0.146.0",
     "@steipete/oracle": "0.16.1",
     "typescript": "7.0.2",
     "typescript-language-server": "5.3.0"
