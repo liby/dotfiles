@@ -2,8 +2,8 @@
 # Isolated behavior tests for pre-edit-warn-chezmoi.sh.
 
 set -u
-HOOK="$(cd "$(dirname "$0")/.." && pwd)/pre-edit-warn-chezmoi.sh"
-[[ -x "$HOOK" ]] || HOOK="$(cd "$(dirname "$0")/.." && pwd)/executable_pre-edit-warn-chezmoi.sh"
+HOOK="$(cd "$(dirname "$0")" && pwd)/pre-edit-warn-chezmoi.sh"
+[[ -x "$HOOK" ]] || HOOK="$(cd "$(dirname "$0")" && pwd)/executable_pre-edit-warn-chezmoi.sh"
 
 if [[ ! -r "$HOOK" ]]; then
   echo "cannot find hook script at $HOOK" >&2

@@ -5,8 +5,8 @@
 # Run: bash pre-bash-policy.test.sh
 
 set -u
-HOOK="$(cd "$(dirname "$0")/.." && pwd)/pre-bash-policy.sh"
-[ -x "$HOOK" ] || HOOK="$(cd "$(dirname "$0")/.." && pwd)/executable_pre-bash-policy.sh"
+HOOK="$(cd "$(dirname "$0")" && pwd)/pre-bash-policy.sh"
+[ -x "$HOOK" ] || HOOK="$(cd "$(dirname "$0")" && pwd)/executable_pre-bash-policy.sh"
 
 if [ ! -r "$HOOK" ]; then
   echo "cannot find hook script at $HOOK" >&2
