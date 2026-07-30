@@ -33,6 +33,7 @@
     "defaultMode": "auto",
     "allow": [
       "Agent",
+      "Bash(oracle:*)",
       "Edit",
       "LSP",
       "mcp__chrome-devtools__*",

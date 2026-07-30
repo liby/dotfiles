@@ -33,6 +33,7 @@ Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONES
 
 - `permissions.defaultMode="auto"` delegates actions not already decided by explicit rules or sandbox auto-allow to the classifier.
 - Keep bare `Bash` out of `permissions.allow`. Sandboxed Bash remains auto-approved, while commands that run outside the sandbox still use the regular auto-mode decision.
+- `Bash(oracle:*)` in `permissions.allow` exists because `oracle:*` in `sandbox.excludedCommands` alone is not enough: oracle needs to run unsandboxed for browser control, and its second-opinion runs attach repository files to an external ChatGPT session, a decision the user has standing-approved via this rule instead of per-run. The pair moves together.
 - `Read`, `Edit`, and `Write` stay broadly allowed for routine file work, so their path deny rules are the file-tool boundary. The Bash secret hook supplies the command-layer checks; keep both surfaces aligned when adding sensitive paths.
 - Empty `attribution.commit` and `attribution.pr` values suppress generated Git attribution. `attribution.sessionUrl` stays the boolean `false` to suppress session links.
 
