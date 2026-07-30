@@ -92,9 +92,9 @@ Bootstrap 脚本位于 `.chezmoiscripts/` 目录下，按以下顺序执行：
 
 `before` 脚本在文件同步前执行，`after` 脚本在文件同步后执行。
 
-[Renovate](renovate.json) 按 `Asia/Singapore` 时区每日检查 GitHub Actions、已声明的全局 npm 工具和 Pyright。下一次 `chezmoi apply` 只安装缺失或版本不符的工具。
+[Renovate](renovate.json) 按 `Asia/Singapore` 时区每日检查依赖，并将所有 manager 的常规更新合入一个 `All dependencies` PR，major update 也不单独拆分。按路径触发的 CI 会验证该 PR 涉及的依赖面。下一次 `chezmoi apply` 只安装缺失或版本不符的全局 npm 工具与 Pyright。
 
-Zsh 插件通过 [`.chezmoiexternal.toml`](../.chezmoiexternal.toml) 固定到上游 commit。Renovate 将 pin 更新归入同一个 PR，[CI](workflows/validate-zsh-plugins.yml) 验证每个 archive 可应用且入口可加载。
+Zsh 插件通过 [`.chezmoiexternal.toml`](../.chezmoiexternal.toml) 固定到上游 commit。[CI](workflows/validate-zsh-plugins.yml) 验证每个 archive 可应用且入口可加载。
 
 ## 贡献指南
 

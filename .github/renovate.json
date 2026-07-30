@@ -31,17 +31,11 @@
   ],
   "packageRules": [
     {
-      "description": "Update Zsh plugin commits together",
-      "matchDatasources": ["git-refs"],
-      "matchFileNames": [".chezmoiexternal.toml"],
-      "groupName": "Zsh plugins"
-    },
-    {
-      "description": "Update global npm tools and Python tools together; no workflow runs on this path, and automerge without ignoreTests waits forever for a check that never appears",
-      "matchFileNames": [".github/dev-tools/**"],
-      "groupName": "Global developer tools",
-      "separateMajorMinor": false,
-      "ignoreTests": true
+      "description": "Keep routine dependency updates from every manager in one PR",
+      "matchPackageNames": ["*"],
+      "groupName": "All dependencies",
+      "groupSlug": "all-dependencies",
+      "separateMajorMinor": false
     }
   ]
 }

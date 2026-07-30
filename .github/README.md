@@ -92,9 +92,9 @@ Bootstrap scripts are located in `.chezmoiscripts/` and run in listed order:
 
 `before` scripts run before file sync, `after` scripts run after file sync.
 
-[Renovate](renovate.json) checks daily in the `Asia/Singapore` timezone and updates GitHub Actions, the declared global npm tools, and Pyright. The next `chezmoi apply` installs only missing or mismatched tool versions.
+[Renovate](renovate.json) checks daily in the `Asia/Singapore` timezone and batches routine updates from every dependency manager, including major updates, into one `All dependencies` PR. Path-scoped CI validates the dependency surfaces changed by that PR. The next `chezmoi apply` installs only missing or mismatched global npm tools and Pyright versions.
 
-Zsh plugins are pinned to upstream commits in [`.chezmoiexternal.toml`](../.chezmoiexternal.toml). Renovate groups their pin updates into one PR, and [CI](workflows/validate-zsh-plugins.yml) verifies that each pinned archive applies and its entry point loads.
+Zsh plugins are pinned to upstream commits in [`.chezmoiexternal.toml`](../.chezmoiexternal.toml). [CI](workflows/validate-zsh-plugins.yml) verifies that each pinned archive applies and its entry point loads.
 
 ## Contribution Guidelines
 
