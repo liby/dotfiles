@@ -9,5 +9,3 @@ Load when changed code touches SQL models, migrations, warehouse tables, materia
 - domain tests for enums, IDs, counts, timestamps, and fields that may be numeric today but text or structured later.
 - grants, row filters, source freshness, and materialization changes that alter who can see data or when.
 - old-object cleanup and rollout order for renamed views, models, schemas, materialized views, and lookup tables.
-
-CRUD, replay, and backfill integrity, and fixing source types before downstream `coalesce`: [data-integrity](../concerns/data-integrity.md). Consumers of a renamed object: [contract](../concerns/contract.md). Warehouse grants and row filters: [security](../concerns/security.md). Layer ownership and incremental cursors: [elt](elt.md). Application query-layer ownership and ORM preference stay in [data-integrity](../concerns/data-integrity.md).

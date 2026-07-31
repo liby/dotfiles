@@ -8,6 +8,3 @@ Load when changed code touches CLI entrypoints, installers, packages, archives, 
 - package or archive inclusion: new scripts, templates, executable bits, generated mirrors, and source-to-install path mapping; published client packages must not depend on server-only source or files omitted from the package.
 - runtime readiness: a launched command is not enough; verify the service is listening and required dependencies are available before clients connect.
 - installer defaults, floating refs, remote downloads, cache paths, and package-manager or Corepack assumptions.
-- failure paths print an actionable setup or refusal message without leaking secret-bearing paths or process output (see [security](../concerns/security.md)).
-
-Sandbox privilege and agent-controlled runtimes: [agent](agent.md). Generated wrappers and installed copies staying in sync with source: [contract](../concerns/contract.md).

@@ -10,140 +10,90 @@ allowed-tools:
 
 # Review
 
-Read, verify, report. Clean verdicts and no-op are valid outcomes. Default review is read-only for the reviewed project: do not edit reviewed files, post comments, start dev servers, or apply fixes in the main reviewer context.
-
-## Outcome Contract
-
-- Outcome: real repository-impact findings, or a clean verdict.
-- Done when: changed paths, direct contracts, relevant review rules, and cheapest validation have been checked.
-- Evidence: each finding names a trigger path, source evidence, impact, and fix direction.
-- Output: exact user contract first; otherwise a concise Markdown review summary. Use canonical JSON only as an internal contract for `--html`, `--fix`, or an explicit machine-readable report.
+Default review is read-only for the reviewed project: do not edit reviewed files, post comments, start dev servers, or apply fixes in the main reviewer context. A clean verdict is a valid outcome.
 
 ## Flow
 
 1. Resolve scope: MR/PR, branch diff, working tree, or explicit notes.
-2. Classify changed paths before reading any diff body. Source `scripts/_lib.sh` from the skill directory and use its machine classifier, the same authority `--fix` enforces: run `validate_git_diff_paths <base> <head>` for a branch, `validate_working_tree_paths` for the working tree, or pass an MR/PR host file list as a NUL-delimited file to `validate_path_file_nul` in the same Bash invocation.
+2. Classify changed paths before reading any diff body. Source `scripts/_lib.sh` from the skill directory and run `validate_git_diff_paths <base> <head>` for a branch, `validate_working_tree_paths` for the working tree, or pass an MR/PR host file list as a NUL-delimited file to `validate_path_file_nul` in the same Bash invocation.
    - Keep path transport NUL-delimited. Never copy a path from an earlier response into a later Bash command, because a plain-looking filename can collide with an unrelated Bash permission rule.
    - Refuse raw secret surfaces without printing them. Stop on ambiguous sensitive paths until the host, project instructions, or user classifies them.
    - Treat encrypted-name matches only as ciphertext candidates. Once project instructions or an encryption marker confirms one, account for path and status, keep its body out of every diff, and continue reviewing ordinary paths.
    - Public certificates, public keys, `authorized_keys`, `known_hosts`, and SSH client configuration are not secret by type. Source code is not secret merely because its path contains `credential`, `secret`, or `token`; review it as security-sensitive code and avoid quoting secret values.
-
    Done when every changed path is classified as ordinary, opaque ciphertext, ambiguous, or raw secret before any body is read.
 3. List changed files before judging behavior:
    - branch: parse `git diff -z --name-status <base>...HEAD`; for `R*` and `C*`, inspect both source and destination paths before any full diff
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`
    - MR/PR: compare host changed files with the local checkout or diff
 4. Read local instructions that can change review rules: `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.agents/`, `README.md`, `REVIEW.md`, `CODE_REVIEW.md`, project review commands, and project review skills.
-5. Read the MR/PR description and discussions when available. Treat prior review rounds, own or others', as review state: a finding the maintainer dismissed with a load-bearing reason is mentioned as one "previously dismissed" line, not re-reported as a numbered finding, unless a new commit or new evidence changes the conclusion; prior open questions that were answered fold into the current judgment instead of being re-asked. Exception: a `P1` security or data-integrity finding re-verified on equal-or-stronger evidence is still reported, labeled "previously dismissed, re-raised because X".
-6. Read touched files, adjacent code, direct call sites, and relevant tests before final severity.
-7. For exported identifiers, deleted symbols, schema fields, event names, and shared helpers, `rg` callers, readers, writers, and tests.
-8. Load the surface rule file(s) whose changed path or runtime matches, from `references/rules/`:
-   - [TypeScript](references/rules/typescript.md): TypeScript API boundaries, exported identifiers, generated types, discriminated unions, and serialization.
-   - [React](references/rules/react.md): React components, hooks, client state, streaming or optimistic UI, and disabled controls.
-   - [Next.js](references/rules/next.js.md): App or Pages Router, route handlers, server actions, middleware, cache, cookies, and the server/client boundary.
-   - [Python](references/rules/python.md): Python ingestion, loaders, dataframes, and scripts that write files or warehouse tables.
-   - [SQL](references/rules/sql.md): SQL models, migrations, warehouse schema, joins, aggregates, and grants.
-   - [CLI](references/rules/cli.md): CLI behavior, installers, packaging, generated wrappers, runtime readiness, and source-to-package mapping.
-   - [Async](references/rules/async.md): queues, jobs, retries, waiters, durable steps, and worker lifecycle.
-   - [Agent](references/rules/agent.md): model routing, tools, connectors, provider wrappers, sandboxed execution, and protocol clients.
-   - [ELT](references/rules/elt.md): extract/load/transform jobs, dbt models, reverse ETL, backfills, and grants.
-9. Apply the Universal Review Lenses to every review, and load the `references/concerns/*.md` file each lens names when the change exercises it.
-10. Verify each candidate with code, docs, tests, runtime output, or the cheapest existing validation command that covers the changed path.
-11. Report only findings with a concrete trigger path and realistic repository impact.
+5. Read the MR/PR description and discussions when available.
+   - Treat discussion claims as review state, not proof. Omit resolved or reasoned-dismissed points unless new evidence reopens them; re-report a reverified `P1` as "previously dismissed, re-raised because X".
+6. Read touched files, adjacent code, direct call sites, and relevant tests. For exported or deleted symbols, schemas, events, and shared helpers, search writers, readers, generated output, and peer surfaces by both symbol and changed concept.
+7. Load every matching surface rule and apply every Universal Review Lens below.
+8. Verify each candidate against the applicable code, source-owned contract, tests, or runtime evidence; run the cheapest existing validation that covers the changed path.
+9. Finish only after every changed path and loaded rule is accounted for, then report findings that pass the Finding Bar or a clean verdict.
 
 ## Rule Precedence
 
-1. Observed runtime, security, data, and product contracts.
-2. Specific distilled rules in `references/concerns/*.md` and `references/rules/*.md` when their `Load when` and trigger match.
-3. Repo-local conventions and personal preferences.
-4. Generic review heuristics.
+Observed runtime and source-owned product, security, and data contracts outrank repository conventions; repository conventions outrank generic heuristics. A shared rule applies only when its trigger matches and no repository-owned contract disproves it.
 
-Treat a repo-local instruction as a level-1 contract only when it documents an actual runtime, product, security, migration, or deployment constraint. Otherwise, when it conflicts with a matching distilled rule, prefer the rule only when its trigger and evidence match and no repo-owned contract disproves it.
+## Surface Rules
 
-Do not treat people, teams, specific projects, or past incidents as review authority in shared skill text. Convert them into trigger, action, boundary, and evidence requirements.
-
-A lower-priority rule may narrow a higher-priority rule by supplying a concrete boundary. It may not silently turn an observed failure, authority violation, or data-corruption path into an accepted convention.
-
-## Reference Routing
-
-- The Universal Review Lenses are the concern axis: apply all of them, and load a `references/concerns/*.md` file for the full check when the change exercises that lens.
-- The `references/rules/*.md` files are the surface axis: load one when the changed path or runtime matches its `Load when` trigger.
-- A change usually loads a few concerns and a few surfaces. A surface file holds only language- and runtime-specific deltas and points up to the concern that owns each cross-cutting rule; do not restate a concern rule inside a surface.
-- Rule files identify review candidates. A checklist item is not reportable until it satisfies the Finding Bar with a concrete trigger path, evidence, impact, and fix direction.
-- Load [result](references/contracts/result.md) before producing canonical review JSON, before handing findings to `--fix`, or before rendering HTML.
-- Load [fix](references/workflows/fix.md) only when `--fix` was requested, after the normal review has produced accepted findings, and before any mutation.
-- Load [second-opinion](references/workflows/second-opinion.md) when dispatching independent reviewers in a large or high-risk review, before composing their briefs.
-- Load [html](references/workflows/html.md) only when an HTML artifact was requested and the canonical review result already exists.
-
-## Review Variants
-
-| Variant | Trigger | Extra handling |
-| --- | --- | --- |
-| Default | Local diff, branch, MR/PR URL, or explicit notes | Read-only concise Markdown review summary unless the user gives an exact output contract. |
-| Remote MR/PR | Host URL or MR/PR reference | Compare host changed files with local checkout or diff; never fabricate URLs. |
-| `--html` | `--html`, report, artifact, or visual view | Load [result](references/contracts/result.md), produce the same review JSON, then render with [html](references/workflows/html.md). |
-| `--fix` | `--fix` after review | Run the normal review first. If accepted findings exist and a writable local checkout is available, load [fix](references/workflows/fix.md) before mutation. |
-| Spec-backed review | MR/PR description, issue, Jira, PRD, or explicit requirements exist | Map each requirement to a diff change; report missing or partial implementation and unrequested behavior beyond the spec as separate findings so one axis does not mask the other. |
-| Large or high-risk review | Broad contract, security, automation, release, migration, or cross-runtime change | Use optional independent reviewers only when they can inspect distinct risk areas; load [second-opinion](references/workflows/second-opinion.md) when dispatching them, and verify their citations before forwarding. |
-
-The main reviewer must not edit reviewed project files. Only the fix-orchestrator may mutate, and only inside a local writable checkout. A host-only MR/PR review is report-only. A local writable checkout of that MR/PR branch is eligible for `--fix`.
+- Load [TypeScript](references/rules/typescript.md), [React](references/rules/react.md), or [Next.js](references/rules/next.js.md) for their language, UI-state, routing, cache, or server/client boundaries.
+- Load [SQL](references/rules/sql.md) or [ELT](references/rules/elt.md) for loaders, persisted data, queries, migrations, warehouse models, or pipelines.
+- Load [CLI](references/rules/cli.md), [Async](references/rules/async.md), or [Agent](references/rules/agent.md) for packaging and runtime readiness, deferred lifecycle, or model/tool/provider boundaries.
 
 ## Universal Review Lenses
 
-Apply all of these to every review. Each names the concern file that owns the full check; load it from `references/concerns/` when the change exercises that lens.
+Apply every lens; load its file when the change exercises it.
 
-- Establish the source-owned contract, names, and generated shapes before judging the implementation: [contract](references/concerns/contract.md).
-- Trace ownership and authority through wrappers, runtimes, and deployment boundaries, require an observed caller for each guard, fallback, and abstraction, and filter any value before it reaches a client: [boundaries](references/concerns/boundaries.md).
-- Keep expected absence, business rejection, retryable failure, waiting, partial work, and success observably distinct, and write final markers only after durable effects complete: [failure-states](references/concerns/failure-states.md).
-- Prove DB and API round trips stay bounded and each write keeps grain, scope, and meaning: [data-integrity](references/concerns/data-integrity.md).
-- Classify every config and request value, and prove a lower-trust input cannot become higher-trust authority: [security](references/concerns/security.md).
-- Require tests to fail when the changed invariant breaks, not merely exercise a fixture: [tests](references/concerns/tests.md).
-- Mechanically inspect every changed, deleted, or moved line, then sweep peer surfaces by concept: [mechanical](references/concerns/mechanical.md).
+- [Contract](references/concerns/contract.md): requirements, schemas, names, generated shapes, and consumers.
+- [Boundaries](references/concerns/boundaries.md): ownership, authority, guards, persistence, clients, and credential/runtime scope.
+- [Failure states](references/concerns/failure-states.md): absence, rejection, retries, partial work, and final markers.
+- [Data integrity](references/concerns/data-integrity.md): round trips, grain, scope, transactions, and per-record outcomes.
+- [Security](references/concerns/security.md): value trust, authorization, environment isolation, and sandbox exposure.
+- [Tests](references/concerns/tests.md): reachable fixtures, observable invariants, and real runtime boundaries.
+
+## Variants
+
+- `--html`, report, artifact, or visual review: load [result](references/contracts/result.md), produce canonical JSON, then load [html](references/workflows/html.md).
+- `--fix`: finish the normal review first; when accepted findings and a writable local checkout exist, load [fix](references/workflows/fix.md) before mutation.
+- Spec-backed review: map each requirement to the diff; review missing, partial, and unrequested behavior separately.
+- Large or high-risk review: dispatch independent reviewers only for distinct risk areas, after loading [second-opinion](references/workflows/second-opinion.md).
 
 ## Finding Bar
 
-Prioritize:
+Report only a source-owned contract mismatch or repository-reachable behavior, not style, speculative guards, broad maintainability advice, or pattern matches alone. A reachable path may begin at a supported producer or current caller, exposed untrusted or environment-controlled input, persisted or migration data, replay or scheduling, or an external/public contract. Vendor capability, manually constructible syntax, hypothetical future use, and another environment's convention are insufficient; free text is reachable only through an exposed entrypoint for the relevant producer or adversarial input class.
 
-1. Contract and source-of-truth mismatch
-2. Semantic mismatch in names, fields, states, events, or API shape
-3. Ownership boundary violation
-4. Hidden failure, false success, partial-work masking, or silent data corruption
-5. Security, permission, identity, exposure, or environment-isolation risk
-6. Incomplete symmetry across writers, readers, sibling cases, schema variants, generated output, or removed consumers
-7. Unbounded DB/API fan-out in backend paths that scale with rows, events, users, tools, or retries
-8. Mechanical bugs in changed lines
-9. Tests and docs, only when they prove or hide one of the risks above
+Before reporting, record provenance and diff contribution; reachable trigger; applicable contract, if any; downstream controls and consequence; decisive evidence; severity; remedy prerequisites; and disposition. Verify each independently: a verified diagnosis does not validate its remedy. An unavailable prerequisite invalidates the remedy; an unknown prerequisite stays conditional and cannot raise severity.
 
-Skip pure style, speculative guards, broad maintainability advice, and pattern matches without a concrete trigger path.
+Do not attribute pre-existing debt to the diff; report it separately only when the change newly exposes or worsens it, falsely claims to fix it, it blocks the changed behavior, or it is an active `P1` defect in touched code.
 
-Completeness gaps become numbered findings only when a requirement, peer contract, or reachable behavior proves the omitted behavior. Otherwise put them in `manual` or `notes`.
+An omission is a finding only when an explicit requirement, source-owned peer contract, or reachable behavior proves it. Otherwise drop it. Preserve a material validation gap only when the path reaches one named unknown boundary/runtime fact, source-specific evidence calls the local assumption into doubt, and the answer could change the verdict to `P1` or `P2`; represent it as a `manual` finding and do not give a clean verdict.
 
 ## Severity
 
-- `P1`: likely in normal use, breaks a security or permission boundary, leaves persistent bad state, or records a failed operation as successful.
-- `P2`: needs specific conditions, but the trigger and consequence are real in this repository.
-- `P3`: local, recoverable, low impact, or mainly maintainability with a concrete future failure path.
+- `P1`: a verified normal-use path with material harm, or a reachable path that breaks a security or permission boundary, leaves persistent bad state with material impact, silently corrupts downstream data, or records a material failure as successful.
+- `P2`: a verified path requiring specific supported conditions and causing material impact, but not meeting `P1`.
+- `P3`: a verified local, recoverable, low-impact behavior or a concrete future failure path already enabled by the changed code.
 
-Downshift when the project does not run in the required mode. Upshift when bad state persists, misleads operators, widens access, or silently affects downstream data.
+Unsupported or unreachable modes fail the Finding Bar; do not preserve them by downshifting.
 
 ## Verification
 
-- Control flow claim: read the call path.
-- Convention claim: verify adjacent code.
-- External contract claim: read the local wrapper, docs, schema, generated type, or tests.
-- Runtime claim: observe it directly or mark manual verification.
-- Missing-X claim: search the whole ownership chain first.
+- For provider-, persisted-, migration-, or replay-owned values, verify the exact property the code relies on against a source-owned schema, documentation, generated type, test, or runtime. A handwritten local type or fixture alone does not prove it.
+- Trace downstream gates, fallbacks, retries, and containment before assigning impact or severity.
+- Validate dependency changes against the lockfile-resolved target version and its types or runtime; otherwise keep the verdict conditional on CI, typecheck, or test.
+- Require runtime evidence only for facts not established locally and specific to runtime or deployment, such as migration state, deployed role or plan, timing, or sandbox lifecycle.
 
-Discover validation commands from local instructions, `package.json`, `Makefile`, `justfile`, task config, CI workflow, and adjacent tests. Use the cheapest existing command that covers the changed path. Do not run dev/start/serve commands during review.
-
-Require runtime evidence for browser or hydration behavior, cross-tab timing, live identifier equality, DB migration state, UI enablement, external service paging, sandbox lifecycle, provider payload shape, and terminal states not encoded locally.
+A challenged or corrected finding re-enters verification as a new claim at the same Finding Bar. Do not replace one unverified conclusion with another, and remove a disproved candidate from final output and finding counts.
 
 ## Output
 
 Respect exact output contracts first: `approve`, `No blocking findings.`, verdict-only, blocker-only, or any user-provided shape override the default chat review.
 
-For normal chat output, give a concise Markdown summary. Start with findings when any exist. For each finding include severity, `path:line`, title, trigger or evidence, impact, and fix direction. If there are no findings, say `No blocking findings.` and name only material validation gaps.
+For normal chat, start with findings. Include severity, `path:line`, title, reachable trigger, decisive evidence, consequence, and fix direction. For a finding not plainly introduced, state provenance and exact diff contribution; when attribution is unknown, state the failed step. Use `No blocking findings.` only when no material validation gap remains.
+
+When comments or replies are requested, emit only the final body, one unresolved root cause each: the minimum exact claim, reachable trigger, plain-language consequence, and requested fix or focused question. Prefer the normal producer or caller; otherwise name the supported external or adversarial entrypoint. Omit resolved points, review mechanics, and unsupported examples.
 
 For `--html`, `--fix`, or explicit machine-readable reports, load `references/contracts/result.md` and produce canonical JSON for that workflow. For `--html`, render that same result using `references/workflows/html.md`.
-
-Do not narrate review mechanics, tool setup, worktree preparation, or skill rules.

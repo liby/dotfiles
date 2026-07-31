@@ -1,127 +1,45 @@
 # Fix Workflow
 
-Load only when `--fix` was requested, after the normal review has produced accepted findings, and before any mutation.
+Load only when `--fix` was requested, after the read-only review has accepted findings, and before mutation. `--fix` does not change the Finding Bar.
 
-`--fix` does not change what counts as a finding.
+Run fixes in a fresh write-capable fix-orchestrator subagent against a local writable checkout. Its frontier contains only accepted findings and regressions it introduces; a host-only review remains report-only.
 
-## Contract
+## Inputs And Scope
 
-- Review phase is read-only.
-- Fix phase runs in a fresh write-capable fix-orchestrator subagent.
-- Fixes apply only to a local writable checkout.
-- A host-only MR/PR review is report-only.
-- A local writable checkout of an MR/PR branch is eligible for `--fix`.
-- Initial accepted findings seed a live review frontier.
-- The fix-orchestrator edits only unresolved frontier items classified as `fix` or `rewrite`, plus regressions it introduced.
-- A new finding can enter the frontier only when it has a new trigger path, source-of-truth evidence, realistic impact, and owner, or when it is a real regression from the fix.
+Pass the writable repo root, review scope/base, repo instructions, validation commands, and each fixable finding with severity, `path:line`, root cause, direct dependents, and any manual observation. Also pass absolute paths to `SKILL.md` and this file, requiring the fixer to read both completely before mutation; if either is inaccessible in its runtime, inline the Finding Bar plus this workflow's scope, baseline, secret-classifier, mutation, and stop rules. Do not pass dropped, manual, speculative, weak, repeated, or raw second-opinion content.
 
-## Vocabulary
-
-- Review disposition: `accepted`, `manual`, or `dropped`.
-- Fixer action: `fix`, `rewrite`, `manual`, or `drop`.
-- Post-fix status: `resolved`, `still-open`, `regression-from-fix`, `new-real`, `repeated`, `speculative`, or `manual`.
-- `new-real`: newly discovered issue in the original review scope with a new trigger path, new evidence, realistic impact, and owner.
-- `manual`: requires runtime evidence, product judgment, credentials, destructive action, or external access.
-
-Do not use `skipped` unless a caller supplies a distinct meaning.
-
-## Inputs
-
-Pass:
-
-- repo root: the real writable working tree from `git rev-parse --show-toplevel`
-- review scope and base
-- initial accepted findings with severity, `path:line`, root cause, allowed touch paths or direct dependents, and validation command or manual gap
-- validation commands discovered during review
-- local instructions already read
-
-Do not pass dropped, manual, repeated, speculative, weak, or raw second-opinion transcript content into the mutating context. If transcript evidence is needed, pass only the bounded citation or command result.
-
-## Secret Path Denylist
-
-Before any baseline, snapshot, or edit, list the paths the fix-orchestrator may touch and validate them with the helper-backed denylist in `scripts/_lib.sh`. On a match, stop without printing the raw path.
-
-`scripts/_lib.sh` is the machine authority. Keep prose behavioral and avoid maintaining a second Markdown denylist.
-
-## Triage
-
-Classify each frontier item before editing:
-
-- `fix`: root cause is clear and local evidence is sufficient.
-- `rewrite`: finding is real, but the suggested fix is partly wrong.
-- `manual`: runtime evidence, product judgment, destructive action, credentials, or external access is required.
-- `drop`: trigger path no longer applies in the current checkout.
-
-P1 and P2 findings may enter automatic mutation. P3 findings enter automatic mutation only when the user explicitly asked, they block P1 or P2 validation, or they are a regression from the fix. Drop P3 polish, broad cleanup, and unrelated maintainability suggestions unless they block an unresolved frontier item.
-
-## Baseline
-
-Before the first edit, create `FIX_SCOPE_FILE=$(mktemp)` and fill it with NUL-delimited repo-relative paths the current review scope permits the fixer to touch. Include initial frontier paths and direct dependents likely required by fixes. Do not include unrelated dirty files. Only after the file is written, run:
+Before editing, create a NUL-delimited scope file containing only frontier paths and direct dependents the fixes may require. Exclude unrelated dirty files. Run the helper, which enforces the secret-path classifier and creates a scoped Git baseline:
 
 ```bash
 REVIEW_SKILL_DIR="${REVIEW_SKILL_DIR:-$HOME/.agents/skills/review}"
-BASELINE_HELPER="$REVIEW_SKILL_DIR/scripts/review-fix-baseline.sh"
-BASELINE=$(bash "$BASELINE_HELPER" "$FIX_SCOPE_FILE") || exit $?
+FIX_SCOPE_FILE=$(mktemp)
+# Write allowed repo-relative paths to FIX_SCOPE_FILE as NUL-delimited records.
+BASELINE=$(bash "$REVIEW_SKILL_DIR/scripts/review-fix-baseline.sh" "$FIX_SCOPE_FILE") || exit $?
 ```
 
-The script snapshots only fix-scope paths and prints the baseline id. Do not use `git stash create`. Do not snapshot all tracked dirty files. Do not add untracked files unless the frontier item cites them, the user asked to include them, and the denylist has no match.
+Do not use `git stash create` or snapshot the whole working tree. Add an untracked file only when a frontier item cites it and the path classifier accepts it.
 
-## Edit Rules
+## Triage And Edit
 
-- Re-read cited files and direct dependents.
-- Fix root cause plus direct dependents.
-- Prefer loud failure over silent fallback when the invariant should hold.
-- Batch findings only when they share the same root cause and no unrelated module is touched.
-- Clean only orphans introduced by the fix.
-- Do not run broad refactors, format sweeps, dependency swaps, or cleanup skills unless a frontier item requires them.
-- If a later accepted item needs a path outside the baseline fix scope, report it as scope expansion and stop before editing that path unless the user confirms.
+Classify each item once:
 
-## Validation
+- `fix`: evidence supports the root cause and remedy.
+- `rewrite`: the finding is real but its proposed remedy is wrong or incomplete.
+- `manual`: product judgment, runtime evidence, credentials, destructive action, or external access is required.
+- `drop`: the trigger no longer applies or fails the Finding Bar.
 
-Run the cheapest existing validation that exercises the changed path. Do not run dev/start/serve commands unless the user explicitly requested that environment.
+P1 and P2 items may mutate automatically. P3 may mutate only when the user requested it, it blocks P1/P2 validation, or the fixer introduced it.
 
-If validation cannot cover the finding, state the remaining manual observation.
+Fix the root cause and direct dependents inside the baseline scope. Do not perform broad refactors, formatting sweeps, dependency swaps, or cleanup unrelated to a frontier item. Stop before touching a path outside the scope and report the required expansion.
 
-## Re-Review
+## Validate And Re-Review
 
-After edits, re-review changed files, direct dependents, touched generated artifacts, and validation output. The fix-orchestrator must not broaden the review target.
+Run the cheapest validation that exercises each fix and name any remaining manual observation. Re-review changed paths, direct dependents, generated artifacts, and validation output.
 
-Classify post-fix findings:
+Classify the result as `resolved`, `still-open`, `regression-from-fix`, `new-real`, or `manual`. A `new-real` item must independently pass the Finding Bar and remain inside the baseline scope. Only `still-open`, `regression-from-fix`, and `new-real` may re-enter mutation.
 
-- `resolved`: frontier item is fixed and covered by validation or named manual evidence.
-- `still-open`: accepted finding remains after the fix attempt.
-- `regression-from-fix`: introduced by the fix.
-- `new-real`: newly discovered issue in the original review scope with a new trigger path, source-of-truth evidence, realistic impact, and owner.
-- `repeated`: same root cause or same trigger path without new evidence.
-- `speculative`: lacks observed trigger, impact, source evidence, or reachable path.
-- `manual`: requires runtime evidence, product judgment, credentials, destructive action, or external access.
-
-Only `still-open`, `new-real`, and `regression-from-fix` can trigger automatic mutation. `new-real` must stay inside the baseline fix scope. `regression-from-fix` is the fixer's rollback or repair responsibility, not proof that the goal expanded.
-
-## Termination
-
-Stop when:
-
-- all `fix` and `rewrite` items are resolved and validation has run,
-- the next change would cross the baseline fix scope,
-- the next step requires runtime evidence, product judgment, credentials, destructive action, or external access,
-- no local writable checkout is available,
-- the same root cause, trigger path, or fix area repeats without new evidence,
-- the next change would undo a prior fix without a new source-of-truth reason,
-- new accepted work is mostly regressions introduced by the current fix loop,
-- the same strategy fails twice,
-- or a user-provided, harness-provided, or executor-owned safety cap is reached.
-
-Do not invent a numeric round budget. Use a numeric cap only when the user, harness, or executor skill supplies one. One round means triage, edit, validation, and re-review of changed files plus direct dependents.
+Stop when all fixable items are resolved and validated, the next action crosses scope or authority, a candidate adds no new evidence, or the same strategy fails twice.
 
 ## Return
 
-- Applied Fix: count and citations
-- Applied Rewrite: count and citations
-- Drop: count and reasons
-- Manual: count, citations, and required observation
-- Not fixed: citations and reason
-- Frontier: resolved, new-real, regression-from-fix, repeated, speculative, manual, and still-open counts
-- Progress: what changed since the previous round, with evidence
-- Validation: commands and verdicts
-- Baseline: snapshot id when used
+Report applied fixes or rewrites with citations, unresolved or manual items and reasons, validation commands and verdicts, the baseline id, and any scope stop.

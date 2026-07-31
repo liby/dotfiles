@@ -3,7 +3,7 @@
 // report and open it. File-centric layout modeled on Anthropic's
 // 03-code-review-pr html-effectiveness example: PR/scope header, risk map with
 // anchor navigation, per-file cards whose findings render as line-anchored
-// review bubbles, and local dark diff snippets. File cards form a single-open
+// review bubbles. File cards form a single-open
 // accordion (native <details name>): the first card is open, others collapsed.
 // Run with node (>=18) or bun. Zero deps.
 //
@@ -11,7 +11,7 @@
 //   node render-review.mjs <data.json>     # or pipe JSON via stdin
 //
 // The agent's only job is to produce the JSON (see references/contracts/result.md).
-// All HTML structure, escaping, colors, and the diff/risk-map live here.
+// All HTML structure, escaping, colors, and the risk map live here.
 //
 // JSDoc typedefs document the JSON contract without a TS toolchain; no @ts-check.
 //
@@ -25,15 +25,14 @@ import { join } from 'node:path';
 /**
  * @typedef {'P1'|'P2'|'P3'} Sev
  * @typedef {'confirmed'|'manual'} FindingLevel
- * @typedef {'weak'} NoteLevel
+ * @typedef {'introduced'|'newly reachable'|'worsened'|'pre-existing'|'unknown'} Provenance
  * @typedef {{ iid: number|string, title?: string, url: string }} MR
  * @typedef {{ requirement?: string, assessment?: string }} Rationale
  * @typedef {{ add?: number, del?: number, files?: number }} Stat
- * @typedef {{ project?: string, scope?: string, scope_slug?: string, reviewed_sha?: string, repo_root?: string, mr?: MR, verdict?: string, validation?: string, manual_gap?: string, rationale?: Rationale, author?: string, branch?: string, stat?: Stat }} Meta
- * @typedef {{ sev: Sev, path: string, line?: number, title: string, level?: FindingLevel, problem: string, trigger?: string[], fix: string, fix_code?: string, code_snippet?: string, evidence?: string, impact?: string }} Finding
+ * @typedef {{ project?: string, scope?: string, scope_slug?: string, reviewed_sha?: string, repo_root?: string, mr?: MR, verdict?: string, validation?: string, rationale?: Rationale, author?: string, branch?: string, stat?: Stat }} Meta
+ * @typedef {{ sev: Sev, path: string, line?: number, title: string, level: FindingLevel, provenance: Provenance, diff_contribution?: string, problem: string, trigger: string[], fix: string, evidence: string, impact: string }} Finding
  * @typedef {{ path: string, add?: number, del?: number, note?: string }} FileEntry
- * @typedef {{ text: string, level?: NoteLevel }} Note
- * @typedef {{ meta?: Meta, findings?: Finding[], files?: FileEntry[], notes?: Note[] }} ReviewData
+ * @typedef {{ meta?: Meta, findings?: Finding[], files?: FileEntry[] }} ReviewData
  */
 
 // --- helpers ---------------------------------------------------------------
@@ -84,26 +83,6 @@ function train(steps = []) {
     .join('<span class="tarrow">&rarr;</span>');
 }
 
-/** Local diff snippet: each input line prefixed +/-/space; renders a dark block. */
-/** @param {string} [snippet] @returns {string} */
-function diffSnippet(snippet) {
-  if (!snippet) return '';
-  const rows = String(snippet)
-    .replace(/\n$/, '')
-    .split('\n')
-    .map((line) => {
-      let cls = 'ctx';
-      let mark = '';
-      let code = line;
-      if (line[0] === '+') { cls = 'add'; mark = '+'; code = line.slice(1); }
-      else if (line[0] === '-') { cls = 'del'; mark = '−'; code = line.slice(1); }
-      else if (line[0] === ' ') { code = line.slice(1); }
-      return `<div class="diff-row ${cls}"><span class="mark">${mark}</span><span class="code">${esc(code)}</span></div>`;
-    })
-    .join('');
-  return `<div class="diff snippet">${rows}</div>`;
-}
-
 // --- input -----------------------------------------------------------------
 const src = process.argv[2] ? readFileSync(process.argv[2], 'utf8') : readFileSync(0, 'utf8');
 /** @type {ReviewData} */
@@ -122,15 +101,13 @@ const m = data.meta || {};
 const findings = Array.isArray(data.findings) ? data.findings : [];
 /** @type {FileEntry[]} */
 const files = Array.isArray(data.files) ? data.files : [];
-/** @type {Note[]} */
-const notes = Array.isArray(data.notes) ? data.notes : [];
 const repoRoot = m.repo_root || '';
 
 // Required fields render blank or miscolored when missing; fail before HTML so
 // the JSON contract is enforced at the same boundary that consumes it.
 const VALID_SEV = new Set(['P1', 'P2', 'P3']);
 const VALID_FINDING_LEVEL = new Set(['confirmed', 'manual']);
-const VALID_NOTE_LEVEL = new Set(['weak']);
+const VALID_PROVENANCE = new Set(['introduced', 'newly reachable', 'worsened', 'pre-existing', 'unknown']);
 /** @param {unknown} v @returns {boolean} */
 const blank = (v) => typeof v !== 'string' || v.trim() === '';
 /** @type {string[]} */
@@ -154,16 +131,25 @@ if (data.files != null && !Array.isArray(data.files)) {
   contractErrors.push('files must be an array when present');
 }
 
-if (data.notes != null && !Array.isArray(data.notes)) {
-  contractErrors.push('notes must be an array when present');
+if (/** @type {Record<string, unknown>} */ (m).manual_gap != null) {
+  contractErrors.push('meta.manual_gap was removed; use a level "manual" finding');
+}
+
+if (/** @type {Record<string, unknown>} */ (data).notes != null) {
+  contractErrors.push('notes was removed; drop weak items');
 }
 
 /** @type {(keyof Finding)[]} */
-const REQUIRED_FINDING = ['sev', 'title', 'problem', 'fix', 'path'];
+const REQUIRED_FINDING = ['sev', 'title', 'level', 'problem', 'fix', 'path', 'provenance', 'evidence', 'impact'];
 findings.forEach((f, i) => {
   if (!f || typeof f !== 'object' || Array.isArray(f)) {
     contractErrors.push(`finding[${i}] must be an object`);
     return;
+  }
+  for (const key of ['code_snippet', 'fix_code']) {
+    if (/** @type {Record<string, unknown>} */ (f)[key] != null) {
+      contractErrors.push(`finding[${i}].${key} was removed; omit it`);
+    }
   }
   const missing = REQUIRED_FINDING.filter((k) => blank(f[k]));
   if (missing.length) {
@@ -172,8 +158,17 @@ findings.forEach((f, i) => {
   if (!blank(f.sev) && !VALID_SEV.has(f.sev)) {
     contractErrors.push(`finding[${i}].sev must be P1, P2, or P3`);
   }
-  if (f.level != null && !VALID_FINDING_LEVEL.has(f.level)) {
-    contractErrors.push(`finding[${i}].level must be confirmed or manual; move weak items to notes[]`);
+  if (!blank(f.level) && !VALID_FINDING_LEVEL.has(f.level)) {
+    contractErrors.push(`finding[${i}].level must be confirmed or manual`);
+  }
+  if (!blank(f.provenance) && !VALID_PROVENANCE.has(f.provenance)) {
+    contractErrors.push(`finding[${i}].provenance is invalid`);
+  }
+  if (!blank(f.provenance) && f.provenance !== 'introduced' && blank(f.diff_contribution)) {
+    contractErrors.push(`finding[${i}].diff_contribution is required when provenance is not introduced`);
+  }
+  if (!Array.isArray(f.trigger) || f.trigger.length === 0 || f.trigger.some(blank)) {
+    contractErrors.push(`finding[${i}].trigger must be a non-empty string array`);
   }
 });
 
@@ -184,19 +179,6 @@ files.forEach((f, i) => {
   }
   if (blank(f.path)) {
     contractErrors.push(`files[${i}].path missing required field`);
-  }
-});
-
-notes.forEach((n, i) => {
-  if (!n || typeof n !== 'object' || Array.isArray(n)) {
-    contractErrors.push(`notes[${i}] must be an object`);
-    return;
-  }
-  if (blank(n.text)) {
-    contractErrors.push(`notes[${i}].text missing required field`);
-  }
-  if (n.level != null && !VALID_NOTE_LEVEL.has(n.level)) {
-    contractErrors.push(`notes[${i}].level must be weak when present`);
   }
 });
 
@@ -242,6 +224,8 @@ function deltaSpan(e) {
 function bubble(f) {
   /** @type {string[]} */
   const more = [];
+  const attribution = f.diff_contribution ? `${f.provenance}: ${f.diff_contribution}` : f.provenance;
+  more.push(`<div class="mini"><span class="mlabel">改动归属</span><span>${inline(attribution)}</span></div>`);
   if (f.trigger?.length)
     more.push(`<div class="mini"><span class="mlabel">怎么引起的</span><div class="train">${train(f.trigger)}</div></div>`);
   if (f.evidence)
@@ -251,16 +235,13 @@ function bubble(f) {
   const moreBlock = more.length
     ? `<details class="more"><summary>更多证据 / 影响</summary>${more.join('')}</details>`
     : '';
-  const fixCode = f.fix_code ? `<pre><code>${esc(f.fix_code)}</code></pre>` : '';
   const anchor = f.line ? `line ${esc(f.line)}` : esc(basename(f.path));
   return `
         <div class="bubble sev-${esc(f.sev)}">
           <div class="anchor"><a href="${vscodeHref(repoRoot, f.path, f.line)}">${anchor}</a></div>
-          <p class="btitle"><span class="label">${esc(f.sev)}</span>${inline(f.title)}</p>
+          <p class="btitle"><span class="label">${esc(f.sev)}</span>${f.level === 'manual' ? '<span class="manual-label">需人工验证</span>' : ''}${inline(f.title)}</p>
           <p class="problem">${inline(f.problem)}</p>
-          ${diffSnippet(f.code_snippet)}
           ${f.fix ? `<p class="fix"><span class="fixlabel">建议</span>${inline(f.fix)}</p>` : ''}
-          ${fixCode}
           ${moreBlock}
         </div>`;
 }
@@ -345,7 +326,7 @@ const summary = `
     ${m.verdict ? `<p class="verdict">${inline(m.verdict)}</p>` : ''}
     ${rat.requirement ? `<p><span class="k">要解决什么</span>${inline(rat.requirement)}</p>` : ''}
     ${rat.assessment ? `<p><span class="k">方案是否合理</span>${inline(rat.assessment)}</p>` : ''}
-    ${m.validation || m.manual_gap ? `<p class="bound"><span class="k">证据边界</span>${inline([m.validation, m.manual_gap].filter(Boolean).join('，'))}</p>` : ''}
+    ${m.validation ? `<p class="bound"><span class="k">验证</span>${inline(m.validation)}</p>` : ''}
     ${countLine}
   </section>`;
 
@@ -373,23 +354,15 @@ const filesSection =
   </section>`
     : '';
 
-const notesBlock = notes.length
-  ? `
-  <section class="notes"><h2>Notes（weak）</h2>${notes.map((n) => `<p>${inline(n.text)}</p>`).join('')}</section>`
-  : '';
-
 // --- template (structure fixed; :root colors are the only theming entry point) --
 const CSS = `
   /* Anthropic html-effectiveness palette (03-code-review-pr): ivory canvas,
-     serif headings, hairline cards, dark diff. Severity is the multi-hue
+     serif headings, hairline cards. Severity is the multi-hue
      signal: P1 rust, P2 clay, P3 olive (red -> orange -> green, descending). */
   :root{
     --ivory:#FAF9F5; --slate:#141413; --clay:#D97757; --oat:#E3DACC; --olive:#788C5D; --rust:#B04A3F;
     --gray-150:#F0EEE6; --gray-300:#D1CFC5; --gray-500:#87867F; --gray-700:#3D3D3A;
     --p1:#B04A3F; --p2:#D97757; --p3:#788C5D; --hl:#E3DACC;
-    /* GitLab-aligned diff tints (measured from a live GitLab MR diff): solid pale
-       backgrounds, saturated green/rose ink for the rail+mark, near-black code text */
-    --diff-add-bg:#ECFDF0; --diff-add-ink:#2F7549; --diff-del-bg:#FBE9EB; --diff-del-ink:#A83246; --diff-ink:#3A383F;
     --serif:ui-serif,Georgia,'Times New Roman',serif;
     --sans:system-ui,-apple-system,'Segoe UI','PingFang SC',Roboto,sans-serif;
     --mono:ui-monospace,'SF Mono',Menlo,Monaco,monospace;
@@ -471,23 +444,11 @@ const CSS = `
   .bubble .anchor a{color:inherit;text-decoration:none} .bubble .anchor a:hover{color:var(--clay);text-decoration:underline}
   .bubble .label{display:inline-block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-right:8px}
   .bubble.sev-P1 .label{color:var(--p1)} .bubble.sev-P2 .label{color:var(--p2)} .bubble.sev-P3 .label{color:var(--olive)}
+  .bubble .manual-label{display:inline-block;font-size:10.5px;letter-spacing:.04em;font-weight:700;color:var(--p2);background:rgba(217,119,87,.13);padding:2px 6px;margin-right:8px}
   .bubble .btitle{font-size:14.5px;color:var(--slate);font-weight:500;margin-bottom:6px;line-height:1.45}
   .bubble .problem{font-size:13.5px;color:var(--gray-700);margin-bottom:2px}
   .bubble .fix{font-size:13.5px;color:var(--gray-700);margin-top:8px}
   .bubble .fixlabel{display:inline-block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--olive);margin-right:8px}
-
-  /* GitLab-aligned diff: white panel, solid pale add/del tints (GitLab uses solid
-     fills, not low-alpha overlays; the old olive/rust overlays muddied against the
-     warm panel), 3px rail + bold +/- in GitLab green/rose ink, near-black code text */
-  .diff{background:#fff;border:1.5px solid var(--gray-300);border-radius:0;font-family:var(--mono);font-size:12.5px;line-height:1.7;overflow-x:auto;margin:8px 0}
-  .diff-row{display:grid;grid-template-columns:18px 1fr;align-items:baseline;padding:0 12px;white-space:pre}
-  .diff-row .mark{text-align:center;color:var(--gray-500)}
-  .diff-row .code{color:var(--diff-ink)}
-  .diff-row.ctx .code{color:#6B6A63}
-  .diff-row.add{background:var(--diff-add-bg);box-shadow:inset 3px 0 0 var(--diff-add-ink)} .diff-row.add .mark{color:var(--diff-add-ink);font-weight:600}
-  .diff-row.del{background:var(--diff-del-bg);box-shadow:inset 3px 0 0 var(--diff-del-ink)} .diff-row.del .mark{color:var(--diff-del-ink);font-weight:600}
-  pre{background:#F3F1E9;border:1.5px solid var(--gray-300);color:#1F1E1C;font-family:var(--mono);font-size:12.5px;line-height:1.7;padding:12px 14px;border-radius:0;overflow-x:auto;margin-top:8px}
-  pre code{background:none;padding:0;color:inherit;font-size:inherit}
 
   /* more details inside a bubble */
   details.more{margin-top:10px}
@@ -505,12 +466,6 @@ const CSS = `
   details.file-collapsed{border:1.5px solid var(--gray-300);border-radius:0;background:#fff;margin-bottom:14px;scroll-margin-top:20px}
   details.file-collapsed[open]>summary.file-head{border-bottom:1.5px solid var(--gray-150)}
   details.file-collapsed .body{padding:14px 20px 16px;font-size:13.5px;color:var(--gray-700)}
-
-  /* notes */
-  .notes{position:relative;border:1.5px solid var(--gray-300);border-radius:0;background:#fff;padding:16px 22px}
-  .notes::before{content:"";position:absolute;left:-1.5px;top:-1.5px;bottom:-1.5px;width:3px;background:var(--gray-500)}
-  .notes h2{font-family:var(--sans);font-size:15px;color:var(--gray-500);margin-bottom:6px;font-weight:600}
-  .notes p{font-size:13px;color:var(--gray-700);margin-bottom:5px}
 
   @media print{ body{padding:0} .file-card,.file-collapsed,.summary,header.pr-head,.bubble{break-inside:avoid} }
 `;
@@ -530,7 +485,6 @@ const html = `<!doctype html>
   ${summary}
   ${riskMap}
   ${filesSection}
-  ${notesBlock}
 </div>
 <script>
   // Risk-map anchors: open a collapsed target and briefly ring the card.
