@@ -1,199 +1,151 @@
 ---
-description: 'Send a bounded prompt and file bundle to an independent ChatGPT Pro, Deep Research, or API model for second-opinion review. Use when the user says /oracle, asks to consult ChatGPT Pro or another model, or explicitly requires an external model check. Not for ordinary review or research that the current agent can complete directly.'
+description: 'Send a bounded prompt and files to ChatGPT Pro or Deep Research, or to an explicitly requested Oracle API model. Use when the user explicitly asks for one of those external routes or a ChatGPT Project consultation. Not for ordinary review, ordinary research, or other browser models.'
 allowed-tools:
-    - Bash(curl:*)
-    - Bash(lsof:*)
-    - Bash(mktemp:*)
     - Bash(oracle:*)
 metadata:
     github-path: skills/oracle
-    github-ref: refs/tags/v0.16.0
+    github-ref: refs/tags/v0.16.1
     github-repo: https://github.com/steipete/oracle
     github-tree-sha: 0bc3e9fcbffa218ccf8745a3ce8af0e50c9aec4f
 name: oracle
 ---
-# Oracle (CLI): best use
+# Oracle
 
-Oracle sends a prompt and selected files to another model through the API or a
-browser. Attach only the context needed for the question, treat the result as
-advisory, and verify it against the codebase and tests.
+Use the reviewed globally installed `oracle` binary, not an unpinned `npx -y`
+download. Treat its answer as advisory and verify material claims against
+authoritative sources, repository behavior, and tests.
 
-## Default path: ChatGPT Pro in running Chrome
+## Default: current ChatGPT Pro
 
-Use ChatGPT Pro for an independent second opinion.
-
-Recommended defaults:
-
-- Use `--engine browser --browser-attach-running`.
-- Pin every new browser run with `--model gpt-5-pro`; never rely on Oracle's
-  CLI default. Do not add a thinking-time flag.
-- Let Oracle open a dedicated tab. Do not pass `--browser-tab` by default.
-- Pass `--chatgpt-url "<project-url>"` when the review belongs in a ChatGPT
-  Project.
-- Use `--copy-profile "$HOME/Library/Application Support/Google/Chrome"` only
-  when no attachable Chrome is listening.
-- Preview every attached file set before sending it.
-
-Preflight the normal browser path:
+Use the semantic `gpt-5-pro` route with the current Pro `extended` effort:
 
 ```bash
-lsof -nP -iTCP:9222 -sTCP:LISTEN
+oracle --engine browser --browser-attach-running \
+  --browser-model-strategy select --model gpt-5-pro \
+  --browser-thinking-time extended --slug "<3-5 words>" \
+  -p "<task>" --file "<path-or-glob>"
 ```
 
-When it is listening, run:
+The alias selects ChatGPT's current `Pro` picker; it is not a fixed
+product-version claim. Do not inherit the tab's model or substitute a base,
+older, or cheaper model. Let Oracle open a dedicated tab.
+
+For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Completion
+must retain that Project ID/path in the conversation URL or visibly confirm
+membership in the target Project. A generic `/c/<id>` URL or fallback to the
+ChatGPT home page leaves Project placement unverified.
+
+If attach-running fails, ask the user to enable or approve Chrome remote
+debugging, or use the manual path below. Never copy a personal browser profile
+or target an existing tab.
+
+## Authorization and context
+
+An explicit request to consult ChatGPT Pro or Deep Research authorizes the
+requested subscription-backed browser run, model selection, and Project target.
+API mode requires separate, explicit billing consent.
+
+Never attach secrets, credential files, private keys, shell history, browser
+storage, real environment files, or a broad home-directory tree. Ask the user
+to complete login, CAPTCHA, SSO, workspace selection, or another human check in
+the visible browser.
+
+A fresh root has no reliable task context beyond what you provide; account and
+Project memory may add context. Make the prompt self-contained with the exact
+question, verified facts, attempts and verbatim errors, constraints, desired
+output, and the smallest files containing the evidence. Use a follow-up when
+continuity matters.
+
+## Run and prove
+
+Preview directories, globs, generated or unfamiliar paths, and inputs of
+uncertain expansion or size:
 
 ```bash
-oracle --engine browser --browser-attach-running --model gpt-5-pro \
-  -p "<task>" --file "src/**"
+oracle --dry-run summary --files-report \
+  -p "<task>" --file "<path-or-glob>"
 ```
 
-When it is not listening, use the copied-profile fallback:
+Every included file must be intentional. Narrow an oversized bundle rather than
+raising its limit; use explicit dotfile paths and `!` exclusions. If attachment
+upload or send-button readiness times out, retry once with
+`--browser-bundle-files --browser-bundle-format auto`.
+
+Wait on the running process without fixed sleeps or repeated polling. After
+detachment, resumption, compaction, or a stale controller, inspect the existing
+session before starting another: use `oracle status`; while it runs, use
+`oracle session <id> --live`; use `--harvest` when the page has an unsaved
+answer, or `--render` after completion.
+
+Accept a fresh automated Pro result only when:
+
+- the session is terminal `completed` with a non-empty answer or artifact;
+- the CLI records a Pro picker resolution, currently `resolved=Pro`
+  (`resolvedLabel=Pro` in metadata), with `strategy=select` and `verified=yes`;
+- the CLI's fail-closed Pro Extended selection passes; and
+- any supplied Project passes the Project-placement check above.
+
+After controller loss, non-empty recovered output plus
+`browser.harvest.state=completed` from `--live` or `--harvest` satisfies the
+first condition for the same verified session even if its top-level status is
+stale. Stale status alone remains insufficient.
+
+Thinking UI, a detached command, a timeout, or stale `running` metadata is not
+completion. While a run is pending or unrecovered, report that state; do not
+substitute the current agent's analysis for the requested second opinion.
+
+If automation cannot submit, rerun the original prompt and text-file arguments
+with `oracle --render-markdown`, inspect the rendered text, and submit it in the
+visible signed-in browser. Separately attach each original non-text file or a
+byte-preserving archive, and verify attachment readiness before sending. Verify
+visible `Pro`, extended effort, and the Project; then require a visible completed
+answer and saved conversation URL. Report these as manual UI observations only.
+A preceding failed Oracle session supplies no picker, model, or completion
+evidence for the manually submitted answer.
+
+## Browser follow-up
+
+Use repeated `--browser-follow-up "<message>"` options for planned turns in the
+root run. To continue later:
 
 ```bash
-oracle --engine browser --model gpt-5-pro \
-  --copy-profile "$HOME/Library/Application Support/Google/Chrome" \
-  -p "<task>" --file "src/**"
+oracle --followup "<root-session-id>" -p "<message>"
 ```
 
-`gpt-5-pro` selects ChatGPT's current `Pro` picker, currently GPT-5.6 Sol Pro,
-and follows future Pro upgrades. If Pro is unavailable for the account, stop
-and report it. Do not substitute another model.
+Add `--browser-archive never` when continuity is expected. A browser follow-up
+is valid when the verified Pro root completed, the child references that parent
+and its exact saved conversation URL, and the child completes with a non-empty
+answer. Its model selection is normally skipped and unverified; do not apply
+the fresh-root picker gate.
 
-## Local authorization
+Never guess a conversation from open tabs. If continuity is essential and
+Oracle cannot recover the URL, stop and report the gap; otherwise start a fresh,
+self-contained root in the requested Project.
 
-The user has authorized this skill to use browser mode against the running
-Chrome, select the requested model, target a ChatGPT Project, and use the
-copied-profile fallback when the task is to consult ChatGPT Pro, Deep Research,
-or another model from Codex or Claude Code.
+## Deep Research
 
-- Do not ask again before using `--engine browser`, `--browser-attach-running`,
-  `--model`, `--chatgpt-url`, or the copied-profile fallback for that task.
-- Use `--browser-tab current` only when the user explicitly requests existing-tab
-  reuse and the check in Known pitfalls passes.
-- Do not attach secrets, credential files, private keys, shell history, browser
-  storage, or a broad home-directory tree.
-- If ChatGPT requires login, CAPTCHA, SSO, workspace selection, or manual
-  verification, stop and ask the user to complete it in the visible browser.
-- API runs require explicit user consent because they use API billing rather
-  than the ChatGPT subscription.
+Use `--browser-research deep` only when explicitly requested. Keep the browser,
+attach-running, semantic Pro, and Project route, but omit
+`--browser-thinking-time` and do not combine it with `--browser-follow-up`.
+Require terminal completion, a non-empty report, and usable citations.
 
-## Golden path
+## Explicit API mode
 
-1. Run `oracle --version` and confirm `oracle --help --verbose` exposes the
-   intended model and browser flags.
-2. Select the smallest file set that contains the truth, then preview it with
-   `--dry-run` and `--files-report` until every included file is intentional.
-3. Preflight port 9222 and choose attach-running or copied-profile mode from the
-   observed result.
-4. Run with an explicit model and preserve the session identifier plus model
-   selection evidence.
-5. Keep checking or reattaching until Oracle returns an answer, a terminal
-   error, or the user stops the run. Do not substitute the current agent's
-   answer while the requested second opinion is still pending.
+After explicit API-billing consent, inspect current verbose help and preflight
+only the requested model. Verify that `--route` matches the provider covered by
+the consent and pin that provider with current CLI flags when billing or data
+boundaries differ. Run with explicit `--engine api` and `--model`. Pro API runs
+detach by default: add `--wait`, or inspect an already detached run with
+`oracle session <id>`; a returned session ID is still pending.
 
-## Commands
+API `--followup` applies to supported OpenAI or Azure Responses runs. Verify
+response/session lineage, the requested model, and terminal output; browser
+picker and conversation-URL gates do not apply. Avoid printing credentials,
+hardcoded provider catalogs, or arbitrary timeouts.
 
-- Help: `oracle --help --verbose`
-- Preview: `oracle --dry-run summary -p "<task>" --file "src/**" --file "!**/*.test.*"`
-- Full bundle preview: `oracle --dry-run full -p "<task>" --file "src/**"`
-- Token report: `oracle --dry-run summary --files-report -p "<task>" --file "src/**"`
-- Manual paste: `oracle --render-markdown --copy-markdown -p "<task>" --file "src/**"`
-- Performance trace: `oracle --perf-trace --perf-trace-path "$(mktemp)" --dry-run summary -p "<task>" --file "src/**"`
+## Version boundary
 
-Use the globally installed `oracle` binary so the reviewed CLI version and the
-skill stay aligned. Do not replace these commands with an unpinned `npx -y`
-download during a normal run.
-
-## Attaching files
-
-`--file` accepts files, directories, and globs. Pass it multiple times or use
-comma-separated entries.
-
-- Include: `--file "src/**"`, `--file src/index.ts`, `--file docs --file README.md`
-- Exclude: prefix a pattern with `!`, for example `--file "!src/**/*.test.ts"`
-- Default ignored directories: `node_modules`, `dist`, `coverage`, `.git`,
-  `.turbo`, `.next`, `build`, and `tmp`
-- Globs honor `.gitignore` and do not follow symlinks.
-- Dotfiles require an explicit dot-segment, such as `--file ".github/**"`.
-- Files over 1 MB are rejected by default; configure
-  `ORACLE_MAX_FILE_SIZE_BYTES` or `maxFileSizeBytes` only when required.
-
-Keep total input under roughly 196k tokens. Use `--files-report` or
-`--dry-run json` to find oversized inputs. JSON previews print banner lines
-before the JSON object, so extract from the first `{` before passing output to
-`jq`, or use the summary preview instead.
-
-## Engines and browser controls
-
-- Always pass `--engine browser` for the subscription-backed path. Otherwise an
-  exported API key can make Oracle select the billable API engine.
-- Browser mode supports GPT through ChatGPT and Gemini through Gemini web. Read
-  current help before selecting other model families or providers.
-- `--browser-attach-running` attaches to an existing Chrome and opens a
-  dedicated tab. `--browser-model-strategy select` is the default and applies
-  the explicit `--model`; `current` ignores that model and inherits tab state.
-- The copied-profile fallback creates a throwaway copy, launches Chrome, and
-  removes the copy after the run. It cannot be retained or reattached.
-- Browser attachments use `--browser-attachments auto|never|always`; add
-  `--browser-bundle-files --browser-bundle-format auto|zip` for many files.
-- Use `--browser-research deep` only when Deep Research is explicitly requested.
-
-## API preflight
-
-Before an explicitly authorized API run, check provider readiness without
-printing secrets:
-
-```bash
-oracle doctor --providers --models gpt-5.6,claude-4.6-sonnet,gemini-3-pro
-oracle --preflight --models gpt-5.6,gemini-3-pro
-oracle --route --model gpt-5.6
-```
-
-Use `--provider openai` or `--no-azure` when first-party OpenAI routing is
-required. For a multi-model panel where partial success is useful, use
-`--allow-partial --write-output <path>` so successful outputs and the manifest
-remain recoverable. Set an explicit automation deadline such as `--timeout 10m`.
-
-## Sessions and recovery
-
-- Sessions live under `~/.oracle/sessions`; override with `ORACLE_HOME_DIR`.
-- Browser artifacts include `transcript.md` and, when available, research
-  reports and generated images.
-- List recent sessions with `oracle status --hours 72`.
-- Reattach with `oracle session <id> --render`.
-- Use `--slug "<3-5 words>"` for readable session identifiers.
-- Use `--force` only when a genuinely new identical run is intended.
-- Successful non-project browser one-shots archive automatically by default;
-  override with `--browser-archive never|always`.
-- Before browser `--followup`, use the real ChatGPT conversation URL preserved
-  by the original session. If it is missing, recover it from session artifacts
-  or ask the user. Never guess from open tabs.
-
-## Known pitfalls
-
-Oracle resolves explicit existing-tab references through `CDP.List`, which
-uses the HTTP `/json/list` endpoint. Some approved remote-debugging Chrome
-flows expose a working browser WebSocket while `/json/list` returns 404. In
-that case, omit `--browser-tab` and let attach-running open a dedicated tab.
-
-Check the endpoint only when existing-tab reuse is explicitly requested:
-
-```bash
-/usr/bin/curl -sS -o /dev/null -w '%{http_code}\n' \
-  http://127.0.0.1:9222/json/list
-```
-
-## Prompt template
-
-Oracle starts with zero project knowledge. Include:
-
-- Project briefing: stack, services, build/test commands, and platform constraints
-- Where things live: entrypoints, configs, key modules, and dependency boundaries
-- Exact question, prior attempts, and verbatim error text
-- Constraints such as API compatibility, performance budgets, and files not to change
-- Desired output such as a patch plan, tests, risk list, or tradeoff comparison
-
-For a long investigation, make the prompt restorable: put a 6 to 30 sentence
-briefing at the top, concrete reproduction and errors in the middle, and attach
-all context files required by a fresh model at the bottom. Oracle runs are
-one-shot; the model does not remember prior runs.
+Inspect version and verbose help after install or upgrade, option rejection, or
+picker-routing failure. If the installed version differs from the reviewed
+upstream ref, verify the release and relevant source before changing this skill;
+do not add a compatibility branch without an observed caller.
