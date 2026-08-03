@@ -8,7 +8,7 @@ Revalidate these local deltas after an update:
 
 - Explicit web consultations use the reviewed global CLI, attach-running, a
   dedicated tab, semantic current `Pro`, and its highest available effort. No
-  profile copy, inherited tab, silent model substitution, or API fallback.
+  profile copy, inherited tab, model substitution, or API fallback.
 - The request authorizes its browser-subscription route; API billing needs
   separate consent, and private input remains excluded.
 - A supplied Project is a completion requirement. Fresh roots, browser

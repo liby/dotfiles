@@ -1,5 +1,5 @@
 ---
-description: 'Send a bounded prompt and files to ChatGPT Pro or Deep Research, or to an explicitly requested Oracle API model. Use when the user explicitly asks for one of those external routes or a ChatGPT Project consultation. Not for ordinary review, ordinary research, or other browser models.'
+description: 'Use Oracle only when the user explicitly requests Oracle, ChatGPT Pro, ChatGPT Deep Research, a ChatGPT Project consultation, continuation of an Oracle session, or Oracle API mode. Not for requests limited to other consultants, ordinary review or research, or inspection of existing ChatGPT content.'
 allowed-tools:
     - Bash(oracle:*)
 metadata:
@@ -26,9 +26,9 @@ oracle --engine browser --browser-attach-running \
   -p "<task>" --file "<path-or-glob>"
 ```
 
-The alias selects ChatGPT's current `Pro` picker; it is not a fixed
-product-version claim. Do not inherit the tab's model or substitute a base,
-older, or cheaper model. Let Oracle open a dedicated tab.
+The alias selects ChatGPT's current `Pro` picker, not a fixed version. Do not
+inherit or substitute another model or effort here; run any other consultant
+separately through its native route. Let Oracle open a dedicated tab.
 
 For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Completion
 must retain that Project ID/path in the conversation URL or visibly confirm
