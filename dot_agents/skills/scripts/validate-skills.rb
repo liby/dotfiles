@@ -43,6 +43,7 @@ CLAUDE_CODE_FIELDS = Set[
   "model",
   "effort",
   "context",
+  "background",
   "agent",
   "hooks",
   "paths",

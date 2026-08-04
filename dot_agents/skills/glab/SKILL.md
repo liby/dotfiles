@@ -1,7 +1,6 @@
 ---
 name: glab
 description: Operate GitLab through the `glab` CLI for GitLab merge requests, issues, pipelines, discussions, repos, and MR descriptions. Use when the user gives a GitLab URL, asks about a GitLab MR/issue/pipeline, mentions `glab`, or asks to draft/update an MR description. Not for GitHub URLs or purely local git tasks that do not need GitLab issue, MR, pipeline, discussion, or repo data.
-context: fork
 allowed-tools:
   - Bash(glab:*)
   - Bash(git:*)

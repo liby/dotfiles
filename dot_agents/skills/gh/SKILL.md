@@ -2,6 +2,7 @@
 name: gh
 description: Operate GitHub through the `gh` CLI for GitHub issues, pull requests, repos, workflow data, comments, and GitHub-hosted Agent Skills. Use when the user gives a GitHub URL, `owner/repo#123`, asks about a GitHub issue/PR/workflow, or asks to preview/install/update a skill from GitHub. Not for GitLab URLs or local skill editing without a GitHub source.
 context: fork
+background: false
 allowed-tools:
   - Bash(gh:*)
   - Bash(jq:*)

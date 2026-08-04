@@ -3,6 +3,7 @@ name: commit
 description: Create or amend a local Git commit from the relevant changes. Use only when the user asks to commit, amend, or complete a requested Git action such as push that first requires a commit. Stage only in-scope files and write a repository-matching message. Not for message drafts or branch creation.
 argument-hint: "[additional context]"
 context: fork
+background: false
 allowed-tools:
   - Bash(git:*)
   - Bash(cat .git/hooks/pre-commit)
