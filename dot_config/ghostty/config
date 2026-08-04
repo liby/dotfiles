@@ -4,6 +4,10 @@ auto-update-channel = tip
 cursor-style = block
 cursor-style-blink = false
 
+# Inconsolata LGC 3.201 (Nerd Fonts 3.5.0) shrank its line height by 25%.
+# 30% (not the raw 33% ratio) lands on the exact old 35px cell after pixel
+# rounding, at font-size 12 on 2x displays; re-tune if any of those change.
+adjust-cell-height = 30%
 font-codepoint-map = "U+27F3=STIX Two Math"
 font-family = "Inconsolata LGC Nerd Font Mono"
 font-family = "PingFang SC"
