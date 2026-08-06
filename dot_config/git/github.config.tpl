@@ -6,5 +6,11 @@
 [commit]
   gpgsign = true
 
+[core]
+  sshCommand = ~/.config/git/git-ssh-gpg-agent --transport
+
+[ssh]
+  variant = ssh
+
 [tag]
   gpgsign = true
