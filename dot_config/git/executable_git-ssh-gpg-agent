@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+export SSH_AUTH_SOCK="$HOME/.gnupg/S.gpg-agent.ssh"
+
+if [ ! -S "$SSH_AUTH_SOCK" ]; then
+  /opt/homebrew/bin/gpg-connect-agent /bye >/dev/null 2>&1
+fi
+
+if [ "${1:-}" = "--transport" ]; then
+  shift
+  exec /usr/bin/ssh "$@"
+fi
+
+exec /usr/bin/ssh-keygen "$@"
