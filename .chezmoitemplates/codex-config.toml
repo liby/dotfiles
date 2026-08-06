@@ -25,33 +25,29 @@ network_proxy = false
 prevent_idle_sleep = true
 
 [permissions.development.filesystem]
-# Run commands inside a write-capable sandbox. Keep credentials denied except
-# ~/.npmrc, which package managers may read but not modify.
+# Deny stores no routine trusted client should consume. Exact project .env
+# reads restrict writes without the client-blocking effect of deny globs.
 ":root" = "write"
 "~/.claude/.credentials.json*" = "deny"
 "~/.codex/auth.json*" = "deny"
 "~/.gnupg/private-keys-v1.d" = "deny"
 "~/.npmrc" = "read"
+"~/.ssh" = "read"
 "~/.ssh/id_*" = "deny"
+"~/.ssh/polylab-deploy" = "deny"
+"~/.ssh/polylab-host-ed25519" = "deny"
 "~/.zprofile*" = "deny"
 "~/.zsh_history*" = "deny"
 
 [permissions.development.filesystem.":workspace_roots"]
-"**/.env.*.local" = "deny"
-"**/.env.local*" = "deny"
-"**/.env" = "deny"
+".env" = "read"
+".env.local" = "read"
 
 [permissions.development.network]
 enabled = true
 
 [permissions.development.network.unix_sockets]
 "{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh" = "allow"
-
-[mcp_servers.computer-use]
-enabled = true
-command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
-args = ["mcp"]
-cwd = "."
 
 [mcp_servers.context7]
 enabled = true
@@ -63,7 +59,6 @@ enabled = true
 url = "https://developers.openai.com/mcp"
 
 [mcp_servers.node_repl]
-enabled = true
 # Keep the desktop-provided ChatGPT runtime path.
 command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
 args = []
