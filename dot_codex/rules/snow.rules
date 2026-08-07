@@ -1,0 +1,20 @@
+# Keep the installed Snowflake CLI on one native-SSO execution path outside
+# the sandbox. The personal snow skill owns behavior; Snowflake RBAC owns
+# server authorization.
+prefix_rule(
+    pattern = ["snow"],
+    decision = "allow",
+    justification = "Run the installed Snowflake CLI with native SSO access.",
+    match = [
+        "snow sql -q 'SELECT 1' --format json --silent",
+        "snow sql -q 'DELETE FROM example_table' --format json --silent",
+        "snow --version",
+        "snow connection list",
+        "snow object list warehouse",
+        "snow stage copy @example ./download",
+    ],
+    not_match = [
+        "uvx --from snowflake-cli snow sql -q 'SELECT 1'",
+        "echo snow sql -q 'SELECT 1'",
+    ],
+)

@@ -109,9 +109,9 @@ def line_command(line)
 end
 
 # Deployed pass over ~/.agents/skills (skipped silently when absent, e.g. CI).
-# Encrypted sources (snow) are ciphertext in this repo, so the deployed
-# plaintext is the only validatable copy; dirs without a SKILL.md (scripts/) are
-# not skills. Deployed-only skills get provenance warnings, not content checks.
+# For encrypted-only source skills, the deployed plaintext is the only
+# validatable copy. Dirs without a SKILL.md (scripts/) are not skills.
+# Deployed-only skills get provenance warnings, not content checks.
 deployed_names = Set.new
 pointer_scan = []
 Dir.glob(File.join(DEPLOYED_ROOT, "*/SKILL.md")).sort.each do |path|

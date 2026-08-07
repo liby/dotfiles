@@ -43,7 +43,7 @@ brew "proto"
 brew "resend/cli/resend", trusted: true
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# Snowflake Developer CLI for SQL and data warehouse operations
+# Official command-line client for Snowflake
 brew "snowflake-cli"
 # Cross-shell prompt for astronauts
 brew "starship"
