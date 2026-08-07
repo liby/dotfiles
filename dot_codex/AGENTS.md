@@ -23,6 +23,7 @@
 - Verify current Codex behavior against the installed version and official OpenAI sources. Verify dependencies against the pinned version and official sources; use the matching host CLI.
 - Keep `envchain` values in the consuming client's namespace and expand them only inside the wrapped process. Missing values are set by the user.
 - Use isolated homes and synthetic stores for credential probes. Ordinary clients retain their opaque path; verify live accounts through credential-safe status or mark them `unverified`.
+- Let the personal `snow` skill own Snowflake CLI execution and authentication recovery; workspace skills may supply query or domain guidance but must not replace its runtime. Run every Snowflake CLI command through the installed `scripts/snow-agent`, which wraps the Homebrew `snow` runtime and its standard Keychain token cache; do not invoke workspace `uvx` or Homebrew `snow` directly. A valid cached ID token runs without a browser. On `SNOW_REAUTH_BROWSER_V1=CHROME`, the runner has opened the user's Chrome profile itself: keep waiting for the original process, never use the in-app browser or ask the user to run `snow connection test`, and report a non-zero exit or non-OK marker instead. If successful SSO is followed by another Chrome marker, stop instead of looping: the stale `com.snowflake.connector.python` item requires one user-performed removal from Keychain Access, and agents must not mutate it.
 
 ## Engineering And Evidence
 

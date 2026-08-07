@@ -1,0 +1,124 @@
+#!/bin/bash -p
+
+set -u
+set +x
+unset BASH_ENV ENV PYTHONHOME PYTHONPATH PYTHONSTARTUP
+umask 077
+
+readonly snow_bin="/opt/homebrew/bin/snow"
+readonly marker_prefix="SNOW_REAUTH_V1"
+
+emit_marker() {
+  printf '%s=%s\n' "$marker_prefix" "$1"
+}
+
+if [[ ! -x "$snow_bin" ]]; then
+  emit_marker "UNAVAILABLE"
+  exit 69
+fi
+
+IFS= read -r snow_shebang < "$snow_bin"
+snow_python="${snow_shebang#\#!}"
+if [[ "$snow_shebang" != '#!'/* || ! -x "$snow_python" ]]; then
+  emit_marker "UNAVAILABLE"
+  exit 69
+fi
+readonly snow_python
+
+case "${0##*/}" in
+  reauth-snow)
+    if (( $# > 1 )) || (( $# == 1 )) && [[
+      -z "$1" || "$1" == *://* || "$1" == */* ||
+      "$1" == *'?'* || "$1" == *'#'* ||
+      "$1" == *$'\r'* || "$1" == *$'\n'*
+    ]]; then
+      emit_marker "INVALID_ARGS"
+      exit 64
+    fi
+    connection_args=(connection test)
+    (( $# == 0 )) || connection_args+=("--connection=$1")
+    set -- "${connection_args[@]}"
+    quiet=true
+    ;;
+  *)
+    if (( $# == 0 )); then
+      printf '%s\n' "snow-agent: missing Snowflake CLI arguments" >&2
+      exit 64
+    fi
+    quiet=false
+    ;;
+esac
+
+PATH="/opt/homebrew/bin:/usr/bin:/bin"
+BROWSER='/usr/bin/open -a "Google Chrome" %s'
+export PATH BROWSER
+
+run_snow() {
+  "$snow_python" -I - "$@" <<'PY'
+import builtins
+import signal
+import sys
+
+from snowflake.cli._app.__main__ import main as snow_main
+from snowflake.connector.auth.webbrowser import AuthByWebBrowser
+
+TIMEOUT_SECONDS = 180
+real_print = builtins.print
+browser_marker_emitted = False
+
+
+def filtered_print(*args, **kwargs):
+    global browser_marker_emitted
+    if args and isinstance(args[0], str) and args[0].startswith("Going to open:"):
+        if not browser_marker_emitted:
+            sys.stderr.write("SNOW_REAUTH_BROWSER_V1=CHROME\n")
+            sys.stderr.flush()
+            browser_marker_emitted = True
+        return
+    real_print(*args, **kwargs)
+
+
+def timeout(_signum, _frame):
+    raise TimeoutError
+
+
+original_prepare = AuthByWebBrowser.prepare
+
+
+def bounded_prepare(self, *args, **kwargs):
+    signal.alarm(TIMEOUT_SECONDS)
+    builtins.print = filtered_print
+    try:
+        return original_prepare(self, *args, **kwargs)
+    finally:
+        builtins.print = real_print
+        signal.alarm(0)
+
+
+AuthByWebBrowser.prepare = bounded_prepare
+signal.signal(signal.SIGALRM, timeout)
+sys.argv = ["snow", *sys.argv[1:]]
+
+try:
+    raise SystemExit(int(snow_main() or 0))
+except TimeoutError:
+    raise SystemExit(124)
+except KeyboardInterrupt:
+    raise SystemExit(130)
+PY
+}
+
+if [[ "$quiet" == false ]]; then
+  run_snow "$@"
+  exit $?
+fi
+
+run_snow "$@" >/dev/null
+snow_status=$?
+case "$snow_status" in
+  0) emit_marker "OK" ;;
+  124) emit_marker "TIMEOUT" ;;
+  130) emit_marker "INTERRUPTED" ;;
+  *) emit_marker "FAILED" ;;
+esac
+exit "$snow_status"
