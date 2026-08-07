@@ -18,7 +18,7 @@
 
   - Shared Agent Skills：[`dot_agents/skills`](https://github.com/liby/dotfiles/tree/main/dot_agents/skills)
 
-  - Git 配置：[`dot_config/git`](https://github.com/liby/dotfiles/tree/main/dot_config/git)
+  - Git 配置：[`dot_config/git`](https://github.com/liby/dotfiles/tree/main/dot_config/git) 和 [`.chezmoitemplates/git`](https://github.com/liby/dotfiles/tree/main/.chezmoitemplates/git)
 
   - Homebrew 依赖：[`Brewfile`](https://github.com/liby/dotfiles/blob/main/Brewfile)
 
@@ -32,11 +32,14 @@
 
 ### 新设备初始化
 
-在新 Mac 上打开 Terminal.app，运行：
+在新的 Apple Silicon Mac 上打开 Terminal.app，运行：
 
 ```sh
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply liby
 ```
+
+这是一条统一入口命令，并不是无人值守安装。请保持 Terminal.app 打开，以便
+填写私有模板值、完成 Xcode 或 `sudo` 交互，以及使用 YubiKey。
 
 这条命令会：
 1. 安装 chezmoi
@@ -79,18 +82,41 @@ Bootstrap 脚本位于 `.chezmoiscripts/` 目录下，按以下顺序执行：
 |------|------|------|
 | before | [Xcode CLI Tools](../.chezmoiscripts/run_once_before_01-install-xcode-cli-tools.sh) | Git 和编译依赖 |
 | before | [Homebrew](../.chezmoiscripts/run_once_before_02-install-homebrew.sh) | |
-| before | [Brewfile packages](../.chezmoiscripts/run_onchange_before_03-install-brew-packages.sh.tmpl) | |
-| before | [Case-sensitive volume](../.chezmoiscripts/run_once_before_04-setup-case-sensitive-volume.sh) | 供 `~/Code` 使用 |
-| before | [Node.js](../.chezmoiscripts/run_once_before_05-install-nodejs.sh) | 包含 proto 和 pnpm |
-| before | [全局开发工具](../.chezmoiscripts/run_onchange_before_06-reconcile-dev-tools.sh.tmpl) | 全局 npm 工具和 Pyright 的版本声明见 [`package.json`](dev-tools/package.json) 与 [`requirements.txt`](dev-tools/requirements.txt) |
-| before | [Rust](../.chezmoiscripts/run_once_before_07-install-rust.sh) | |
-| before | [Claude Code](../.chezmoiscripts/run_once_before_08-install-claude-code.sh) | |
-| after | [GPG agent](../.chezmoiscripts/run_once_after_01-setup-gpg-agent.sh) | 含 YubiKey 配置 |
-| after | [Git config](../.chezmoiscripts/run_once_after_02-setup-gitconfig.sh) | 从模板生成 |
-| after | [macOS defaults](../.chezmoiscripts/run_onchange_after_03-setup-macos-defaults.sh) | Dock、Finder 等 |
-| after | [zsh completions](../.chezmoiscripts/run_once_after_04-reload-zsh-completions.sh) | |
+| before | [Brewfile packages](../.chezmoiscripts/run_onchange_before_03-install-brew-packages.sh.tmpl) | 重建每日执行 Homebrew update、upgrade 和 cleanup 的 LaunchAgent |
+| before | [GPG agent](../.chezmoiscripts/run_once_before_04-setup-gpg-agent.sh) | 在同步加密目标前获取 YubiKey 公钥 |
+| before | [Case-sensitive volume](../.chezmoiscripts/run_once_before_05-setup-case-sensitive-volume.py) | 创建并持久挂载 `~/Code` APFS volume |
+| before | [Node.js](../.chezmoiscripts/run_once_before_06-install-nodejs.sh) | 通过 proto 安装，包含 pnpm |
+| before | [全局开发工具](../.chezmoiscripts/run_onchange_before_07-reconcile-dev-tools.sh.tmpl) | 全局 npm 工具和 Pyright 的版本声明见 [`package.json`](dev-tools/package.json) 与 [`requirements.txt`](dev-tools/requirements.txt) |
+| before | [Rust](../.chezmoiscripts/run_once_before_08-install-rust.sh) | |
+| before | [Claude Code](../.chezmoiscripts/run_once_before_09-install-claude-code.sh) | |
+| after | [Git config](../.chezmoiscripts/run_onchange_after_01-setup-gitconfig.sh.tmpl) | 渲染输入变化时重新生成 provider 配置，并在运行时从 GPG/YubiKey 解析签名密钥 |
+| after | [macOS defaults](../.chezmoiscripts/run_onchange_after_02-setup-macos-defaults.sh.tmpl) | Dock、Finder 等 |
+| after | [zsh completions](../.chezmoiscripts/run_once_after_03-reload-zsh-completions.sh) | |
+| after | [Envchain seed](../.chezmoiscripts/run_onchange_after_04-seed-envchain.sh.tmpl) | 将用户管理的加密值写入 Keychain namespace |
 
 `before` 脚本在文件同步前执行，`after` 脚本在文件同步后执行。
+
+Homebrew autoupdate 是周期 LaunchAgent，两次运行之间无需持续存在活跃进程。
+`brew autoupdate status` 检查调用方所在的 bootstrap namespace，因此从其他
+app 运行时，即使 Terminal 安装的 agent 已加载，也可能显示 `stopped`。请用
+GUI domain 中的持久状态验收：
+
+```sh
+launchctl print "gui/$(id -u)/com.github.domt4.homebrew-autoupdate"
+```
+
+大小写敏感 volume 脚本使用 Python plist parser 定位 `$HOME` 所属 APFS
+container，通过 `vifs` 安装基于 UUID 的持久挂载；如果 `~/Code` 非空或该
+volume 已挂载到别处，脚本会停止而不会自动卸载。失败后处理冲突并重新运行
+`chezmoi apply`；失败的 `run_once` 会重试，但成功后不会持续修复后续漂移。
+无需磁盘操作的检查可这样运行：
+
+```sh
+/usr/bin/python3 .github/tests/setup_case_sensitive_volume_test.py
+```
+
+Docker 无法验证 macOS APFS 或 Disk Arbitration。新机最终仍需完成一次
+`apply`、重启后确认同一 volume 挂载在 `~/Code`，再验证第二次 `apply` 无操作。
 
 [Renovate](renovate.json) 按 `Asia/Singapore` 时区每日检查依赖，并将所有 manager 的常规更新合入一个 `All dependencies` PR，major update 也不单独拆分。按路径触发的 CI 会验证该 PR 涉及的依赖面。下一次 `chezmoi apply` 只安装缺失或版本不符的全局 npm 工具与 Pyright。
 

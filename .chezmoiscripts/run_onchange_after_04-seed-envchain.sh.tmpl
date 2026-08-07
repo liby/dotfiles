@@ -10,12 +10,33 @@
 set -euo pipefail
 
 seed="{{ .chezmoi.sourceDir }}/.secrets/seed.asc"
-python="$(uv python find --no-project --managed-python '>=3.11')"
+chezmoi_bin="{{ .chezmoi.executable }}"
 
-chezmoi decrypt "$seed" | "$python" -c '
+brew_prefix="/opt/homebrew"
+
+uv_bin="$brew_prefix/bin/uv"
+envchain_bin="$brew_prefix/bin/envchain"
+[[ -x "$chezmoi_bin" ]] || {
+  print -u2 "seed-envchain: chezmoi executable not found"
+  exit 1
+}
+[[ -x "$uv_bin" ]] || {
+  print -u2 "seed-envchain: uv is not installed"
+  exit 1
+}
+[[ -x "$envchain_bin" ]] || {
+  print -u2 "seed-envchain: envchain is not installed"
+  exit 1
+}
+
+python="$("$uv_bin" python find --no-project --managed-python '>=3.11')"
+
+"$chezmoi_bin" decrypt "$seed" | "$python" -c '
 import subprocess
 import sys
 import tomllib
+
+envchain = sys.argv[1]
 
 try:
     namespaces = tomllib.load(sys.stdin.buffer)
@@ -36,11 +57,11 @@ for namespace, variables in namespaces.items():
 
 for namespace, variable, value in entries:
     subprocess.run(
-        ["envchain", "--set", namespace, variable],
+        [envchain, "--set", namespace, variable],
         input=value + "\n",
         text=True,
         check=True,
         stdout=subprocess.DEVNULL,
     )
     print(f"seed-envchain: seeded {namespace}.{variable}", file=sys.stderr)
-'
+' "$envchain_bin"
