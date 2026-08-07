@@ -1,0 +1,23 @@
+#!/bin/zsh
+set -euo pipefail
+
+command_text=$(/usr/bin/plutil \
+  -extract tool_input.command raw -expect string -o - -)
+typeset -a words
+words=(${(z)command_text})
+
+executable=""
+namespace=""
+child=""
+(( ${#words} >= 1 )) && executable=${(Q)words[1]}
+(( ${#words} >= 2 )) && namespace=${(Q)words[2]}
+(( ${#words} >= 3 )) && child=${(Q)words[3]}
+
+program=${executable:t}
+child=${child:t}
+if [[ "$program" == claude ]] ||
+   [[ "$program" == envchain && "$child" == claude &&
+      ",$namespace," != *,claude-gateway,* ]]; then
+  print -u2 'Run Claude as `envchain claude-gateway claude ...`.'
+  exit 2
+fi

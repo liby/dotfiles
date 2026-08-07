@@ -1,7 +1,3 @@
-[user]
-  email = 38807139+liby@users.noreply.github.com
-  name = Bryan Lee
-
 [alias]
   st = status
 
@@ -99,7 +95,7 @@
 [status]
   showStash = true
 
-[includeIf "gitdir:~/Code/GitHub/"]
+[include]
   path = github.config
 
 [includeIf "gitdir:~/Code/GitLab/"]

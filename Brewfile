@@ -1,8 +1,6 @@
-tap "homebrew/autoupdate", trusted: true
+tap "domt4/autoupdate", trusted: { command: "autoupdate" }
 tap "resend/cli"
 
-# Simple, modern, secure file encryption
-brew "age"
 # Official Amazon AWS command-line interface
 brew "awscli"
 # Manage your dotfiles across multiple diverse machines, securely
@@ -53,8 +51,6 @@ brew "starship"
 brew "uv"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
-# UNIX shell (command interpreter)
-brew "zsh"
 # Memory training application
 cask "anki"
 # Application uninstaller

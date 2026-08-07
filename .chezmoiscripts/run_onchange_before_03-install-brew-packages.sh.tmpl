@@ -5,17 +5,61 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
-if [[ "$(uname -m)" == "arm64" ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-else
-  eval "$(/usr/local/bin/brew shellenv)"
-fi
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 brewfile="{{ .chezmoi.sourceDir }}/Brewfile"
 if [[ ! -f "$brewfile" ]]; then
   echo "No Brewfile found at $brewfile"
   exit 1
 fi
+
+# Brewfile installs these apps on new machines, while their own updaters own
+# later upgrades. This is the complete chezmoi-managed cask pin set.
+managed_cask_pins=(
+  chatgpt
+  ghostty
+  google-chrome
+  input-source-pro
+  itsycal
+  orbstack
+  raycast
+  visual-studio-code
+)
+
+contains_cask() {
+  local needle="$1"
+  shift
+  local cask
+  for cask in "$@"; do
+    [[ "$cask" == "$needle" ]] && return 0
+  done
+  return 1
+}
+
+reconcile_cask_pins() {
+  local cask
+  local -a installed_casks current_cask_pins casks_to_pin casks_to_unpin
+
+  installed_casks=(${(f)"$(brew list --cask)"})
+  current_cask_pins=(${(f)"$(brew list --pinned --cask)"})
+
+  for cask in "${current_cask_pins[@]}"; do
+    contains_cask "$cask" "${managed_cask_pins[@]}" ||
+      casks_to_unpin+=("$cask")
+  done
+
+  for cask in "${managed_cask_pins[@]}"; do
+    if contains_cask "$cask" "${installed_casks[@]}" &&
+       ! contains_cask "$cask" "${current_cask_pins[@]}"; then
+      casks_to_pin+=("$cask")
+    fi
+  done
+
+  (( ${#casks_to_unpin} == 0 )) ||
+    brew unpin --cask "${casks_to_unpin[@]}"
+  (( ${#casks_to_pin} == 0 )) ||
+    brew pin --cask "${casks_to_pin[@]}"
+}
 
 # mas-cli requires en_US locale to search the App Store
 # https://github.com/mas-cli/mas/blob/ed676787f0a0a26e23a10548eb841bc15411fa52/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L23
@@ -35,17 +79,35 @@ if [[ -n "$current_locale" ]]; then
 fi
 
 echo "Installing brew packages..."
+reconcile_cask_pins
 brew bundle --file="$brewfile"
+reconcile_cask_pins
 
-# Homebrew 6.0+ refuses to load untrusted tap commands; the Brewfile's
-# `trusted: true` has `brew bundle` (above) write the trust-store entry on
-# every run, so no manual `brew trust` is needed before the daemon loads.
+# Homebrew 6.0+ refuses to load untrusted tap commands. The Brewfile grants
+# command-scoped trust to `domt4/autoupdate/autoupdate` on every run, so no
+# manual `brew trust` is needed before loading the management command.
+# A running daemon may have been started with different options, so replace it
+# whenever this run_onchange script executes.
+autoupdate_service="gui/$UID/com.github.domt4.homebrew-autoupdate"
 autoupdate_status="$(brew autoupdate status)"
-if [[ "$autoupdate_status" != *"installed and running"* ]]; then
-  echo "Setting up brew autoupdate (daily update + upgrade + cleanup)..."
-  if [[ "$autoupdate_status" == *"installed and stopped"* ]]; then
-    brew autoupdate delete
+if [[ "$autoupdate_status" == *"installed and "* ]]; then
+  brew autoupdate delete
+  if launchctl print "$autoupdate_service" >/dev/null 2>&1; then
+    print -u2 "Homebrew autoupdate is still loaded after delete"
+    exit 1
   fi
-  PATH="$(brew --prefix)/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-    brew autoupdate start 86400 --upgrade --cleanup
+  autoupdate_status="$(brew autoupdate status)"
+  [[ "$autoupdate_status" == *"not configured"* ]] || {
+    print -u2 "Homebrew autoupdate is still configured after delete"
+    exit 1
+  }
 fi
+echo "Setting up brew autoupdate (daily update + upgrade + cleanup)..."
+PATH="$(brew --prefix)/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+  brew autoupdate start 86400 --upgrade --cleanup
+
+# Upstream does not propagate `launchctl load` failures from `start`.
+launchctl print "$autoupdate_service" >/dev/null 2>&1 || {
+  print -u2 "Homebrew autoupdate was configured but launchd did not load it; rerun chezmoi apply from Terminal.app"
+  exit 1
+}

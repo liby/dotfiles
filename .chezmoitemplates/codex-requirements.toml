@@ -15,5 +15,5 @@ matcher = "^Bash$"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/require-claude-envchain.ts"
+command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/require-claude-envchain"
 timeout = 5
