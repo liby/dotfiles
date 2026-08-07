@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 const hook = new URL(
-  "./executable_require-claude-envchain.ts",
+  "./executable_require-claude-envchain",
   import.meta.url,
 ).pathname;
 
@@ -20,7 +20,7 @@ const cases: Array<[string, number]> = [
 
 for (const [command, exitCode] of cases) {
   test(command, () => {
-    const result = Bun.spawnSync([process.execPath, hook], {
+    const result = Bun.spawnSync(["/bin/zsh", "-f", hook], {
       stdin: new Blob([JSON.stringify({ tool_input: { command } })]),
       stdout: "pipe",
       stderr: "pipe",
@@ -42,6 +42,6 @@ test("managed requirements register the hook", async () => {
   ).text();
 
   expect(requirements).toContain(
-    'command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/require-claude-envchain.ts"',
+    'command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/require-claude-envchain"',
   );
 });

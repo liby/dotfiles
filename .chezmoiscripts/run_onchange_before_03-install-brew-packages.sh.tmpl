@@ -5,11 +5,7 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
-if [[ "$(uname -m)" == "arm64" ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-else
-  eval "$(/usr/local/bin/brew shellenv)"
-fi
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 brewfile="{{ .chezmoi.sourceDir }}/Brewfile"
 if [[ ! -f "$brewfile" ]]; then
@@ -37,15 +33,31 @@ fi
 echo "Installing brew packages..."
 brew bundle --file="$brewfile"
 
-# Homebrew 6.0+ refuses to load untrusted tap commands; the Brewfile's
-# `trusted: true` has `brew bundle` (above) write the trust-store entry on
-# every run, so no manual `brew trust` is needed before the daemon loads.
+# Homebrew 6.0+ refuses to load untrusted tap commands. The Brewfile grants
+# command-scoped trust to `domt4/autoupdate/autoupdate` on every run, so no
+# manual `brew trust` is needed before loading the management command.
+# A running daemon may have been started with different options, so replace it
+# whenever this run_onchange script executes.
+autoupdate_service="gui/$UID/com.github.domt4.homebrew-autoupdate"
 autoupdate_status="$(brew autoupdate status)"
-if [[ "$autoupdate_status" != *"installed and running"* ]]; then
-  echo "Setting up brew autoupdate (daily update + upgrade + cleanup)..."
-  if [[ "$autoupdate_status" == *"installed and stopped"* ]]; then
-    brew autoupdate delete
+if [[ "$autoupdate_status" == *"installed and "* ]]; then
+  brew autoupdate delete
+  if launchctl print "$autoupdate_service" >/dev/null 2>&1; then
+    print -u2 "Homebrew autoupdate is still loaded after delete"
+    exit 1
   fi
-  PATH="$(brew --prefix)/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-    brew autoupdate start 86400 --upgrade --cleanup
+  autoupdate_status="$(brew autoupdate status)"
+  [[ "$autoupdate_status" == *"not configured"* ]] || {
+    print -u2 "Homebrew autoupdate is still configured after delete"
+    exit 1
+  }
 fi
+echo "Setting up brew autoupdate (daily update + upgrade + cleanup)..."
+PATH="$(brew --prefix)/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+  brew autoupdate start 86400 --upgrade --cleanup
+
+# Upstream does not propagate `launchctl load` failures from `start`.
+launchctl print "$autoupdate_service" >/dev/null 2>&1 || {
+  print -u2 "Homebrew autoupdate was configured but launchd did not load it; rerun chezmoi apply from Terminal.app"
+  exit 1
+}

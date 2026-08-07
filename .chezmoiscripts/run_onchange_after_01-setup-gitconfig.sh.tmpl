@@ -1,0 +1,66 @@
+#!/bin/zsh
+set -euo pipefail
+
+gpg_bin="/opt/homebrew/bin/gpg"
+[[ -x "$gpg_bin" ]] || {
+  print -u2 "Error: GPG executable not found: $gpg_bin"
+  exit 1
+}
+
+git_config_dir="$HOME/.config/git"
+ssh_dir="$HOME/.ssh"
+
+mkdir -p "$git_config_dir" "$ssh_dir"
+
+card_status=""
+if card_status=$("$gpg_bin" --card-status 2>/dev/null); then
+  gpg_key_id=$(/usr/bin/awk '
+    /^sec/ { split($2, fields, "/"); print fields[2]; exit }
+  ' <<< "$card_status")
+fi
+[[ -n "${gpg_key_id:-}" ]] || {
+  print -u2 "Error: no GPG signing key found; insert the YubiKey and retry"
+  exit 1
+}
+
+gpg_ssh_pub_key_file="$ssh_dir/$gpg_key_id.pub"
+gpg_ssh_public_key=$("$gpg_bin" --export-ssh-key "$gpg_key_id") || exit $?
+[[ -n "$gpg_ssh_public_key" ]] || {
+  print -u2 "Error: GPG exported an empty SSH public key"
+  exit 1
+}
+if [[ ! -f "$gpg_ssh_pub_key_file" ]] ||
+   [[ "$(<"$gpg_ssh_pub_key_file")" != "$gpg_ssh_public_key" ]]; then
+  echo "Exporting GPG key $gpg_key_id as SSH key..."
+  gpg_ssh_pub_key_tmp=$(mktemp "$ssh_dir/.${gpg_key_id}.pub.XXXXXX")
+  print -r -- "$gpg_ssh_public_key" > "$gpg_ssh_pub_key_tmp" || {
+    write_status=$?
+    rm -f "$gpg_ssh_pub_key_tmp"
+    exit "$write_status"
+  }
+  mv "$gpg_ssh_pub_key_tmp" "$gpg_ssh_pub_key_file" || {
+    move_status=$?
+    rm -f "$gpg_ssh_pub_key_tmp"
+    exit "$move_status"
+  }
+fi
+
+install_config() {
+  local destination=$1 signing_key=$2 temporary install_status=0
+  temporary=$(mktemp "$git_config_dir/.${destination:t}.XXXXXX") || return $?
+  {
+    cat > "$temporary" &&
+      /usr/bin/git config --file "$temporary" user.signingkey "$signing_key" &&
+      mv "$temporary" "$destination"
+  } || install_status=$?
+  rm -f "$temporary"
+  return "$install_status"
+}
+
+install_config "$git_config_dir/github.config" "$gpg_key_id" <<'EOF'
+{{ includeTemplate "git/github.config" . -}}
+EOF
+
+install_config "$git_config_dir/gitlab.config" "$gpg_ssh_pub_key_file" <<'EOF'
+{{ includeTemplate "git/gitlab.config" . -}}
+EOF

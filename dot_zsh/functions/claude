@@ -3,19 +3,20 @@
 # claude [args...]                       Launch in the current mode.
 # claude --switch-provider [args...]     Pick a provider, save it, then launch.
 # claude --gateway [args...]             Use the gateway for this call.
+# claude --subscription [args...]        Use the subscription for this call.
 
 emulate -L zsh
 
 local pick=0
-local force_gateway=0
+local mode_override=
 while (( $# )); do
   case $1 in
     --switch-provider)
       pick=1
       shift
       ;;
-    --gateway)
-      force_gateway=1
+    --gateway|--subscription)
+      mode_override=${1#--}
       shift
       ;;
     *)
@@ -30,7 +31,7 @@ local gateway_namespace=claude-gateway
 
 local mode=subscription
 [[ -f $mode_file ]] && mode=$(< $mode_file)
-(( force_gateway )) && mode=gateway
+[[ -n $mode_override ]] && mode=$mode_override
 
 if (( pick )); then
   [[ -t 0 && -t 1 ]] || { print -u2 "claude: --switch-provider requires an interactive terminal"; return 1 }
@@ -85,7 +86,8 @@ if (( pick )); then
   print -n $teardown
 
   mode=$modes[selected+1]
-  print -n $mode > $mode_file
+  mkdir -p "$config_dir" || return 1
+  print -n "$mode" > "$mode_file" || return 1
 fi
 
 # envchain warns but still runs the command when a namespace is missing.
