@@ -6,6 +6,8 @@ set -euo pipefail
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
 defaults write NSGlobalDomain KeyRepeat -int 2
+defaults write NSGlobalDomain AppleICUForce24HourTime -bool true
+defaults delete NSGlobalDomain AppleICUForce12HourTime 2>/dev/null || true
 
 defaults write com.apple.dock autohide -bool true
 
@@ -18,4 +20,4 @@ defaults write com.openai.codex requirements_toml_base64 -string \
   '{{ includeTemplate "codex-requirements.toml" . | b64enc }}'
 
 # Reload processes that cache the Apple UI defaults.
-killall Dock Finder SystemUIServer 2>/dev/null || true
+killall ControlCenter Dock Finder
