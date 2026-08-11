@@ -28,6 +28,16 @@ autoload -Uz compinit
   fi
 }
 
+# Shell options
+setopt INTERACTIVE_COMMENTS NO_BEEP
+
+# History: INC_APPEND_HISTORY (not _TIME) writes entries pre-exec, so a
+# crash keeps the in-flight command at the cost of recorded durations.
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+setopt EXTENDED_HISTORY INC_APPEND_HISTORY
+
 # Environment variables
 export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
@@ -48,7 +58,8 @@ typeset -aU path
     "$GPG_PATH/bin"
     "$GPG_PATH/libexec"
   )
-  path=($path_dirs $path[@])
+  # Re-front: /etc/zprofile's path_helper demoted the zshenv toolchain dirs.
+  path=($__BRYAN_TOOLCHAIN_PATH $path_dirs $path[@])
 }
 
 # Alias Set
@@ -63,17 +74,12 @@ alias ipcn="curl myip.ipip.net"
 alias ka='caffeinate -is'
 alias la='ls --all'
 alias ll='la --long --git --time-style=long-iso --no-user'
-alias ls='eza --group-directories-first --hyperlink'
+alias ls='eza --group-directories-first --hyperlink=auto'
 alias lt='ll --tree --level=2 --git-ignore --ignore-glob=.git'
 alias python='python3'
 
 # Functions (autoloaded from ~/.zsh/functions/)
 autoload -Uz $HOME/.zsh/functions/*(N:t)
-
-# This speeds up pasting w/ autosuggest
-# https://github.com/zsh-users/zsh-autosuggestions/issues/238
-zstyle :bracketed-paste-magic paste-init pasteinit
-zstyle :bracketed-paste-magic paste-finish pastefinish
 
 # Skip per-precmd widget rebinding for faster prompt
 ZSH_AUTOSUGGEST_MANUAL_REBIND=""
@@ -81,6 +87,8 @@ ZSH_AUTOSUGGEST_MANUAL_REBIND=""
 # Source plugins and configurations
 source $HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
+# fsh's default comment style (black,bold) is unreadable on a dark background
+FAST_HIGHLIGHT_STYLES[comment]='fg=248'
 
 # Clear stale suggestion after paste (not in plugin defaults)
 # https://github.com/zsh-users/zsh-autosuggestions/issues/351
@@ -91,8 +99,6 @@ ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 # Guard on the file, not `orb`: the brew-cask CLI exists before ~/.orbstack/,
 # which OrbStack.app only creates on first run.
 [[ -r ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
-# Work around moonrepo/proto#1054 until a fixed release is installed.
-export PROTO_REPORTER=text
 (( $+commands[proto] )) && eval "$(proto activate zsh)"
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"

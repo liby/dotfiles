@@ -1,3 +1,4 @@
+export EDITOR="code --wait"
 export LAST30DAYS_MEMORY_DIR="$HOME/.local/share/last30days"
 export PNPM_HOME="$HOME/Code/.pnpm"
 export PROTO_HOME="$HOME/.proto"
@@ -5,11 +6,12 @@ export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
 export TZ=Asia/Singapore
 
 typeset -aU path
-path=(
+# zshrc re-fronts this list after /etc/zprofile's path_helper demotes it.
+__BRYAN_TOOLCHAIN_PATH=(
   "$PROTO_HOME/shims"
   "$PROTO_HOME/bin"
   "$NPM_CONFIG_PREFIX/bin"
   "$PNPM_HOME/bin"
-  $path
 )
+path=($__BRYAN_TOOLCHAIN_PATH $path)
 export PATH
