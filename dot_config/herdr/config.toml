@@ -3,27 +3,29 @@ onboarding = false
 [experimental]
 switch_ascii_input_source_in_prefix = true
 
-pane_history = true
-
 [keys]
-split_vertical = ["prefix+v", "alt+v"]
-split_horizontal = ["prefix+minus", "alt+shift+v"]
-
-new_tab = ["prefix+c", "alt+t"]
-new_workspace = ["prefix+shift+n", "alt+w"]
-goto = ["prefix+g", "alt+g"]
-
 close_pane = ["prefix+x", "alt+x"]
 close_tab = ["prefix+shift+x", "alt+shift+x"]
-
+goto = ["prefix+g", "alt+g"]
+new_tab = ["prefix+c", "alt+t"]
+new_workspace = ["prefix+shift+n", "alt+w"]
 settings = ["prefix+s", "alt+comma"]
+split_horizontal = ["prefix+minus", "alt+shift+v"]
+split_vertical = ["prefix+v", "alt+v"]
 
 [theme]
 name = "one-dark"
-auto_switch = false
+
+[ui]
+agent_panel_sort = "priority"
+copy_on_select = false
+pane_scrollbars = false
 
 [ui.sound]
 enabled = false
 
 [ui.toast]
 delivery = "terminal"
+
+[worktrees]
+directory = "~/.config/herdr/worktrees"

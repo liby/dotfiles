@@ -194,18 +194,8 @@
     "type": "command",
     "command": "~/.claude/scripts/statusline.sh"
   },
-  "enabledPlugins": {
-    "codex@openai-codex": true
-  },
-  "extraKnownMarketplaces": {
-    "openai-codex": {
-      "source": {
-        "source": "github",
-        "repo": "openai/codex-plugin-cc"
-      },
-      "autoUpdate": true
-    }
-  },
+  "enabledPlugins": {},
+  "extraKnownMarketplaces": {},
   "spinnerTipsEnabled": false,
   "spinnerVerbs": {
     "mode": "replace",
