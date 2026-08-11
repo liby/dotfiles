@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # Static validator for local agent skills. Default mode is offline.
 
+require "json"
 require "open3"
 require "optparse"
 require "pathname"
@@ -12,7 +13,7 @@ require "yaml"
 
 options = { smoke: false }
 OptionParser.new do |opts|
-  opts.on("--smoke", "Run local CLI help and shell syntax checks") { options[:smoke] = true }
+  opts.on("--smoke", "Run local CLI contract and shell syntax checks") { options[:smoke] = true }
 end.parse!
 
 root = Pathname.new(__dir__).parent
@@ -52,12 +53,45 @@ CLAUDE_CODE_FIELDS = Set[
   "metadata"
 ].freeze
 
-# Keep this list to CLI skills whose instructions depend on current help output.
-# The validator checks that the command is installed and that the documented help
-# path still returns quickly; it does not prove every flag in the skill body.
+# This is the reviewed local overlay contract, not a floating upstream default.
+# A global-tool bump must update this record, the skill, and its provenance in
+# one review before static validation can pass.
+ORACLE_REVIEWED_CONTRACT = {
+  version: "0.17.2",
+  github_repo: "https://github.com/steipete/oracle",
+  github_path: "skills/oracle",
+  tree_sha: "f311d56ee97abde2bcdb79ae50675b21156a1d11",
+  browser_model: "gpt-5.6-sol",
+  browser_target: "GPT-5.6 Sol",
+  browser_effort: "pro"
+}.freeze
+
+# Keep this list to CLI skills whose instructions depend on current CLI behavior.
+# The validator checks that the command is installed and that a documented help
+# or no-side-effect contract path returns quickly; it does not prove every flag.
 CLI_SMOKE_COMMANDS = [
   ["gh skill install help", %w[gh skill install --help]],
   ["glab pipeline help", %w[glab ci list --help]],
+  [
+    "oracle latest-model Pro browser dry run",
+    [
+      "oracle",
+      "--engine", "browser",
+      "--browser-attach-running",
+      "--browser-model-strategy", "select",
+      "--model", ORACLE_REVIEWED_CONTRACT.fetch(:browser_model),
+      "--browser-thinking-time", ORACLE_REVIEWED_CONTRACT.fetch(:browser_effort),
+      "--dry-run", "summary",
+      "--files-report",
+      "--prompt", "Validate the Oracle skill CLI contract.",
+      "--file", root.join("oracle/SKILL.md").to_s
+    ],
+    Regexp.new(
+      "\\[preview\\] Oracle \\(#{Regexp.escape(ORACLE_REVIEWED_CONTRACT.fetch(:version))}\\) " \
+      "browser mode \\(target=#{Regexp.escape(ORACLE_REVIEWED_CONTRACT.fetch(:browser_target))}; " \
+      "requested=#{Regexp.escape(ORACLE_REVIEWED_CONTRACT.fetch(:browser_model))}\\)"
+    )
+  ],
   ["snow sql help", %w[snow sql --help]]
 ].freeze
 
@@ -79,6 +113,95 @@ def parse_skill(path)
   match = text.match(/\A---\n(.*?)\n---\n/m)
   return [nil, text] unless match
   [YAML.safe_load(match[1], permitted_classes: [], aliases: false) || {}, text]
+end
+
+# Oracle's executable is upgraded from the global-tools manifest, while its
+# locally overlaid skill must be reviewed rather than overwritten from upstream.
+# Pin the release, upstream tree, documented root command, and dry-run route as
+# one contract so a dependency-only bump or prose/runtime split cannot pass.
+dev_tools_manifest = repo.join(".github/dev-tools/package.json")
+oracle_skill = root.join("oracle/SKILL.md")
+if dev_tools_manifest.exist? != oracle_skill.exist?
+  missing_path = dev_tools_manifest.exist? ? oracle_skill : dev_tools_manifest
+  errors << "#{rel(missing_path, repo)}: missing half of the reviewed Oracle CLI/skill contract"
+elsif dev_tools_manifest.exist?
+  begin
+    manifest = JSON.parse(dev_tools_manifest.read)
+    oracle_version = manifest.dig("devDependencies", "@steipete/oracle")
+    if oracle_version == ORACLE_REVIEWED_CONTRACT.fetch(:version)
+      oracle_frontmatter, oracle_text = parse_skill(oracle_skill)
+      if oracle_frontmatter.is_a?(Hash)
+        metadata = oracle_frontmatter["metadata"].is_a?(Hash) ? oracle_frontmatter["metadata"] : {}
+        expected_metadata = {
+          "github-repo" => ORACLE_REVIEWED_CONTRACT.fetch(:github_repo),
+          "github-path" => ORACLE_REVIEWED_CONTRACT.fetch(:github_path),
+          "github-ref" => "refs/tags/v#{ORACLE_REVIEWED_CONTRACT.fetch(:version)}",
+          "github-tree-sha" => ORACLE_REVIEWED_CONTRACT.fetch(:tree_sha)
+        }
+        expected_metadata.each do |field, expected|
+          actual = metadata[field]
+          next if actual == expected
+
+          errors << "#{rel(oracle_skill, repo)}: #{field} #{actual.inspect} does not match reviewed Oracle contract #{expected.inspect}"
+        end
+      end
+
+      default_section = oracle_text[/^## Default:.*?(?=^## |\z)/m]
+      root_commands = default_section.to_s.scan(/```bash\n(.*?)\n```/m).flatten
+      if root_commands.length != 1
+        errors << "#{rel(oracle_skill, repo)}: Default section must contain exactly one bash root command"
+      else
+        begin
+          command_tokens = Shellwords.split(root_commands.first.gsub(/\\\n/, " "))
+          errors << "#{rel(oracle_skill, repo)}: Oracle default command must invoke oracle" unless command_tokens.first == "oracle"
+
+          expected_options = {
+            "--engine" => "browser",
+            "--browser-attach-running" => true,
+            "--browser-model-strategy" => "select",
+            "--model" => ORACLE_REVIEWED_CONTRACT.fetch(:browser_model),
+            "--browser-thinking-time" => ORACLE_REVIEWED_CONTRACT.fetch(:browser_effort),
+            "--slug" => "<3-5 words>",
+            "-p" => "<task>",
+            "--file" => "<path-or-glob>"
+          }
+
+          parsed_options = {}
+          invalid_option_set = false
+          index = 1
+          while index < command_tokens.length
+            option = command_tokens[index]
+            expected = expected_options[option]
+            if expected.nil? || parsed_options.key?(option)
+              invalid_option_set = true
+              break
+            end
+
+            if expected == true
+              parsed_options[option] = true
+              index += 1
+            else
+              parsed_options[option] = command_tokens[index + 1]
+              index += 2
+            end
+          end
+
+          if invalid_option_set || parsed_options != expected_options
+            errors << "#{rel(oracle_skill, repo)}: Oracle default command options must exactly match the reviewed contract"
+          end
+        rescue ArgumentError => e
+          errors << "#{rel(oracle_skill, repo)}: cannot parse Oracle default command (#{e.message})"
+        end
+      end
+
+      expected_preview = "target=#{ORACLE_REVIEWED_CONTRACT.fetch(:browser_target)}; requested=#{ORACLE_REVIEWED_CONTRACT.fetch(:browser_model)}"
+      errors << "#{rel(oracle_skill, repo)}: missing reviewed Oracle preview contract #{expected_preview.inspect}" unless oracle_text.include?(expected_preview)
+    else
+      errors << "#{rel(dev_tools_manifest, repo)}: @steipete/oracle #{oracle_version.inspect} does not match reviewed contract #{ORACLE_REVIEWED_CONTRACT.fetch(:version).inspect}"
+    end
+  rescue JSON::ParserError => e
+    errors << "#{rel(dev_tools_manifest, repo)}: malformed JSON (#{e.message})"
+  end
 end
 
 def command_allowlist(frontmatter)
@@ -191,7 +314,7 @@ end
 
 # Catches retired-skill leftovers: each smoke label starts with the skill name.
 known_names = source_names | deployed_names
-CLI_SMOKE_COMMANDS.each do |smoke_label, _command|
+CLI_SMOKE_COMMANDS.each do |smoke_label, _command, _expected_output|
   skill = smoke_label.split(/\s+/).first
   warnings << "CLI_SMOKE_COMMANDS: #{smoke_label.inspect} does not match any known skill" unless known_names.include?(skill)
 end
@@ -260,14 +383,22 @@ if options[:smoke]
     end
   end
 
-  CLI_SMOKE_COMMANDS.each do |label, command|
+  CLI_SMOKE_COMMANDS.each do |label, command, expected_output|
     unless system("which", command.first, out: File::NULL, err: File::NULL)
-      warnings << "smoke: #{command.first} not found, skipped #{label}"
+      message = "smoke: #{command.first} not found, skipped #{label}"
+      expected_output ? errors << message : warnings << message
       next
     end
     begin
-      _out, _err, status = Timeout.timeout(10) { Open3.capture3(*command) }
-      warnings << "smoke: #{label} exited #{status.exitstatus}" unless status.success?
+      out, _err, status = Timeout.timeout(10) { Open3.capture3(*command) }
+      unless status.success?
+        message = "smoke: #{label} exited #{status.exitstatus}"
+        expected_output ? errors << message : warnings << message
+        next
+      end
+      if expected_output && !out.match?(expected_output)
+        errors << "smoke: #{label} did not report the reviewed route"
+      end
     rescue Timeout::Error
       errors << "smoke: #{label} timed out after 10s"
     end
