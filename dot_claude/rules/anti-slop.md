@@ -1,19 +1,19 @@
 # Anti-AI slop
 
-Applies to every output in both Chinese and English: chat, explanations, MR/PR descriptions, IM/email drafts, commit messages, announcements. Use direct factual language; rhetorical setup before the point is noise. Use emoji only when the user explicitly asks.
+Applies to every output in both Chinese and English: chat, explanations, MR/PR descriptions, IM/email drafts, commit messages, announcements. Give the requested answer or artifact first in direct factual language. Include the context needed to understand or act at the level asked; add broader background or alternatives only when requested or when omission would mislead. Use structure only when it helps navigation. Use emoji only when the user explicitly asks.
 
 ## Patterns to fix
 
 Each rule names a mechanism. Listed tokens are illustrative, not exhaustive. Match by mechanism, not by token literal.
 
-- **One paragraph, one idea.** If a paragraph bridges adjacent-but-distinct points, split it. The split surfaces which point is load-bearing.
+- **Start a new paragraph when the topic or requested action changes.** Keep closely related sentences together.
 - **State the corrected point directly.** Use "不是 X 而是 Y" / "Not X, it's Y" only when overturning something the user or a prior turn actually said. Otherwise drop the contrast and assert Y.
-- **Name the concrete change instead of decisiveness signals or vague-improvement verbs.** Replace `落地` with the most specific action supported by the available evidence; do not infer implementation, merge, deployment, persistence, or rollback state from the word itself. Replace `更硬` / `把 X 写硬` with `enforced at compile time` / `assert at request boundary` / `unique constraint at DB layer`; replace `streamline / enhance / robustify / leverage / facilitate` with the specific change, and use `use` instead of `leverage`. Rewrite the sentence; don't just delete the token. Tokens to flag: `落地`, `落库`, `落盘`, `抓手`, `闭环`, `开干`, `起飞`, `更硬`, `变硬`, `最硬`.
-- **Use literal editing verbs.** For file moves, renames, deletions, or structural edits, use `移 / 改名 / 删 / 加`. Do not use `砍` to mean deleting edits, files, or code; do not flag the token outside an edit context.
-- **Write the system's own English string instead of coining a Chinese label for it.** In Chinese output, keep the exact greppable English form of identifiers, config keys, error or status tokens, API/SDK/vendor concepts, product names, UI strings, section headers, and repo-defined artifacts: `TypeScript` not `Type Script`, `root layout` not `根布局`, `cache entry` not `缓存条目`. Do not translate a repo-defined artifact into an invented label (`评论机器人` for a `review-bot` workflow, `Stripe 对账单` for `stripe-parse-statement`): cut the detail if the reader will not act on it, otherwise write the identifier. Verbs, connectives, narration, and established Chinese business nouns stay Chinese, including natural combinations such as `MR 描述` and `GitLab 项目`.
-- **End at the point, without announcing it.** Delete redundant trailing soft-restatements (`这说明……`, `也就是说……`, `换句话说……`) and structure announcements (`一句话总结`, `一句话 X 版`). If the previous sentence already made the point, stop there.
-- **Back intensity with evidence or downgrade the claim.** When a claim carries intensity (severity, confidence, a guarantee, or grandiose framing like `彻底改变` for routine work), attach the number, observed behavior, or consequence that licenses it; if none exists, downgrade the claim instead of decorating it. Unlicensed intensity (`可被稳定复现`, `completes reliably`, a confidence label higher than the stated evidence supports) reads as style but fails as accuracy. The same failure runs in reverse: keep a hedge that carries real uncertainty; deleting it manufactures confidence the evidence does not license.
-- **Silently filter spurious IDE diagnostics.** Spurious means the warning is technically correct against its own spec, but this file does not belong to that spec. Examples: VS Code agent linter says `allowed-tools` / `context: fork` are unknown (true under VS Code agent spec, valid under Claude Code skill spec); cSpell flags library / CLI / domain names (true that they aren't dictionary words, valid as technical terms here). If you cannot confirm the warning is spurious, verify against the file's actual spec first (`code.claude.com/docs` for Claude Code skills). Do not write rebuttal sentences for confirmed-spurious ones.
+- **直接写来源里能确认的实际行为或结果。** 过滤就说过滤，重试就说重试；不用比喻、行话动词、自造的简称或标签、模糊的评价代替实际动作或结果：说「写进数据库」，不说「落库」。来源没有说明原因、行为或结果时，直接说不确定，不要为了讲顺而补出一套解释。
+- **编辑操作用字面动词。** 移动、改名、删除、结构调整，写 `移 / 改名 / 删 / 加`，不用「砍」表示删掉改动、文件或代码；「砍」出现在编辑语境之外不用管。
+- **原名保持原样。** 代码标识符、配置键、命令、参数、路径、产品名、界面文案和仓库内已有名称不翻译、不改写、不缩略。需要泛指时用「这个查询」「这些组件」这类普通说法，不要把名称里的英文单词单独翻成新的中文称呼。`root layout` 仍写 `root layout`，`review-bot` 仍写 `review-bot`，不写「根布局」「评论机器人」。
+- **让读者不用猜术语。** 优先用平实、具体的中文写清谁做了什么、在什么条件下、结果是什么。日常口语用英文原词的术语保留英文，标准是大家平时怎么说，不是词典有没有译名：说 rebase 不说「变基」，说 hook 不说「钩子」，说 token 不说「词元」。反过来，英文习语和复合词不逐字翻成中文，直译名即使在文献里存在，只要不是大家平时说的话就不用：wall-clock time 写「实际耗时」或保留 wall-clock，不写「墙钟时间」。读者可能不熟的术语（无论中英文），如果不解释会影响理解或操作，第一次出现时用一句话说明它在当前任务里指什么。
+- **说完就停。** 删掉结尾多余的软复述（`这说明……`、`也就是说……`、`换句话说……`）和结构宣告（`一句话总结`、`一句话 X 版`）；前一句已经把话说清，就停在那里。
+- **Match intensity to evidence.** Support severity, confidence, and guarantees with an observed result or consequence; otherwise narrow the claim. Keep wording that expresses real uncertainty.
 
 ## Formatting rules
 
@@ -22,20 +22,8 @@ Each rule names a mechanism. Listed tokens are illustrative, not exhaustive. Mat
 - Chinese prose uses fullwidth punctuation (`，。：；！？（）「」`), not ASCII halfwidth. ASCII punctuation stays inside code identifiers, file paths, and English terms themselves (`file.ext:line`, `foo(bar)`). In mixed Chinese/English sentences, punctuation follows the language of the surrounding clause.
 - Reserve bold for labels in label-value lists, table headers, and section titles; a paragraph with 3+ bolded phrases means most are wrong. Reserve quote marks for actual quotations, system output, error messages, or a term's first-time introduction; use plain text or italic for emphasis: `防止 Agent 提升分数` is the right form, `防止 Agent "提升"分数` is the wrong form.
 - Code blocks: always specify language; use `plaintext` when no syntax highlighting fits.
-- Links and citations: use descriptive link text that describes the destination, and render external identifiers (PR/issue numbers, commit SHAs, ticket keys) as clickable markdown links. Place evidence inline next to the claim it supports, quoting 1-3 lines plus a clickable `file_path:line_number` for code; no trailing sources section.
+- In evidence-bearing chat and review reports, use descriptive link text and make external identifiers clickable. Place evidence next to the claim it supports instead of adding a trailing sources section.
 
 ## Final output check
 
 Before sending, scan the draft against the mechanisms above. When one matches, rewrite the surrounding sentence around its underlying intent; do not delete the token while leaving the rest of the sentence intact.
-
-<examples>
-<example name="silently filter cSpell noise on technical terms">
-Wrong: `已完成。cSpell 关于 backtest 的告警是技术词典缺词，可以忽略。`
-Right: `已完成。`
-</example>
-
-<example name="use the system's own name for a code-level thing">
-Wrong: `把 Stripe 对账单和评论机器人里的 model id 换成 claude-opus-5`
-Right: `把 stripe-parse-statement 和 review-bot 里的 model id 换成 claude-opus-5`
-</example>
-</examples>
