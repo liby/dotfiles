@@ -47,7 +47,7 @@ chezmoi edit <target>              # 编辑由 chezmoi 管理的加密文件
 chezmoi edit-encrypted <filename>  # 编辑未由 chezmoi 管理的加密文件
 ```
 
-编辑加密文件时需要使用 YubiKey，不应该交给 Agent 处理。
+编辑加密文件时需要使用 YubiKey，不应该交由 Agent 处理。
 
 其他命令参见 [chezmoi 日常操作指南](https://www.chezmoi.io/user-guide/daily-operations/)。
 

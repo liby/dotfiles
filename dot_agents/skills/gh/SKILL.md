@@ -1,10 +1,9 @@
 ---
 name: gh
 description: Operate GitHub through the `gh` CLI for GitHub issues, pull requests, repos, workflow data, comments, and GitHub-hosted Agent Skills. Use when the user gives a GitHub URL, `owner/repo#123`, asks about a GitHub issue/PR/workflow, or asks to preview/install/update a skill from GitHub. Not for GitLab URLs or local skill editing without a GitHub source.
-context: fork
-background: false
 allowed-tools:
   - Bash(gh:*)
+  - Bash(git:*)
   - Bash(jq:*)
   - Bash(ls:*)
   - Read
@@ -18,8 +17,10 @@ Use `gh` for GitHub operations. Verify command syntax with `gh <command> --help`
 |---|---|---|
 | View issue, PR, repo, comments, workflow data | Read with `gh ... --json` and `jq` | No |
 | Long discussion analysis | Fetch body, timeline, and high-signal comments | No |
+| Draft PR title or body | Resolve the base and inspect the complete branch change; return text in chat | No |
+| Create or update a PR | Draft from the verified branch change, then write only after an explicit request | Yes |
 | Preview GitHub skill | `gh skill preview` and inspect bundled files | No |
-| Install, update, comment, label, close, merge, create | Explain target and run only after explicit user request | Yes |
+| Install or update a skill; create an issue; comment, label, close, or merge; any other write | Explain target and run only after explicit user request | Yes |
 
 Do not run `gh auth status` unless a `gh` command fails with an auth or host error. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, which unconditionally rewrites the global git credential helper to gh's absolute path and clobbers dotfile-managed git config.
 
@@ -59,6 +60,17 @@ For issues or PRs with many comments:
 2. Fetch comments and sort by reaction count for the top five high-signal comments.
 3. Read the first three and last three comments to understand timeline.
 4. Check timeline events for labels, assignments, review states, and cross-references when they affect the answer.
+
+## Pull Requests
+
+When asked to draft, create, or update a PR title or body:
+
+1. For an existing PR, resolve the base, head, and URL with `gh pr view <number-or-url> --json baseRefName,headRefName,url`.
+2. For a new PR, resolve the base from the user's request, the branch's `gh-merge-base` configuration, or the repository default branch. Do not hardcode `main` or `master`.
+3. For an existing PR, inspect its complete patch with `gh pr diff <number-or-url>` and use the resolved PR metadata for commits and files. For a new PR, inspect `git log <base>..HEAD`, the stat, and the complete `git diff <base>...HEAD`. Read the repository PR template when one exists.
+4. Draft from the actual branch changes and follow the user's requested structure. Do not invent release, rollback, impact, or testing claims.
+5. Run `gh pr create` or `gh pr edit` only when the user explicitly asked for that write this turn. Otherwise keep the draft in chat.
+6. Return the final title and body. After a write, also return the PR URL.
 
 ## Agent Skills From GitHub
 
