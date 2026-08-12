@@ -1,0 +1,38 @@
+{
+  "providers": {
+    "rc-gateway": {
+      "baseUrl": "{{ .private.aiGatewayBaseUrl }}",
+      "api": "openai-completions",
+      "apiKey": "!envchain pi sh -c 'printf %s \"$AI_GATEWAY_TOKEN\"'",
+      "models": [
+        {
+          "id": "moonshotai/kimi-k3-fast",
+          "name": "Kimi K3 Fast",
+          "reasoning": true,
+          "thinkingLevelMap": { "max": "max" },
+          "input": ["text", "image"],
+          "contextWindow": 1000000,
+          "maxTokens": 131072
+        },
+        {
+          "id": "deepseek/deepseek-v4-pro",
+          "name": "DeepSeek V4 Pro",
+          "reasoning": true,
+          "thinkingLevelMap": { "max": "max" },
+          "input": ["text"],
+          "contextWindow": 1048600,
+          "maxTokens": 1048600
+        },
+        {
+          "id": "deepseek/deepseek-v4-flash-0731",
+          "name": "DeepSeek V4 Flash 0731",
+          "reasoning": true,
+          "thinkingLevelMap": { "max": "max" },
+          "input": ["text"],
+          "contextWindow": 1000000,
+          "maxTokens": 384000
+        }
+      ]
+    }
+  }
+}

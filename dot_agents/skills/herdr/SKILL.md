@@ -120,6 +120,24 @@ Read-only helpers may share the current checkout. Do not let concurrent writers
 edit the same checkout. Keep extra agents read-only or sequential unless the
 user asks for isolated worktrees.
 
+## Pi specifics
+
+- Start pi bare (no envchain) with an explicit `--provider` (the
+  `defaultProvider` in `~/.pi/agent/settings.json`) and an exact model ID from
+  `~/.pi/agent/models.json`; a fuzzy `--model` pattern silently resolves into
+  a credential-less built-in catalog provider. When unsure, verify with
+  `pi auth check --provider <name>` before starting.
+- The provider entry in `models.json` resolves its API key through an inline
+  command; never print the resolved key when inspecting the file.
+- Send slash commands with `pane run` and read `visible` to confirm the
+  effect; `agent prompt` waits observe lifecycle state, which a slash command
+  never changes.
+- Herdr v0.8.0 delivers `agent prompt` text to current pi unreliably. Submit
+  tasks with `pane send-text` then `send-keys enter`, and confirm from
+  `visible` that the composer holds the text. For a long self-contained task,
+  skip the TUI: run `pi -p @<file>` via `pane run`, redirect output to a file,
+  and echo a unique completion marker.
+
 ## Run an ordinary command in another pane
 
 Use pane commands for a shell command that does not need agent lifecycle. Split

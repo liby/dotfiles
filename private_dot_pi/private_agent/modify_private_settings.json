@@ -1,0 +1,21 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Partially manage ~/.pi/agent/settings.json. pi rewrites defaultProvider
+      and defaultModel together on every /model selection, so defaultModel is
+      seed-only. Enforcing defaultProvider is drift-free only while rc-gateway
+      is the sole configured provider; demote it to a seed if another provider
+      is added. Preserve all other runtime-owned keys. */ -}}
+{{- $managed := dict "defaultProvider" "rc-gateway" -}}
+{{- $seeds := dict "defaultModel" "moonshotai/kimi-k3-fast" "defaultThinkingLevel" "max" -}}
+{{- $stdin := .chezmoi.stdin -}}
+{{- $current := dict -}}
+{{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
+{{- $out := deepCopy $current -}}
+{{- range $k, $v := $managed -}}{{- $out = set $out $k $v -}}{{- end -}}
+{{- range $k, $v := $seeds -}}
+{{-   if not (hasKey $out $k) -}}{{- $out = set $out $k $v -}}{{- end -}}
+{{- end -}}
+{{- if deepEqual $current $out -}}
+  {{- $stdin -}}
+{{- else -}}
+  {{ toPrettyJson $out }}
+{{- end -}}
