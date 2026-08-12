@@ -1,6 +1,7 @@
 encryption = "gpg"
 
 [data.private]
+  aiGatewayBaseUrl = {{ promptStringOnce . "private.aiGatewayBaseUrl" "OpenAI-compatible API base URL (ending in /v1)" | quote }}
   gitlabEmail = {{ promptStringOnce . "private.gitlabEmail" "Private GitLab email" | quote }}
   gitlabHost = {{ promptStringOnce . "private.gitlabHost" "Private GitLab host" | quote }}
   gitlabName = {{ promptStringOnce . "private.gitlabName" "Private GitLab name" | quote }}
