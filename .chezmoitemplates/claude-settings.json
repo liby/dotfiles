@@ -109,6 +109,7 @@
         "~/.codex",
         "~/.local/share/uv",
         "~/.npm",
+        "~/.oracle",
         "~/.pnpm-store",
         "~/.proto",
         "~/.rustup",
