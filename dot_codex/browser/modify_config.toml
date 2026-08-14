@@ -1,0 +1,16 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Partially manage Browser Use defaults while preserving App-written site
+      authorization and other runtime state. */ -}}
+{{- $stdin := .chezmoi.stdin -}}
+{{- $current := dict -}}
+{{- if $stdin -}}
+  {{- $current = $stdin | fromToml -}}
+{{- end -}}
+{{- $out := deepCopy $current -}}
+{{- $out = set $out "approval_mode" "never_ask" -}}
+{{- $out = set $out "full_cdp_access_enabled" true -}}
+{{- if deepEqual $current $out -}}
+  {{- $stdin -}}
+{{- else -}}
+  {{- $out | toToml -}}
+{{- end -}}
