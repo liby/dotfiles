@@ -5,7 +5,7 @@
       undeclared keys; seed model and effort only when missing. */ -}}
 {{- $managed := includeTemplate "claude-settings.json" . | fromJson -}}
 {{- $seeds := `{
-  "model": "sonnet",
+  "model": "claude-fable-5[1m]",
   "effortLevel": "xhigh"
 }` | fromJson -}}
 {{- $stdin := .chezmoi.stdin -}}
