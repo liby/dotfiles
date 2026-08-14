@@ -1,0 +1,158 @@
+#!/bin/zsh
+set -uo pipefail
+
+block() {
+  print -u2 -- "$1"
+  exit 2
+}
+
+is_client_input() {
+  local path=${1#*=}
+  local base=${path:t}
+
+  case "$base" in
+    (.env|.env.local|.env\{*,*\}|.npmrc|.zprofile*|.zsh_history*) return 0 ;;
+  esac
+  if [[ "$base" == .env* &&
+        ( "$base" == *\** || "$base" == *\?* || "$base" == *\[* ) ]]; then
+    return 0
+  fi
+  case "$path" in
+    (*.ssh/id_*.pub) return 1 ;;
+    (*.ssh/id_*|*.ssh/polylab-deploy|*.ssh/polylab-host-ed25519| \
+     *.claude/.credentials.json*|*.codex/auth.json*| \
+     *.gnupg/private-keys-v1.d|*.gnupg/private-keys-v1.d/*) return 0 ;;
+  esac
+  return 1
+}
+
+is_secret_name() {
+  local name=${1:u}
+  [[ "$name" == *TOKEN* || "$name" == *SECRET* || "$name" == *PASSWORD* ||
+     "$name" == *CREDENTIAL* || "$name" == *API_KEY* || "$name" == *PRIVATE_KEY* ]]
+}
+
+command_text=$(/usr/bin/plutil -extract tool_input.command raw -expect string -o - -) || exit 0
+typeset -a words
+words=(${(z)command_text}) || block 'Could not parse the Bash command.'
+(( ${#words} )) || exit 0
+words=("${(@Q)words}")
+while (( ${#words} )) && [[ "${words[1]}" =~ '^[A-Za-z_][A-Za-z0-9_]*=' ]]; do
+  words=("${(@)words[2,-1]}")
+done
+(( ${#words} )) || exit 0
+
+program=${words[1]:t}
+namespace=${words[2]-}
+child=${${words[3]-}:t}
+
+if [[ "$program" == env ]]; then
+  integer env_index=2
+  while (( env_index <= ${#words} )); do
+    case "${words[env_index]}" in
+      (-u|-P|-C) (( env_index += 2 )) ;;
+      (-i|-v) (( env_index++ )) ;;
+      (-S) exit 0 ;;
+      (--)
+        (( env_index++ ))
+        while (( env_index <= ${#words} )) &&
+              [[ "${words[env_index]}" =~ '^[A-Za-z_][A-Za-z0-9_]*=' ]]; do
+          (( env_index++ ))
+        done
+        break
+        ;;
+      (-*|*=*) (( env_index++ )) ;;
+      (*) break ;;
+    esac
+  done
+  (( env_index <= ${#words} )) || block 'Do not dump the process environment.'
+  words=("${(@)words[env_index,-1]}")
+  program=${words[1]:t}
+  namespace=${words[2]-}
+  child=${${words[3]-}:t}
+fi
+if [[ "$program" == envchain ]]; then
+  if [[ "$child" == env || "$child" == printenv ]]; then
+    block 'Do not dump an envchain namespace.'
+  fi
+  if [[ "$child" == claude && ",$namespace," != *,claude-gateway,* ]]; then
+    block 'Run Claude as `envchain claude-gateway claude ...`.'
+  fi
+  exit 0
+fi
+[[ "$program" == claude ]] &&
+  block 'Run Claude as `envchain claude-gateway claude ...`.'
+
+case "$program" in
+  (cat|head|tail|less|more|bat|sed|awk|jq|yq|base64|xxd|od|strings|diff|openssl|plutil)
+    for word in "${words[@]}"; do
+      is_client_input "$word" &&
+        block 'Credential and environment files are opaque client inputs; do not display their contents.'
+    done
+    ;;
+  (printenv)
+    (( ${#words} == 1 )) && block 'Do not dump the process environment.'
+    for word in "${(@)words[2,-1]}"; do
+      is_secret_name "$word" && block 'Do not print credential environment variables.'
+    done
+    ;;
+  (export)
+    (( ${#words} == 1 )) && block 'Do not dump exported variables.'
+    for word in "${(@)words[2,-1]}"; do
+      if [[ "$word" == -* && "$word" != --* && "$word" == *p* ]]; then
+        block 'Do not dump exported variables.'
+      fi
+    done
+    ;;
+  (typeset|declare)
+    (( ${#words} == 1 )) && block 'Do not dump shell variables.'
+    if (( ${#words} == 2 )) && [[ "${words[2]}" == -* &&
+       "${words[2]}" != --* && "${words[2]}" == *[px]* ]]; then
+      block 'Do not dump shell variables.'
+    fi
+    for word in "${(@)words[2,-1]}"; do
+      is_secret_name "$word" && block 'Do not print credential shell variables.'
+    done
+    ;;
+  (set)
+    (( ${#words} == 1 )) && block 'Do not dump shell variables.'
+    ;;
+  (gh|glab)
+    if [[ "${words[2]-}" == auth && "${words[3]-}" == token ]]; then
+      [[ "$program" == gh ]] && block 'Do not print Git hosting credentials.'
+    fi
+    if [[ "${words[2]-}" == auth && "${words[3]-}" == status ]]; then
+      for word in "${(@)words[4,-1]}"; do
+        if [[ "$word" == --show-token || "$word" == --show-token=* ||
+              ( "$word" == -* && "$word" != --* && "$word" == *t* ) ]]; then
+          block 'Do not print Git hosting credentials.'
+        fi
+      done
+    fi
+    ;;
+  (security)
+    flat=" ${(j: :)words} "
+    if [[ "$flat" == *' -w '* || "$flat" == *' -g '* ]]; then
+      block 'Do not extract credentials from the macOS Keychain.'
+    fi
+    ;;
+  (curl)
+    tracing=false
+    authenticated=false
+    for word in "${(@)words[2,-1]}"; do
+      upper_word=${word:u}
+      if [[ "$word" == --verbose || "$word" == --trace || "$word" == --trace-* ||
+            ( "$word" == -* && "$word" != --* && "$word" == *v* ) ]]; then
+        tracing=true
+      fi
+      if [[ "$upper_word" == *AUTHORIZATION* || "$upper_word" == *X-API-KEY* ||
+            "$upper_word" == *X-AUTH-TOKEN* || "$word" == -u* ||
+            "$word" == --user || "$word" == --user=* || "$word" == --netrc* ]]; then
+        authenticated=true
+      fi
+    done
+    [[ "$tracing" == true && "$authenticated" == true ]] &&
+      block 'Authenticated curl tracing can print credential headers.'
+    ;;
+esac
+exit 0

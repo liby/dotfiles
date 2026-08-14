@@ -1,7 +1,8 @@
 default_permissions = "development"
+allowed_approval_policies = ["on-request"]
+allowed_approvals_reviewers = ["auto_review"]
 
 [allowed_permission_profiles]
-":danger-full-access" = true
 development = true
 
 [features]
@@ -15,5 +16,5 @@ matcher = "^Bash$"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
-command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/require-claude-envchain"
+command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/guard-bash"
 timeout = 5

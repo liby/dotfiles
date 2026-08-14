@@ -1,9 +1,11 @@
-# Before editing, read paired dot_codex/modify_private_config.toml and the
-# AGENTS.md files governing both paths.
+# This template is merged by dot_codex/modify_private_config.toml. Before
+# editing either path, read their governing AGENTS.md files.
 approval_policy = "on-request"
 approvals_reviewer = "auto_review"
+cli_auth_credentials_store = "keyring"
 default_permissions = "development"
 experimental_compact_prompt_file = "compact-prompt.md"
+mcp_oauth_credentials_store = "keyring"
 model = "gpt-5.6-sol"
 model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
@@ -25,19 +27,7 @@ network_proxy = false
 prevent_idle_sleep = true
 
 [permissions.development.filesystem]
-# Deny stores no routine trusted client should consume. Exact project .env
-# reads restrict writes without the client-blocking effect of deny globs.
 ":root" = "write"
-"~/.claude/.credentials.json*" = "deny"
-"~/.codex/auth.json*" = "deny"
-"~/.gnupg/private-keys-v1.d" = "deny"
-"~/.npmrc" = "read"
-"~/.ssh" = "read"
-"~/.ssh/id_*" = "deny"
-"~/.ssh/polylab-deploy" = "deny"
-"~/.ssh/polylab-host-ed25519" = "deny"
-"~/.zprofile*" = "deny"
-"~/.zsh_history*" = "deny"
 
 [permissions.development.filesystem.":workspace_roots"]
 ".env" = "read"
@@ -48,6 +38,12 @@ enabled = true
 
 [permissions.development.network.unix_sockets]
 "{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh" = "allow"
+
+[shell_environment_policy.set]
+# Keep Snowflake's localhost SAML listener alive so the snow skill can open an
+# emitted login URL while the original query waits. Undocumented connector flag
+# (connector auth/webbrowser.py); re-check after CLI upgrades.
+SNOWFLAKE_AUTH_FORCE_SERVER = "true"
 
 [mcp_servers.context7]
 enabled = true

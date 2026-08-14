@@ -17,7 +17,7 @@ defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
 defaults write com.apple.menuextra.clock DateFormat -string "EEE HH:mm"
 
 defaults write com.openai.codex requirements_toml_base64 -string \
-  '{{ includeTemplate "codex-requirements.toml" . | b64enc }}'
+  '{{ includeTemplate "codex/requirements.toml" . | b64enc }}'
 
 # Reload processes that cache the Apple UI defaults.
 killall ControlCenter Dock Finder

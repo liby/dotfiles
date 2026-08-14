@@ -1,9 +1,9 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Deep-overlay codex-config.toml while replacing fully managed subtrees
+{{- /* Deep-overlay codex/config.toml while replacing fully managed subtrees
       and preserving other live values. Clean one-time destination drift
       directly; persistent deletion requires evidence of a recurring writer.
       Emit unchanged input when equal to avoid formatting-only drift. */ -}}
-{{- $managed := includeTemplate "codex-config.toml" . | fromToml -}}
+{{- $managed := includeTemplate "codex/config.toml" . | fromToml -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := $stdin | fromToml -}}
 {{- $out := mergeOverwrite (deepCopy $current) $managed -}}
