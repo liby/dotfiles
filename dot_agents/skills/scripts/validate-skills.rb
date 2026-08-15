@@ -57,10 +57,10 @@ CLAUDE_CODE_FIELDS = Set[
 # A global-tool bump must update this record, the skill, and its provenance in
 # one review before static validation can pass.
 ORACLE_REVIEWED_CONTRACT = {
-  version: "0.17.2",
+  version: "0.18.0",
   github_repo: "https://github.com/steipete/oracle",
   github_path: "skills/oracle",
-  tree_sha: "f311d56ee97abde2bcdb79ae50675b21156a1d11",
+  tree_sha: "26cca2ea90a18f55ea56bddd7e5fb318a67f466c",
   browser_model: "gpt-5.6-sol",
   browser_target: "GPT-5.6 Sol",
   browser_effort: "pro"

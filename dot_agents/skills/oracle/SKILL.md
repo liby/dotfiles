@@ -4,9 +4,9 @@ allowed-tools:
     - Bash(oracle:*)
 metadata:
     github-path: skills/oracle
-    github-ref: refs/tags/v0.17.2
+    github-ref: refs/tags/v0.18.0
     github-repo: https://github.com/steipete/oracle
-    github-tree-sha: f311d56ee97abde2bcdb79ae50675b21156a1d11
+    github-tree-sha: 26cca2ea90a18f55ea56bddd7e5fb318a67f466c
 name: oracle
 ---
 # Oracle
@@ -28,10 +28,10 @@ oracle --engine browser --browser-attach-running \
 ```
 
 The model slug pins the latest ChatGPT model verified for this CLI release;
-`Pro` is a separate effort selection. Keep both flags explicit. Do not replace
-the model with `gpt-5-pro`: in v0.17.2 that alias targets GPT-5.5, not the latest
-model. Let Oracle open a dedicated tab, and run any other consultant separately
-through its native route.
+`Pro` is a separate effort selection. In v0.18.0 the generic current-Pro aliases
+also resolve to GPT-5.6 Sol, but they intentionally float with ChatGPT. Keep the
+model and effort flags explicit, let Oracle open a dedicated tab, and run any
+other consultant separately through its native route.
 
 For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Completion
 must retain that Project ID/path in the conversation URL or visibly confirm
