@@ -133,7 +133,7 @@ render_rate_row() {
   bar=$(build_bar "$pct" "$bar_width")
   pct_color=$(color_for_pct "$pct")
   pct_fmt=$(printf "%3d" "$pct")
-  printf '%s' "${muted}${label}${reset} ${bar}${pct_color}${pct_fmt}%${reset} ${dim}⟳${reset}  ${sky}${reset_time}${reset}${suffix}${stale_marker}"
+  printf '%s' "${muted}${label}${reset} ${bar}${pct_color}${pct_fmt}%${reset} ${dim}⟳${reset}  ${sky}${reset_time}${reset}${suffix}"
 }
 
 render_extra_rate_row() {
@@ -315,15 +315,24 @@ get_oauth_token() {
   echo ""
 }
 
-# ── Fetch extra usage data (API, cached — only field not in stdin) ──
-cache_dir="/tmp/claude"
-cache_file="${cache_dir}/statusline-usage-cache.json"
+# ── Fetch usage data (API, cached) ──────────────────────
+# The usage endpoint 429s aggressively (per-token window of ~5 requests,
+# retry-after often 0: https://github.com/anthropics/claude-code/issues/30930),
+# and CC's own background polling shares the same account budget. usage.json is
+# written only on verified success; failures back off via usage.retry; sessions
+# serialize fetches through refresh.lock. The cache lives outside /tmp so the
+# last snapshot survives reboots (startup renders before stdin has rate_limits).
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude-statusline"
+usage_file="${cache_dir}/usage.json"
+retry_file="${cache_dir}/usage.retry"
+lock_dir="${cache_dir}/refresh.lock"
+retry_backoff_cold=300      # no snapshot to render: retry soon to heal startup
 cache_max_age_enabled=300   # 5 min when extra is active
 cache_max_age_disabled=10800 # 3h when extra is off (re-check if user enabled it)
-[ -d "$cache_dir" ] || mkdir -p "$cache_dir"
+[ -d "$cache_dir" ] || mkdir -p -m 700 "$cache_dir"
 
 # Resolve version (cached to file — avoids fork on every tick)
-version_file="${cache_dir}/statusline-claude-version"
+version_file="${cache_dir}/claude-version"
 version_max_age=3600
 claude_version=""
 if [ -f "$version_file" ] && (( _now - $(file_mtime "$version_file") < version_max_age )); then
@@ -336,60 +345,81 @@ if [ -z "$claude_version" ]; then
   [ -n "$claude_version" ] && echo "$claude_version" > "$version_file"
 fi
 
-needs_refresh=true
-usage_data=""
-cache_age=0
-
-if [ -f "$cache_file" ]; then
-  cache_age=$(( _now - $(file_mtime "$cache_file") ))
-  usage_data=$(<"$cache_file")
-  # Pick TTL based on whether extra is enabled in cached data (pattern match, no fork)
+# Decide refresh from on-disk state; refresh_usage_cache re-runs this under the
+# lock, since another session may have fetched or failed while this one queued
+read_usage_state() {
+  needs_refresh=true
+  usage_data=""
+  extra_active=0
   cache_max_age=$cache_max_age_disabled
-  [[ "$usage_data" =~ \"is_enabled\"[[:space:]]*:[[:space:]]*true ]] && cache_max_age=$cache_max_age_enabled
-  (( cache_age < cache_max_age )) && needs_refresh=false
-fi
+  if [ -f "$usage_file" ]; then
+    usage_data=$(<"$usage_file")
+    # Detect extra via pattern match (no fork); it also picks the TTL
+    if [[ "$usage_data" =~ \"is_enabled\"[[:space:]]*:[[:space:]]*true ]]; then
+      cache_max_age=$cache_max_age_enabled
+      extra_active=1
+    fi
+    (( _now - $(file_mtime "$usage_file") < cache_max_age )) && needs_refresh=false
+  fi
+  # Failure backoff: a snapshot on disk affords a full TTL; retry sooner when
+  # cold, or when only the login was missing (marker content "token")
+  if $needs_refresh && [ -f "$retry_file" ]; then
+    retry_backoff=$retry_backoff_cold
+    [ -n "$usage_data" ] && [ "$(<"$retry_file")" != "token" ] && retry_backoff=$cache_max_age
+    (( _now - $(file_mtime "$retry_file") < retry_backoff )) && needs_refresh=false
+  fi
+}
+read_usage_state
 
 refresh_usage_cache() {
-  local token
-  token=$(get_oauth_token)
-  [ -n "$token" ] && [ "$token" != "null" ] || return
-
-  local body_file
-  body_file=$(mktemp "${cache_dir}/statusline-response.XXXXXX")
-  curl -s -o "$body_file" --max-time 5 \
-    -H "Accept: application/json" \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $token" \
-    -H "anthropic-beta: oauth-2025-04-20" \
-    -H "User-Agent: claude-code/${claude_version}" \
-    "https://api.anthropic.com/api/oauth/usage" 2>/dev/null
-
-  if [ -f "$body_file" ] && jq -e '.five_hour' < "$body_file" >/dev/null 2>&1; then
-    usage_data=$(<"$body_file")
-    cache_age=0
-    mv "$body_file" "$cache_file"
+  # Single-flight: on contention clear an expired lease (30s covers curl's 5s
+  # cap) and yield; the next tick re-decides from the fresh on-disk state
+  if ! mkdir "$lock_dir" 2>/dev/null; then
+    local lock_mtime
+    lock_mtime=$(file_mtime "$lock_dir")
+    (( lock_mtime > 0 && _now - lock_mtime > 30 )) && rmdir "$lock_dir" 2>/dev/null
     return
   fi
-  # Failed (429, timeout, etc.) — touch/create cache to delay retry by one full TTL
-  rm -f "$body_file"
-  touch "$cache_file"
-  cache_age=0
+  read_usage_state
+  if $needs_refresh; then
+    local token
+    token=$(get_oauth_token)
+    if [ -n "$token" ] && [ "$token" != "null" ]; then
+      local body_file
+      body_file=$(mktemp "${cache_dir}/usage-response.XXXXXX")
+      curl -s -o "$body_file" --max-time 5 \
+        -H "Accept: application/json" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $token" \
+        -H "anthropic-beta: oauth-2025-04-20" \
+        -H "User-Agent: claude-code/${claude_version}" \
+        "https://api.anthropic.com/api/oauth/usage" 2>/dev/null
+      if jq -e '.five_hour' < "$body_file" >/dev/null 2>&1 && mv "$body_file" "$usage_file"; then
+        usage_data=$(<"$usage_file")
+        rm -f "$retry_file"
+      else
+        rm -f "$body_file"
+        : > "$retry_file"
+      fi
+    else
+      printf 'token' > "$retry_file"
+    fi
+  fi
+  rmdir "$lock_dir" 2>/dev/null
 }
 
 $needs_refresh && refresh_usage_cache
 
 # ── Rate limit lines ────────────────────────────────────
-# 5h/7d from stdin (real-time), fallback to API cache when stdin has no rate_limits
-rate_lines=""
-stale_marker=""
-
-# Fallback: before first conversation, stdin may lack rate_limits — use cached API data
-if [ -z "$five_hour_pct_raw" ] && [ -n "$usage_data" ]; then
+# stdin carries live rate_limits (CC >= 2.1.80) only after the session's first
+# message; the last API snapshot fills the startup gap, per window.
+fb_five_pct=""; fb_five_reset=""; fb_seven_pct=""; fb_seven_reset=""
+if { [ -z "$five_hour_pct_raw" ] || [ -z "$seven_day_pct_raw" ]; } && [ -n "$usage_data" ]; then
   {
-    read -r five_hour_pct_raw
-    read -r five_hour_reset_epoch
-    read -r seven_day_pct_raw
-    read -r seven_day_reset_epoch
+    read -r fb_five_pct
+    read -r fb_five_reset
+    read -r fb_seven_pct
+    read -r fb_seven_reset
   } < <(jq -r '
     def epoch: if . and . != "" then sub("(\\.[0-9]+)?(Z|[+-][0-9:]+)?$"; "") | strptime("%Y-%m-%dT%H:%M:%S") | mktime else "" end;
     (.five_hour.utilization // ""),
@@ -399,16 +429,27 @@ if [ -z "$five_hour_pct_raw" ] && [ -n "$usage_data" ]; then
   ' <<< "$usage_data" 2>/dev/null)
 fi
 
-if [ -n "$five_hour_pct_raw" ]; then
+rate_lines=""
+append_rate_row() { # label stdin_pct stdin_reset_epoch snapshot_pct snapshot_reset_epoch
+  local label="$1" pct="$2" reset_epoch="$3" marker=""
+  if [ -z "$pct" ]; then
+    pct="$4"
+    reset_epoch="$5"
+    [ -n "$pct" ] || return
+    # A snapshot window is trustworthy only while its reset lies ahead; ~ marks it cached
+    { [[ "$reset_epoch" =~ ^[0-9]+$ ]] && (( reset_epoch > _now )); } || return
+    marker=" ${dim}~${reset}"
+  fi
   # Keep "%m-%d %H:%M" for all rows — do NOT shorten 5h to "%H:%M", breaks alignment
-  five_hour_reset=$(format_epoch "$five_hour_reset_epoch" "%m-%d %H:%M" 2>/dev/null)
-  seven_day_reset=$(format_epoch "$seven_day_reset_epoch" "%m-%d %H:%M" 2>/dev/null)
-
-  rate_lines+="$(render_rate_row "5h" "$five_hour_pct_raw" "$five_hour_reset")"
-  rate_lines+="\n$(render_rate_row "7d" "$seven_day_pct_raw" "$seven_day_reset")"
-
+  local reset_time
+  reset_time=$(format_epoch "$reset_epoch" "%m-%d %H:%M" 2>/dev/null)
+  rate_lines+="${rate_lines:+\n}$(render_rate_row "$label" "$pct" "$reset_time" "$marker")"
+}
+append_rate_row "5h" "$five_hour_pct_raw" "$five_hour_reset_epoch" "$fb_five_pct" "$fb_five_reset"
+append_rate_row "7d" "$seven_day_pct_raw" "$seven_day_reset_epoch" "$fb_seven_pct" "$fb_seven_reset"
+if (( extra_active )); then
   extra_row=$(render_extra_rate_row)
-  [ -n "$extra_row" ] && rate_lines+="\n${extra_row}"
+  [ -n "$extra_row" ] && rate_lines+="${rate_lines:+\n}${extra_row}"
 fi
 
 # ── Output ──────────────────────────────────────────────
