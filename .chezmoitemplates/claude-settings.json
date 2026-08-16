@@ -32,6 +32,7 @@
   "disableRemoteControl": true,
   "disableClaudeAiConnectors": true,
   "disableBundledSkills": true,
+  "disableDeepLinkRegistration": "disable",
   "permissions": {
     "defaultMode": "auto",
     "allow": [
