@@ -37,6 +37,7 @@
     "defaultMode": "auto",
     "allow": [
       "Agent",
+      "Bash(herdr:*)",
       "Bash(oracle:*)",
       "Bash(snow:*)",
       "Edit",
