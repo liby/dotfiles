@@ -53,7 +53,7 @@ These rules override every other section.
 ## Tools
 
 - Search: `fd` for files (`Glob` stays deny-listed); Bash `rg` covers what the Grep tool cannot: piping search output into further processing.
-- ALWAYS read the entire file when any of these holds: the user provided its path, it is the file's first read, it is under 500 lines, or only partial snippets were given.
+- Read the whole file when the user explicitly asks for a full read, the task depends on relationships across the file, or before a full-file rewrite. Otherwise start with search and bounded reads, expanding until the evidence covers the claim; line count alone is not a safe size proxy.
 - Edit from the file's current state: re-Read after your own Bash rewrites it (git switch/checkout, formatters, codemods), after compaction or resume, and before retrying any read-state failure; Bash output never counts as a Read.
 - Before claiming the IDE diagnostics are clean, unrelated, or limited to a specific item, run `mcp__ide__getDiagnostics`: the `<new-diagnostics>` reminder only shows what the IDE pushes, not the full language-server set. Confirm a diagnostic against the file's actual specification before calling it irrelevant; omit confirmed wrong-spec warnings and spelling noise on established technical names from the user-facing response.
 - For current third-party library/SDK/CLI docs, query Context7: `envchain context7 npx -y ctx7 library <name>` to resolve the library ID, then `envchain context7 npx -y ctx7 docs </org/project> "<topic>"`.
