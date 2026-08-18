@@ -28,6 +28,7 @@ prevent_idle_sleep = true
 
 [permissions.development.filesystem]
 ":root" = "write"
+"{{ .chezmoi.homeDir }}/.codex/plugins/cache/openai-bundled/browser" = "read"
 
 [permissions.development.filesystem.":workspace_roots"]
 ".env" = "read"
@@ -59,6 +60,9 @@ url = "https://developers.openai.com/mcp"
 command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
 args = []
 startup_timeout_sec = 120
+
+[plugins."codex-app-tools@openai-bundled"]
+enabled = true
 
 [plugins."browser@openai-bundled"]
 enabled = true
