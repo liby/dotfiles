@@ -18,3 +18,10 @@ matcher = "^Bash$"
 type = "command"
 command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/guard-bash"
 timeout = 5
+
+[[hooks.UserPromptSubmit]]
+
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/contextual-markdown-links"
+timeout = 5

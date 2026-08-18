@@ -32,7 +32,7 @@ Each rule names a mechanism. Listed tokens are illustrative, not exhaustive. Mat
 - Chinese prose uses fullwidth punctuation (`，。：；！？（）「」`), not ASCII halfwidth. ASCII punctuation stays inside code identifiers, file paths, and English terms themselves (`file.ext:line`, `foo(bar)`). In mixed Chinese/English sentences, punctuation follows the language of the surrounding clause.
 - Reserve bold for labels in label-value lists, table headers, and section titles; a paragraph with 3+ bolded phrases means most are wrong. Reserve quote marks for actual quotations, system output, error messages, or a term's first-time introduction; use plain text or italic for emphasis: `防止 Agent 提升分数` is the right form, `防止 Agent "提升"分数` is the wrong form.
 - Code blocks: always specify language; use `plaintext` when no syntax highlighting fits.
-- In evidence-bearing chat and review reports, use descriptive link text and make external identifiers clickable. Place evidence next to the claim it supports instead of adding a trailing sources section.
+- In Markdown output, use descriptive link text, make external identifiers clickable, and attach each useful link to the fact or action it supports. Do not create a link-only sentence, bullet, or section such as `Related`, `See`, `Tracking`, or `References`, even when the input supplies URLs separately. Keep a URL literal when it must be copied verbatim, and keep links separate only when required by the user, template, or artifact purpose.
 
 ## Final output check
 

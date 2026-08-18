@@ -1,0 +1,4 @@
+#!/bin/zsh
+
+# UserPromptSubmit matchers are ignored; unconditional context also covers links found after tool calls.
+print -r -- '{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"When producing Markdown, do not preserve or create a links block. Every link-bearing sentence must state requested substantive content beyond the link relationship. Put each useful URL on descriptive link text in the existing sentence about the fact or action it supports; never add a separate see, tracking, related, or reference sentence, paragraph, list, or section merely to retain it. Preserve literal or separate URLs only when the requested format or artifact purpose requires them."}}'
