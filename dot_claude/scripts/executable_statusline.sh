@@ -32,6 +32,9 @@ claude='\033[38;2;215;119;87m' # CLI theme "claude" brand orange
 dim='\033[2m'
 muted='\033[38;2;120;130;150m'
 faint='\033[38;2;60;65;75m'
+# Cache-marker slate violet: the only hue unused by data colors, so it stays
+# recognizable as "from snapshot" next to the shifting pct ramp and sky time
+cache='\033[38;2;130;125;160m'
 reset='\033[0m'
 
 sep=" ${dim}∙${reset} " # U+2219 bullet operator: lower profile than │, distinct from the effort circle glyphs
@@ -436,9 +439,9 @@ append_rate_row() { # label stdin_pct stdin_reset_epoch snapshot_pct snapshot_re
     pct="$4"
     reset_epoch="$5"
     [ -n "$pct" ] || return
-    # A snapshot window is trustworthy only while its reset lies ahead; ~ marks it cached
+    # A snapshot window is trustworthy only while its reset lies ahead; ≈ marks it cached
     { [[ "$reset_epoch" =~ ^[0-9]+$ ]] && (( reset_epoch > _now )); } || return
-    marker=" ${dim}~${reset}"
+    marker=" ${cache}≈${reset}"
   fi
   # Keep "%m-%d %H:%M" for all rows — do NOT shorten 5h to "%H:%M", breaks alignment
   local reset_time
