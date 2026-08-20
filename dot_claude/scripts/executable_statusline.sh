@@ -66,16 +66,18 @@ file_mtime() {
   fi
 }
 
-color_for_pct() {
-  local pct=$1
-  if (( pct >= 90 )); then printf "$red"
-  elif (( pct >= 70 )); then printf "$coral"
-  elif (( pct >= 50 )); then printf "$cyan"
-  else printf "$muted"
+# Render helpers return via globals (_pct_color, _bar, _row, _dollars) instead
+# of $( ) command substitution: each $( ) forks a subshell (~0.4 ms measured on
+# this machine) and these run per row on every statusline tick.
+color_for_pct() { # sets _pct_color
+  if (( $1 >= 90 )); then _pct_color=$red
+  elif (( $1 >= 70 )); then _pct_color=$coral
+  elif (( $1 >= 50 )); then _pct_color=$cyan
+  else _pct_color=$muted
   fi
 }
 
-build_bar() {
+build_bar() { # sets _bar, _pct_color
   local pct=$1 width=$2
   (( pct < 0 )) && pct=0
   (( pct > 100 )) && pct=100
@@ -83,8 +85,7 @@ build_bar() {
   local filled=$(( pct * width / 100 ))
   (( pct > 0 && filled == 0 )) && filled=1
   local empty=$(( width - filled ))
-  local bar_color
-  bar_color=$(color_for_pct "$pct")
+  color_for_pct "$pct"
 
   local fill_buf empty_buf
   printf -v fill_buf '%*s' "$filled" ''
@@ -92,7 +93,7 @@ build_bar() {
   printf -v empty_buf '%*s' "$empty" ''
   empty_buf="${empty_buf// /▱}"
 
-  printf "${bar_color}${fill_buf}${faint}${empty_buf}${reset}"
+  _bar="${_pct_color}${fill_buf}${faint}${empty_buf}${reset}"
 }
 
 truncate_middle() {
@@ -119,28 +120,27 @@ format_epoch() {
   fi
 }
 
-cents_to_dollars() {
-  local raw; raw=$(printf "%.0f" "${1:-0}" 2>/dev/null) || raw=0
+cents_to_dollars() { # sets _dollars
+  local raw
+  printf -v raw "%.0f" "${1:-0}" 2>/dev/null
+  [[ "$raw" =~ ^-?[0-9]+$ ]] || raw=0
   local whole=$(( raw / 100 )) rem=$(( raw % 100 ))
-  if [ "$rem" -eq 0 ]; then printf '%d' "$whole"
-  else printf '%d.%02d' "$whole" "$rem"
+  if [ "$rem" -eq 0 ]; then _dollars=$whole
+  else printf -v _dollars '%d.%02d' "$whole" "$rem"
   fi
 }
 
-render_rate_row() {
+render_rate_row() { # sets _row
   local label="$1" pct_raw="$2" reset_time="$3" suffix="$4"
-  local pct bar pct_color pct_fmt
-  pct=$(printf "%.0f" "$pct_raw" 2>/dev/null)
-  [ -z "$pct" ] && pct=0
+  local pct pct_fmt
+  printf -v pct "%.0f" "$pct_raw" 2>/dev/null
   [[ "$pct" =~ ^-?[0-9]+$ ]] || pct=0
-  bar=$(build_bar "$pct" "$bar_width")
-  pct_color=$(color_for_pct "$pct")
-  pct_fmt=$(printf "%3d" "$pct")
-  printf '%s' "${muted}${label}${reset} ${bar}${pct_color}${pct_fmt}%${reset} ${dim}⟳${reset}  ${sky}${reset_time}${reset}${suffix}"
+  build_bar "$pct" "$bar_width"
+  printf -v pct_fmt "%3d" "$pct"
+  _row="${muted}${label}${reset} ${_bar}${_pct_color}${pct_fmt}%${reset} ${dim}⟳${reset}  ${sky}${reset_time}${reset}${suffix}"
 }
 
-render_extra_rate_row() {
-  [ -n "$usage_data" ] || return
+queue_extra_rate_row() {
   local extra_enabled extra_pct_raw extra_used_raw extra_limit_raw
   {
     read -r extra_enabled
@@ -155,13 +155,12 @@ render_extra_rate_row() {
   ' <<< "$usage_data" 2>/dev/null)
 
   [ "$extra_enabled" = "true" ] || return
-  local extra_used extra_limit month extra_reset extra_suffix
-  extra_used=$(cents_to_dollars "$extra_used_raw")
-  extra_limit=$(cents_to_dollars "$extra_limit_raw")
+  local extra_used extra_limit month extra_reset
+  cents_to_dollars "$extra_used_raw";  extra_used=$_dollars
+  cents_to_dollars "$extra_limit_raw"; extra_limit=$_dollars
   month=$(( 10#$_month % 12 + 1 ))
-  extra_reset=$(printf "%02d-01" "$month")
-  extra_suffix=" ${dim}\$${extra_used}/\$${extra_limit}${reset}"
-  render_rate_row "Ex" "$extra_pct_raw" "$extra_reset" "$extra_suffix"
+  printf -v extra_reset "%02d-01" "$month"
+  queue_row "Ex" "$extra_pct_raw" "$extra_reset" " ${dim}\$${extra_used}/\$${extra_limit}${reset}"
 }
 
 # ── Extract JSON data (single jq call) ──────────────────
@@ -249,7 +248,6 @@ pct_used=$(( current * 100 / compact_at ))
 (( pct_used > 100 )) && pct_used=100
 
 # ── LINE 1: Context % │ Dir:branch │ Model │ Effort ──
-pct_color=$(color_for_pct "$pct_used")
 { [ -z "$cwd" ] || [ "$cwd" = "null" ]; } && cwd=$(pwd)
 dir_name="${cwd##*/}"
 
@@ -259,7 +257,8 @@ git_branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null) && {
   git -C "$cwd" diff-index --quiet HEAD -- 2>/dev/null || git_dirty="*"
 }
 
-line1="${sky}Context${reset} ${pct_color}${pct_used}%${reset}"
+color_for_pct "$pct_used"
+line1="${sky}Context${reset} ${_pct_color}${pct_used}%${reset}"
 line1+="${sep}"
 line1+="${amber}${dir_name}${reset}"
 if [ -n "$git_branch" ]; then
@@ -328,8 +327,9 @@ get_oauth_token() {
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude-statusline"
 usage_file="${cache_dir}/usage.json"
 retry_file="${cache_dir}/usage.retry"
+error_file="${cache_dir}/usage-last-error.json"
 lock_dir="${cache_dir}/refresh.lock"
-retry_backoff_cold=300      # no snapshot to render: retry soon to heal startup
+retry_backoff_cold=300      # cold start or credential problem: retry soon
 cache_max_age_enabled=300   # 5 min when extra is active
 cache_max_age_disabled=10800 # 3h when extra is off (re-check if user enabled it)
 [ -d "$cache_dir" ] || mkdir -p -m 700 "$cache_dir"
@@ -364,11 +364,18 @@ read_usage_state() {
     fi
     (( _now - $(file_mtime "$usage_file") < cache_max_age )) && needs_refresh=false
   fi
-  # Failure backoff: a snapshot on disk affords a full TTL; retry sooner when
-  # cold, or when only the login was missing (marker content "token")
+  # Failure backoff. Marker: "token" = no credential, else HTTP status of the
+  # last failure (000 = curl failed). Credential problems retry soon since CC
+  # may refresh the OAuth token at any moment; other failures afford a full
+  # TTL while a snapshot exists to render.
   if $needs_refresh && [ -f "$retry_file" ]; then
+    local marker=''
+    IFS= read -r marker < "$retry_file" # no fork; marker has no trailing newline
     retry_backoff=$retry_backoff_cold
-    [ -n "$usage_data" ] && [ "$(<"$retry_file")" != "token" ] && retry_backoff=$cache_max_age
+    case "$marker" in
+      token|401|403) ;;
+      *) [ -n "$usage_data" ] && retry_backoff=$cache_max_age ;;
+    esac
     (( _now - $(file_mtime "$retry_file") < retry_backoff )) && needs_refresh=false
   fi
 }
@@ -385,24 +392,34 @@ refresh_usage_cache() {
   fi
   read_usage_state
   if $needs_refresh; then
+    # Orphans from ticks killed mid-fetch; safe to sweep while holding the
+    # lock. set +f: the script runs under set -f, which would keep the glob
+    # literal and make this rm a silent no-op.
+    set +f; rm -f "${cache_dir}"/usage-response.*; set -f
     local token
     token=$(get_oauth_token)
     if [ -n "$token" ] && [ "$token" != "null" ]; then
-      local body_file
+      local body_file http_code
       body_file=$(mktemp "${cache_dir}/usage-response.XXXXXX")
-      curl -s -o "$body_file" --max-time 5 \
+      http_code=$(curl -s -o "$body_file" -w '%{http_code}' --max-time 5 \
         -H "Accept: application/json" \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $token" \
         -H "anthropic-beta: oauth-2025-04-20" \
         -H "User-Agent: claude-code/${claude_version}" \
-        "https://api.anthropic.com/api/oauth/usage" 2>/dev/null
+        "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
       if jq -e '.five_hour' < "$body_file" >/dev/null 2>&1 && mv "$body_file" "$usage_file"; then
-        usage_data=$(<"$usage_file")
         rm -f "$retry_file"
+        # Re-derive the whole tuple (usage_data, extra_active, cache_max_age):
+        # updating only usage_data left extra_active stale, dropping the Ex
+        # row on the tick that performed a cold fetch.
+        read_usage_state
       else
-        rm -f "$body_file"
-        : > "$retry_file"
+        # Keep the last failed body for post-hoc diagnosis; kept across later
+        # successes, so its mtime dates the last failure. Marker vocabulary is
+        # classified by read_usage_state.
+        mv "$body_file" "$error_file" 2>/dev/null || rm -f "$body_file"
+        printf '%s' "${http_code:-000}" > "$retry_file"
       fi
     else
       printf 'token' > "$retry_file"
@@ -432,28 +449,45 @@ if { [ -z "$five_hour_pct_raw" ] || [ -z "$seven_day_pct_raw" ]; } && [ -n "$usa
   ' <<< "$usage_data" 2>/dev/null)
 fi
 
-rate_lines=""
-append_rate_row() { # label stdin_pct stdin_reset_epoch snapshot_pct snapshot_reset_epoch
-  local label="$1" pct="$2" reset_epoch="$3" marker=""
+# Queue every row first, then pad the time column to the widest rendered time
+# string: mixed rows stay aligned, an all-expired display keeps ≈ next to "--"
+# instead of floating at timestamp width, and the Ex row shares the column.
+row_labels=(); row_pcts=(); row_times=(); row_suffixes=(); _time_w=0
+queue_row() { # label pct time suffix: single writer keeps the arrays aligned
+  local t="${3:---}"
+  row_labels+=("$1"); row_pcts+=("$2"); row_times+=("$t"); row_suffixes+=("$4")
+  (( ${#t} > _time_w )) && _time_w=${#t}
+}
+queue_rate_row() { # label stdin_pct stdin_reset_epoch snapshot_pct snapshot_reset_epoch
+  local label="$1" pct="$2" reset_epoch="$3" suffix=""
   if [ -z "$pct" ]; then
     pct="$4"
     reset_epoch="$5"
     [ -n "$pct" ] || return
-    # A snapshot window is trustworthy only while its reset lies ahead; ≈ marks it cached
-    { [[ "$reset_epoch" =~ ^[0-9]+$ ]] && (( reset_epoch > _now )); } || return
-    marker=" ${cache}≈${reset}"
+    suffix=" ${cache}≈${reset}"
+    # Zero only a confirmed-ended window: a reset in the past means the next
+    # window starts empty, so current usage is 0%; an unparseable resets_at
+    # keeps the cached pct because that window may still be live.
+    if [[ "$reset_epoch" =~ ^[0-9]+$ ]] && (( reset_epoch <= _now )); then
+      pct=0
+      reset_epoch=""
+    fi
   fi
-  # Keep "%m-%d %H:%M" for all rows — do NOT shorten 5h to "%H:%M", breaks alignment
-  local reset_time
-  reset_time=$(format_epoch "$reset_epoch" "%m-%d %H:%M" 2>/dev/null)
-  rate_lines+="${rate_lines:+\n}$(render_rate_row "$label" "$pct" "$reset_time" "$marker")"
+  # Keep "%m-%d %H:%M" for every real timestamp so the column reads uniformly
+  local reset_time=''
+  [[ "$reset_epoch" =~ ^[0-9]+$ ]] && reset_time=$(format_epoch "$reset_epoch" "%m-%d %H:%M" 2>/dev/null)
+  queue_row "$label" "$pct" "$reset_time" "$suffix"
 }
-append_rate_row "5h" "$five_hour_pct_raw" "$five_hour_reset_epoch" "$fb_five_pct" "$fb_five_reset"
-append_rate_row "7d" "$seven_day_pct_raw" "$seven_day_reset_epoch" "$fb_seven_pct" "$fb_seven_reset"
-if (( extra_active )); then
-  extra_row=$(render_extra_rate_row)
-  [ -n "$extra_row" ] && rate_lines+="${rate_lines:+\n}${extra_row}"
-fi
+queue_rate_row "5h" "$five_hour_pct_raw" "$five_hour_reset_epoch" "$fb_five_pct" "$fb_five_reset"
+queue_rate_row "7d" "$seven_day_pct_raw" "$seven_day_reset_epoch" "$fb_seven_pct" "$fb_seven_reset"
+(( extra_active )) && queue_extra_rate_row
+
+rate_lines=""
+for _i in "${!row_labels[@]}"; do
+  printf -v _time_pad '%-*s' "$_time_w" "${row_times[$_i]}"
+  render_rate_row "${row_labels[$_i]}" "${row_pcts[$_i]}" "$_time_pad" "${row_suffixes[$_i]}"
+  rate_lines+="${rate_lines:+\n}${_row}"
+done
 
 # ── Output ──────────────────────────────────────────────
 printf "%b" "$line1"
