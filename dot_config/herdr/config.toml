@@ -20,6 +20,7 @@ name = "one-dark"
 agent_panel_sort = "priority"
 copy_on_select = false
 pane_scrollbars = false
+window_title = "{terminal_title}"
 
 [ui.sound]
 enabled = false
