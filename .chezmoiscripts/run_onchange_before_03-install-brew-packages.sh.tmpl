@@ -86,28 +86,34 @@ reconcile_cask_pins
 # Homebrew 6.0+ refuses to load untrusted tap commands. The Brewfile grants
 # command-scoped trust to `domt4/autoupdate/autoupdate` on every run, so no
 # manual `brew trust` is needed before loading the management command.
-# A running daemon may have been started with different options, so replace it
+# A running job may have been started with different options, so replace it
 # whenever this run_onchange script executes.
-autoupdate_service="gui/$UID/com.github.domt4.homebrew-autoupdate"
-autoupdate_status="$(brew autoupdate status)"
-if [[ "$autoupdate_status" == *"installed and "* ]]; then
-  brew autoupdate delete
-  if launchctl print "$autoupdate_service" >/dev/null 2>&1; then
-    print -u2 "Homebrew autoupdate is still loaded after delete"
-    exit 1
-  fi
-  autoupdate_status="$(brew autoupdate status)"
-  [[ "$autoupdate_status" == *"not configured"* ]] || {
-    print -u2 "Homebrew autoupdate is still configured after delete"
-    exit 1
-  }
+autoupdate_label="com.github.domt4.homebrew-autoupdate"
+autoupdate_gui_domain="gui/$UID"
+autoupdate_service="$autoupdate_gui_domain/$autoupdate_label"
+autoupdate_plist="$HOME/Library/LaunchAgents/$autoupdate_label.plist"
+if launchctl print "$autoupdate_service" >/dev/null 2>&1; then
+  launchctl bootout "$autoupdate_service"
 fi
-echo "Setting up brew autoupdate (daily update + upgrade + cleanup)..."
+if [[ -f "$autoupdate_plist" ]]; then
+  brew autoupdate delete
+fi
+echo "Setting up brew autoupdate (10:00 daily and at load, with upgrade + cleanup)..."
 PATH="$(brew --prefix)/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
   brew autoupdate start 86400 --upgrade --cleanup
 
-# Upstream does not propagate `launchctl load` failures from `start`.
+# Unload upstream's relative timer before adding the fixed-time and login
+# triggers in the canonical GUI domain.
+launchctl unload "$autoupdate_plist" >/dev/null 2>&1 || true
+/usr/bin/plutil -insert StartCalendarInterval \
+  -json '{"Hour":10,"Minute":0}' "$autoupdate_plist"
+/usr/bin/plutil -insert RunAtLoad -bool true "$autoupdate_plist"
+/usr/bin/plutil -remove StartInterval "$autoupdate_plist"
+launchctl bootstrap "$autoupdate_gui_domain" "$autoupdate_plist"
+
+# Upstream's status command only sees the caller's bootstrap namespace and
+# does not understand calendar schedules.
 launchctl print "$autoupdate_service" >/dev/null 2>&1 || {
-  print -u2 "Homebrew autoupdate was configured but launchd did not load it; rerun chezmoi apply from Terminal.app"
+  print -u2 "Homebrew autoupdate was configured but launchd did not load it"
   exit 1
 }
