@@ -64,6 +64,8 @@ glab api projects/:fullpath/pipelines/<pipeline_id>/jobs | jq -r '
 
 ## Merge Requests
 
+During MR preparation, route a needed commit to the `commit` skill and a needed new branch to the `new-branch` skill instead of an inline git flow.
+
 When asked to draft or update an MR title and description:
 
 1. Resolve the MR and target branch from `glab mr view <id> -F json` or the user's URL.

@@ -1,6 +1,6 @@
 ---
 name: new-branch
-description: Create a new Git branch for a task using the repository's naming convention. Use only when the user asks to create a branch. Not for switching to an existing branch.
+description: Create a new Git branch for a task using the repository's naming convention. Use when the user asks to create a branch, or a requested task such as opening an MR or PR needs one as a step. Not for switching to an existing branch.
 argument-hint: "[ticket-number] [additional context]"
 allowed-tools:
   - Bash(git:*)
@@ -30,7 +30,7 @@ Examples:
 
 ## Process
 
-1. Confirm the user asked to create a new branch. If they asked to switch to an existing branch, do not use this skill.
+1. Confirm the user asked for a new branch, or for a task that needs one as a step, such as opening an MR or PR from new work. If they asked to switch to an existing branch, do not use this skill.
 2. Run read-only context checks:
    - `git branch --show-current`
    - `git status --short`

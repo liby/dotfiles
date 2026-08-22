@@ -35,6 +35,7 @@ CLAUDE_CODE_FIELDS = Set[
   "name",
   "description",
   "when_to_use",
+  "compatibility",
   "argument-hint",
   "arguments",
   "disable-model-invocation",
@@ -51,6 +52,19 @@ CLAUDE_CODE_FIELDS = Set[
   "shell",
   "license",
   "metadata"
+].freeze
+
+# Naming a destructive verb in allowed-tools is a deliberate targeted
+# pre-approval. Broad wildcards such as Bash(git:*) pre-approve the same
+# commands but stay un-flagged: warning on them would force blanket rewrites
+# of ordinary read-heavy skills, so body workflow rules stay the real gate.
+SENSITIVE_PREAPPROVALS = [
+  "git push",
+  "glab mr merge",
+  "gh pr merge",
+  "terraform apply",
+  "terraform destroy",
+  "kubectl delete"
 ].freeze
 
 # This is the reviewed local overlay contract, not a floating upstream default.
@@ -282,6 +296,7 @@ skill_files.each do |path|
     warnings << "#{label}: unknown Claude Code frontmatter field #{field.inspect}" unless CLAUDE_CODE_FIELDS.include?(field)
   end
   errors << "#{label}: argument-hint must be a string" if frontmatter.key?("argument-hint") && !frontmatter["argument-hint"].is_a?(String)
+  errors << "#{label}: compatibility must be a string of 1 to 500 chars" if frontmatter.key?("compatibility") && (!frontmatter["compatibility"].is_a?(String) || frontmatter["compatibility"].empty? || frontmatter["compatibility"].length > 500)
   errors << "#{label}: context must be fork when set" if frontmatter.key?("context") && frontmatter["context"] != "fork"
   errors << "#{label}: shell must be bash or powershell when set" if frontmatter.key?("shell") && !%w[bash powershell].include?(frontmatter["shell"].to_s)
   %w[disable-model-invocation user-invocable].each do |field|
@@ -301,6 +316,49 @@ skill_files.each do |path|
   unparseable_entries.each do |entry|
     warnings << "#{label}: unparseable allowed-tools entry #{entry.inspect}; it silently matches nothing"
   end
+
+  raw_tools = frontmatter["allowed-tools"]
+  bash_specs = raw_tools.is_a?(String) ? raw_tools.scan(/Bash\([^)]*\)/) : Array(raw_tools).grep(/\ABash\(/)
+  bash_specs.each do |entry|
+    # Trailing :* and a glued prefix * are wildcard syntax; other colons are
+    # literal.
+    inner = entry[/\ABash\((.*)\)\z/m, 1].to_s.sub(/:\*\z/, "").sub(/\*\z/, "")
+    tokens = inner.strip.split
+    next if tokens.empty?
+    # Skip option-shaped tokens, their values, and standalone * wildcards so
+    # interposed material (git -C <path> push, glab * mr merge) still hits,
+    # while a different subcommand or data word (git stash push,
+    # git log --grep push) aborts the match; extra flags may neutralize the
+    # verb, so the message stays conditional. A * absorbing the sensitive
+    # words themselves (glab * merge) is unflagged glob fidelity, like broad
+    # wildcards.
+    hit = SENSITIVE_PREAPPROVALS.find do |sensitive|
+      words = sensitive.split
+      next false unless File.basename(tokens.first) == words.first
+      idx = 1
+      option_value_ok = false
+      matched = true
+      tokens.drop(1).each do |t|
+        break if idx == words.length
+        if t == words[idx]
+          idx += 1
+          option_value_ok = false
+        elsif t == "*"
+          option_value_ok = false
+        elsif t.start_with?("-")
+          option_value_ok = true
+        elsif option_value_ok
+          option_value_ok = false
+        else
+          matched = false
+          break
+        end
+      end
+      matched && idx == words.length
+    end
+    warnings << "#{label}: allowed-tools entry names destructive #{hit.inspect}; unless its extra arguments neutralize the verb, gate it with a body workflow rule or permission ask rule instead" if hit
+  end
+
   next if allowlist == :any
 
   text.scan(/```(?:bash|sh)\n(.*?)```/m).flatten.each do |block|

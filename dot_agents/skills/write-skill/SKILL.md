@@ -54,7 +54,7 @@ Target this local Claude Code and Codex setup in one `SKILL.md`. Keep portable d
 - Use `user-invocable: false` only to hide a skill from Claude Code's `/` menu; it does not block model invocation.
 - Use `context: fork` for explicit long-running tasks, independent review, or research. Do not put passive reference knowledge in a fork-only skill.
 - Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution. `$ARGUMENTS` substitution is Claude Code-only (Codex injects the literal token), so never let dual-runtime behavior depend on it; word the instruction to fall back to the user's accompanying message.
-- Treat `allowed-tools` as Claude Code pre-approval metadata, not a deny-list. For bash examples, include command-scoped entries that match the fenced commands. Use `disallowed-tools` to remove tools from the model while the skill is active (cleared when the user sends the next message); reserve permission deny rules for blocking a tool globally.
+- Treat `allowed-tools` as Claude Code pre-approval metadata, not a deny-list. For bash examples, include command-scoped entries that match the fenced commands. Do not name a destructive verb in an entry (`Bash(git push:*)`, `Bash(glab mr merge:*)`): that is a deliberate targeted pre-approval of the exact dangerous command, and a broad wildcard covering it silences the prompt just the same, so gate destructive commands with a body workflow rule (explicit user request) or a permission ask/deny rule, never with allowed-tools scoping. Use `disallowed-tools` to remove tools from the model while the skill is active (cleared when the user sends the next message); reserve permission deny rules for blocking a tool globally.
 
 ## Structure
 
@@ -78,13 +78,14 @@ Runtimes keep skill metadata broadly visible but may truncate, reattach, or omit
 ## Writing Rules
 
 - Start with what the loaded skill must do, not why the skill exists.
-- Use imperative sentences. One sentence should produce one behavior.
+- Use imperative sentences. One sentence should produce one behavior. When one rule maps several conditions to different actions, write a condition -> action list instead of packing the branches into one sentence: in A/B runs the packed prose form reliably dropped one branch on GPT-5.6 while the list form dropped none, with no regression on either target model. A dense single-condition sentence whose every clause carries weight stays as is.
 - Put the common path in `SKILL.md`; move rare branches, long examples, and lookup material out.
 - Keep runtime context lean, not just `SKILL.md` itself: narrow reads with filters, time windows, limits, explicit fields, or exact IDs; request structured output when available; save a bulky raw response to a temp file instead of into context; then project only the needed fields as TSV, a small table, or a field summary. If a CLI defaults to a human table, show the machine-readable flags and field selection path.
 - Prefer values the runtime or code can derive over counts, paths, or amounts hardcoded into prose. A literal like "the four flags" or an absolute path is a maintenance hazard the moment the underlying value changes; point at the source of truth or how to read it.
 - For API, SDK, CLI, platform, or MCP claims, cite current docs, installed help, generated types, source paths, or checked-in examples. If evidence is unavailable, write a research or audit deliverable instead of guessing.
 - Do not request hidden reasoning or step-by-step internal thought. Require conclusions plus observable evidence such as paths, quotes, links, and command results instead.
-- Keep examples only when they prove output shape, trigger boundaries, a failure mode, or a quality boundary (acceptable vs unacceptable output at the same correctness level).
+- Keep examples only when they prove output shape, trigger boundaries, a failure mode, or a quality boundary (acceptable vs unacceptable output at the same correctness level). A worked example must obey the skill's own rules: when it conflicts with a stated rule, models copy the example, so fix whichever one is wrong. A labeled negative example is exempt from the one rule it demonstrates breaking.
+- Give every conditionally applicable template or output slot a legitimate empty form, such as "same as the minimal proposal; no structural change indicated"; a slot that must always be filled invites invented content. A slot whose absence must stop the workflow, such as a missing approval or an unresolved destructive target, keeps no empty form.
 - In every skill edit, mask project names, personal names, hosts, private paths, clients, internal URLs, credential variable names, token variables, repo paths, and customer data; use them only in a skill explicitly scoped to that private environment.
 
 ## Rule Hygiene
@@ -98,6 +99,15 @@ Use headings, bold imperatives, and examples only to expose a distinct routing, 
 For evaluator, verifier, rubric, PASS/FAIL, or completion-gate rules, require trigger, evidence, an acceptance or manual-observation condition, failure action or stop, and owner: project skill, target repo, user confirmation, or CLI/runtime.
 
 For transcript-derived rules, exclude duplicated forked or replayed material from independent counts, and treat quoted, pasted, or carried-forward material as context rather than independent preference evidence unless the user explicitly adopts it; count the explicit adoption, not the duplicated source. Pair a rejection with the rejected output and an accepted successor when available, separate repeated behavior from artifact-local or one-off corrections, and write the reusable failure mode in its narrowest existing owner without copying raw transcript prose.
+
+Triage each observed failure before editing:
+
+- The skill never stated the rule: add it, gated by this section.
+- The rule loaded but was skipped: sharpen wording, placement, or a done-condition; do not restate content.
+- The feedback is specific to one codebase or session, and the skill does not own that scope: change nothing there; route the fix to the narrowest owner of that scope, such as the repository's own instructions or a skill that owns it.
+- The transcript shows a recurring self-authorization, such as treating the user's report as sufficient evidence to skip a check: counter that pattern at the step it derails, stated abstractly, not in the session's verbatim words.
+
+Treat an approach the user confirmed as a constraint: do not weaken it while fixing something else, and never copy the session's exact failing instance into the skill, or the session stops working as a regression probe.
 
 The completion bar reaches past evaluator rules: in any skill with a Process, end each numbered step on a checkable done-condition, its demand graded to the coverage the step must force ("every changed file accounted for" forces digging; "produce a change list" does not; "understanding reached" is not even checkable). A flat rules-only skill carries one exhaustiveness bar instead, such as "apply every loaded rule to every hunk"; a single-paragraph skill is exempt.
 
@@ -123,6 +133,8 @@ Use negative wording only when it improves routing, safety, or recovery:
 
 Give each negative rule a recovery path: what to do instead, when to stop, or where to route.
 
+Put the gate for a sensitive or irreversible step adjacent to the instruction that performs it: the same step, table row, or sentence. This includes `references/` files and scripts, because a documented step sequence is an execution plan to the agent walking it; a warning parked in another section does not fire at the step.
+
 ## Verification
 
 Run the checks that match the change and target runtime.
@@ -130,7 +142,7 @@ Run the checks that match the change and target runtime.
 1. Use the skill repo's existing validator, package script, test, lint, or marketplace command first. For skills in this tree, run the [skills validator](../scripts/validate-skills.rb) with `ruby` and pass `--smoke`, resolving the link against this skill's own directory, not the cwd; do not hand-roll frontmatter or reference-link checks.
 2. Verify YAML frontmatter, local-runtime fields, one-hop file references, and changed scripts.
 3. Before changing a model-invocable description or material global `AGENTS.md`/`CLAUDE.md` behavior, freeze the baseline bytes and cases. For a description, use 3 obvious should-trigger prompts, 3 paraphrases, and 3 near misses (8-10 each for important skills), keeping explicit `/name` and `$name` controls separate. For global behavior, use representative target, adjacent no-change, and proportionality cases in every intended runtime. Sanitize history-derived cases.
-4. Evaluate baseline and candidate against the same runtime-visible inputs and retain a change only when its target behavior improves with no paired regression; rerun nondeterministic boundaries when cost permits. For routing, capture the complete catalog when confidentiality permits; otherwise disclose exclusions, label the narrower comparison a managed-catalog proxy, and add actual runtime probes for realistic collisions. Count `invoked` only when the client loads the full `SKILL.md`, and label classifier output `selected`.
+4. Evaluate baseline and candidate against the same runtime-visible inputs and retain a change only when its target behavior improves with no paired regression; rerun nondeterministic boundaries when cost permits. For a skill that claims to change output quality, also run the same cases with and without the skill: the with/without delta is the skill's value. Exclude assertions that pass in both configurations from the value claim but keep them as regression controls; investigate assertions that fail in both. For routing, capture the complete catalog when confidentiality permits; otherwise disclose exclusions, label the narrower comparison a managed-catalog proxy, and add actual runtime probes for realistic collisions. Count `invoked` only when the client loads the full `SKILL.md`, and label classifier output `selected`.
 5. Use evaluation failures to revise the general intent, artifact, or nearby-task boundary; keep a validation split hidden, then try fresh prompts before accepting an important rewrite. When a real run skips a linked file, sharpen the pointer's trigger before inlining the material.
 6. For rewrites, state what behavior stayed the same, what changed, and why.
 7. Run changed scripts with fixed inputs. Confirm clear stdout, stderr, exit codes, and failing-path messages.

@@ -69,7 +69,7 @@ Before reporting, record provenance and diff contribution; reachable trigger; ap
 
 Do not attribute pre-existing debt to the diff; report it separately only when the change newly exposes or worsens it, falsely claims to fix it, it blocks the changed behavior, or it is an active `P1` defect in touched code.
 
-An omission is a finding only when an explicit requirement, source-owned peer contract, or reachable behavior proves it. Otherwise drop it. Preserve a material validation gap only when the path reaches one named unknown boundary/runtime fact, source-specific evidence calls the local assumption into doubt, and the answer could change the verdict to `P1` or `P2`; represent it as a `manual` finding and do not give a clean verdict.
+An omission is a finding only when an explicit requirement, source-owned peer contract, or reachable behavior proves it. Otherwise drop it. Preserve a material validation gap only when the path reaches one named unknown boundary/runtime fact, source-specific evidence calls the local assumption into doubt, and the answer could change the verdict to `P1` or `P2`; represent it as a `manual` finding naming each applicable probe already attempted with its result, and do not give a clean verdict.
 
 ## Severity
 
@@ -99,3 +99,5 @@ When comments or replies are requested, emit only the final body and address one
 For a review comment or reply, prescribe implementation details or a particular approach only when the author asks, prior replies failed to resolve the same issue, or naming an established repository approach is necessary to explain the problem clearly. A confirmed issue may still request the required behavior or outcome without designing the solution. Use questions only for genuine uncertainty.
 
 For `--html`, `--fix`, or explicit machine-readable reports, load `references/contracts/result.md` and produce canonical JSON for that workflow. For `--html`, render that same result using `references/workflows/html.md`.
+
+Any condensing, restyling, or rendering pass keeps findings, severities, evidence, and `path:line` citations 1:1; readability never justifies merging distinct findings or dropping one.
