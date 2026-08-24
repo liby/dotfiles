@@ -203,6 +203,7 @@
   "enabledPlugins": {},
   "extraKnownMarketplaces": {},
   "spinnerTipsEnabled": false,
+  "tui": "default",
   "spinnerVerbs": {
     "mode": "replace",
     "verbs": [
