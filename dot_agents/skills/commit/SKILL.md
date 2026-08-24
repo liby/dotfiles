@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Create or amend a local Git commit from the relevant changes. Use only when the user asks to commit, amend, or complete a requested Git action such as push that first requires a commit. Stage only in-scope files and write a repository-matching message. Not for message drafts or branch creation.
+description: Create or amend a local Git commit from the relevant changes. Use for every commit you are about to create, regardless of how the request arrived, which repository it targets, or what tooling wraps git. Stage only in-scope files and write a repository-matching message. Not for message drafts or branch creation.
 argument-hint: "[additional context]"
 context: fork
 background: false
@@ -18,6 +18,7 @@ Create one git commit for: $ARGUMENTS. With empty arguments, commit the work fro
 ## Contract
 
 - Commit only after an explicit user request.
+- When the commit targets a repository other than the cwd, resolve its directory first and run every git command in this skill with `git -C <dir>`.
 - Do not push, reset, checkout, rebase, or rewrite history unless the user explicitly asked for that operation.
 - Recover motivation from the current conversation, linked issue or plan, project docs, current diff, and targeted agent transcript search when the user wants one commit for work spread across prior conversations or agents.
 - Do not read shell history. Treat transcripts as secret surfaces: search them narrowly, do not dump raw snippets into chat, and extract only the motivation needed for the commit message.
