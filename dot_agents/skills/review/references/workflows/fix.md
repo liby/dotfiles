@@ -6,7 +6,7 @@ Run fixes in a fresh write-capable fix-orchestrator subagent against a local wri
 
 ## Inputs And Scope
 
-Pass the writable repo root, review scope/base, repo instructions, validation commands, and each fixable finding with severity, `path:line`, root cause, direct dependents, and any manual observation. Also pass absolute paths to `SKILL.md` and this file, requiring the fixer to read both completely before mutation; if either is inaccessible in its runtime, inline the Finding Bar plus this workflow's scope, baseline, secret-classifier, mutation, and stop rules. Do not pass dropped, manual, speculative, weak, repeated, or raw second-opinion content.
+Pass the writable repo root, review scope/base, repo instructions, and validation commands. For each fixable finding, pass severity, `path:line`, provenance, exact diff contribution, root cause, reachable trigger, decisive evidence, consequence, fix direction, remedy prerequisites, and direct dependents. Also pass absolute paths to `SKILL.md` and this file, requiring the fixer to read both completely before mutation. If either is inaccessible in its runtime, inline the Finding Bar plus this workflow's scope, baseline, secret-classifier, mutation, and stop rules. Do not pass dropped, manual, speculative, weak, repeated, or raw second-opinion content.
 
 Before editing, create a NUL-delimited scope file containing only frontier paths and direct dependents the fixes may require. Exclude unrelated dirty files. Run the helper, which enforces the secret-path classifier and creates a scoped Git baseline:
 

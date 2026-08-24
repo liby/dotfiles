@@ -1,7 +1,7 @@
 ---
 name: review
 description: Review remote merge requests or pull requests, branches, commits, diffs, and uncommitted code changes for correctness and regression risk, reporting only evidence-backed findings. Use for pre-merge code review, review findings, and MR/PR URLs. Not for prose review, skill-authoring audits, or implementation requests.
-argument-hint: "[--fix] [--html] [MR/PR URL or notes]"
+argument-hint: "[--fix] [MR/PR URL or notes]"
 allowed-tools:
   - Bash
   - Read
@@ -56,7 +56,6 @@ Apply every lens; load its file when the change exercises it.
 
 ## Variants
 
-- `--html`, report, artifact, or visual review: load [result](references/contracts/result.md), produce canonical JSON, then load [html](references/workflows/html.md).
 - `--fix`: finish the normal review first; when accepted findings and a writable local checkout exist, load [fix](references/workflows/fix.md) before mutation.
 - Spec-backed review: map each requirement to the diff; review missing, partial, and unrequested behavior separately.
 - Large or high-risk review: dispatch independent reviewers only for distinct risk areas, after loading [second-opinion](references/workflows/second-opinion.md).
@@ -97,7 +96,5 @@ For normal chat, start with findings. Include severity, `path:line`, title, reac
 When comments or replies are requested, emit only the final body and address one issue per comment or reply. State the verified problem or ask the one question needed to establish it. In a reply, answer the author's concern first with the verified fact that resolves it. If the concern is whether the patch changed behavior, state what was already true and whether the patch changes it. Add only the context needed to support that answer, using the concrete terms and identifiers already established by the code or discussion. Omit resolved points, review mechanics, and unsupported examples.
 
 For a review comment or reply, prescribe implementation details or a particular approach only when the author asks, prior replies failed to resolve the same issue, or naming an established repository approach is necessary to explain the problem clearly. A confirmed issue may still request the required behavior or outcome without designing the solution. Use questions only for genuine uncertainty.
-
-For `--html`, `--fix`, or explicit machine-readable reports, load `references/contracts/result.md` and produce canonical JSON for that workflow. For `--html`, render that same result using `references/workflows/html.md`.
 
 Any condensing, restyling, or rendering pass keeps findings, severities, evidence, and `path:line` citations 1:1; readability never justifies merging distinct findings or dropping one.
