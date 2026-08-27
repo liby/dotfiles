@@ -28,7 +28,19 @@ if ! grep -q "pinentry-program" "$gpg_agent_conf"; then
   echo "pinentry-program $pinentry_bin" >> "$gpg_agent_conf"
 fi
 
-"$gpgconf_bin" --launch gpg-agent
+# no-autostart: only an explicit `gpg-agent --daemon` from a trusted context
+# may start the agent; an agent born inside an app sandbox inherits it for
+# life and loses the YubiKey. This also suppresses `gpgconf --launch`, hence
+# the explicit daemon start below.
+common_conf="$HOME/.gnupg/common.conf"
+[[ ! -f "$common_conf" ]] && touch "$common_conf"
+if ! grep -q "^no-autostart" "$common_conf"; then
+  echo "no-autostart" >> "$common_conf"
+fi
+
+if ! "$brew_prefix/bin/gpg-connect-agent" --no-autostart 'getinfo pid' /bye 2>/dev/null | grep -q '^D '; then
+  "$brew_prefix/bin/gpg-agent" --daemon >/dev/null
+fi
 "$gpgconf_bin" --reload gpg-agent
 
 card_status=$("$gpg_bin" --card-status 2>/dev/null) || {

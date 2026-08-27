@@ -24,6 +24,7 @@
 - Verify current Codex behavior against the installed version and official OpenAI sources. Verify dependencies against the pinned version and official sources; use the matching host CLI.
 - Keep `envchain` values in the consuming client's namespace and expand them only inside the wrapped process. Missing values are set by the user.
 - Use isolated homes and synthetic stores for credential probes. Ordinary clients retain their opaque path; verify live accounts through credential-safe status or mark them `unverified`.
+- Never start gpg-agent from a sandboxed shell: it inherits the sandbox for life and loses the YubiKey (`no-autostart` is set). On `no running gpg-agent` or `No pinentry`, run escalated as the login user, never sudo: `gpgconf --kill gpg-agent && gpg-agent --daemon`.
 
 ## Engineering And Evidence
 
