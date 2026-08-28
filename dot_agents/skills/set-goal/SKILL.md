@@ -60,7 +60,13 @@ Do not require a hard round budget unless the user asks for one or the executor 
 
 After read-back verification succeeds, emit either a callable goal tool invocation or a two-line paste handoff. No summaries, file path explanations, or additional commentary around it.
 
-If the runtime exposes a callable goal tool such as `create_goal` or equivalent, invoke it with the argument `Read <absolute-file-path> and use its contents as the goal.` Pass only this short pointer, never the drafted goal body: goal objective fields can be length-capped. If creation reports an unfinished goal, report the conflict once and include status output only when a callable status tool is exposed; do not retry. For any other creation failure, report the non-sensitive error once and stop without blind retries. After the call succeeds, continue executing the goal in the same thread.
+If the runtime exposes `create_goal` or an equivalent callable goal tool:
+
+- Call `get_goal` or the equivalent status tool first when available.
+- If status reports an active goal, complete it with `update_goal` or an equivalent action only when fresh evidence in the current conversation satisfies that goal's own Proof of completion. If completion is unavailable, unjustified, or fails, report the conflict or non-sensitive failure once and stop without invoking creation. Never replace or overwrite an unrelated or unfinished goal.
+- Invoke creation once with the argument `Read <absolute-file-path> and use its contents as the goal.` Pass only this short pointer, never the drafted goal body: goal objective fields can be length-capped.
+- If creation reports an unfinished goal, call status again when available. Continue executing from the verified goal file without retrying creation only when refreshed status identifies the same prior goal as completed; otherwise report the conflict once, include status output only when available, and stop.
+- For any other creation or status failure, report the non-sensitive error once and stop without blind retries. After a successful creation, continue executing the goal in the same thread.
 
 Otherwise, when the harness exposes `/goal` only as user input and has no callable goal tool, the entire assistant message is exactly two paragraphs separated by a blank line. The first paragraph is the literal string `Run next:` and the second is `/goal Read <absolute-file-path> and use its contents as the goal.` Nothing else appears before, between, or after these paragraphs.
 

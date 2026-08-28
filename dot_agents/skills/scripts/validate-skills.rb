@@ -229,20 +229,22 @@ def command_allowlist(frontmatter)
   [parsed.map(&:last).compact.to_set, unparseable]
 end
 
-def line_command(line)
-  return nil if line.match?(/\A\s/)
+def line_commands(line)
+  return [] if line.match?(/\A\s/)
   line = line.strip
-  return nil if line.empty? || line.start_with?("#")
+  return [] if line.empty? || line.start_with?("#")
   line = line.sub(/\A(?:&&|\|\||;)\s*/, "")
-  return File.basename(Regexp.last_match(1)) if line =~ /\A[A-Za-z_][A-Za-z0-9_]*=\$\(([^)\s]+)/
+  return [File.basename(Regexp.last_match(1))] if line =~ /\A[A-Za-z_][A-Za-z0-9_]*=\$\(([^)\s]+)/
 
   words = Shellwords.split(line) rescue line.split(/\s+/)
-  words.shift while words.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
-  cmd = words.first
-  return nil if cmd.nil? || cmd.start_with?("-")
-  return nil if cmd.match?(/\A\/[A-Za-z_][A-Za-z0-9_-]*\z/)
-  return nil if %w[if then else fi do done while for case esac in function local export return true false].include?(cmd)
-  File.basename(cmd)
+  words.slice_when { |word, _| %w[&& || | &].include?(word) }.map do |segment|
+    segment.shift while segment.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
+    cmd = segment.first
+    next if cmd.nil? || cmd.start_with?("-")
+    next if cmd.match?(/\A\/[A-Za-z_][A-Za-z0-9_-]*\z/)
+    next if %w[if then else fi do done while for case esac in function local export return true false].include?(cmd)
+    File.basename(cmd)
+  end.compact
 end
 
 # Deployed pass over ~/.agents/skills (skipped silently when absent, e.g. CI).
@@ -363,9 +365,10 @@ skill_files.each do |path|
 
   text.scan(/```(?:bash|sh)\n(.*?)```/m).flatten.each do |block|
     block.each_line do |line|
-      cmd = line_command(line)
-      next unless cmd && !allowlist.include?(cmd)
-      warnings << "#{label}: bash block uses #{cmd.inspect} but allowed-tools does not list Bash(#{cmd}:*)"
+      line_commands(line).each do |cmd|
+        next if allowlist.include?(cmd)
+        warnings << "#{label}: bash block uses #{cmd.inspect} but allowed-tools does not list Bash(#{cmd}:*)"
+      end
     end
   end
 end
@@ -377,9 +380,6 @@ CLI_SMOKE_COMMANDS.each do |smoke_label, _command, _expected_output|
   warnings << "CLI_SMOKE_COMMANDS: #{smoke_label.inspect} does not match any known skill" unless known_names.include?(skill)
 end
 
-# Prompt skills can own small contract tripwires where instruction structure is
-# the behavior under test. Run them in normal validation so canonical output
-# blocks and known bad variants cannot hide behind valid frontmatter.
 Dir.glob(root.join("*/scripts/check-contract.rb").to_s).sort.each do |script|
   stdout, stderr, status = Open3.capture3(RbConfig.ruby, script)
   next if status.success?

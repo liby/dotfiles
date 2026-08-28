@@ -71,12 +71,13 @@ raising its limit; use explicit dotfile paths and `!` exclusions. If attachment
 upload or send-button readiness times out, retry once with
 `--browser-bundle-files --browser-bundle-format auto`.
 
-Wait on the running process without fixed sleeps or repeated polling. After
-detachment, resumption, compaction, or a stale controller, inspect the existing
-session before starting another: use `oracle status`, then `oracle session <id>`
-to follow its worker or saved log. Use `--live` only to tail the bound browser
-tab, `--harvest` to snapshot or recover its answer, and `--render` after
-completion.
+Wait on the running process without fixed sleeps or repeated polling. Treat a
+`prompt-commit-timeout` as possibly submitted. After it, detachment, resumption,
+compaction, a stale or finalizing controller, or a duplicate-running guard,
+inspect the exact existing session and saved conversation before resending or
+starting another: use `oracle status`, then `oracle session <id>` to follow its
+worker or saved log. Use `--live` only to tail the bound browser tab,
+`--harvest` to snapshot or recover its answer, and `--render` after completion.
 
 Accept a fresh automated Pro result only when:
 
@@ -88,15 +89,21 @@ Accept a fresh automated Pro result only when:
   fail-closed; and
 - any supplied Project passes the Project-placement check above.
 
-After controller loss, only an Oracle-reported missing-tab reopen/recovery may
-override stale top-level status, and only with non-empty latest-turn output plus
-`browser.harvest.state=completed`. Ordinary `--live` or `--harvest` output from
-a still-bound tab does not establish completion; otherwise report the session as
-pending or unverified.
-
-Thinking UI, a detached command, a timeout, or stale `running` metadata is not
-completion. While a run is pending or unrecovered, report that state; do not
-substitute the current agent's analysis for the requested second opinion.
+If the exact bound page remains unchanged at `Finalizing answer` across one
+finite observation, or after controller loss looks completed while harvest
+remains unexpectedly empty, reload it at most once and recheck the same session;
+any other Thinking state or observed progress means keep waiting. A UI-visible
+answer after reload may be surfaced as a manual UI observation, but does not
+establish automated completion. In reviewed Oracle v0.18.0, missing-tab recovery
+does not bind the recovered user turn to this session and cannot override stale
+automated status; a separately verified visible answer remains a manual UI
+observation.
+Ordinary `--live` or `--harvest` output from a still-bound tab, Thinking UI,
+command launch, detachment, timeout, or stale `running` metadata do not establish
+completion. Use `--force` only when the worker, controller, and bound browser
+target are dead and the exact conversation or its output remains unrecoverable.
+While a run is pending or unrecovered, report that state; do not substitute the
+current agent's analysis for the requested second opinion.
 
 If automation cannot submit, rerun the original prompt and text-file arguments
 with `oracle --render-markdown`, inspect the rendered text, and submit it in the
@@ -119,9 +126,11 @@ oracle --followup "<root-session-id>" -p "<message>"
 
 Add `--browser-archive never` when continuity is expected. A browser follow-up
 is valid when the verified GPT-5.6 Sol + Pro root completed, the child references
-that parent and its exact saved conversation URL, and the child completes with a
-non-empty answer. Its model selection is normally skipped and unverified; do not
-apply the fresh-root picker gate.
+that parent and its exact saved conversation URL, the conversation shows the
+follow-up message as its latest submitted user turn, and the child completes
+with a non-empty latest assistant answer to that turn. Command launch or child
+linkage alone is not lineage evidence. Its model selection is normally skipped
+and unverified; do not apply the fresh-root picker gate.
 
 Never guess a conversation from open tabs. If continuity is essential and
 Oracle cannot recover the URL, stop and report the gap; otherwise start a fresh,

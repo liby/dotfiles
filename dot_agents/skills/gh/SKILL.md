@@ -22,7 +22,7 @@ Use `gh` for GitHub operations. Verify command syntax with `gh <command> --help`
 | Preview GitHub skill | `gh skill preview` and inspect bundled files | No |
 | Install or update a skill; create an issue; comment, label, close, or merge; any other write | Explain target and run only after explicit user request | Yes |
 
-Do not run `gh auth status` unless a `gh` command fails with an auth or host error. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, which unconditionally rewrites the global git credential helper to gh's absolute path and clobbers dotfile-managed git config.
+Do not run `gh auth status` unless a `gh` command fails with an auth or host error. Report the failing account or host without printing tokens. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, which unconditionally rewrites the global git credential helper to gh's absolute path and clobbers dotfile-managed git config.
 
 ## URL And Reference Parsing
 
@@ -112,9 +112,3 @@ Local skill removal is a filesystem workflow, not a `gh skill` operation in the 
 GitHub writes include issue creation, comments, labels, closes, merges, releases, workflow dispatches, skill installs, and skill updates. Run them only after explicit user request.
 
 When creating public issues, PRs, or comments, mask personal information: hostnames, local directory paths, email addresses, repo URLs that should not be public, tokens, and raw debug output.
-
-## Troubleshooting
-
-- Unknown flag: run `gh <command> --help` and adjust to the installed version.
-- Auth or host error: run `gh auth status` and report the failing account or host without printing tokens.
-- Large JSON: stream to `jq` with bounded output before responding.

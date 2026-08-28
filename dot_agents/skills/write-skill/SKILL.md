@@ -92,13 +92,17 @@ Runtimes keep skill metadata broadly visible but may truncate, reattach, or omit
 
 Before adding a rule, search the runtime-visible global instructions and relevant sibling skills for the same trigger. Merge with the narrowest owner when the trigger, action, or boundary overlaps, replace wrong wording, and add only a failure mode no owner covers.
 
-Keep a rule when it changes agent behavior and names at least three of: trigger, action, boundary, evidence.
+Keep a rule only when omitting it can cause a concrete wrong action or result in a realistic target case.
+
+Put the rule at the earliest action it must constrain. An implementation convention owned only by a review-time skill cannot prevent the initial mistake; route it through an always-loaded repository instruction or deterministic enforcement instead.
 
 Use headings, bold imperatives, and examples only to expose a distinct routing, safety, recovery, completion, or quality boundary. Formatting does not justify duplicate wording. Keep a calibration example when it proves a difference that prose alone does not make testable.
 
 For evaluator, verifier, rubric, PASS/FAIL, or completion-gate rules, require trigger, evidence, an acceptance or manual-observation condition, failure action or stop, and owner: project skill, target repo, user confirmation, or CLI/runtime.
 
 For transcript-derived rules, exclude duplicated forked or replayed material from independent counts, and treat quoted, pasted, or carried-forward material as context rather than independent preference evidence unless the user explicitly adopts it; count the explicit adoption, not the duplicated source. Pair a rejection with the rejected output and an accepted successor when available, separate repeated behavior from artifact-local or one-off corrections, and write the reusable failure mode in its narrowest existing owner without copying raw transcript prose.
+
+For a claimed complete time-window, all-skill, or all-session audit, define the qualifying owning-root set and account for every root through its terminal user outcome, including dissatisfaction or correction and any accepted successor; report unresolved roots as coverage gaps instead of claiming completeness. Activation counts and sampled traces may prioritize reading, but cannot prove complete coverage.
 
 Triage each observed failure before editing:
 
@@ -120,7 +124,7 @@ Delete or merge rules that:
 - explain agent skills, progressive disclosure, or repo background without changing the next action
 - assume a tool, account, server, path, model, runtime, or workflow without saying how to verify it
 - copy a project-specific incident, user correction, or a rule that only fits the example skills you studied, instead of extracting the reusable pattern
-- state what a competent agent would already do unprompted (filler). Test each line: if cutting it doesn't change the next action, cut it (e.g. a security skill explaining that leaked credentials are dangerous).
+- state what a competent agent would already do unprompted (filler)
 
 ## Negative Wording
 
@@ -141,12 +145,10 @@ Run the checks that match the change and target runtime.
 
 1. Use the skill repo's existing validator, package script, test, lint, or marketplace command first. For skills in this tree, run the [skills validator](../scripts/validate-skills.rb) with `ruby` and pass `--smoke`, resolving the link against this skill's own directory, not the cwd; do not hand-roll frontmatter or reference-link checks.
 2. Verify YAML frontmatter, local-runtime fields, one-hop file references, and changed scripts.
-3. Before changing a model-invocable description or material global `AGENTS.md`/`CLAUDE.md` behavior, freeze the baseline bytes and cases. For a description, use 3 obvious should-trigger prompts, 3 paraphrases, and 3 near misses (8-10 each for important skills), keeping explicit `/name` and `$name` controls separate. For global behavior, use representative target, adjacent no-change, and proportionality cases in every intended runtime. Sanitize history-derived cases.
-4. Evaluate baseline and candidate against the same runtime-visible inputs and retain a change only when its target behavior improves with no paired regression; rerun nondeterministic boundaries when cost permits. For a skill that claims to change output quality, also run the same cases with and without the skill: the with/without delta is the skill's value. Exclude assertions that pass in both configurations from the value claim but keep them as regression controls; investigate assertions that fail in both. For routing, capture the complete catalog when confidentiality permits; otherwise disclose exclusions, label the narrower comparison a managed-catalog proxy, and add actual runtime probes for realistic collisions. Count `invoked` only when the client loads the full `SKILL.md`, and label classifier output `selected`.
-5. Use evaluation failures to revise the general intent, artifact, or nearby-task boundary; keep a validation split hidden, then try fresh prompts before accepting an important rewrite. When a real run skips a linked file, sharpen the pointer's trigger before inlining the material.
-6. For rewrites, state what behavior stayed the same, what changed, and why.
-7. Run changed scripts with fixed inputs. Confirm clear stdout, stderr, exit codes, and failing-path messages.
-8. For any skill edit, scan the current diff against the masking rule in Writing Rules, plus hardcoded-but-derivable literals.
+3. Before changing model-invocable routing, a skill's claimed output quality, or material global `AGENTS.md`/`CLAUDE.md` behavior, load and follow the [evaluation protocol](references/evaluation.md).
+4. For rewrites, state what behavior stayed the same, what changed, and why.
+5. Run changed scripts with fixed inputs. Confirm clear stdout, stderr, exit codes, and failing-path messages.
+6. For any skill edit, scan the current diff against the masking rule in Writing Rules, plus hardcoded-but-derivable literals.
 
 ## Output
 

@@ -10,7 +10,7 @@ allowed-tools:
 
 Use `glab` for GitLab operations. Verify command syntax with `glab <command> --help` before relying on flags that affect writes, JSON output, or pipelines.
 
-Do not run `glab auth status` unless a `glab` command fails with an auth or host error.
+Do not run `glab auth status` unless a `glab` command fails with an auth or host error. Report the failing host without printing tokens.
 
 ## Mode Picker
 
@@ -90,8 +90,9 @@ When asked to draft or update an MR title and description:
 
 GitLab writes include creating or updating issues/MRs, comments, approvals, labels, merges, pipeline retries, pipeline cancels, and MR metadata updates. Run them only after explicit user request.
 
-## Troubleshooting
+For `mr approve` or `mr merge`:
 
-- Unknown flag: run `glab <command> --help` and adjust to the installed version.
-- Auth or host error: run `glab auth status` and report the failing host without printing tokens.
-- API endpoint mismatch: run `glab api --help` and use documented placeholders such as `:fullpath`.
+1. Immediately before the write, refresh the MR and resolve its current head SHA.
+2. If the action follows a review or earlier inspection, stop when that SHA differs from the reviewed SHA.
+3. Pass the refreshed SHA with `--sha`. For merge, add `--auto-merge=false` unless the user explicitly requested auto-merge.
+4. Refetch the MR after the command and verify the same head SHA and resulting approval or merge state.

@@ -22,8 +22,7 @@ lifecycle state.
 Before any control command, verify that this process belongs to Herdr:
 
 ```bash
-test "${HERDR_ENV:-}" = 1 || exit 1
-herdr pane current --current
+test "${HERDR_ENV:-}" = 1 && herdr pane current --current
 ```
 
 If either check fails, say that this process is outside Herdr and stop. Do not

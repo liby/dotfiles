@@ -79,7 +79,7 @@ Format:
 7. Stage only files that belong to the requested commit. If an unrelated staged file is already present, stop and report it instead of unstaging user work.
 8. Verify `git diff --staged --name-only` matches every file named by the message.
 9. Search the current conversation, linked issue, plan, and project docs for motivation behind each staged change. For dotfile or config changes, check the tool's documentation or changelog for the reason the path, key, or default changed. If a search returns zero hits, verify the search syntax before concluding motivation is absent (`rg` uses `|` for alternation, not `\|`; `grep` is the opposite).
-10. If motivation is still missing or the user indicates prior agent work, use the transcript recovery workflow below.
+10. If motivation is still missing or the user indicates prior agent work, load and follow [transcript recovery](references/transcript-recovery.md).
 11. Build an evidence ledger for the subject and every included body claim. Mark each entry as `diff`, `motivation`, or `report`, and name the staged path, hunk, issue, plan, or transcript source.
 12. Draft the message from ledger-approved entries, applying the Message Rules source categories. If it has no body, verify that the subject itself preserves every recoverable reason, constraint, material trade-off, and non-obvious consequence a future reader needs; otherwise add the body.
 13. Scan the draft message for vague verbs from Message Rules. Treat a match as an error only when it substitutes for the exact behavior, metric, bound, invariant, or threat model; rewrite the missing meaning rather than deleting a token mechanically.
@@ -96,29 +96,6 @@ Format:
    In amend mode only, replace `git commit` with `git commit --amend`.
 
 15. After commit, run `git status --short`.
-
-## Transcript Recovery
-
-Use transcripts to recover motivation when the final commit spans multiple agents, directories, or conversations.
-
-Search targets:
-
-- Claude Code: `~/.claude/projects/**.jsonl` and `~/.claude/projects/**/subagents/*.jsonl`
-- Codex: `~/.codex/sessions/**/*.jsonl`
-
-Workflow:
-
-1. Build search terms from changed file paths, branch names, issue IDs, function names, and user-provided context. Do not use broad terms such as `fix`, `update`, or `commit`.
-2. Search in this order:
-   - Claude current-project slug under `~/.claude/projects`
-   - Codex sessions mentioning the current repo absolute path, repo basename, active branch, or changed path
-   - Global transcript search only when the user indicates cross-agent or cross-directory work and at least two specific search terms are available
-3. List candidate transcript files with `rg -l --fixed-strings <term> <transcript-root>`. Cap broad searches with date, project slug, or another term before reading.
-4. Prefer assistant summaries, final messages, plan text, and tool-call result summaries. Avoid raw command output, environment dumps, logs, process lists, auth output, and secret-like paths.
-5. For JSONL files, use `jq` to extract bounded text fields instead of printing whole records. Keep only lines needed to identify motivation, accepted trade-offs, test results, or manual verification gaps.
-6. If the transcript evidence conflicts with the current diff, trust the current diff for what changed and use transcripts only for why the work happened.
-7. Route transcript-only facts about uncommitted local config, rejected alternatives, skipped tools, or operator workflow to the post-commit report.
-8. If no targeted evidence appears after one broad search plus one refinement, ask one specific motivation question rather than continuing to trawl transcripts.
 
 ## Failure Modes
 
