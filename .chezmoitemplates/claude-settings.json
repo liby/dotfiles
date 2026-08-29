@@ -8,6 +8,7 @@
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
     "CLAUDE_AUTO_BACKGROUND_TASKS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
+    "CLAUDE_CODE_DISABLE_CRON": "1",
     "CLAUDE_CODE_DISABLE_MOUSE": "1",
     "CLAUDE_CODE_ENABLE_CFC": "0",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
@@ -35,6 +36,7 @@
   "disableDeepLinkRegistration": "disable",
   "permissions": {
     "defaultMode": "auto",
+    "disableBypassPermissionsMode": "disable",
     "allow": [
       "Agent",
       "Bash(herdr:*)",
@@ -61,9 +63,6 @@
       "Bash(*auth.json*)",
       "Bash(*gh auth token*)",
       "Bash(*private-keys-v1.d*)",
-      "CronCreate",
-      "CronDelete",
-      "CronList",
       "DesignSync",
       "Edit(~/.claude/.credentials.json*)",
       "Edit(~/.gnupg/private-keys-v1.d/**)",
@@ -86,7 +85,9 @@
       "Read(~/.zsh_history*)",
       "Read(~/*/auth.json*)",
       "RemoteTrigger",
-      "ReportFindings"
+      "ReportFindings",
+      "ScheduleWakeup",
+      "TaskOutput"
     ]
   },
   "sandbox": {
@@ -222,6 +223,5 @@
   "showThinkingSummaries": true,
   "showTurnDuration": false,
   "skipAutoPermissionPrompt": true,
-  "skipWorkflowUsageWarning": true,
-  "skipDangerousModePermissionPrompt": true
+  "skipWorkflowUsageWarning": true
 }

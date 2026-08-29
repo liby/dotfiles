@@ -51,6 +51,7 @@ Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONES
 ## Integrations
 
 - `CLAUDE_CODE_ENABLE_CFC=0` explicitly disables automatic Claude in Chrome wiring; it does not govern the separately permitted `chrome-devtools` MCP tools. Keep the explicit false value because unset restores automatic eligibility.
+- Keep `CLAUDE_CODE_DISABLE_CRON=1` with the bare `ScheduleWakeup` deny while local scheduling is retired. The environment variable removes `/loop` and the Cron tools, but Claude Code 2.1.251 still registers `ScheduleWakeup` eagerly. Cloud Routines are account-owned and unaffected. Re-test the registry after CLI upgrades before removing the deny.
 - `disableClaudeAiConnectors=true` is the source of truth for blocking auto-fetched claude.ai connectors; explicitly configured MCP servers remain available.
 - `disableBundledSkills=true` keeps the repository-managed skill registry authoritative. Keep the separate `disableWorkflows` setting unset because `ultracode` depends on dynamic workflows.
 - `ENABLE_TOOL_SEARCH=1` forces MCP tool deferral through the custom gateway. Re-test after gateway changes because the gateway must preserve `tool_reference` blocks.
