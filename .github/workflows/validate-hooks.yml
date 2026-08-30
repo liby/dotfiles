@@ -3,6 +3,7 @@ name: validate-hooks
 on:
   pull_request:
     paths:
+      - ".chezmoitemplates/claude-settings.json"
       - ".chezmoitemplates/codex/requirements.toml"
       - ".github/workflows/validate-hooks.yml"
       - "dot_claude/hooks/**"
@@ -10,6 +11,7 @@ on:
   push:
     branches: [main]
     paths:
+      - ".chezmoitemplates/claude-settings.json"
       - ".chezmoitemplates/codex/requirements.toml"
       - ".github/workflows/validate-hooks.yml"
       - "dot_claude/hooks/**"

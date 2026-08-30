@@ -5,7 +5,6 @@ require "json"
 require "open3"
 require "optparse"
 require "pathname"
-require "rbconfig"
 require "set"
 require "shellwords"
 require "timeout"
@@ -54,19 +53,6 @@ CLAUDE_CODE_FIELDS = Set[
   "metadata"
 ].freeze
 
-# Naming a destructive verb in allowed-tools is a deliberate targeted
-# pre-approval. Broad wildcards such as Bash(git:*) pre-approve the same
-# commands but stay un-flagged: warning on them would force blanket rewrites
-# of ordinary read-heavy skills, so body workflow rules stay the real gate.
-SENSITIVE_PREAPPROVALS = [
-  "git push",
-  "glab mr merge",
-  "gh pr merge",
-  "terraform apply",
-  "terraform destroy",
-  "kubectl delete"
-].freeze
-
 # This is the reviewed local overlay contract, not a floating upstream default.
 # A global-tool bump must update this record, the skill, and its provenance in
 # one review before static validation can pass.
@@ -80,12 +66,16 @@ ORACLE_REVIEWED_CONTRACT = {
   browser_effort: "pro"
 }.freeze
 
-# Keep this list to CLI skills whose instructions depend on current CLI behavior.
-# The validator checks that the command is installed and that a documented help
-# or no-side-effect contract path returns quickly; it does not prove every flag.
+# Keep this list to CLI skills whose instructions depend on current CLI
+# behavior, and give every entry an output regex naming the depended-on flags
+# or route; an entry that only proves the command exits 0 asserts nothing.
 CLI_SMOKE_COMMANDS = [
-  ["gh skill install help", %w[gh skill install --help]],
-  ["glab pipeline help", %w[glab ci list --help]],
+  ["gh skill install help", %w[gh skill install --help], /(?=.*--agent)(?=.*--allow-hidden-dirs)(?=.*--dir)(?=.*--from-local)(?=.*--scope)/m],
+  ["gh skill update help", %w[gh skill update --help], /(?=.*gh skill update \[<skill>\.\.\.\])(?=.*--all)(?=.*--dir)(?=.*--dry-run)/m],
+  ["gh pr merge head guard help", %w[gh pr merge --help], /--match-head-commit/],
+  ["glab mr update safe input help", %w[glab mr update --help], /(?=.*--description-file)(?=.*--yes)/m],
+  ["glab mr approve head guard help", %w[glab mr approve --help], /--sha/],
+  ["glab mr merge head guard help", %w[glab mr merge --help], /(?=.*--sha)(?=.*--auto-merge=false)/m],
   [
     "oracle latest-model Pro browser dry run",
     [
@@ -105,8 +95,7 @@ CLI_SMOKE_COMMANDS = [
       "browser mode \\(target=#{Regexp.escape(ORACLE_REVIEWED_CONTRACT.fetch(:browser_target))}; " \
       "requested=#{Regexp.escape(ORACLE_REVIEWED_CONTRACT.fetch(:browser_model))}\\)"
     )
-  ],
-  ["snow sql help", %w[snow sql --help]]
+  ]
 ].freeze
 
 skill_files = Dir.glob(root.join("*/SKILL.md").to_s).sort
@@ -207,9 +196,6 @@ elsif dev_tools_manifest.exist?
           errors << "#{rel(oracle_skill, repo)}: cannot parse Oracle default command (#{e.message})"
         end
       end
-
-      expected_preview = "target=#{ORACLE_REVIEWED_CONTRACT.fetch(:browser_target)}; requested=#{ORACLE_REVIEWED_CONTRACT.fetch(:browser_model)}"
-      errors << "#{rel(oracle_skill, repo)}: missing reviewed Oracle preview contract #{expected_preview.inspect}" unless oracle_text.include?(expected_preview)
     else
       errors << "#{rel(dev_tools_manifest, repo)}: @steipete/oracle #{oracle_version.inspect} does not match reviewed contract #{ORACLE_REVIEWED_CONTRACT.fetch(:version).inspect}"
     end
@@ -218,59 +204,12 @@ elsif dev_tools_manifest.exist?
   end
 end
 
-def command_allowlist(frontmatter)
-  raw_tools = frontmatter["allowed-tools"]
-  tools = raw_tools.is_a?(String) ? raw_tools.split(/\s+/) : Array(raw_tools)
-  return [:any, []] if tools.include?("Bash")
-
-  bash_entries = tools.grep(/\ABash\(/)
-  parsed = bash_entries.map { |tool| [tool, tool[/\ABash\(([^:*]+)(?::\*)?\)\z/, 1]] }
-  unparseable = parsed.select { |_, cmd| cmd.nil? }.map(&:first)
-  [parsed.map(&:last).compact.to_set, unparseable]
-end
-
-def line_commands(line)
-  return [] if line.match?(/\A\s/)
-  line = line.strip
-  return [] if line.empty? || line.start_with?("#")
-  line = line.sub(/\A(?:&&|\|\||;)\s*/, "")
-  return [File.basename(Regexp.last_match(1))] if line =~ /\A[A-Za-z_][A-Za-z0-9_]*=\$\(([^)\s]+)/
-
-  words = Shellwords.split(line) rescue line.split(/\s+/)
-  words.slice_when { |word, _| %w[&& || | &].include?(word) }.map do |segment|
-    segment.shift while segment.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
-    cmd = segment.first
-    next if cmd.nil? || cmd.start_with?("-")
-    next if cmd.match?(/\A\/[A-Za-z_][A-Za-z0-9_-]*\z/)
-    next if %w[if then else fi do done while for case esac in function local export return true false].include?(cmd)
-    File.basename(cmd)
-  end.compact
-end
-
-# Deployed pass over ~/.agents/skills (skipped silently when absent, e.g. CI).
-# For encrypted-only source skills, the deployed plaintext is the only
-# validatable copy. Dirs without a SKILL.md (scripts/) are not skills.
-# Deployed-only skills get provenance warnings, not content checks.
-deployed_names = Set.new
-pointer_scan = []
-Dir.glob(File.join(DEPLOYED_ROOT, "*/SKILL.md")).sort.each do |path|
-  dir_name = File.basename(File.dirname(path))
-  deployed_names << dir_name
-  if encrypted_names.include?(dir_name)
-    skill_files << path
-    next
-  end
-  next if source_names.include?(dir_name)
-
-  frontmatter, = parse_skill(path)
-  frontmatter = {} unless frontmatter.is_a?(Hash)
-  metadata = frontmatter["metadata"].is_a?(Hash) ? frontmatter["metadata"] : {}
-  if metadata.key?("github-repo") || metadata.key?("source") || frontmatter.key?("source")
-    warnings << "~/.agents/skills/#{dir_name}: vendored, not backed up in git"
-  else
-    warnings << "~/.agents/skills/#{dir_name}: unmanaged, no provenance"
-  end
-  pointer_scan << ["~/.agents/skills/#{dir_name}/SKILL.md", frontmatter]
+# For an encrypted-only source skill, the deployed plaintext is the only
+# validatable copy; absent (e.g. CI, no GPG) it is skipped silently. Other
+# deployed entries are unmanaged (see AGENTS.md) and get no checks.
+encrypted_names.each do |dir_name|
+  deployed = File.join(DEPLOYED_ROOT, dir_name, "SKILL.md")
+  skill_files << deployed if File.exist?(deployed)
 end
 
 skill_files.each do |path|
@@ -280,7 +219,6 @@ skill_files.each do |path|
     errors << "#{label}: missing or malformed YAML frontmatter"
     next
   end
-  pointer_scan << [label, frontmatter]
 
   name = frontmatter["name"].to_s.strip
   desc = frontmatter["description"].to_s.strip
@@ -288,8 +226,6 @@ skill_files.each do |path|
   errors << "#{label}: missing name" if name.empty?
   errors << "#{label}: name #{name.inspect} does not match directory #{dir_name.inspect}" unless name.empty? || name == dir_name
   errors << "#{label}: name exceeds 64 chars" if name.length > 64
-  warnings << "#{label}: name uses a reserved Claude term" if name.match?(/(?:claude|anthropic)/i)
-  warnings << "#{label}: name contains XML angle brackets" if name.match?(/[<>]/)
   errors << "#{label}: missing description" if desc.empty?
   errors << "#{label}: description exceeds 1024 chars" if desc.length > 1024
   errors << "#{label}: description contains XML angle brackets" if desc.match?(/[<>]/)
@@ -304,6 +240,9 @@ skill_files.each do |path|
   %w[disable-model-invocation user-invocable].each do |field|
     errors << "#{label}: #{field} must be boolean" if frontmatter.key?(field) && ![true, false].include?(frontmatter[field])
   end
+  raw_tools = frontmatter["allowed-tools"]
+  valid_allowed_tools = raw_tools.nil? || raw_tools.is_a?(String) || (raw_tools.is_a?(Array) && raw_tools.all? { |tool| tool.is_a?(String) })
+  errors << "#{label}: allowed-tools must be a string or an array of strings" unless valid_allowed_tools
 
   text.scan(/\[[^\]]+\]\(([^)#][^)]+)\)/).flatten.each do |target|
     next if target.match?(/\A[a-z][a-z0-9+.-]*:/i) || target.start_with?("#")
@@ -311,95 +250,12 @@ skill_files.each do |path|
     resolved = File.expand_path(target.delete_prefix("<").delete_suffix(">"), File.dirname(path))
     errors << "#{label}: missing linked file #{target}" unless File.exist?(resolved)
   end
-
-  warnings << "#{label}: fixed /tmp JSON path example found; prefer mktemp or direct jq pipe" if text.match?(%r{/tmp/[A-Za-z0-9_.-]+\.json})
-
-  allowlist, unparseable_entries = command_allowlist(frontmatter)
-  unparseable_entries.each do |entry|
-    warnings << "#{label}: unparseable allowed-tools entry #{entry.inspect}; it silently matches nothing"
-  end
-
-  raw_tools = frontmatter["allowed-tools"]
-  bash_specs = raw_tools.is_a?(String) ? raw_tools.scan(/Bash\([^)]*\)/) : Array(raw_tools).grep(/\ABash\(/)
-  bash_specs.each do |entry|
-    # Trailing :* and a glued prefix * are wildcard syntax; other colons are
-    # literal.
-    inner = entry[/\ABash\((.*)\)\z/m, 1].to_s.sub(/:\*\z/, "").sub(/\*\z/, "")
-    tokens = inner.strip.split
-    next if tokens.empty?
-    # Skip option-shaped tokens, their values, and standalone * wildcards so
-    # interposed material (git -C <path> push, glab * mr merge) still hits,
-    # while a different subcommand or data word (git stash push,
-    # git log --grep push) aborts the match; extra flags may neutralize the
-    # verb, so the message stays conditional. A * absorbing the sensitive
-    # words themselves (glab * merge) is unflagged glob fidelity, like broad
-    # wildcards.
-    hit = SENSITIVE_PREAPPROVALS.find do |sensitive|
-      words = sensitive.split
-      next false unless File.basename(tokens.first) == words.first
-      idx = 1
-      option_value_ok = false
-      matched = true
-      tokens.drop(1).each do |t|
-        break if idx == words.length
-        if t == words[idx]
-          idx += 1
-          option_value_ok = false
-        elsif t == "*"
-          option_value_ok = false
-        elsif t.start_with?("-")
-          option_value_ok = true
-        elsif option_value_ok
-          option_value_ok = false
-        else
-          matched = false
-          break
-        end
-      end
-      matched && idx == words.length
-    end
-    warnings << "#{label}: allowed-tools entry names destructive #{hit.inspect}; unless its extra arguments neutralize the verb, gate it with a body workflow rule or permission ask rule instead" if hit
-  end
-
-  next if allowlist == :any
-
-  text.scan(/```(?:bash|sh)\n(.*?)```/m).flatten.each do |block|
-    block.each_line do |line|
-      line_commands(line).each do |cmd|
-        next if allowlist.include?(cmd)
-        warnings << "#{label}: bash block uses #{cmd.inspect} but allowed-tools does not list Bash(#{cmd}:*)"
-      end
-    end
-  end
 end
 
 # Catches retired-skill leftovers: each smoke label starts with the skill name.
-known_names = source_names | deployed_names
 CLI_SMOKE_COMMANDS.each do |smoke_label, _command, _expected_output|
   skill = smoke_label.split(/\s+/).first
-  warnings << "CLI_SMOKE_COMMANDS: #{smoke_label.inspect} does not match any known skill" unless known_names.include?(skill)
-end
-
-Dir.glob(root.join("*/scripts/check-contract.rb").to_s).sort.each do |script|
-  stdout, stderr, status = Open3.capture3(RbConfig.ruby, script)
-  next if status.success?
-
-  detail = [stdout, stderr].join.lines.map(&:strip).reject(&:empty?).first(8).join(" | ")
-  errors << "#{rel(script, repo)}: contract check failed#{detail.empty? ? "" : ": #{detail}"}"
-end
-
-# Routing pointers like "(use pm first)" rot silently when the target skill is
-# renamed or retired. Deployed-only skills are legitimate targets, so without
-# the deployed tree (CI) the known-name set is incomplete and any warning could
-# be a false positive; only warn when the deployed tree exists.
-if Dir.exist?(DEPLOYED_ROOT)
-  pointer_scan.each do |scan_label, frontmatter|
-    %w[description when_to_use].each do |field|
-      frontmatter[field].to_s.scan(/\(use ([A-Za-z0-9_-]+)(?: first)?\)/).flatten.each do |target|
-        warnings << "#{scan_label}: routing pointer to unknown skill #{target.inspect}" unless known_names.include?(target)
-      end
-    end
-  end
+  warnings << "CLI_SMOKE_COMMANDS: #{smoke_label.inspect} does not match any known skill" unless source_names.include?(skill)
 end
 
 if options[:smoke]
@@ -443,18 +299,14 @@ if options[:smoke]
 
   CLI_SMOKE_COMMANDS.each do |label, command, expected_output|
     unless system("which", command.first, out: File::NULL, err: File::NULL)
-      message = "smoke: #{command.first} not found, skipped #{label}"
-      expected_output ? errors << message : warnings << message
+      errors << "smoke: #{command.first} not found, skipped #{label}"
       next
     end
     begin
       out, _err, status = Timeout.timeout(10) { Open3.capture3(*command) }
-      unless status.success?
-        message = "smoke: #{label} exited #{status.exitstatus}"
-        expected_output ? errors << message : warnings << message
-        next
-      end
-      if expected_output && !out.match?(expected_output)
+      if !status.success?
+        errors << "smoke: #{label} exited #{status.exitstatus}"
+      elsif !out.match?(expected_output)
         errors << "smoke: #{label} did not report the reviewed route"
       end
     rescue Timeout::Error

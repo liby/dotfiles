@@ -21,6 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Static mode only: no ~/.agents tree on the runner (deployed pass skips
-      # silently) and no GPG, so encrypted skills are not validated here.
+      # Static mode only: no ~/.agents tree and no GPG on the runner, so
+      # encrypted-only skills (validated via deployed plaintext) are skipped.
       - run: ruby dot_agents/skills/scripts/validate-skills.rb
