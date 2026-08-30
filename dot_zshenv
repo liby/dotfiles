@@ -1,5 +1,4 @@
 export EDITOR="code --wait"
-export LAST30DAYS_MEMORY_DIR="$HOME/.local/share/last30days"
 export PNPM_HOME="$HOME/Code/.pnpm"
 export PROTO_HOME="$HOME/.proto"
 export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
