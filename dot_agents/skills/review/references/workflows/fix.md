@@ -11,7 +11,8 @@ Pass the writable repo root, review scope/base, repo instructions, and validatio
 Before editing, create a NUL-delimited scope file containing only frontier paths and direct dependents the fixes may require. Exclude unrelated dirty files. Run the helper, which enforces the secret-path classifier and creates a scoped Git baseline:
 
 ```bash
-REVIEW_SKILL_DIR="${REVIEW_SKILL_DIR:-$HOME/.agents/skills/review}"
+REVIEW_SKILL_FILE="<absolute SKILL.md path passed to this fixer>"
+REVIEW_SKILL_DIR="${REVIEW_SKILL_FILE%/SKILL.md}"
 FIX_SCOPE_FILE=$(mktemp)
 # Write allowed repo-relative paths to FIX_SCOPE_FILE as NUL-delimited records.
 BASELINE=$(bash "$REVIEW_SKILL_DIR/scripts/review-fix-baseline.sh" "$FIX_SCOPE_FILE") || exit $?

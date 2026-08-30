@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create a scoped baseline object for /review --fix.
+# Create a scoped baseline object for the review fix workflow.
 # Input is a NUL-delimited file of repo-relative paths the fixer may touch.
 # Stdout prints the baseline commit id. Stderr prints refusal, ambiguity, or usage errors.
 
