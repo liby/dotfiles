@@ -2,22 +2,22 @@
 name: commit
 description: Create or amend a local Git commit from the relevant changes. Use for every commit you are about to create, regardless of how the request arrived, which repository it targets, or what tooling wraps git. Stage only in-scope files and write a repository-matching message. Not for message drafts or branch creation.
 argument-hint: "[additional context]"
-context: fork
 background: false
 allowed-tools:
   - Bash(git:*)
-  - Bash(cat .git/hooks/pre-commit)
   - Bash(rg:*)
   - Bash(fd:*)
   - Bash(jq:*)
   - Read
+  - WebFetch
+  - WebSearch
 ---
 
-Create one git commit for: $ARGUMENTS. With empty arguments, commit the work from the current conversation.
+Create one git commit for the requested work. Recover its scope and motivation from the invocation, available conversation or transcript context, and current repository evidence.
 
 ## Contract
 
-- Commit only after an explicit user request.
+- Commit when the user requested a commit or the requested workflow cannot complete without one, such as creating an MR/PR or an explicitly requested release step. An implementation request alone does not authorize a commit; stop and report the prepared state instead.
 - When the commit targets a repository other than the cwd, resolve its directory first and run every git command in this skill with `git -C <dir>`.
 - Do not push, reset, checkout, rebase, or rewrite history unless the user explicitly asked for that operation.
 - Recover motivation from the current conversation, linked issue or plan, project docs, current diff, and targeted agent transcript search when the user wants one commit for work spread across prior conversations or agents.
@@ -68,22 +68,22 @@ Format:
    - `git diff -z --name-only`
    - `git branch --show-current`
    - `git log -15 --no-merges --format='%h%n%s%n%b%n---'`
-   - `cat .git/hooks/pre-commit` if present
+   - `git rev-parse --path-format=absolute --git-path hooks/pre-commit`, then read the resolved file if it exists
 2. Classify every changed path under the Contract. Abort on raw secret surfaces. Record opaque ciphertext separately, exclude its body from every later diff, and continue with ordinary paths once every ambiguous path is classified.
-3. Decide ordinary commit mode unless the user explicitly asked to amend the previous git commit. In amend mode, read `git show --stat --patch HEAD` and treat staged changes as the net replacement relative to `HEAD^`; ordinary commit mode must not use `git commit --amend`.
+3. Decide ordinary commit mode unless the user explicitly asked to amend the previous git commit. In amend mode, read `git show --stat --patch HEAD` and treat the amended commit as the net replacement relative to `HEAD^`; ordinary commit mode must not use `git commit --amend`.
 4. Read `git diff HEAD` for ordinary commit mode or the amend-mode net diff, limited to ordinary paths. Inspect opaque ciphertext through `--name-status`, `--stat`, or encryption markers only.
 5. If the log dialect is Conventional Commits, look for scope config with:
    - `rg -l --no-ignore-vcs '"?commitlint"?|"?commitizen"?' -g '!node_modules' -g '!.git' .`
    - `fd CONTRIBUTING -d 3 .`
 6. Record the pre-staged set from `git diff --cached -z --name-only`. Before any `git add`, compute the intersection of planned commit paths with `git diff -z --name-only`; if a pre-staged planned file also has unstaged changes, abort with `abort: partially staged path in commit scope` and the count. Do not collapse staged and unstaged hunks with `git add <path>`.
 7. Stage only files that belong to the requested commit. If an unrelated staged file is already present, stop and report it instead of unstaging user work.
-8. Verify `git diff --staged --name-only` matches every file named by the message.
+8. Verify the complete NUL-delimited `git diff --cached -z --name-only` set equals the planned staging path set; abort on any extra or missing path. Use `git diff --staged` in ordinary mode or `git diff --cached HEAD^` in amend mode, limited to ordinary paths, as the final `diff` evidence, including for newly added files. Inspect opaque ciphertext through metadata only.
 9. Search the current conversation, linked issue, plan, and project docs for motivation behind each staged change. For dotfile or config changes, check the tool's documentation or changelog for the reason the path, key, or default changed. If a search returns zero hits, verify the search syntax before concluding motivation is absent (`rg` uses `|` for alternation, not `\|`; `grep` is the opposite).
 10. If motivation is still missing or the user indicates prior agent work, load and follow [transcript recovery](references/transcript-recovery.md).
 11. Build an evidence ledger for the subject and every included body claim. Mark each entry as `diff`, `motivation`, or `report`, and name the staged path, hunk, issue, plan, or transcript source.
 12. Draft the message from ledger-approved entries, applying the Message Rules source categories. If it has no body, verify that the subject itself preserves every recoverable reason, constraint, material trade-off, and non-obvious consequence a future reader needs; otherwise add the body.
 13. Scan the draft message for vague verbs from Message Rules. Treat a match as an error only when it substitutes for the exact behavior, metric, bound, invariant, or threat model; rewrite the missing meaning rather than deleting a token mechanically.
-14. Commit with a single-quoted heredoc:
+14. Immediately before invoking `git commit`, repeat the complete staged-set equality check from step 8. Then commit with a single-quoted heredoc:
 
    ```bash
    git commit -F - <<'COMMIT_MSG_END'

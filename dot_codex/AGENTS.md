@@ -39,6 +39,7 @@
 - Put behavior in code and durable contracts in owning docs. Plans cover requirements, behavior, validation, failure handling, and material open questions.
 - A comment states the non-obvious reason at the owning boundary. Include a constraint or invalidation condition only when a maintainer needs it to know when the rationale or code stops being valid. Do not restate the operation, preserve intermediate attempts, or list speculative future work.
 - When the user asks for comment text, return only the comment lines. Do not add a Markdown fence, surrounding code, or explanation.
+- When agent skills or reusable agent instructions change, use `write-skill` on that surface before the final `deslop` pass. Before final validation, run `deslop` on the current change. Keep both passes within the authorized scope.
 
 ## Delegation And Response
 
