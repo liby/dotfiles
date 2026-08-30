@@ -1,11 +1,14 @@
 ---
 name: write-skill
-description: Create, rewrite, or audit agent skills and reusable agent instructions. Use for skill routing, workflow or wording optimization, validation, and splitting or merging skills. Not for application-code review, running an existing skill without changing it, or deleting a skill without redesign or replacement.
+description: Create, test, improve, or audit agent skills and reusable agent instructions. Use for evidence-driven refinement from feedback or failed runs, skill routing, workflow or wording optimization, validation, splitting or merging skills, and instruction-owner audits. Not for application-code review, generic documentation or comment cleanup, running an existing skill without changing it, or deleting a skill without redesign or replacement.
 allowed-tools:
   - Bash
+  - Agent
   - Read
   - Edit
   - Write
+  - WebFetch
+  - WebSearch
 ---
 
 # Write Skill
@@ -21,12 +24,14 @@ Write skills that change agent behavior. Use established domain terms when they 
    - Distilled lesson: add a rule only if it clears Rule Hygiene.
 
    When a step sequence keeps finishing early, sharpen that step's done-condition first (local and cheap); split into a separate skill only when the condition cannot be sharpened further and the rush is actually observed in real runs. Splitting pays off only across a real context boundary (a `context: fork` skill, a subagent dispatch, or a user `/name` invocation hand-off): an inline model-invoked skill call leaves the later steps in the same window and clears nothing. When a rename, split, merge, or replacement removes a skill, `rg` sibling skills' `description`, `when_to_use`, and body routing lines and update every pointer. A direct deletion with no redesign or replacement belongs to the repository's normal file-removal workflow.
-2. If a skill path was given, read `SKILL.md` fully before judging; read linked files only when they affect the change. Re-read right before any full-file rewrite, and Read before Edit/Write when resuming after compaction, because an edit since your last read (including the user's own manual trim) is silently lost; prefer targeted edits over rewriting the whole file. When the edit tool rejects a stale or unread file ("File has not been read yet" in Claude Code), read the file once and retry; never repeat the identical edit call.
-3. Diagnose across the instruction graph, not just the named file. When observed behavior violates an existing rule, verify that the runtime loaded it, identify its narrowest owner and any higher-priority or conflicting instruction, then fix that load, ownership, priority, or conflict before rewriting the rule. Otherwise check whether one root cause explains the same symptom elsewhere and fix it once.
-4. For non-trivial new skills, inspect 2-4 comparable local or public skills. Use actual `SKILL.md` files or current runtime docs, not README claims.
-5. Preserve working trigger behavior unless the task is to change it.
-6. Ask one question only when the requested behavior still has multiple valid interpretations after reading the relevant files.
-7. Before finishing, run a subtraction pass: merge what you duplicated, delete what went stale, relocate what drifted from its section, disclose rare detail into a reference. Rewrite existing wording only when the change is a clear win, shorter without losing information; leave a dense sentence alone when every clause carries weight. The edit should leave the skill net flat or shorter unless it added genuinely new behavior.
+2. Resolve the owning source from current environment or repository instructions before editing an installed skill. Edit the source instead of its deployed copy. When no owner is declared, change only an explicitly named path and do not adopt it into another registry as a side effect.
+3. Read `SKILL.md` fully before judging; read linked files only when they affect the change. Re-read right before any full-file rewrite, and Read before Edit/Write when resuming after compaction, because an edit since your last read (including the user's own manual trim) is silently lost; prefer targeted edits over rewriting the whole file. When the edit tool rejects a stale or unread file ("File has not been read yet" in Claude Code), read the file once and retry; never repeat the identical edit call.
+4. Diagnose across the instruction graph, not just the named file. When observed behavior violates an existing rule, verify that the runtime loaded it, identify its narrowest owner and any higher-priority or conflicting instruction, then fix that load, ownership, priority, or conflict before rewriting the rule. Otherwise check whether one root cause explains the same symptom elsewhere and fix it once.
+5. When user corrections, failed runs, reviews, evals, or transcript evidence are used to diagnose or improve an existing instruction, load and follow the [evidence-driven improvement loop](references/improvement-loop.md) before judging or proposing a change. Separately, when a candidate change touches model-invocable routing, conditional reference loading, claimed output quality, or material global `AGENTS.md`/`CLAUDE.md` behavior, load the [evaluation protocol](references/evaluation.md) before judging or proposing the candidate.
+6. For non-trivial new skills, inspect 2-4 comparable local or public skills. Use actual `SKILL.md` files or current runtime docs, not README claims.
+7. Preserve working trigger behavior unless the task is to change it.
+8. Ask one question only when the requested behavior still has multiple valid interpretations after reading the relevant files.
+9. Before finishing, run a subtraction pass: merge what you duplicated, delete what went stale, relocate what drifted from its section, disclose rare detail into a reference. Rewrite existing wording only when the change is a clear win, shorter without losing information; leave a dense sentence alone when every clause carries weight. The edit should leave the skill net flat or shorter unless it added genuinely new behavior.
 
 ## Routing
 
@@ -48,42 +53,33 @@ The `description` is the routing surface for model-invocable skills. Write it be
 Target this local Claude Code and Codex setup in one `SKILL.md`. Keep portable discovery fields (`name`, `description`) clear because both runtimes use them to route. Add `when_to_use` only when extra routing context is worth a field some clients may ignore. Treat the other fields as Claude Code-specific execution metadata; behavior required in both runtimes belongs in the body. Use the [Agent Skills frontmatter spec](https://agentskills.io/specification#frontmatter) for the portable `SKILL.md` baseline and the [Claude Code frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference) for Claude-specific fields, types, and defaults.
 
 - Prefer a short, easy-to-type `name`/directory slug; drop category nouns the description already carries (a platform word in the name duplicates the description and invites renames).
-- Use `disable-model-invocation: true` only when Claude Code should never auto-load the workflow. Side effects, cost, or timing make a skill a candidate for manual invocation, not proof: first verify its actual callers and sibling-skill loads. Write its `description` as a one-line human-facing `/` menu summary because Claude removes it from model context.
+- Use `disable-model-invocation: true` only when Claude Code should never auto-load the workflow. Side effects, cost, or timing make a skill a candidate for manual invocation, not proof: first verify its actual human and model invocation paths, including sibling loads, because Claude treats a skill-from-skill load as model invocation. Write its `description` as a one-line human-facing `/` menu summary because Claude removes it from model context.
 - For Codex manual-only routing, set `policy.allow_implicit_invocation: false` in the skill's `agents/openai.yaml`. Treat the Claude Code and Codex policies independently and verify both intended invocation paths.
-- Do not set `disable-model-invocation` on a skill that other skills load: a skill-from-skill load is a model invocation, so the flag also removes the skill from their reach. A shared reference skill loaded by downstream skills stays model-invocable, with a `description` that names that downstream role; content shared between two `/`-only skills can only live in a plain linked file. Before setting the flag, `rg` sibling skills for the skill's name.
 - Use `user-invocable: false` only to hide a skill from Claude Code's `/` menu; it does not block model invocation.
 - Use `context: fork` for explicit long-running tasks, independent review, or research. Do not put passive reference knowledge in a fork-only skill.
-- Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution. `$ARGUMENTS` substitution is Claude Code-only (Codex injects the literal token), so never let dual-runtime behavior depend on it; word the instruction to fall back to the user's accompanying message.
-- Treat `allowed-tools` as Claude Code pre-approval metadata, not a deny-list. For bash examples, include command-scoped entries that match the fenced commands. Do not name a destructive verb in an entry (`Bash(git push:*)`, `Bash(glab mr merge:*)`): that is a deliberate targeted pre-approval of the exact dangerous command, and a broad wildcard covering it silences the prompt just the same, so gate destructive commands with a body workflow rule (explicit user request) or a permission ask/deny rule, never with allowed-tools scoping. Use `disallowed-tools` to remove tools from the model while the skill is active (cleared when the user sends the next message); reserve permission deny rules for blocking a tool globally.
+- Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution. Keep shared skill behavior independent of host-specific argument interpolation; use invocation arguments or the user's accompanying request instead of embedding a runtime placeholder in body text.
+- Treat `allowed-tools` as Claude Code prompt-free preapproval, not a deny-list, authorization rule, or cross-runtime capability contract. Match it to the normal contract when prompt-free execution is required: use exact entries only when the command set is exhaustive and stable, otherwise use `Bash(<program>:*)` or bare `Bash`, and validate that missing coverage cannot stop the workflow. Keep authorization requirements in the user request and skill body. Use `disallowed-tools` to remove tools from the model while the skill is active; reserve permission deny rules for blocking a tool globally.
 
-## Structure
+## Loading And Structure
 
-Choose the smallest shape that preserves behavior:
+Place an instruction at the cheapest layer that reliably reaches the first action it must constrain:
 
-- One durable instruction: frontmatter plus one imperative paragraph.
-- Repeated workflow: short `Process` with numbered steps.
-- Branching intent: `Mode Picker` before mode details.
-- Fragile or repeated command: script with fixed inputs and validation. Reference bundled scripts as relative links from `SKILL.md`, resolved against the skill's own directory: derivable in both runtimes, unlike Claude Code-only `${CLAUDE_SKILL_DIR}` or a hardcoded install path. Keep an overridable env var (`"${VAR:-<default>}"`) only when a script must also run from outside the skill tree. Derive script output paths from the runtime (`tmpdir()`, `$TMPDIR`) instead of hardcoding `/tmp/...`: hosting agents sandbox different temp directories, and a hardcoded path fails with a write denial under one of them.
-- Tool-rich API/MCP surface: short lookup workflow that caches or splits the tool schema, reads only the relevant tool docs, then calls the tool.
-- Rare or bulky detail: one-level `references/` file. State each link's load condition ("Load when <trigger>", not a bare "see X"); the pointer's wording, not its target, decides whether the file gets read.
-- Ephemeral output shape: inline template or short `examples/`.
-- Durable cross-session or shared artifact: a one-hop `<NAME>-FORMAT.md` contract carrying a filled template, a when-to-write gate, and lifecycle rules. Link it from `SKILL.md` and load it before writing that artifact, or it becomes dead documentation. Use it only when the schema must hold across writes or sessions or another skill shares it; below that bar keep the shape inline.
-- Reusable final artifacts: `assets/`.
-- Term-dense or ambiguity-sensitive workflow: a short `Glossary`, with `Avoid` synonyms only when term drift changes routing, artifact schema, or safety.
+- Always-loaded `AGENTS.md` or `CLAUDE.md`: behavior every relevant task needs before routing or file inspection.
+- A runtime-supported path rule: behavior required only when a matching path is touched.
+- `SKILL.md`: the common path and gates every activation of that capability needs.
+- One-level `references/`: a rare or bulky branch with an observable load condition stated in the parent before the branch's first action.
+- A validated script, hook, permission, or test: fragile, repeated, or deterministic enforcement that cannot depend on model recall.
 
-Use 100 lines as pressure, 200 as a review point. Keep routing, safety, tool choice, validation, and output detail when they justify the length. Past the threshold, diagnose which disease the length is before picking a cure. Stale accumulation gets deleted, not moved into `references/` where the rot keeps living. The same meaning written in several places merges back to a single home. Only when every line is alive and the file is still long is it structural surgery: push material that only some paths need down into `references/`, keep the common path inline; deleting lines cannot cure this one.
+Splitting helps only when common runs avoid the moved material and target runs reliably follow the pointer. A file imported into the startup context is organization, not progressive disclosure. If every activation must read a reference, keep it inline; if the pointer cannot state when to load it, narrowing or deleting the material is safer than hiding it.
 
-Runtimes keep skill metadata broadly visible but may truncate, reattach, or omit body content under context limits. Put routing in the description and keep safety, recovery, and critical workflow rules near the top of the body.
+Link bundled files relative to `SKILL.md`; both runtimes can resolve that path, unlike a host-specific skill-directory variable or hardcoded install directory. Derive temporary output paths from the runtime because fixed temp paths fail across sandboxed hosts. Use a one-hop format contract only when its schema must survive across sessions or writers; give it a write trigger and lifecycle, and require loading it before writing the artifact.
+
+Runtimes keep metadata broadly visible but may truncate, reattach, or omit body content under context limits. Keep routing in the description and critical safety or recovery rules near the top of the body.
 
 ## Writing Rules
 
-- Start with what the loaded skill must do, not why the skill exists.
-- Use imperative sentences. One sentence should produce one behavior. When one rule maps several conditions to different actions, write a condition -> action list instead of packing the branches into one sentence: in A/B runs the packed prose form reliably dropped one branch on GPT-5.6 while the list form dropped none, with no regression on either target model. A dense single-condition sentence whose every clause carries weight stays as is.
-- Put the common path in `SKILL.md`; move rare branches, long examples, and lookup material out.
-- Keep runtime context lean, not just `SKILL.md` itself: narrow reads with filters, time windows, limits, explicit fields, or exact IDs; request structured output when available; save a bulky raw response to a temp file instead of into context; then project only the needed fields as TSV, a small table, or a field summary. If a CLI defaults to a human table, show the machine-readable flags and field selection path.
+- When one rule maps several conditions to different actions, use a condition -> action list. Leave a dense single-condition sentence intact when every clause changes behavior.
 - Prefer values the runtime or code can derive over counts, paths, or amounts hardcoded into prose. A literal like "the four flags" or an absolute path is a maintenance hazard the moment the underlying value changes; point at the source of truth or how to read it.
-- For API, SDK, CLI, platform, or MCP claims, cite current docs, installed help, generated types, source paths, or checked-in examples. If evidence is unavailable, write a research or audit deliverable instead of guessing.
-- Do not request hidden reasoning or step-by-step internal thought. Require conclusions plus observable evidence such as paths, quotes, links, and command results instead.
 - Keep examples only when they prove output shape, trigger boundaries, a failure mode, or a quality boundary (acceptable vs unacceptable output at the same correctness level). A worked example must obey the skill's own rules: when it conflicts with a stated rule, models copy the example, so fix whichever one is wrong. A labeled negative example is exempt from the one rule it demonstrates breaking.
 - Give every conditionally applicable template or output slot a legitimate empty form, such as "same as the minimal proposal; no structural change indicated"; a slot that must always be filled invites invented content. A slot whose absence must stop the workflow, such as a missing approval or an unresolved destructive target, keeps no empty form.
 - In every skill edit, mask project names, personal names, hosts, private paths, clients, internal URLs, credential variable names, token variables, repo paths, and customer data; use them only in a skill explicitly scoped to that private environment.
@@ -94,64 +90,25 @@ Before adding a rule, search the runtime-visible global instructions and relevan
 
 Keep a rule only when omitting it can cause a concrete wrong action or result in a realistic target case.
 
+Keep reusable skills independently usable. Check commands, defaults, and side effects for policy leakage, not just wording:
+
+- Keep a tool or runtime fact when it changes the command, input, output, or recovery path this skill owns.
+- Keep only the narrow integration seam needed by this skill. Put caller policy, source ownership, registry maintenance, adoption, deployment lifecycle, and repository policy in the environment or repository that owns them.
+- Describe a prerequisite from another capability as an outcome. A sibling skill may provide it when available, but successful completion must not depend on that sibling being installed unless the dependency is an explicit part of this skill's contract.
+
 Put the rule at the earliest action it must constrain. An implementation convention owned only by a review-time skill cannot prevent the initial mistake; route it through an always-loaded repository instruction or deterministic enforcement instead.
 
-Use headings, bold imperatives, and examples only to expose a distinct routing, safety, recovery, completion, or quality boundary. Formatting does not justify duplicate wording. Keep a calibration example when it proves a difference that prose alone does not make testable.
+Put the gate for a sensitive or irreversible step adjacent to the instruction that performs it, including in linked references and scripts; a warning in another section does not constrain the agent walking the execution sequence.
 
 For evaluator, verifier, rubric, PASS/FAIL, or completion-gate rules, require trigger, evidence, an acceptance or manual-observation condition, failure action or stop, and owner: project skill, target repo, user confirmation, or CLI/runtime.
 
-For transcript-derived rules, exclude duplicated forked or replayed material from independent counts, and treat quoted, pasted, or carried-forward material as context rather than independent preference evidence unless the user explicitly adopts it; count the explicit adoption, not the duplicated source. Pair a rejection with the rejected output and an accepted successor when available, separate repeated behavior from artifact-local or one-off corrections, and write the reusable failure mode in its narrowest existing owner without copying raw transcript prose.
-
-For a claimed complete time-window, all-skill, or all-session audit, define the qualifying owning-root set and account for every root through its terminal user outcome, including dissatisfaction or correction and any accepted successor; report unresolved roots as coverage gaps instead of claiming completeness. Activation counts and sampled traces may prioritize reading, but cannot prove complete coverage.
-
-Triage each observed failure before editing:
-
-- The skill never stated the rule: add it, gated by this section.
-- The rule loaded but was skipped: sharpen wording, placement, or a done-condition; do not restate content.
-- The feedback is specific to one codebase or session, and the skill does not own that scope: change nothing there; route the fix to the narrowest owner of that scope, such as the repository's own instructions or a skill that owns it.
-- The transcript shows a recurring self-authorization, such as treating the user's report as sufficient evidence to skip a check: counter that pattern at the step it derails, stated abstractly, not in the session's verbatim words.
-
-Treat an approach the user confirmed as a constraint: do not weaken it while fixing something else, and never copy the session's exact failing instance into the skill, or the session stops working as a regression probe.
-
-The completion bar reaches past evaluator rules: in any skill with a Process, end each numbered step on a checkable done-condition, its demand graded to the coverage the step must force ("every changed file accounted for" forces digging; "produce a change list" does not; "understanding reached" is not even checkable). A flat rules-only skill carries one exhaustiveness bar instead, such as "apply every loaded rule to every hunk"; a single-paragraph skill is exempt.
+For feedback-derived changes, use the evidence-driven improvement loop rather than copying a correction into this section. Treat an approach the user confirmed as a constraint; do not weaken it while fixing something else.
 
 Keep trace stores, durable session logs, sandbox state, and automatic progress ledgers out of shared skill text unless every target runtime supports the mechanism or the skill explicitly branches by runtime.
 
-Delete or merge rules that:
-
-- duplicate another rule without adding a sharper boundary or higher prominence
-- say to be careful, robust, high quality, concise, or thoughtful without a check
-- explain agent skills, progressive disclosure, or repo background without changing the next action
-- assume a tool, account, server, path, model, runtime, or workflow without saying how to verify it
-- copy a project-specific incident, user correction, or a rule that only fits the example skills you studied, instead of extracting the reusable pattern
-- state what a competent agent would already do unprompted (filler)
-
-## Negative Wording
-
-Use negative wording only when it improves routing, safety, or recovery:
-
-- `Never`: irreversible actions, credential exposure, public leakage, destructive git, money movement, or production writes.
-- `Do not`: common high-cost failures with a specific trigger.
-- `Not for`: description-level routing boundary.
-- `Avoid`: style pressure or rewrite direction, not a safety boundary.
-
-Give each negative rule a recovery path: what to do instead, when to stop, or where to route.
-
-Put the gate for a sensitive or irreversible step adjacent to the instruction that performs it: the same step, table row, or sentence. This includes `references/` files and scripts, because a documented step sequence is an execution plan to the agent walking it; a warning parked in another section does not fire at the step.
-
 ## Verification
 
-Run the checks that match the change and target runtime.
-
-1. Use the skill repo's existing validator, package script, test, lint, or marketplace command first. For skills in this tree, run the [skills validator](../scripts/validate-skills.rb) with `ruby` and pass `--smoke`, resolving the link against this skill's own directory, not the cwd; do not hand-roll frontmatter or reference-link checks.
-2. Verify YAML frontmatter, local-runtime fields, one-hop file references, and changed scripts.
-3. Before changing model-invocable routing, a skill's claimed output quality, or material global `AGENTS.md`/`CLAUDE.md` behavior, load and follow the [evaluation protocol](references/evaluation.md).
-4. For rewrites, state what behavior stayed the same, what changed, and why.
-5. Run changed scripts with fixed inputs. Confirm clear stdout, stderr, exit codes, and failing-path messages.
-6. For any skill edit, scan the current diff against the masking rule in Writing Rules, plus hardcoded-but-derivable literals.
-
-## Output
-
-For implementation work, report changed files, validation results, and behavior intentionally left unchanged.
-
-For audits, report findings first with `path:line`, quoted evidence, and the exact rewrite direction.
+1. Use the owning skill repository's existing validator, package script, test, lint, or marketplace command first; do not hand-roll checks it already owns.
+2. For a change covered by the evaluation gate in Process, run that protocol before accepting the candidate.
+3. Run changed scripts with fixed inputs and verify their output, exit codes, and failure path.
+4. Scan the diff for private identifiers and hardcoded values the runtime can derive.

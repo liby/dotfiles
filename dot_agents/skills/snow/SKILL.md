@@ -3,6 +3,7 @@ name: snow
 description: Run read-only Snowflake inspection and SELECT queries with the installed Snowflake CLI. Use whenever a task needs live Snowflake data. Not for dbt compilation that needs no live warehouse access.
 allowed-tools:
   - Bash(snow:*)
+  - mcp__chrome-devtools__*
 ---
 
 # Snowflake Execution

@@ -5,7 +5,6 @@ allowed-tools:
   - Bash(gh:*)
   - Bash(git:*)
   - Bash(jq:*)
-  - Bash(ls:*)
   - Read
 ---
 
@@ -22,7 +21,7 @@ Use `gh` for GitHub operations. Verify command syntax with `gh <command> --help`
 | Preview GitHub skill | `gh skill preview` and inspect bundled files | No |
 | Install or update a skill; create an issue; comment, label, close, or merge; any other write | Explain target and run only after explicit user request | Yes |
 
-Do not run `gh auth status` unless a `gh` command fails with an auth or host error. Report the failing account or host without printing tokens. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, which unconditionally rewrites the global git credential helper to gh's absolute path and clobbers dotfile-managed git config.
+Do not run `gh auth status` unless a `gh` command fails with an auth or host error. Report the failing account or host without printing tokens. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, because it rewrites Git's global credential-helper configuration.
 
 ## URL And Reference Parsing
 
@@ -63,9 +62,13 @@ For issues or PRs with many comments:
 
 ## Pull Requests
 
+At the first inspection of an existing PR, record its `url` and `headRefOid` with
+the evidence. A review or inspection from another workflow can serve as a later
+merge baseline only when it carries that exact URL and OID.
+
 When asked to draft, create, or update a PR title or body:
 
-1. For an existing PR, resolve the base, head, and URL with `gh pr view <number-or-url> --json baseRefName,headRefName,url`.
+1. For an existing PR, resolve the base, head, head OID, and URL with `gh pr view <number-or-url> --json baseRefName,headRefName,headRefOid,url`.
 2. For a new PR, resolve the base from the user's request, the branch's `gh-merge-base` configuration, or the repository default branch. Do not hardcode `main` or `master`.
 3. For an existing PR, inspect its complete patch with `gh pr diff <number-or-url>` and use the resolved PR metadata for commits and files. For a new PR, inspect `git log <base>..HEAD`, the stat, and the complete `git diff <base>...HEAD`. Read the repository PR template when one exists.
 4. Draft from the actual branch changes and follow the user's requested structure. Do not invent release, rollback, impact, or testing claims.
@@ -74,41 +77,19 @@ When asked to draft, create, or update a PR title or body:
 
 ## Agent Skills From GitHub
 
-Use `gh skill` instead of manually downloading a GitHub-hosted `SKILL.md`.
-
-Read-only path:
-
-```bash
-gh skill preview <owner/repo> <skill>
-gh skill update --dry-run --dir ~/.agents/skills
-```
-
-Write path, only after explicit request:
-
-```bash
-gh skill install <owner/repo> <skill> --dir ~/.agents/skills
-gh skill install <owner/repo> <skill> --agent codex --scope user
-gh skill update --all --dir ~/.agents/skills
-```
-
-Applying `gh skill update` requires `--all` (or interactive confirmation) even when skill names are given.
-
-Use `--from-local` only when the user asks to install from a local directory. Use `--allow-hidden-dirs` only when the source repo stores skills under hidden directories.
-
-For this setup, shared personal skills live under `~/.agents/skills`; `~/.claude/skills` is expected to point at the same root. Verify with:
-
-```bash
-ls -ld ~/.agents/skills ~/.claude/skills 2>/dev/null
-```
-
-If `gh skill update --dry-run` reports duplicate names, verify host paths and rerun against the canonical root.
-
-If `gh skill update` prompts for missing source metadata, answer only when the original repo is known. Otherwise reinstall from a known source instead of guessing provenance.
-
-Local skill removal is a filesystem workflow, not a `gh skill` operation in the verified help. Do not remove local skill directories from this skill unless a current `gh skill remove --help` command exists and documents the removal mode.
+Before the first `gh skill` command for preview, install, or update, load and
+follow the [GitHub-hosted Agent Skills workflow](references/agent-skills.md).
 
 ## Write Operations
 
 GitHub writes include issue creation, comments, labels, closes, merges, releases, workflow dispatches, skill installs, and skill updates. Run them only after explicit user request.
+
+For `gh pr merge`:
+
+1. If the merge relies on a review or earlier inspection, require its recorded PR URL and `headRefOid`; stop if either is absent.
+2. Immediately before the write, refresh the PR and resolve its current `url` and `headRefOid`.
+3. Stop when the refreshed URL or OID differs from the recorded review/inspection baseline.
+4. Pass the refreshed, successfully compared OID with `--match-head-commit`.
+5. Refetch the PR after the command and verify the same head OID and resulting merge state.
 
 When creating public issues, PRs, or comments, mask personal information: hostnames, local directory paths, email addresses, repo URLs that should not be public, tokens, and raw debug output.

@@ -2,9 +2,7 @@
 name: glab
 description: Operate GitLab through the `glab` CLI for GitLab merge requests, issues, pipelines, discussions, repos, and MR descriptions. Use when the user gives a GitLab URL, asks about a GitLab MR/issue/pipeline, mentions `glab`, or asks to draft/update an MR description. Not for GitHub URLs or purely local git tasks that do not need GitLab issue, MR, pipeline, discussion, or repo data.
 allowed-tools:
-  - Bash(glab:*)
-  - Bash(git:*)
-  - Bash(jq:*)
+  - Bash
   - Read
 ---
 
@@ -64,8 +62,6 @@ glab api projects/:fullpath/pipelines/<pipeline_id>/jobs | jq -r '
 
 ## Merge Requests
 
-During MR preparation, route a needed commit to the `commit` skill and a needed new branch to the `new-branch` skill instead of an inline git flow.
-
 When asked to draft or update an MR title and description:
 
 1. Resolve the MR and target branch from `glab mr view <id> -F json` or the user's URL.
@@ -73,15 +69,24 @@ When asked to draft or update an MR title and description:
 3. Analyze all branch changes against the base:
 
    ```bash
-   git log <base>...HEAD --oneline
+   git log <base>..HEAD --oneline
    git diff <base>...HEAD --stat
    ```
 
 4. Draft a title and description from actual branch changes. Use the user's requested structure. Do not invent release, rollback, or testing claims.
-5. If the user explicitly asked to update the MR, run:
+5. If the user explicitly asked to update the MR, choose separate heredoc
+   delimiters containing only letters, digits, and underscores which do not occur
+   as complete lines in the generated title and description. Verify both
+   comparisons before composing the command; replace the sample delimiters below
+   for every payload, then run:
 
    ```bash
-   glab mr update <iid> --title "<title>" --description "<description>"
+   IFS= read -r MR_TITLE <<'MR_TITLE_END_7Q4'
+   <title>
+   MR_TITLE_END_7Q4
+   glab mr update <iid> --title "$MR_TITLE" --description-file - --yes <<'MR_DESCRIPTION_END_7Q4'
+   <description>
+   MR_DESCRIPTION_END_7Q4
    ```
 
 6. Return the MR URL or the draft text.

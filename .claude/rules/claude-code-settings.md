@@ -12,7 +12,7 @@ paths:
 
 This is not a settings reference. Keep only repository-specific decisions that cannot be recovered from the managed configuration, its owning code, or the [environment variable](https://code.claude.com/docs/en/env-vars), [settings](https://code.claude.com/docs/en/settings), and [sandbox](https://code.claude.com/docs/en/sandboxing) references.
 
-Every entry must name a plausible wrong edit it prevents and the hidden relationship or evidence that makes the edit wrong. Delete entries that only explain a field, restate visible ownership, or preserve compatibility history without a current boundary. Revalidate runtime-dependent evidence after upgrades.
+Revalidate runtime-dependent evidence after upgrades.
 
 ## Ownership
 
@@ -32,7 +32,7 @@ Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONES
 ## Auto mode and file protection
 
 - Keep bare `Bash` out of `permissions.allow`. Sandboxed Bash remains auto-approved, while commands that run outside the sandbox still use the regular auto-mode decision.
-- Keep `Bash(oracle:*)` and `Bash(snow:*)` globally allowed even though their Skills also pre-approve them. On Claude Code 2.1.226, isolated canaries loaded each Skill but still denied its matching Bash command in `dontAsk`, reproducing [anthropics/claude-code#14956](https://github.com/anthropics/claude-code/issues/14956); the global Oracle rule then allowed its canary. Their sandbox exclusions remain separately necessary for browser control and native Snowflake SSO.
+- Keep `Bash(herdr:*)` and `Bash(oracle:*)` globally allowed because their panes or sessions can continue after the invoking Skill's turn, when frontmatter preapproval no longer applies. Keep `Bash(snow:*)` globally allowed for the standing direct-command and native-SSO execution path owned by the Snowflake invariant in `AGENTS.md`. Do not mirror same-turn Git or other host-CLI commands globally unless a current-version reproducer shows that Claude denies the matching Skill grant. Their sandbox exclusions remain separately necessary for Herdr control, Oracle browser control, and native Snowflake SSO.
 - Do not mirror `excludedCommands` into `permissions.allow`: sandbox placement and permission approval are independent decisions. `chezmoi`, `docker`, and direct `codex` stay on the regular auto-mode path; Git and plugin commands receive narrower Skill or plugin approvals. The companion filename exclusion is intentionally broad enough to match expanded plugin paths and must not become a spoofable global allow rule.
 - `Read`, `Edit`, and `Write` stay broadly allowed for routine file work, so their path deny rules are the file-tool boundary. The Bash secret hook supplies the command-layer checks; keep both surfaces aligned when adding sensitive paths.
 

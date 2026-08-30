@@ -7,8 +7,13 @@ allowed-tools:
   - Bash(fd:*)
   - Bash(date:*)
   - Bash(mkdir:*)
+  - Bash(mktemp:*)
+  - Agent
   - Read
+  - Skill
   - Write
+  - WebFetch
+  - WebSearch
 ---
 
 Create a goal file from the slash-command arguments or accompanying request. A direct `/set-goal` invocation always runs this workflow, even when the requested task is to audit or edit the skill itself. Merely quoting or mentioning `set goal` does not invoke it. By default, write the file and follow the Output Contract before starting the requested work. If the user explicitly requires research or requirements gathering to finish before the Goal is drafted, created, or started, first use the deferred read-only grounding path in Process. This delays Goal creation, not skill invocation.
@@ -28,29 +33,19 @@ The goal file is the condition that `/goal` evaluates. Map every material user c
 
 ## Iterative Evaluator Goals
 
-When the request asks to repeat an evaluator, reviewer, auditor, cleanup pass, verifier, or critique until clean, empty, or issue-free, treat its output as evidence for a live issue frontier, not the objective. Completion is an empty accepted frontier with current evaluator evidence adding no new trigger path; another pass requires a later mutation or new external evidence.
-
-In the goal file, require:
-
-- the named evaluator or skill that owns issue classification
-- a live issue frontier with each accepted item carrying a trigger path, evidence, impact, and owner
-- each mutation round to report how the frontier changed: resolved, newly discovered with new trigger evidence, regression from the last fix, repeated prior issue, speculative claim without new evidence, or manual/runtime/product gap
-- progress evidence after each mutation: validation output, source evidence, runtime evidence, or explicit manual gap
-- a stop-and-report condition when the loop repeats the same root cause, the next fix would undo a prior fix, new work is mostly caused by the last fix, or the evaluator keeps producing claims without new evidence
-
-Do not require a hard round budget unless the user asks for one or the executor skill owns a runtime safety cap. Do not freeze the issue set at the first pass. New findings can enter when they add a new trigger path, source-of-truth evidence, or a real regression. If a named evaluator skill has a loop or fix policy, reference that skill as the owner instead of restating its full rules.
+When the request asks to repeat an evaluator, reviewer, auditor, cleanup pass, verifier, or critique until clean, empty, or issue-free, treat its output as evidence for a live issue frontier, not the objective. Completion is an empty accepted frontier with current evaluator evidence adding no new trigger path; another pass requires a later mutation or new external evidence. Load the [iterative-evaluator goal contract](references/iterative-evaluator.md) before drafting its frontier fields and stop-and-report condition.
 
 ## Process
 
-1. Use slash-command arguments when the runtime supplies them; otherwise use the user's accompanying request. Do not treat a literal `$ARGUMENTS` token as input. If both are empty, ask for one sentence describing the desired end state.
+1. Use invocation arguments when the runtime supplies them; otherwise use the user's accompanying request. If both are empty, ask for one sentence describing the desired end state.
 2. Use the deferred pre-Goal grounding path only when the user explicitly orders requirements gathering or research to finish before the Goal is drafted, created, or started. Do not infer it because the Goal itself is to research, investigate, discover, or gather requirements; keep that work inside the Goal.
 3. In the deferred path, use available read-only tools and applicable research skills only to resolve acceptance questions derived from the request. Follow a source only while it directly informs an unresolved acceptance question needed to state the Objective, every material constraint, or Proof. Stop when every such question has current source-of-truth evidence or is recorded in Proof or Scope as an exact manual check or unverified gap. Do not mutate state or execute the Goal. Map only material findings into the existing Goal Structure as drafting input, not completion evidence; do not add a research section or dossier. Record unavailable, stale, or conflicting material evidence as an unverified gap in Proof or Scope. For mutable sources, add a completion check that rereads them after the final relevant mutation.
 4. On the immediate path, decide whether Objective and Proof can be drafted from the input. Do not treat length alone or missing repo matches as ambiguity.
 5. On the immediate path, if named symbols, files, modules, or behaviors would make the proof sharper, do one read-only grounding pass before asking: one search-only `rg` or `fd` lookup, then read the most relevant file, doc, or call site. Do not use preprocessors, exec actions, command substitution, or shell operators, and do not mutate state during grounding.
 6. Ask at most one specific question. In the deferred path, ask only if an unresolved choice would materially change acceptance; in the immediate path, ask only if the user request lacks an observable outcome or success evidence after optional grounding.
-7. For iterative evaluator requests, apply Iterative Evaluator Goals before drafting Proof of completion and Scope.
+7. For iterative evaluator requests, apply the linked Iterative Evaluator Goals contract before drafting Proof of completion and Scope.
 8. Draft the goal in the structure above. Bias toward specificity over length.
-9. Resolve `${SET_GOAL_OUTPUT_DIR:-/tmp}` and the resulting file path to absolute paths, create the directory, then write exactly the drafted goal text with one trailing newline. Use `YYYYMMDD-HHMMSS-<short-slug>.md`; make the slug lowercase ASCII, hyphenated, and outcome-based.
+9. If `SET_GOAL_OUTPUT_DIR` is set, resolve it to an absolute path and create it; otherwise run `mktemp -d` once and use the returned absolute runtime temporary directory. Write exactly the drafted goal text there with one trailing newline. Use `YYYYMMDD-HHMMSS-<short-slug>.md`; make the slug lowercase ASCII, hyphenated, and outcome-based.
 10. Read the file back and verify its content equals the drafted goal text after both strings are normalized to exactly one trailing newline. Verification is internal; do not output the verification result.
 11. If verification fails, use the failure output shape below.
 12. If verification succeeds, follow the output contract below.
@@ -63,7 +58,10 @@ After read-back verification succeeds, emit either a callable goal tool invocati
 If the runtime exposes `create_goal` or an equivalent callable goal tool:
 
 - Call `get_goal` or the equivalent status tool first when available.
-- If status reports an active goal, complete it with `update_goal` or an equivalent action only when fresh evidence in the current conversation satisfies that goal's own Proof of completion. If completion is unavailable, unjustified, or fails, report the conflict or non-sensitive failure once and stop without invoking creation. Never replace or overwrite an unrelated or unfinished goal.
+- If status identifies an unfinished goal, regardless of its status label:
+  - Complete it with `update_goal` or an equivalent action only when fresh evidence in the current conversation satisfies that goal's own Proof of completion.
+  - If completion is unavailable, unjustified, or fails, report the conflict or non-sensitive failure once and stop without invoking creation.
+  - Never replace or overwrite an unrelated or unfinished goal.
 - Invoke creation once with the argument `Read <absolute-file-path> and use its contents as the goal.` Pass only this short pointer, never the drafted goal body: goal objective fields can be length-capped.
 - If creation reports an unfinished goal, call status again when available. Continue executing from the verified goal file without retrying creation only when refreshed status identifies the same prior goal as completed; otherwise report the conflict once, include status output only when available, and stop.
 - For any other creation or status failure, report the non-sensitive error once and stop without blind retries. After a successful creation, continue executing the goal in the same thread.

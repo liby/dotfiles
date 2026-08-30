@@ -2,6 +2,11 @@
 description: 'Use Oracle only when the user explicitly requests Oracle, ChatGPT Pro, ChatGPT Deep Research, a ChatGPT Project consultation, continuation of an Oracle session, or Oracle API mode. Not for requests limited to other consultants, ordinary review or research, or inspection of existing ChatGPT content.'
 allowed-tools:
     - Bash(oracle:*)
+    - Read
+    - Write
+    - WebFetch
+    - WebSearch
+    - mcp__chrome-devtools__*
 metadata:
     github-path: skills/oracle
     github-ref: refs/tags/v0.18.0
@@ -44,8 +49,12 @@ or target an existing tab.
 
 ## Authorization and context
 
-An explicit request to consult ChatGPT Pro or Deep Research authorizes the
-requested subscription-backed browser run, model selection, and Project target.
+An explicit request for Oracle's default browser consultation, ChatGPT Pro, Deep
+Research, or a ChatGPT Project consultation authorizes the requested
+subscription-backed browser run, model selection, and supplied Project target.
+That authorization carries through a same-task manual fallback which sends the
+same reviewed prompt and attachments to the same target; do not ask again unless
+the recipient, material content, paid route, or another external effect changes.
 API mode requires separate, explicit billing consent.
 
 Never attach secrets, credential files, private keys, shell history, browser
@@ -71,6 +80,11 @@ raising its limit; use explicit dotfile paths and `!` exclusions. If attachment
 upload or send-button readiness times out, retry once with
 `--browser-bundle-files --browser-bundle-format auto`.
 
+Before submitting a review request, confirm that every material requested file
+or attachment will be present in the submitted turn. If one is absent, do not
+start an abstract substitute; attach it in the same conversation, then request
+the artifact-specific review.
+
 Wait on the running process without fixed sleeps or repeated polling. Treat a
 `prompt-commit-timeout` as possibly submitted. After it, detachment, resumption,
 compaction, a stale or finalizing controller, or a duplicate-running guard,
@@ -87,7 +101,8 @@ Accept a fresh automated Pro result only when:
   `verified=yes`;
 - the browser log separately confirms `Thinking time: Pro`; this selection is
   fail-closed; and
-- any supplied Project passes the Project-placement check above.
+- any supplied Project passes the Project-placement check above; and
+- the submitted turn contains every material requested file or attachment.
 
 If the exact bound page remains unchanged at `Finalizing answer` across one
 finite observation, or after controller loss looks completed while harvest
@@ -115,61 +130,9 @@ observations only.
 A preceding failed Oracle session supplies no picker, model, or completion
 evidence for the manually submitted answer.
 
-## Browser follow-up
+## Non-default modes
 
-Use repeated `--browser-follow-up "<message>"` options for planned turns in the
-root run. To continue later:
-
-```bash
-oracle --followup "<root-session-id>" -p "<message>"
-```
-
-Add `--browser-archive never` when continuity is expected. A browser follow-up
-is valid when the verified GPT-5.6 Sol + Pro root completed, the child references
-that parent and its exact saved conversation URL, the conversation shows the
-follow-up message as its latest submitted user turn, and the child completes
-with a non-empty latest assistant answer to that turn. Command launch or child
-linkage alone is not lineage evidence. Its model selection is normally skipped
-and unverified; do not apply the fresh-root picker gate.
-
-Never guess a conversation from open tabs. If continuity is essential and
-Oracle cannot recover the URL, stop and report the gap; otherwise start a fresh,
-self-contained root in the requested Project.
-
-## Deep Research
-
-Use `--browser-research deep` only when explicitly requested. Keep the browser,
-attach-running, `--model gpt-5.6-sol`, model-selection strategy, and Project
-route, but omit `--browser-thinking-time` because Deep Research owns its effort
-flow. Do not combine it with `--browser-follow-up`. Require terminal completion,
-a non-empty report, and usable citations.
-
-## Explicit API mode
-
-After explicit API-billing consent, inspect current help and preflight
-only the requested model. Verify that `--route` matches the provider covered by
-the consent and pin that provider with current CLI flags when billing or data
-boundaries differ. Run with explicit `--engine api` and `--model`. Pro API runs
-detach by default: add `--wait`, or inspect an already detached run with
-`oracle session <id>`; a returned session ID is still pending.
-
-For an explicitly requested GPT-5.6 Pro API run, use `--model gpt-5.6-sol`,
-`--reasoning-mode pro`, and `--reasoning-effort max` through a consented OpenAI
-or Azure Responses route. Do not invent a combined Pro model slug or apply the
-API reasoning flags to browser mode.
-
-API `--followup` applies to supported OpenAI or Azure Responses runs. Verify
-response/session lineage, the requested model, and terminal output; browser
-picker and conversation-URL gates do not apply. Avoid printing credentials,
-hardcoded provider catalogs, or arbitrary timeouts.
-
-## Version boundary
-
-Inspect the version, release, and exact-command dry run after install or upgrade,
-option rejection, or picker-routing failure. Browser flags may be intentionally
-hidden from help, so help omission alone does not prove removal; inspect the
-reviewed source when parsing or behavior differs. If the installed version and
-reviewed ref differ, re-identify the latest supported ChatGPT model and update
-the default model slug, expected target, provenance, and validator contract
-together. Do not assume a legacy Pro alias tracks the latest model, and do not
-add a compatibility branch without an observed caller.
+Before a browser follow-up, Deep Research run, explicitly billed API run, or
+version/picker recovery, load the corresponding section of the
+[non-default modes contract](references/non-default-modes.md). Keep the API
+billing gate in Authorization and context in force before loading that contract.

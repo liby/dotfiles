@@ -1,14 +1,13 @@
 ---
 name: deslop
-description: 'Clean changed code, tests, comments, and documentation before final validation: reuse established mechanisms, reduce accidental complexity and cost, remove AI artifacts, and verify type-driven refactors against runtime evidence. Use when the user invokes /deslop or asks to run deslop. Not for correctness review; use /review.'
+description: 'Clean changed code, tests, comments, and documentation before final validation: reuse established mechanisms, reduce accidental complexity and cost, remove AI artifacts, and verify type-driven refactors against runtime evidence. Use when the user invokes /deslop, asks to run deslop, or governing instructions require the final cleanup pass. Not for correctness review.'
 argument-hint: "[<target>]"
 allowed-tools:
-  - Bash(git:*)
-  - Bash(rg:*)
-  - Bash(fd:*)
+  - Bash
   - Agent
   - Read
   - Edit
+  - Write
 ---
 
 Clean the resolved change surface as one workflow. Preserve intended behavior and scope. Treat runtime evidence as a refactor gate, not a bug hunt.
@@ -17,7 +16,7 @@ Treat the current production diff as intended behavior, not a provisional artifa
 
 ## Process
 
-1. **Resolve the change surface.** Use a concrete invocation target when present; otherwise use the current change set. Treat an unexpanded dollar-prefixed `ARGUMENTS` placeholder as absent. Read repository instructions and snapshot `git status --short`. For an explicit target, build the narrowest representative diff. Otherwise use the de-duplicated union of the resolved upstream-or-default `base...HEAD` diff, staged diff, and tracked unstaged diff. Screen untracked names before content; never read raw `.env*`, private keys, or credential stores. Treat repository-declared ciphertext as opaque: account for metadata but keep its body out of scope. Include safe, target-owned files as whole-file scope; report unclassified or raw-secret paths under `Candidates left`. If no branch base resolves, use the working tree and report the omitted branch scope. If a working-tree diff fails, report the command and stderr summary, then stop. For empty scope, skip reviewers and return `no changes to review`, `Changed: none`, `Candidates left: none`, and `Validation: skipped, no changes`.
+1. **Resolve the change surface.** Use a concrete invocation target when present; otherwise use the current change set. Read repository instructions and snapshot `git status --short`. For an explicit target, build the narrowest representative diff. Otherwise use the de-duplicated union of the resolved upstream-or-default `base...HEAD` diff, staged diff, and tracked unstaged diff. Screen untracked names before content; never read raw `.env*`, private keys, or credential stores. Treat repository-declared ciphertext as opaque: account for metadata but keep its body out of scope. Include safe, target-owned files as whole-file scope; report unclassified or raw-secret paths under `Candidates left`. If no branch base resolves, use the working tree and report the omitted branch scope. If a working-tree diff fails, report the command and stderr summary, then stop. For empty scope, skip reviewers and return `no changes to review`, `Changed: none`, `Candidates left: none`, and `Validation: skipped, no changes`.
 
    Done when every path and hunk has a known source, every untracked path has a disposition, and the initial status is recorded.
 
