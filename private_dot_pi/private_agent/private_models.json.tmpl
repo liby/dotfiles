@@ -1,36 +1,89 @@
 {
   "providers": {
     "rc-gateway": {
-      "baseUrl": "{{ .private.aiGatewayBaseUrl }}",
+      "baseUrl": "{{ .private.rcGatewayBaseUrl }}",
       "api": "openai-completions",
-      "apiKey": "!envchain pi sh -c 'printf %s \"$AI_GATEWAY_TOKEN\"'",
+      "apiKey": "!envchain pi sh -c 'printf %s \"$RC_GATEWAY_API_KEY\"'",
       "models": [
         {
-          "id": "moonshotai/kimi-k3-fast",
-          "name": "Kimi K3 Fast",
+          "id": "deepseek/deepseek-v4-flash-0731",
+          "name": "DeepSeek V4 Flash 0731",
           "reasoning": true,
-          "thinkingLevelMap": { "max": "max" },
-          "input": ["text", "image"],
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": null,
+            "max": "max"
+          },
+          "input": ["text"],
           "contextWindow": 1000000,
-          "maxTokens": 131072
+          "maxTokens": 384000
         },
         {
           "id": "deepseek/deepseek-v4-pro-0813",
           "name": "DeepSeek V4 Pro 0813",
           "reasoning": true,
-          "thinkingLevelMap": { "max": "max" },
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": null,
+            "max": "max"
+          },
           "input": ["text"],
           "contextWindow": 1048600,
           "maxTokens": 1048600
         },
         {
-          "id": "deepseek/deepseek-v4-flash-0731",
-          "name": "DeepSeek V4 Flash 0731",
+          "id": "moonshotai/kimi-k3-fast",
+          "name": "Kimi K3 Fast",
           "reasoning": true,
-          "thinkingLevelMap": { "max": "max" },
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": null,
+            "max": "max"
+          },
+          "input": ["text", "image"],
+          "contextWindow": 1000000,
+          "maxTokens": 131072
+        },
+        {
+          "id": "zai/glm-5.3",
+          "name": "GLM 5.3",
+          "reasoning": true,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": null,
+            "max": "max"
+          },
           "input": ["text"],
           "contextWindow": 1000000,
-          "maxTokens": 384000
+          "maxTokens": 1000000
+        },
+        {
+          "id": "zai/glm-5.3-flash",
+          "name": "GLM 5.3 Flash",
+          "reasoning": true,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": null,
+            "max": "max"
+          },
+          "input": ["text", "image"],
+          "contextWindow": 1000000,
+          "maxTokens": 131000
         }
       ]
     }

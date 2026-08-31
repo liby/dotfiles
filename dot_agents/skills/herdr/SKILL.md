@@ -85,6 +85,8 @@ herdr pane rename <returned-pane-id> <agent-name>
 herdr agent start <agent-name> --kind <kind> --pane <returned-pane-id> -- <agent-args...>
 ```
 
+When starting Pi with an explicit model, pass `--provider <provider> --model <exact-model-id>` using the provider paired with that model in Pi's configured model list. Do not rely on `defaultProvider`: explicit `--model` resolution can select an unauthenticated built-in provider with the same model ID. Start Pi directly and let the selected provider resolve its own credentials; do not synthesize or remap credential environment variables.
+
 A successful `agent start` returns only after Herdr detects the expected agent
 and considers it ready for input. If startup is blocked, it returns
 `agent_not_ready` but keeps the name available. Read `visible`, ask the user to
