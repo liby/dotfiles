@@ -25,3 +25,27 @@ Not every configuration is fully replaced. Applications such as Codex and Claude
 [`.chezmoi.toml.tmpl`](../.chezmoi.toml.tmpl) defines prompts for account-specific template values. Each user supplies their own values during `init`; a fork should first review which fields still apply.
 
 Encrypted files use GPG, with private keys stored on a YubiKey. Repository-only encrypted data can seed envchain namespaces in the macOS Keychain instead of deploying credentials as ordinary dotfiles. Adapting the full repository therefore requires replacing or removing its GPG recipients and personal encrypted data.
+
+### Credential-backed features
+
+The [seeding script](../.chezmoiscripts/run_onchange_after_04-seed-envchain.sh.tmpl) reads `.secrets/seed.asc` and stores each entry in the macOS Keychain through envchain. The template below lists only entries consumed by files in this repository.
+
+```toml
+# Used for Claude Code gateway mode.
+[claude-gateway]
+ANTHROPIC_AUTH_TOKEN = "replace-with-value"
+ANTHROPIC_VERTEX_BASE_URL = "replace-with-value"
+ANTHROPIC_VERTEX_PROJECT_ID = "replace-with-value"
+CLAUDE_CODE_SKIP_VERTEX_AUTH = "1"
+CLAUDE_CODE_USE_VERTEX = "1"
+
+# Used for optional Context7 authentication.
+[context7]
+CONTEXT7_API_KEY = "replace-with-value"
+
+# Used for the Pi rc-gateway provider.
+[pi]
+RC_GATEWAY_API_KEY = "replace-with-value"
+```
+
+The [Claude launcher](../dot_zsh/functions/claude) injects the `claude-gateway` namespace only in gateway mode. The [Codex configuration](../.chezmoitemplates/codex/config.toml) launches the Context7 MCP through the `context7` namespace, and the [Claude instructions](../dot_claude/CLAUDE.md) route Context7 CLI calls through the same namespace. The [Pi model configuration](../private_dot_pi/private_agent/private_models.json.tmpl) reads `RC_GATEWAY_API_KEY` from the `pi` namespace.

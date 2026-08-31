@@ -19,7 +19,7 @@ Protect the plaintext boundary, not repository-declared ciphertext. Treat a trac
 
 - Hand every operation that can expose or derive secret plaintext to the user, including add or re-encrypt from a real secret, decrypt, `chezmoi edit`, `chezmoi re-add`, and `chezmoi merge`. Never run `chezmoi merge` for any encrypted target.
 - Add a non-secret encrypted file with `chezmoi add --encrypt <file>`. Edit encrypted non-secret content through `chezmoi edit <dest-path>` or edit its deployed plaintext and run `chezmoi re-add`; never edit an `encrypted_*.asc` source directly. Decryption requires a Yubikey.
-- `.secrets/seed.asc` is secret-bearing, repository-only ciphertext for envchain namespaces. The user must edit it with `chezmoi edit-encrypted .secrets/seed.asc` and then run `chezmoi apply ~/.chezmoiscripts/04-seed-envchain.sh` to reseed the Keychain. Its plaintext is TOML with one top-level table per namespace and one environment variable per single-line string value; quote numeric and boolean-looking values too.
+- `.secrets/seed.asc` is secret-bearing, repository-only ciphertext for envchain namespaces. The user must edit it with `chezmoi edit-encrypted .secrets/seed.asc` and then run `chezmoi apply ~/.chezmoiscripts/04-seed-envchain.sh` to reseed the Keychain. Its plaintext is TOML with one top-level table per namespace and one environment variable per single-line string value; quote numeric and boolean-looking values too. [Credential-backed features](.github/CONCEPTS.md#credential-backed-features) lists the entries consumed by files in this repository; other seed entries are not repository requirements.
 
   ```toml
   [service]
