@@ -1,6 +1,6 @@
 ---
 paths:
-  - ".chezmoitemplates/claude-settings.json"
+  - ".chezmoitemplates/claude/settings.json"
   - "modify_dot_claude.json"
   - "dot_claude/modify_private_settings.json"
   - "dot_claude/CLAUDE.md"
