@@ -11,6 +11,7 @@ Dotfiles managed by [chezmoi](https://www.chezmoi.io/) from `~/.local/share/chez
 - Fold a follow-up change to the same logical unit into its existing unpushed commit (`git commit --amend` or fixup) instead of appending a commit per request; append-only committing turns one feature into a chain that later needs a history rewrite. Start a new commit only for a separate concern, a pushed base, or another author's commit.
 - When retiring or replacing a managed path, verify the exact non-secret destination, then delete the obsolete source and the existing live destination in the same change. Never add `remove_` entries, compatibility readers, or other migration markers; handle any later residue through an explicit audit.
 - For agent skill changes, run `ruby dot_agents/skills/scripts/validate-skills.rb --smoke`. Keep `CLI_SMOKE_COMMANDS` in sync only for skills whose instructions depend on current CLI behavior.
+- In Markdown source, never hard-wrap prose to a fixed column. Keep each prose paragraph, including the prose portion of a list item or blockquote, on one physical line; when content needs intentional separation, create an explicit Markdown block instead of a soft line break. Preserve separate lines for headings, blank paragraph boundaries, separate list items, table rows, fenced code, and explicit hard breaks ending in two spaces or a backslash.
 
 ## Encrypted Files
 

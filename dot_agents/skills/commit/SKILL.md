@@ -32,6 +32,7 @@ Create one git commit for the requested work. Recover its scope and motivation f
 The subject names the concrete behavior or boundary that changed. When a body is needed, use comparable recent, human-authored commits to match its tone and shape. Add a body whenever the reason the change exists, a constraint behind the approach, a material trade-off, or a non-obvious consequence is not clear from the subject alone; the diff is not a substitute for that context. Do not add a body that only repeats the subject or inventories the diff. Omit investigation history and validation narration.
 
 Wrong: `chore: update package manager path` with body `Move the package manager home to the new directory.`
+
 Right: `chore: keep package binaries and store on one volume` with a body explaining that cross-volume installs recreated the store and colocating them prevents that mismatch.
 
 ## Message Rules

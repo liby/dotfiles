@@ -24,12 +24,14 @@ Default review is read-only for the reviewed project: do not edit reviewed files
    - Refuse raw secret surfaces without printing them. Stop on ambiguous sensitive paths until the host, project instructions, or user classifies them.
    - Treat encrypted-name matches only as ciphertext candidates. Once project instructions or an encryption marker confirms one, account for path and status, keep its body out of every diff, and continue reviewing ordinary paths.
    - Public certificates, public keys, `authorized_keys`, `known_hosts`, and SSH client configuration are not secret by type. Source code is not secret merely because its path contains `credential`, `secret`, or `token`; review it as security-sensitive code and avoid quoting secret values.
+
    Done when every changed path is classified as ordinary, opaque ciphertext, ambiguous, or raw secret before any body is read.
 3. List changed files before judging behavior:
    - branch: parse `git diff -z --name-status <base>...HEAD`; for `R*` and `C*`, inspect both source and destination paths before any full diff
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`
    - MR/PR: compare host changed files with the local checkout or diff
 4. From the revision being reviewed, discover and read the root and path-scoped `CLAUDE.md`, `AGENTS.md`, `README.md`, `REVIEW.md`, `CODE_REVIEW.md`, project review commands, and review skills under `.claude/` or `.agents/`. Follow one-hop documents selected by their path rules. Do not treat the current checkout or automatically injected instructions as proof of the reviewed revision; use the exact ref (`git show <head>:<path>`) or the host's raw-file API when they differ.
+
    Done when every changed path has either its applicable repository rules loaded or a recorded `no matching repository rule` disposition.
 5. Read the MR/PR description and discussions when available.
    - Treat discussion claims as review state, not proof. Omit resolved or reasoned-dismissed points unless new evidence reopens them; re-report a reverified `P1` as "previously dismissed, re-raised because X". An invoker-supplied record of prior findings and dispositions is review state under the same rule.

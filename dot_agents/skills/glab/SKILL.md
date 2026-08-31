@@ -74,11 +74,7 @@ When asked to draft or update an MR title and description:
    ```
 
 4. Draft a title and description from actual branch changes. Use the user's requested structure. Do not invent release, rollback, or testing claims.
-5. If the user explicitly asked to update the MR, choose separate heredoc
-   delimiters containing only letters, digits, and underscores which do not occur
-   as complete lines in the generated title and description. Verify both
-   comparisons before composing the command; replace the sample delimiters below
-   for every payload, then run:
+5. If the user explicitly asked to update the MR, choose separate heredoc delimiters containing only letters, digits, and underscores which do not occur as complete lines in the generated title and description. Verify both comparisons before composing the command; replace the sample delimiters below for every payload, then run:
 
    ```bash
    IFS= read -r MR_TITLE <<'MR_TITLE_END_7Q4'

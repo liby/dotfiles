@@ -62,9 +62,7 @@ For issues or PRs with many comments:
 
 ## Pull Requests
 
-At the first inspection of an existing PR, record its `url` and `headRefOid` with
-the evidence. A review or inspection from another workflow can serve as a later
-merge baseline only when it carries that exact URL and OID.
+At the first inspection of an existing PR, record its `url` and `headRefOid` with the evidence. A review or inspection from another workflow can serve as a later merge baseline only when it carries that exact URL and OID.
 
 When asked to draft, create, or update a PR title or body:
 
@@ -77,8 +75,7 @@ When asked to draft, create, or update a PR title or body:
 
 ## Agent Skills From GitHub
 
-Before the first `gh skill` command for preview, install, or update, load and
-follow the [GitHub-hosted Agent Skills workflow](references/agent-skills.md).
+Before the first `gh skill` command for preview, install, or update, load and follow the [GitHub-hosted Agent Skills workflow](references/agent-skills.md).
 
 ## Write Operations
 
