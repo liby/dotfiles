@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Registration test for the Claude hooks subtree in
-# .chezmoitemplates/claude-settings.json.
+# .chezmoitemplates/claude/settings.json.
 # The script tests in this directory prove hook behavior; this test proves the
 # managed settings still register each hook with the intended matcher and
 # deployed command. The modify template replaces the whole top-level
@@ -12,7 +12,7 @@
 
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-TEMPLATE="${CLAUDE_SETTINGS_TEMPLATE:-$HERE/../../.chezmoitemplates/claude-settings.json}"
+TEMPLATE="${CLAUDE_SETTINGS_TEMPLATE:-$HERE/../../.chezmoitemplates/claude/settings.json}"
 
 if [ ! -r "$TEMPLATE" ]; then
   echo "cannot find settings template at $TEMPLATE" >&2

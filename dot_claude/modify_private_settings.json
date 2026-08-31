@@ -3,7 +3,7 @@
       replace live values, so nested removals apply; removing a top-level key
       only stops ownership and requires separate live cleanup. Preserve
       undeclared keys; seed model and effort only when missing. */ -}}
-{{- $managed := includeTemplate "claude-settings.json" . | fromJson -}}
+{{- $managed := includeTemplate "claude/settings.json" . | fromJson -}}
 {{- $seeds := `{
   "model": "claude-fable-5[1m]",
   "effortLevel": "xhigh"
