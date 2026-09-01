@@ -1,5 +1,4 @@
-# This template is merged by dot_codex/modify_private_config.toml. Before
-# editing either path, read their governing AGENTS.md files.
+# Read dot_codex/modify_private_config.toml before editing this template; the modifier controls how these values are merged into the live file.
 approval_policy = "on-request"
 approvals_reviewer = "auto_review"
 cli_auth_credentials_store = "keyring"

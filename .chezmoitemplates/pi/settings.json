@@ -1,0 +1,5 @@
+{{- /* Read private_dot_pi/private_agent/modify_private_settings.json before editing this template; the modifier controls how these values are merged into the live file. */ -}}
+{
+  "defaultProjectTrust": "always",
+  "defaultProvider": "rc-gateway"
+}

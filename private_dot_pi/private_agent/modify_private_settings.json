@@ -4,7 +4,7 @@
       seed-only. Enforcing defaultProvider is drift-free only while rc-gateway
       is the sole configured provider; demote it to a seed if another provider
       is added. Preserve all other runtime-owned keys. */ -}}
-{{- $managed := dict "defaultProvider" "rc-gateway" -}}
+{{- $managed := includeTemplate "pi/settings.json" . | fromJson -}}
 {{- $seeds := dict "defaultModel" "moonshotai/kimi-k3-fast" "defaultThinkingLevel" "max" -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := dict -}}

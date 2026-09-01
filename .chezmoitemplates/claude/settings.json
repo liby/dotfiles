@@ -1,4 +1,4 @@
-{{- /* Read dot_claude/modify_private_settings.json and applicable AGENTS.md before editing. */ -}}
+{{- /* Read dot_claude/modify_private_settings.json before editing this template; the modifier controls how these values are merged into the live file. */ -}}
 {
   "cleanupPeriodDays": 99999,
   "env": {
