@@ -14,6 +14,8 @@ INSTRUCTION_FILES = (
     CONCEPTS,
     ROOT / ".claude" / "rules" / "claude-code-settings.md",
 )
+CLAUDE_SETTINGS_TEMPLATE = ROOT / ".chezmoitemplates" / "claude" / "settings.json"
+CLAUDE_OUTPUT_STYLE = ROOT / "dot_claude" / "output-styles" / "natural-technical-writing.md"
 
 ROUTE_EXPECTATIONS = {
     "Repository validation": (
@@ -194,6 +196,19 @@ class CredentialContractTest(unittest.TestCase):
                     content = path.read_text()
                     for token in tokens:
                         self.assertIn(token, content)
+
+
+class ClaudeOutputStyleContractTest(unittest.TestCase):
+    def test_managed_settings_select_output_style_with_coding_instructions(self):
+        template = CLAUDE_SETTINGS_TEMPLATE.read_text()
+        style = CLAUDE_OUTPUT_STYLE.read_text()
+        self.assertTrue(style.startswith("---\n"))
+        _, frontmatter, _ = style.split("---\n", 2)
+        name = re.search(r"(?m)^name: (.+)$", frontmatter)
+        self.assertIsNotNone(name)
+        selected_styles = re.findall(r'"outputStyle": "([^"]+)"', template)
+        self.assertEqual(selected_styles, [name.group(1)])
+        self.assertRegex(frontmatter, r"(?m)^keep-coding-instructions: true$")
 
 
 if __name__ == "__main__":
