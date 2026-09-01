@@ -14,3 +14,6 @@ __BRYAN_TOOLCHAIN_PATH=(
 )
 path=($__BRYAN_TOOLCHAIN_PATH $path)
 export PATH
+
+# Codex uses non-interactive zsh, so expose only its provider-aware Claude launcher here.
+autoload -Uz "$HOME/.zsh/functions/claude"

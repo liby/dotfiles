@@ -42,9 +42,10 @@ while (( ${#words} )) && [[ "${words[1]}" =~ '^[A-Za-z_][A-Za-z0-9_]*=' ]]; do
 done
 (( ${#words} )) || exit 0
 
-program=${words[1]:t}
-namespace=${words[2]-}
+launcher=${words[1]}
+program=${launcher:t}
 child=${${words[3]-}:t}
+claude_route_message='Run Claude as `claude ...`; the provider-aware launcher selects the persisted mode.'
 
 if [[ "$program" == env ]]; then
   integer env_index=2
@@ -67,21 +68,30 @@ if [[ "$program" == env ]]; then
   done
   (( env_index <= ${#words} )) || block 'Do not dump the process environment.'
   words=("${(@)words[env_index,-1]}")
-  program=${words[1]:t}
-  namespace=${words[2]-}
+  launcher=${words[1]}
+  program=${launcher:t}
   child=${${words[3]-}:t}
+  [[ "$program" == claude ]] && block "$claude_route_message"
 fi
 if [[ "$program" == envchain ]]; then
   if [[ "$child" == env || "$child" == printenv ]]; then
     block 'Do not dump an envchain namespace.'
   fi
-  if [[ "$child" == claude && ",$namespace," != *,claude-gateway,* ]]; then
-    block 'Run Claude as `envchain claude-gateway claude ...`.'
-  fi
+  [[ "$child" == claude ]] && block "$claude_route_message"
   exit 0
 fi
-[[ "$program" == claude ]] &&
-  block 'Run Claude as `envchain claude-gateway claude ...`.'
+if [[ "$program" == command ]]; then
+  command_target=${words[2]-}
+  case "${words[2]-}" in
+    (-v|-V) exit 0 ;;
+    (--) command_target=${words[3]-} ;;
+  esac
+  [[ "${command_target:t}" == claude ]] && block "$claude_route_message"
+fi
+if [[ "$program" == claude ]]; then
+  [[ "$launcher" != claude ]] && block "$claude_route_message"
+  exit 0
+fi
 
 case "$program" in
   (cat|head|tail|less|more|bat|sed|awk|jq|yq|base64|xxd|od|strings|diff|openssl|plutil)

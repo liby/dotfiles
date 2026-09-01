@@ -59,15 +59,15 @@ const cases: Array<[string, number, string?]> = [
   ["cat .env.example", 0],
   ["rg .env README.md", 0],
   ["FOO=1 cat .env", 2],
-  ["claude -p x", 2, "claude"],
-  ['"claude" -p x', 2, "claude"],
+  ["claude -p x", 0],
+  ["claude --resume session-id", 0],
+  ["FOO=1 claude --version", 0],
   ["/path/to/claude -p x", 2, "claude"],
-  ["envchain wrong claude -p x", 2, "claude"],
-  ['envchain wrong "/path with space/claude" -p x', 2, "claude"],
-  ["envchain claude-gateway2 claude -p x", 2, "claude"],
+  ["command claude --version", 2, "claude"],
+  ["command -- claude --version", 2, "claude"],
+  ["command -v claude", 0],
   ["envchain example printenv", 2],
-  ["envchain claude-gateway claude -p x", 0],
-  ['envchain context7,"claude-gateway" claude -p x', 0],
+  ["envchain claude-gateway claude -p x", 2, "claude"],
 ];
 
 for (const [command, exitCode, policy = "client"] of cases) {
@@ -89,7 +89,7 @@ for (const [command, exitCode, policy = "client"] of cases) {
       expect(result.stderr.toString()).toBe("");
     } else if (policy === "claude") {
       expect(result.stderr.toString()).toBe(
-        "Run Claude as `envchain claude-gateway claude ...`.\n",
+        "Run Claude as `claude ...`; the provider-aware launcher selects the persisted mode.\n",
       );
     } else {
       expect(result.stderr.toString()).not.toBe("");
