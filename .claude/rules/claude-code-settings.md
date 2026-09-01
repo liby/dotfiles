@@ -19,7 +19,7 @@ Revalidate runtime-dependent evidence after upgrades.
 
 Keep `~/.claude/settings.json` and `~/.claude.json` partially managed so Claude Code's runtime-owned state survives chezmoi applies. Do not replace their modifiers with complete templates or move `model` and `effortLevel` into the managed fragment; `chezmoi re-add` cannot reconcile these targets.
 
-Keep main-conversation language and terminology defaults in `dot_claude/output-styles/natural-technical-writing.md`, with `keep-coding-instructions: true` so the built-in engineering instructions remain active. Keep operating and artifact contracts in `dot_claude/CLAUDE.md`. Non-fork subagents use separate system prompts, so the style treats their reports as working material before the main conversation reuses them.
+Keep main-conversation presentation and terminology defaults in `dot_claude/output-styles/natural-technical-writing.md`, with `keep-coding-instructions: true` so the built-in engineering instructions remain active. Keep operating and artifact contracts, including verification of model and delegated reports, in `dot_claude/CLAUDE.md`. Non-fork subagents use separate system prompts and do not inherit the output style.
 
 ## Session retention and unattended runs
 

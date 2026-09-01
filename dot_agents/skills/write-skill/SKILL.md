@@ -1,6 +1,6 @@
 ---
 name: write-skill
-description: Create, test, improve, or audit agent skills and reusable agent instructions. Use for evidence-driven refinement from feedback or failed runs, skill routing, workflow or wording optimization, validation, splitting or merging skills, and instruction-owner audits. Not for application-code review, generic documentation or comment cleanup, running an existing skill without changing it, or deleting a skill without redesign or replacement.
+description: Create, test, improve, or audit agent skills and behavior-bearing reusable instructions, including output styles, AGENTS.md/CLAUDE.md, agent rules or prompts, and examples or explanatory prose within those surfaces. Use for evidence-driven refinement, routing, workflow or wording optimization, validation, structural redesign, and instruction-owner audits. Not for application code, code comments, ordinary project documentation, running an unchanged skill, or deletion without redesign or replacement.
 allowed-tools:
   - Bash
   - Agent
@@ -13,12 +13,13 @@ allowed-tools:
 
 # Write Skill
 
-Write skills that change agent behavior. Use established domain terms when they preserve the intended trigger and boundary. Keep routing, workflow, tool use, validation, examples, and rationale only when they change the next action or choice. Cut explanatory restatements, intermediate history, repeated best practice, and competent-agent defaults.
+Write skills and reusable instructions that change agent behavior. Use established domain terms when they preserve the intended trigger and boundary. Keep routing, workflow, tool use, validation, examples, and rationale only when they change the next action or choice. Cut explanatory restatements, intermediate history, repeated best practice, and competent-agent defaults.
 
 ## Process
 
 1. Classify the request, and produce the smallest artifact it needs (a one-off standard, phrasing, or lesson belongs in your reply as prose, not a new `SKILL.md`):
    - New or rewrite: edit the skill.
+   - Reusable instruction: edit its narrowest runtime-visible owner; do not force it into a `SKILL.md`.
    - Trigger audit: report findings first; do not edit until asked.
    - Split or merge: change structure only when it improves routing or loaded context.
    - Distilled lesson: add a rule only if it clears Rule Hygiene.
@@ -31,7 +32,8 @@ Write skills that change agent behavior. Use established domain terms when they 
 6. For non-trivial new skills, inspect 2-4 comparable local or public skills. Use actual `SKILL.md` files or current runtime docs, not README claims.
 7. Preserve working trigger behavior unless the task is to change it.
 8. Ask one question only when the requested behavior still has multiple valid interpretations after reading the relevant files.
-9. Before finishing, run a subtraction pass: merge what you duplicated, delete what went stale, relocate what drifted from its section, disclose rare detail into a reference. Rewrite existing wording only when the change is a clear win, shorter without losing information; leave a dense sentence alone when every clause carries weight. The edit should leave the skill net flat or shorter unless it added genuinely new behavior.
+9. Before finishing, run a subtraction pass; when the change requires behavioral evaluation, do this before freezing the candidate. Merge what you duplicated, delete what went stale, relocate what drifted from its section, and disclose rare detail into a reference. Shorter text and a lower line count are not acceptance criteria. Rewrite existing wording only when the change is a clear win without losing a trigger, boundary, example, or failure mode; leave a dense sentence alone when every clause carries weight.
+10. Freeze candidate identity before behavioral validation. A validated instruction candidate consists of its exact runtime-visible bytes and loading graph. Treat wording compression, examples, ordering, metadata, routing, relocation, and cleanup as behavior-relevant unless evidence establishes equivalence. Any later behavior-relevant edit creates a new candidate: do not carry prior results forward, and rerun the affected regression and acceptance checks before accepting or citing it.
 
 ## Routing
 
