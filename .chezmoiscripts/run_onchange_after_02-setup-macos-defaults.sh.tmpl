@@ -3,11 +3,14 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
+defaults write NSGlobalDomain AppleICUForce24HourTime -bool true
+defaults delete NSGlobalDomain AppleICUForce12HourTime 2>/dev/null || true
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
 defaults write NSGlobalDomain KeyRepeat -int 2
-defaults write NSGlobalDomain AppleICUForce24HourTime -bool true
-defaults delete NSGlobalDomain AppleICUForce12HourTime 2>/dev/null || true
+defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 
 defaults write com.apple.dock autohide -bool true
 
