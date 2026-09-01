@@ -10,14 +10,27 @@ model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
 web_search = "live"
 
+[analytics]
+enabled = false
+
 [desktop]
 ambient-suggestions-enabled = false
+composerPlainTextMode = true
 enabled-reasoning-efforts = ["low", "medium", "high", "xhigh", "ultra", "max"]
 # Keep the selected UI behavior when the desktop default writes queue.
 followUpQueueMode = "steer"
+git-always-force-push = true
+git-branch-prefix = ""
+git-pull-request-merge-method = "squash"
 mac-menu-bar-enabled = false
+open-link-in-target-preference = "external-browser"
+realtimeVoiceScreenContextEnabled = false
 reduced-motion-preference = "on"
+reviewDelivery = "detached"
 show-context-window-usage = true
+
+[feedback]
+enabled = false
 
 [features]
 memories = true

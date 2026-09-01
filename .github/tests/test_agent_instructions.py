@@ -28,6 +28,11 @@ ROUTE_EXPECTATIONS = {
         "(.github/CONCEPTS.md#bootstrap)",
         "(.github/CONCEPTS.md#package-and-tool-ownership)",
     ),
+    "GitLab CLI": (
+        "`.chezmoiscripts/run_onchange_after_05-configure-glab.sh`",
+        "glab's live configuration",
+        "(.github/CONCEPTS.md#gitlab-cli-configuration)",
+    ),
     "Codex": (
         "`.chezmoitemplates/codex/**`",
         "`dot_codex/**`",
