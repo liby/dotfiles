@@ -1,9 +1,11 @@
 # Global gitignore
 
-## Claude Code local settings (e.g. settings.local.json)
-*.local.*
+## Claude Code runtime directories
 **/.claude/.cc-writes/
 **/.claude/worktrees/
+
+## Local-only overrides
+*.local.*
 
 ## General
 *.log
