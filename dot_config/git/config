@@ -27,7 +27,7 @@
   sync = !git fetch origin && git reset --hard @{u}
 
   ### tag ###
-  lt = describe --tags --abbrev=0
+  lt = for-each-ref --merged=HEAD --sort=-creatordate --count=1 --format='%(refname:short)' refs/tags
 
 [branch]
   autosetuprebase = always
@@ -37,7 +37,6 @@
   ui = auto
 
 [core]
-  attributesFile = ~/.config/git/attributes
   autocrlf = input
   editor = vim
   quotepath = false
@@ -65,11 +64,6 @@
   required = true
   smudge = git-lfs smudge -- %f
 
-[filter "prototools"]
-  clean = ~/.config/git/prototools.filter.sh
-  required = true
-  smudge = cat
-
 [help]
   autocorrect = prompt
 
@@ -86,7 +80,7 @@
 [rebase]
   autosquash = true
   autostash = true
-  missingCommitsCheck = warn
+  missingCommitsCheck = error
   updateRefs = false
 
 [rerere]

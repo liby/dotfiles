@@ -140,8 +140,7 @@
       ],
       "allowUnixSockets": [
         "~/.gnupg/S.gpg-agent",
-        "~/.gnupg/S.gpg-agent.ssh",
-        "~/Code"
+        "~/.gnupg/S.gpg-agent.ssh"
       ]
     }
   },
