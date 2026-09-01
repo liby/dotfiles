@@ -28,6 +28,22 @@ realtimeVoiceScreenContextEnabled = false
 reduced-motion-preference = "on"
 reviewDelivery = "detached"
 show-context-window-usage = true
+worktree-upstream-refresh-mode = "best-effort"
+
+[desktop.appearanceDarkChromeTheme]
+accent = "#339cff"
+accentSource = "custom"
+contrast = 60
+ink = "#ffffff"
+opaqueWindows = false
+surface = "#181818"
+
+[desktop.appearanceDarkChromeTheme.fonts]
+
+[desktop.appearanceDarkChromeTheme.semanticColors]
+diffAdded = "#40c977"
+diffRemoved = "#fa423e"
+skill = "#ad7bf9"
 
 [feedback]
 enabled = false
