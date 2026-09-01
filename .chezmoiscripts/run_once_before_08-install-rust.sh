@@ -7,8 +7,6 @@ if ! command -v rustc &>/dev/null; then
   source "$HOME/.cargo/env"
 fi
 
-# rust-analyzer: LSP server spawned by Claude Code's rust-analyzer-lsp plugin.
-# It ships as a rustup component, not bundled by the plugin. This runs
-# unconditionally (rustup component add is idempotent) so it also backfills
-# machines where Rust predates this line; the previous `exit 0` skipped them.
+# Claude Code's rust-analyzer-lsp plugin requires the separate rustup component.
+# Install it independently of rustc; rustup component add is idempotent.
 rustup component add rust-analyzer
