@@ -2,14 +2,16 @@ name: validate-zsh-plugins
 
 on:
   pull_request:
-    paths:
+    paths: &paths
       - ".chezmoiexternal.toml"
       - ".github/workflows/validate-zsh-plugins.yml"
   push:
     branches: [main]
-    paths:
-      - ".chezmoiexternal.toml"
-      - ".github/workflows/validate-zsh-plugins.yml"
+    paths: *paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -17,11 +19,15 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       # renovate: datasource=github-releases depName=twpayne/chezmoi
       CHEZMOI_VERSION: v2.72.1
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install smoke-test dependencies
         run: |
           sudo apt-get update

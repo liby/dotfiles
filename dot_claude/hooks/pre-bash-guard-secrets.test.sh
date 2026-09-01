@@ -116,8 +116,8 @@ run_case PASS  'echo foo\;bar'
 run_case PASS  "echo 'foo;bar'"
 
 section "Command substitution (\$() and backticks)"
-# Secret reads inside $() and `...` must still block — the subshell closer
-# was missing from the trailing path-boundary class before this fix.
+# The trailing path boundary must include the subshell closer so secret reads
+# inside $() and `...` still block.
 run_case BLOCK 'echo $(cat .env)'
 run_case BLOCK 'echo $(cat auth.json)'
 run_case BLOCK 'result=$(cat .env.production)'

@@ -2,7 +2,7 @@ name: validate-hooks
 
 on:
   pull_request:
-    paths:
+    paths: &paths
       - ".chezmoitemplates/claude/settings.json"
       - ".chezmoitemplates/codex/requirements.toml"
       - ".github/workflows/validate-hooks.yml"
@@ -10,23 +10,28 @@ on:
       - "dot_codex/managed-hooks/**"
   push:
     branches: [main]
-    paths:
-      - ".chezmoitemplates/claude/settings.json"
-      - ".chezmoitemplates/codex/requirements.toml"
-      - ".github/workflows/validate-hooks.yml"
-      - "dot_claude/hooks/**"
-      - "dot_codex/managed-hooks/**"
+    paths: *paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  test:
+  hooks:
     runs-on: macos-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-      - run: |
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - name: Test agent hooks
+        run: |
           for t in dot_claude/hooks/*.test.sh; do
             echo "== $t"
             bash "$t"

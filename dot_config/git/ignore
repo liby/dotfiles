@@ -13,13 +13,17 @@
 .prototools
 
 ## JetBrains
-.idea
+.idea/
 
 ## macOS
 .DS_Store
 
 ## Node.js
-node_modules
+node_modules/
+
+## Python
+__pycache__/
+*.py[cod]
 
 ## Visual Studio Code
-.vscode
+.vscode/

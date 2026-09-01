@@ -1,14 +1,9 @@
-name: validate-skills
+name: validate-agent-instructions
 
 on:
   pull_request:
-    paths: &paths
-      - ".github/dev-tools/package.json"
-      - ".github/workflows/validate-skills.yml"
-      - "dot_agents/skills/**"
   push:
     branches: [main]
-    paths: *paths
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  validate:
+  agent-instructions:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -26,6 +21,5 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Validate managed skills
-        # Static mode has no ~/.agents tree or GPG, so encrypted-only deployed skills are skipped.
-        run: ruby dot_agents/skills/scripts/validate-skills.rb
+      - name: Test agent instruction contracts
+        run: python3 -B -m unittest discover --start-directory .github/tests --pattern "test_agent_instructions.py"

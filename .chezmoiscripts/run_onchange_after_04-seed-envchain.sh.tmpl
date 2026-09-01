@@ -1,9 +1,7 @@
 #!/bin/zsh
-# Seeds envchain namespaces in the macOS Keychain from the gpg-encrypted
-# seed file at .secrets/seed.asc in the chezmoi source. Its plaintext format is
-# documented in AGENTS.md. Decrypted content flows through the uv-managed
-# Python process and envchain stdin only: values never enter shell words,
-# argv, or the filesystem, so xtrace on this script cannot print them.
+# Decrypted seed content flows through the uv-managed Python process and
+# envchain stdin only: values never enter shell words, argv, or the filesystem,
+# so xtrace on this script cannot print them.
 # Re-runs when the ciphertext changes:
 # seed hash: {{ if stat (joinPath .chezmoi.sourceDir ".secrets/seed.asc") }}{{ include ".secrets/seed.asc" | sha256sum }}{{ else }}absent{{ end }}
 

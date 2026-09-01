@@ -8,8 +8,11 @@ from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import call, patch
 
-SCRIPT = (Path(__file__).parents[2] / ".chezmoiscripts" /
-          "run_once_before_05-setup-case-sensitive-volume.py")
+SCRIPT = (
+    Path(__file__).parents[2]
+    / ".chezmoiscripts"
+    / "run_once_before_05-setup-case-sensitive-volume.py"
+)
 sys.dont_write_bytecode = True
 SPEC = importlib.util.spec_from_file_location("case_volume", SCRIPT)
 case_volume = importlib.util.module_from_spec(SPEC)

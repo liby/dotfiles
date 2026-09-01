@@ -206,7 +206,7 @@ end
 
 # For an encrypted-only source skill, the deployed plaintext is the only
 # validatable copy; absent (e.g. CI, no GPG) it is skipped silently. Other
-# deployed entries are unmanaged (see AGENTS.md) and get no checks.
+# deployed entries are unmanaged (see .github/CONCEPTS.md) and get no checks.
 encrypted_names.each do |dir_name|
   deployed = File.join(DEPLOYED_ROOT, dir_name, "SKILL.md")
   skill_files << deployed if File.exist?(deployed)

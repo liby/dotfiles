@@ -1,11 +1,11 @@
-name: validate-skills
+name: validate-bootstrap
 
 on:
   pull_request:
     paths: &paths
-      - ".github/dev-tools/package.json"
-      - ".github/workflows/validate-skills.yml"
-      - "dot_agents/skills/**"
+      - ".chezmoiscripts/run_once_before_05-setup-case-sensitive-volume.py"
+      - ".github/tests/test_case_sensitive_volume.py"
+      - ".github/workflows/validate-bootstrap.yml"
   push:
     branches: [main]
     paths: *paths
@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 jobs:
-  validate:
+  bootstrap:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -26,6 +26,5 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Validate managed skills
-        # Static mode has no ~/.agents tree or GPG, so encrypted-only deployed skills are skipped.
-        run: ruby dot_agents/skills/scripts/validate-skills.rb
+      - name: Test bootstrap logic
+        run: python3 -m unittest discover --start-directory .github/tests --pattern "test_case_sensitive_volume.py"

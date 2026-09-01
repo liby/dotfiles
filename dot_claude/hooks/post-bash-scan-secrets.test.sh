@@ -42,9 +42,8 @@ run_case() {
 }
 
 section "Template/placeholder source code (must NOT warn)"
-# These are the false-positive cases that motivated tightening the regexes:
-# source code containing $-interpolation, template literals, or angle-bracket
-# placeholders should not look like a leaked secret.
+# Source code containing $-interpolation, template literals, or angle-bracket
+# placeholders must not look like a leaked secret.
 run_case none 'Authorization: `Bearer ${apiToken}`'
 run_case none "'Authorization': \`Bearer \${apiToken}\`,"
 run_case none 'TOKEN=${REAL_TOKEN}'

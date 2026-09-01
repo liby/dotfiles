@@ -2,14 +2,12 @@ name: validate-dev-tools
 
 on:
   pull_request:
-    paths:
+    paths: &paths
       - ".github/dev-tools/**"
       - ".github/workflows/validate-dev-tools.yml"
   push:
     branches: [main]
-    paths:
-      - ".github/dev-tools/**"
-      - ".github/workflows/validate-dev-tools.yml"
+    paths: *paths
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -23,10 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "lts/*"
       - name: Resolve npm tools
@@ -34,7 +34,7 @@ jobs:
         run: npm install --dry-run --engine-strict --ignore-scripts --package-lock=false
       - name: Resolve Python tools
         run: |
-          python -m venv "$RUNNER_TEMP/dev-tools-venv"
+          python3 -m venv "$RUNNER_TEMP/dev-tools-venv"
           "$RUNNER_TEMP/dev-tools-venv/bin/python" -m pip install \
             --dry-run \
             --requirement .github/dev-tools/requirements.txt

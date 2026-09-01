@@ -410,9 +410,8 @@ refresh_usage_cache() {
         "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
       if jq -e '.five_hour' < "$body_file" >/dev/null 2>&1 && mv "$body_file" "$usage_file"; then
         rm -f "$retry_file"
-        # Re-derive the whole tuple (usage_data, extra_active, cache_max_age):
-        # updating only usage_data left extra_active stale, dropping the Ex
-        # row on the tick that performed a cold fetch.
+        # Re-derive the coupled usage_data, extra_active, and cache_max_age
+        # tuple so the Ex row and cache policy match the fresh response.
         read_usage_state
       else
         # Keep the last failed body for post-hoc diagnosis; kept across later
