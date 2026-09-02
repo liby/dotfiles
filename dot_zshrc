@@ -39,7 +39,6 @@ SAVEHIST=100000
 setopt EXTENDED_HISTORY INC_APPEND_HISTORY
 
 # Environment variables
-export GPG_PATH="$HOMEBREW_PREFIX/opt/gnupg"
 export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
 export HOMEBREW_NO_ENV_HINTS=1
 export ORACLE_ENGINE="browser"
@@ -55,8 +54,6 @@ typeset -aU path
     "$HOME/bin"
     "$HOME/.cargo/bin"
     "$HOME/.local/bin"
-    "$GPG_PATH/bin"
-    "$GPG_PATH/libexec"
   )
   # Re-front: /etc/zprofile's path_helper demoted the zshenv toolchain dirs.
   path=($__BRYAN_TOOLCHAIN_PATH $path_dirs $path[@])
@@ -95,7 +92,7 @@ FAST_HIGHLIGHT_STYLES[comment]='fg=248'
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
 # Initialize tools and configurations
-(( $+commands[gpg-connect-agent] )) && setup_gpg_tty &>/dev/null
+export GPG_TTY="$TTY"
 # Guard on the file, not `orb`: the brew-cask CLI exists before ~/.orbstack/,
 # which OrbStack.app only creates on first run.
 [[ -r ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh

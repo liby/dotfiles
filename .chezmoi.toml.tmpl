@@ -12,6 +12,8 @@ encryption = "gpg"
   command = "code"
 
 [gpg]
+  # The bootstrap shell has no Homebrew PATH when chezmoi first decrypts.
+  command = "/opt/homebrew/bin/gpg"
   args = ["--quiet"]
   recipients = ["36F97A0999999999", "4700E3BE99999999"]
 

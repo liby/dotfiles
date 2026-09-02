@@ -13,7 +13,7 @@ Script identity includes rendered comments and other non-executable bytes. A com
 Three dependencies shape the sequence:
 
 - Homebrew and [`Brewfile`](../Brewfile) packages provide tools used by later scripts.
-- GPG agent and YubiKey public-key setup remains after Homebrew installation but in the `before` phase, because chezmoi needs the corresponding private keys while synchronizing encrypted files; moving the setup to `after` deadlocks a fresh machine.
+- launchd LaunchAgents own gpg-agent and keyboxd, and `no-autostart` in `~/.gnupg/common.conf` stops every client from starting one implicitly: a daemon started from a sandboxed agent shell keeps that sandbox for life and cannot reach the YubiKey. The GPG script writes and bootstraps those jobs in the `before` phase after Homebrew installation, because chezmoi needs the private keys while synchronizing encrypted files. dirmngr is deliberately unmanaged, so keyserver operations fail explicitly instead of autostarting it; the script imports the card's public key over HTTPS from the URL stored on the card instead of using the card's `fetch` command.
 - A dedicated case-sensitive `Code` volume is provisioned as machine infrastructure rather than managed as a normal file target.
 
 The bootstrap targets Apple Silicon macOS and uses `/opt/homebrew` directly.

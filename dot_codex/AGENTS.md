@@ -25,7 +25,7 @@
 - Keep `envchain` values in the consuming client's namespace and expand them only inside the wrapped process. Missing values are set by the user.
 - Use isolated homes and synthetic stores for credential probes. Ordinary clients retain their opaque path; verify live accounts through credential-safe status or mark them `unverified`.
 - Run headless browser jobs (screenshot, print-to-pdf) only with a dedicated binary (puppeteer's Chrome for Testing, chrome-headless-shell) under a finite deadline, and kill the process when the job ends. Never use `/Applications/Google Chrome.app`: a hung headless render there holds the Chrome app identity, so every GUI launch silently routes to the windowless process.
-- Never start gpg-agent from a sandboxed shell: it inherits the sandbox for life and loses the YubiKey (`no-autostart` is set). On `no running gpg-agent` or `No pinentry`, run escalated as the login user, never sudo: `gpgconf --kill gpg-agent && gpg-agent --daemon`.
+- Never start gpg-agent or keyboxd from a sandboxed shell: a daemon started there keeps the sandbox for life and cannot reach the YubiKey, and `no-autostart` in `~/.gnupg/common.conf` exists so nothing starts one implicitly. launchd starts these daemons at login. On `no running gpg-agent` or `No pinentry`, run `gpgconf --kill gpg-agent && launchctl kickstart gui/$UID/org.gnupg.gpg-agent`; on `no keyboxd running in this session`, run `gpgconf --kill keyboxd && launchctl kickstart gui/$UID/org.gnupg.keyboxd`; both escalated as the login user, never sudo.
 
 ## Engineering And Evidence
 

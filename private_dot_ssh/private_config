@@ -5,7 +5,6 @@ Include config.vmiss
 Host *
   AddKeysToAgent yes
   Compression yes
-  IgnoreUnknown UseKeychain
   ServerAliveInterval 30
   UseKeychain yes
 

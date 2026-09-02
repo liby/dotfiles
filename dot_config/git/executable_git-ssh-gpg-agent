@@ -5,13 +5,6 @@ export SSH_AUTH_SOCK="$HOME/.gnupg/S.gpg-agent.ssh"
 
 if [ "${1:-}" = "--transport" ]; then
   shift
-  # common.conf sets no-autostart and starting the agent here would make it
-  # inherit the caller's sandbox, so fail fast with a real diagnostic instead
-  # of letting ssh fall through to a misleading "Permission denied (publickey)".
-  if ! /opt/homebrew/bin/gpg-connect-agent --no-autostart 'getinfo pid' /bye 2>/dev/null | grep -q '^D '; then
-    echo "git-ssh-gpg-agent: no running gpg-agent; start it from an unsandboxed shell (not sudo): /opt/homebrew/bin/gpg-agent --daemon" >&2
-    exit 1
-  fi
   exec /usr/bin/ssh "$@"
 fi
 

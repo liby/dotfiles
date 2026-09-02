@@ -65,8 +65,15 @@ prevent_idle_sleep = true
 [permissions.development.network]
 enabled = true
 
+# Codex enforces socket rules only while the network proxy is on; keep the
+# signing and SSH sockets listed so enabling the proxy later does not cut off
+# the YubiKey. Socket rules reject `~` (the proxy fails to start), so every
+# home path in this profile is rendered absolute for one consistent form.
 [permissions.development.network.unix_sockets]
+"{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent" = "allow"
 "{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh" = "allow"
+"{{ .chezmoi.homeDir }}/.gnupg/S.keyboxd" = "allow"
+
 
 [shell_environment_policy.set]
 # Keep Snowflake's localhost SAML listener alive so the snow skill can open an

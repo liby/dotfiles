@@ -141,7 +141,8 @@
       ],
       "allowUnixSockets": [
         "~/.gnupg/S.gpg-agent",
-        "~/.gnupg/S.gpg-agent.ssh"
+        "~/.gnupg/S.gpg-agent.ssh",
+        "~/.gnupg/S.keyboxd"
       ]
     }
   },
