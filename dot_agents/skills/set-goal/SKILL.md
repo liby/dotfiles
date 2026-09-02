@@ -62,11 +62,11 @@ If the runtime exposes `create_goal` or an equivalent callable goal tool:
   - Complete it with `update_goal` or an equivalent action only when fresh evidence in the current conversation satisfies that goal's own Proof of completion.
   - If completion is unavailable, unjustified, or fails, report the conflict or non-sensitive failure once and stop without invoking creation.
   - Never replace or overwrite an unrelated or unfinished goal.
-- Invoke creation once with the argument `Read <absolute-file-path> and use its contents as the goal.` Pass only this short pointer, never the drafted goal body: goal objective fields can be length-capped.
+- Invoke creation once with the argument `Read <absolute-file-path>; the goal is met only when its entire contents are satisfied.` Pass only this short pointer, never the drafted goal body: goal objective fields can be length-capped.
 - If creation reports an unfinished goal, call status again when available. Continue executing from the verified goal file without retrying creation only when refreshed status identifies the same prior goal as completed; otherwise report the conflict once, include status output only when available, and stop.
 - For any other creation or status failure, report the non-sensitive error once and stop without blind retries. After a successful creation, continue executing the goal in the same thread.
 
-Otherwise, when the harness exposes `/goal` only as user input and has no callable goal tool, the entire assistant message is exactly two paragraphs separated by a blank line. The first paragraph is the literal string `Run next:` and the second is `/goal Read <absolute-file-path> and use its contents as the goal.` Nothing else appears before, between, or after these paragraphs.
+Otherwise, when the harness exposes `/goal` only as user input and has no callable goal tool, the entire assistant message is exactly two paragraphs separated by a blank line. The first paragraph is the literal string `Run next:` and the second is `/goal Read <absolute-file-path>; the goal is met only when its entire contents are satisfied.` Nothing else appears before, between, or after these paragraphs.
 
 ## Failure Output
 
