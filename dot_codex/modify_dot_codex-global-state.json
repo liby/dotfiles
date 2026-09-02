@@ -1,0 +1,12 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Keep selected interaction preferences portable without adopting other Desktop state. */ -}}
+{{- $managed := includeTemplate "codex/global-state.json" . | fromJson -}}
+{{- $stdin := .chezmoi.stdin -}}
+{{- $current := dict -}}
+{{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
+{{- $out := mergeOverwrite (deepCopy $current) $managed -}}
+{{- if deepEqual $current $out -}}
+  {{- $stdin -}}
+{{- else -}}
+  {{ toPrettyJson $out }}
+{{- end -}}

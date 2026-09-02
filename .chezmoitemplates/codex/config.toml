@@ -8,6 +8,7 @@ mcp_oauth_credentials_store = "keyring"
 model = "gpt-5.6-sol"
 model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
+suppress_unstable_features_warning = true
 web_search = "live"
 
 [analytics]
@@ -16,7 +17,7 @@ enabled = false
 [desktop]
 ambient-suggestions-enabled = false
 composerPlainTextMode = true
-enabled-reasoning-efforts = ["low", "medium", "high", "xhigh", "ultra", "max"]
+enabled-reasoning-efforts = ["high", "xhigh", "max", "ultra"]
 # Keep the selected UI behavior when the desktop default writes queue.
 followUpQueueMode = "steer"
 git-always-force-push = true
@@ -24,10 +25,13 @@ git-branch-prefix = ""
 git-pull-request-merge-method = "squash"
 mac-menu-bar-enabled = false
 open-link-in-target-preference = "external-browser"
+# Desktop's power-save blocker is separate from features.prevent_idle_sleep.
+preventSleepWhileRunning = true
 realtimeVoiceScreenContextEnabled = false
 reduced-motion-preference = "on"
 reviewDelivery = "detached"
 show-context-window-usage = true
+usePointerCursors = true
 worktree-upstream-refresh-mode = "best-effort"
 
 [desktop.appearanceDarkChromeTheme]
@@ -81,6 +85,8 @@ enabled = true
 "{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh" = "allow"
 "{{ .chezmoi.homeDir }}/.gnupg/S.keyboxd" = "allow"
 
+[shell_environment_policy]
+inherit = "core"
 
 [shell_environment_policy.set]
 # Keep Snowflake's localhost SAML listener alive so the snow skill can open an
@@ -113,6 +119,9 @@ enabled = true
 enabled = true
 
 [plugins."computer-use@openai-bundled"]
+enabled = true
+
+[plugins."unified-computer-use@openai-bundled"]
 enabled = true
 
 [plugins."documents@openai-primary-runtime"]
