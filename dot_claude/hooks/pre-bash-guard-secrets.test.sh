@@ -39,6 +39,25 @@ run_case() {
   fi
 }
 
+run_file_case() {
+  local expected="$1" path="$2" payload rc actual
+  payload=$(jq -nc --arg p "$path" '{tool_name: "Read", tool_input: {file_path: $p}}')
+  echo "$payload" | bash "$HOOK" >/dev/null 2>&1
+  rc=$?
+  case "$rc" in
+    0) actual=PASS ;;
+    2) actual=BLOCK ;;
+    *) actual="ERR($rc)" ;;
+  esac
+  if [ "$actual" = "$expected" ]; then
+    printf '  ok   %-5s  Read %s\n' "$actual" "$path"
+    PASS=$((PASS + 1))
+  else
+    printf '  FAIL want=%-5s got=%-5s  Read %s\n' "$expected" "$actual" "$path"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
 section "Env dump commands"
 run_case BLOCK 'printenv'
 run_case BLOCK 'printenv HOME'
@@ -90,9 +109,23 @@ run_case PASS  "grep '.pem.config' file.js"
 run_case PASS  "grep '.key.serialize()' cli.js"
 run_case PASS  "grep 'auth.json.parse' cli.js"
 
-section "SSH private keys"
+section "~/.ssh: private material blocked, client config and public keys readable"
 run_case BLOCK 'cat ~/.ssh/id_rsa'
+run_case BLOCK 'cat ~/.ssh/deploy-key'
+run_case BLOCK 'head "$HOME/.ssh/server.pem"'
+run_case BLOCK 'cat ~/.ssh/config ~/.ssh/deploy-key'
 run_case PASS  'cat ~/.ssh/id_rsa.pub'
+run_case PASS  'cat ~/.ssh/config'
+run_case PASS  'cat ~/.ssh/config.work'
+run_case PASS  'cat ~/.ssh/allowed_signers'
+run_case PASS  'grep github ~/.ssh/known_hosts'
+run_case PASS  'echo $(cat ~/.ssh/id_rsa.pub)'
+run_case PASS  'ssh -i ~/.ssh/deploy-key example.test'
+run_file_case BLOCK '/Users/me/.ssh/id_ed25519'
+run_file_case BLOCK '/Users/me/.ssh/deploy-key'
+run_file_case PASS  '/Users/me/.ssh/id_ed25519.pub'
+run_file_case PASS  '/Users/me/.ssh/config.work'
+run_file_case PASS  '/Users/me/.zshrc'
 
 section "curl verbose"
 run_case BLOCK 'curl -v https://example.com'

@@ -58,7 +58,6 @@
     "deny": [
       "Bash(*.claude/.credentials.json*)",
       "Bash(*.npmrc*)",
-      "Bash(*.ssh/id_*)",
       "Bash(*.zprofile*)",
       "Bash(*.zsh_history*)",
       "Bash(*auth.json*)",
@@ -68,7 +67,6 @@
       "Edit(~/.claude/.credentials.json*)",
       "Edit(~/.gnupg/private-keys-v1.d/**)",
       "Edit(~/.npmrc*)",
-      "Edit(~/.ssh/id_*)",
       "Edit(~/.zprofile*)",
       "Edit(~/*/auth.json*)",
       "EnterPlanMode",
@@ -82,7 +80,6 @@
       "Read(~/.aws/credentials*)",
       "Read(~/.claude/.credentials.json*)",
       "Read(~/.gnupg/private-keys-v1.d/**)",
-      "Read(~/.ssh/id_*)",
       "Read(~/.zsh_history*)",
       "Read(~/*/auth.json*)",
       "RemoteTrigger",
@@ -121,6 +118,16 @@
         "~/.snowflake/logs",
         "~/Code/.pnpm",
         "~/Library/Caches"
+      ],
+      "denyRead": [
+        "~/.ssh"
+      ],
+      "allowRead": [
+        "~/.ssh/config",
+        "~/.ssh/config.*",
+        "~/.ssh/*.pub",
+        "~/.ssh/allowed_signers",
+        "~/.ssh/known_hosts*"
       ]
     },
     "network": {
@@ -156,6 +163,16 @@
             "command": "~/.claude/hooks/pre-bash-policy.sh",
             "timeout": 10
           },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/pre-bash-guard-secrets.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
           {
             "type": "command",
             "command": "~/.claude/hooks/pre-bash-guard-secrets.sh",

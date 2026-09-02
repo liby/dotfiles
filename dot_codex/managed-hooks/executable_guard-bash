@@ -17,10 +17,11 @@ is_client_input() {
         ( "$base" == *\** || "$base" == *\?* || "$base" == *\[* ) ]]; then
     return 0
   fi
+  # Under ~/.ssh only client config, public keys, allowed_signers, and
+  # known_hosts are readable.
   case "$path" in
-    (*.ssh/id_*.pub) return 1 ;;
-    (*.ssh/id_*|*.ssh/polylab-deploy|*.ssh/polylab-host-ed25519| \
-     *.claude/.credentials.json*|*.codex/auth.json*| \
+    (*.ssh/config|*.ssh/config.*|*.ssh/*.pub|*.ssh/allowed_signers|*.ssh/known_hosts*) return 1 ;;
+    (*.ssh/*|*.claude/.credentials.json*|*.codex/auth.json*| \
      *.gnupg/private-keys-v1.d|*.gnupg/private-keys-v1.d/*) return 0 ;;
   esac
   return 1

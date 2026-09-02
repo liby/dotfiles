@@ -57,6 +57,13 @@ prevent_idle_sleep = true
 [permissions.development.filesystem]
 ":root" = "write"
 "{{ .chezmoi.homeDir }}/.codex/plugins/cache/openai-bundled/browser" = "read"
+# Codex read rules take exact paths, so ~/.ssh is denied as a whole and only the
+# files ssh and Git signature verification need are reopened; public keys stay
+# unreadable here.
+"{{ .chezmoi.homeDir }}/.ssh" = "deny"
+"{{ .chezmoi.homeDir }}/.ssh/config" = "read"
+"{{ .chezmoi.homeDir }}/.ssh/allowed_signers" = "read"
+"{{ .chezmoi.homeDir }}/.ssh/known_hosts" = "write"
 
 [permissions.development.filesystem.":workspace_roots"]
 ".env" = "read"

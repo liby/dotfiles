@@ -1,14 +1,36 @@
 #!/usr/bin/env bash
-# PreToolUse hook for Bash.
-# Blocks commands that read sensitive files or print secret values.
-# Each top-level segment (split on unquoted ; && ||) is checked independently,
-# so `cd foo && cat .env` evaluates per-op rather than as one concatenated
-# string (which would misfire on e.g. `grep foo log; rm .env`).
+# PreToolUse hook for Bash, Read, Edit, and Write.
+# Blocks commands that read sensitive files or print secret values, and file
+# tools that open private material under ~/.ssh.
+# Each top-level Bash segment (split on unquoted ; && ||) is checked
+# independently, so `cd foo && cat .env` evaluates per-op rather than as one
+# concatenated string (which would misfire on e.g. `grep foo log; rm .env`).
 
 source "$(dirname "$0")/_lib.sh"
 
 require_jq
-CMD=$(parse_command) || exit 0
+INPUT=$(cat)
+
+# Under ~/.ssh only client config, public keys, allowed_signers, and known_hosts
+# are readable; a deny glob cannot allow public keys inside a denied directory.
+ssh_private_path() {
+  case "$1" in
+    */.ssh/*) ;;
+    *) return 1 ;;
+  esac
+  case "${1##*/.ssh/}" in
+    config|config.*|*.pub|allowed_signers|known_hosts*) return 1 ;;
+  esac
+  return 0
+}
+
+FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty')
+if [ -n "$FILE" ]; then
+  ssh_private_path "$FILE" && block "reading private material under ~/.ssh."
+  exit 0
+fi
+
+CMD=$(printf '%s' "$INPUT" | parse_command) || exit 0
 
 # Path-boundary patterns below use [[:space:]] not \t — BSD grep ERE treats
 # \t inside [] as literal '\' and 't', which would let backslash-prefixed
@@ -46,11 +68,11 @@ while IFS= read -r SEG; do
     block "reading sensitive file contents."
   fi
 
-  # SSH private keys (~/.ssh/id_* excluding .pub)
-  if echo "$SEG" | grep -qE "\b($READ_CMDS)\b.*\.ssh/id_"; then
-    if echo "$SEG" | grep -oE '\S*\.ssh/id_\S*' | grep -qvE '\.pub$'; then
-      block "reading SSH private key."
-    fi
+  # ~/.ssh paths
+  if echo "$SEG" | grep -qE "\b($READ_CMDS)\b.*\.ssh/"; then
+    while IFS= read -r SSH_PATH; do
+      ssh_private_path "$SSH_PATH" && block "reading private material under ~/.ssh."
+    done < <(echo "$SEG" | grep -oE '\S*\.ssh/\S*' | sed -E 's/["'"'"')`;|&>]+$//')
   fi
 
   # curl -v / --verbose prints Authorization headers
