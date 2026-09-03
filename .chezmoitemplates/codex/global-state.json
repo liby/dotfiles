@@ -1,6 +1,5 @@
 {
   "electron-persisted-atom-state": {
-    "composer-model-picker-menu-view-v1": "simple",
     "electron:onboarding-projectless-completed": true,
     "electron:onboarding-welcome-pending": false,
     "git-active-line-blame-enabled": true,
