@@ -48,8 +48,9 @@ if ! grep -q "^no-autostart" "$common_conf"; then
   append_config_line "$common_conf" "no-autostart"
 fi
 
-# Both daemons fork and the launched process exits: AbandonProcessGroup keeps
-# the child, KeepAlive would loop on the held socket.
+# Both daemons fork and the launched process exits (--no-detach only keeps the
+# console, it still forks in GnuPG 2.5): AbandonProcessGroup keeps the child,
+# KeepAlive would respawn a parent that exits 2 on the held socket.
 typeset -A daemons=(
   gpg-agent "$brew_prefix/bin/gpg-agent"
   keyboxd "$brew_prefix/opt/gnupg/libexec/keyboxd"
@@ -83,13 +84,20 @@ EOF
     launchctl bootout "$service"
   fi
   # bootout reaps only the exited parent; the daemon holding the socket must
-  # stop before the new instance starts.
+  # stop before the new instance starts. gpgconf --kill returns after it exited.
   "$gpgconf_bin" --kill "$component"
   launchctl bootstrap "gui/$UID" "$plist"
+  # While the gui domain is in on-demand-only mode (login app restore or Setup
+  # Assistant), bootstrap leaves the RunAtLoad spawn pended until that phase
+  # ends, long after the wait below gives up (issue #28); kickstart starts it
+  # now. Skip it once launchd reports a run: a second parent would exit 2 on
+  # the held socket and leave that exit code in the diagnostics the error
+  # below points at.
+  launchctl print "$service" | grep -q 'runs = [1-9]' || launchctl kickstart "$service"
 done
 
-# bootstrap returns before RunAtLoad spawns anything; the card commands below
-# need both sockets.
+# Neither bootstrap nor kickstart waits for the daemon's socket; the card
+# commands below need both.
 for _ in {1..50}; do
   ready=1
   for daemon_flag in "" --keyboxd; do
