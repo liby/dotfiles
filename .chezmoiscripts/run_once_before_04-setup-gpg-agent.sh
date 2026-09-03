@@ -15,15 +15,25 @@ for f in "$HOME/.gnupg"/*(.N); do
   chmod 600 "$f"
 done
 
+append_config_line() {
+  local file=$1 line=$2
+  # A hand-edited file may end without a newline; appending would glue the
+  # option onto the last line, where the `grep "^option"` guards never see it.
+  if [[ -s "$file" ]] && ! tail -c1 "$file" | read -r _; then
+    echo >> "$file"
+  fi
+  print -r -- "$line" >> "$file"
+}
+
 gpg_agent_conf="$HOME/.gnupg/gpg-agent.conf"
 [[ ! -f "$gpg_agent_conf" ]] && touch "$gpg_agent_conf"
 
 if ! grep -q "^pinentry-program" "$gpg_agent_conf"; then
-  echo "pinentry-program $pinentry_bin" >> "$gpg_agent_conf"
+  append_config_line "$gpg_agent_conf" "pinentry-program $pinentry_bin"
 fi
 # git-ssh-gpg-agent uses S.gpg-agent.ssh, which exists only with ssh support.
 if ! grep -q "^enable-ssh-support" "$gpg_agent_conf"; then
-  echo "enable-ssh-support" >> "$gpg_agent_conf"
+  append_config_line "$gpg_agent_conf" "enable-ssh-support"
 fi
 
 # no-autostart: daemons come only from the launchd jobs below (CONCEPTS.md, Bootstrap).
@@ -32,10 +42,10 @@ common_conf="$HOME/.gnupg/common.conf"
 # use-keyboxd ignores an existing pubring.kbx, so never switch a populated
 # legacy homedir.
 if [[ ! -f "$HOME/.gnupg/pubring.kbx" ]] && ! grep -q "^use-keyboxd" "$common_conf"; then
-  echo "use-keyboxd" >> "$common_conf"
+  append_config_line "$common_conf" "use-keyboxd"
 fi
 if ! grep -q "^no-autostart" "$common_conf"; then
-  echo "no-autostart" >> "$common_conf"
+  append_config_line "$common_conf" "no-autostart"
 fi
 
 # Both daemons fork and the launched process exits: AbandonProcessGroup keeps
