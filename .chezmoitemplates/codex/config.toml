@@ -96,6 +96,7 @@ SNOWFLAKE_AUTH_FORCE_SERVER = "true"
 [mcp_servers.context7]
 enabled = true
 command = "/opt/homebrew/bin/envchain"
+# Intentionally follow the latest Context7 release.
 args = ["context7", "npx", "-y", "@upstash/context7-mcp"]
 
 [mcp_servers.openaiDeveloperDocs]
