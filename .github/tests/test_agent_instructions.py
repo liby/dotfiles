@@ -93,7 +93,7 @@ CREDENTIAL_CONSUMERS = {
             'command = "/opt/homebrew/bin/envchain"',
             'args = ["context7", "npx", "-y", "@upstash/context7-mcp"]',
         ),
-        "dot_claude/CLAUDE.md": ("envchain context7",),
+        "dot_claude/CLAUDE.md.tmpl": ("envchain context7",),
     },
     "pi": {
         "private_dot_pi/private_agent/private_models.json.tmpl": (

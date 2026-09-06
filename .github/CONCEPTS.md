@@ -40,6 +40,8 @@ The [agent-instruction workflow](workflows/validate-agent-instructions.yml) runs
 
 Most source files and templates render to paths under `$HOME`. Standard source names and template mechanics follow chezmoi rather than repository-specific conventions.
 
+The [Codex global source](../dot_codex/AGENTS.md.tmpl) and [Claude global source](../dot_claude/CLAUDE.md.tmpl) retain `.tmpl` so Codex does not load them as directory instructions when started inside their source directories.
+
 Not every configuration is fully replaced. Applications such as Codex and Claude Code write mutable runtime state, so [`modify_` sources](https://www.chezmoi.io/reference/target-types/#modify-file) manage selected fields while preserving application-owned values.
 
 Chezmoi source manages portable, durable preferences, including established interaction habits, when they should remain consistent across machines. It leaves matching convenience defaults implicit unless an explicit value enforces a repository boundary or counters observed write-back drift. Generated runtime state, machine-specific paths, and settings synchronized elsewhere remain owned by their existing systems.
@@ -121,4 +123,4 @@ CONTEXT7_API_KEY = "replace-with-value"
 RC_GATEWAY_API_KEY = "replace-with-value"
 ```
 
-The [Claude launcher](../dot_zsh/functions/claude) injects the `claude-gateway` namespace only in gateway mode. The [Codex configuration](../.chezmoitemplates/codex/config.toml) launches the Context7 MCP through the `context7` namespace, and the [Claude instructions](../dot_claude/CLAUDE.md) route Context7 CLI calls through the same namespace. The [Pi model configuration](../private_dot_pi/private_agent/private_models.json.tmpl) reads `RC_GATEWAY_API_KEY` from the `pi` namespace. The [agent instruction contract test](tests/test_agent_instructions.py) parses the TOML block and verifies its exact keys, consumer paths, and local namespace wiring without reading the encrypted seed.
+The [Claude launcher](../dot_zsh/functions/claude) injects the `claude-gateway` namespace only in gateway mode. The [Codex configuration](../.chezmoitemplates/codex/config.toml) launches the Context7 MCP through the `context7` namespace, and the [Claude instructions](../dot_claude/CLAUDE.md.tmpl) route Context7 CLI calls through the same namespace. The [Pi model configuration](../private_dot_pi/private_agent/private_models.json.tmpl) reads `RC_GATEWAY_API_KEY` from the `pi` namespace. The [agent instruction contract test](tests/test_agent_instructions.py) parses the TOML block and verifies its exact keys, consumer paths, and local namespace wiring without reading the encrypted seed.

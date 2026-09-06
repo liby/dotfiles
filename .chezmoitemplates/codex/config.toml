@@ -3,9 +3,8 @@ approval_policy = "on-request"
 approvals_reviewer = "auto_review"
 cli_auth_credentials_store = "keyring"
 default_permissions = "development"
-experimental_compact_prompt_file = "compact-prompt.md"
 mcp_oauth_credentials_store = "keyring"
-model = "gpt-5.6-sol"
+model = "gpt-6-astra"
 model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
 suppress_unstable_features_warning = true
@@ -97,6 +96,7 @@ SNOWFLAKE_AUTH_FORCE_SERVER = "true"
 [mcp_servers.context7]
 enabled = true
 command = "/opt/homebrew/bin/envchain"
+# Intentionally follow the latest Context7 release.
 args = ["context7", "npx", "-y", "@upstash/context7-mcp"]
 
 [mcp_servers.openaiDeveloperDocs]
