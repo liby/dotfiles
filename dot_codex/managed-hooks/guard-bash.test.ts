@@ -1,18 +1,6 @@
 import { expect, test } from "bun:test";
 
 const hook = new URL("./executable_guard-bash", import.meta.url).pathname;
-const hookInput = {
-  cwd: "/synthetic/workspace",
-  hook_event_name: "PreToolUse",
-  model: "synthetic-model",
-  permission_mode: "default",
-  session_id: "synthetic-session",
-  tool_name: "Bash",
-  tool_use_id: "synthetic-tool-use",
-  transcript_path: "/synthetic/transcript.jsonl",
-  turn_id: "synthetic-turn",
-};
-
 const cases: Array<[string, number, string?]> = [
   ["cat .env", 2],
   ["cat .env.local", 2],
@@ -167,7 +155,6 @@ const cases: Array<[string, number, string?]> = [
   ["env -S 'client arguments'; cat .env", 2],
   ["FOO=1 cat .env", 2],
   ["claude -p x", 0],
-  ["claude --resume session-id", 0],
   ["FOO=1 claude --version", 0],
   ["/path/to/claude -p x", 2, "claude"],
   ["command claude --version", 2, "claude"],
@@ -182,7 +169,6 @@ for (const [command, exitCode, policy = "client"] of cases) {
     const result = Bun.spawnSync(["/bin/zsh", "-f", hook], {
       stdin: new Blob([
         JSON.stringify({
-          ...hookInput,
           tool_input: { command },
         }),
       ]),

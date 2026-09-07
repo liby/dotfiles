@@ -132,7 +132,6 @@ check_command() {
 
   launcher=${words[1]}
   program=${launcher:t}
-  child=${${words[3]-}:t}
   claude_route_message='Run Claude as `claude ...`; the provider-aware launcher selects the persisted mode.'
 
   if [[ "$program" == env ]]; then
@@ -159,10 +158,10 @@ check_command() {
     raw_words=("${(@)raw_words[env_index,-1]}")
     launcher=${words[1]}
     program=${launcher:t}
-    child=${${words[3]-}:t}
     [[ "$program" == claude ]] && block "$claude_route_message"
   fi
   if [[ "$program" == envchain ]]; then
+    child=${${words[3]-}:t}
     if [[ "$child" == env || "$child" == printenv ]]; then
       block 'Do not dump an envchain namespace.'
     fi
@@ -282,7 +281,7 @@ command_text=$(/usr/bin/plutil -extract tool_input.command raw -expect string -o
 typeset -a tokens words=()
 heredoc=false
 # Keep lexer quotes until after operator recognition; quoted separators are arguments.
-tokens=(${(Z:C:)command_text}) || block 'Could not parse the Bash command.'
+tokens=(${(Z:C:)command_text})
 for (( token_index=1; token_index <= ${#tokens}; token_index++ )); do
   token=${tokens[token_index]}
   case "$token" in

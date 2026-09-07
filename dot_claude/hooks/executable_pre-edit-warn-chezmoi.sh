@@ -4,8 +4,7 @@
 command -v jq &>/dev/null || exit 0
 command -v chezmoi &>/dev/null || exit 0
 
-input=$(cat) || exit 0
-file_path=$(jq -r '.tool_input.file_path // empty' <<<"$input") || exit 0
+file_path=$(jq -r '.tool_input.file_path // empty') || exit 0
 [[ "$file_path" == /* ]] || exit 0
 
 source_path=$(chezmoi source-path "$file_path" 2>/dev/null) || exit 0

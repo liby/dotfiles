@@ -32,8 +32,6 @@ case "$2" in
 esac
 EOF
 chmod +x "$FIXTURE/bin/chezmoi"
-ln -s "$(command -v dirname)" "$FIXTURE/bin-no-jq/dirname"
-ln -s "$(command -v dirname)" "$FIXTURE/bin-no-chezmoi/dirname"
 ln -s "$(command -v jq)" "$FIXTURE/bin-no-chezmoi/jq"
 
 PASS=0

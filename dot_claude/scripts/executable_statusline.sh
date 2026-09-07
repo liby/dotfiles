@@ -217,10 +217,8 @@ _is_truthy() {
 [ -n "$DISABLE_COMPACT" ] && _is_truthy "$DISABLE_COMPACT" && auto_compact_enabled=0
 [ -n "$DISABLE_AUTO_COMPACT" ] && _is_truthy "$DISABLE_AUTO_COMPACT" && auto_compact_enabled=0
 
-# CC triggers auto-compact at min(model_capacity, autoCompactWindow) - COMPACT_RESERVE.
-# 33000 = nAK(20000, max-output reserve) + BAK(13000, compact buffer).
-# Reverse-engineered from CLI 2.1.150 e6H()/LG_(). May change across versions.
-# Keep the denominator capped at autoCompactWindow; it mirrors CC's trigger threshold.
+# CC compacts at min(model window, autoCompactWindow) - min(max output tokens, 20000) - 13000.
+# 33000 assumes the default output budget; a CLAUDE_CODE_MAX_OUTPUT_TOKENS below 20000 lowers the reserve.
 COMPACT_RESERVE=33000
 effective_size=$size
 (( auto_compact_enabled && auto_compact > 0 && auto_compact < effective_size )) && effective_size=$auto_compact

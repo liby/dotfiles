@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -I
 """Best-effort PreToolUse checks; unknown input leaves normal permissions in control."""
 
-import fnmatch
+from collections import deque
 import getopt
 import json
 import os
@@ -33,14 +33,12 @@ PATH_END = r'''($|[\s/"'>;|&)`])'''
 
 def gh_status(args):
     # Requesting token display is blocked even if another flag cancels it.
-    index = 0
-    while index < len(args):
-        word = args[index]
-        index += 1
+    words = iter(args)
+    for word in words:
         if word == '--':
             break
         if word in ('--hostname', '--jq', '--json', '--template', '-h'):
-            index += 1
+            next(words, None)
         elif word and ((word == '--show-token' or word.startswith('--show-token=')) or re.match(r'-[at]*t', word)):
             return True
     return False
@@ -49,7 +47,7 @@ def gh_status(args):
 def bulk_dump(program, args):
     if program == 'set':
         return 'set' if not args else None
-    if program not in ('export', 'declare', 'typeset') or None in args:
+    if program not in ('export', 'declare', 'typeset'):
         return None
     try:
         _, remaining = getopt.getopt(args, 'p' if program == 'export' else 'px')
@@ -116,50 +114,39 @@ def search_signature_is_data(source):
 def split_segments(source):
     # Keep readers separate from unrelated commands' path arguments. Physical
     # lines stay independent so heredoc quotes cannot hide later commands.
-    single = double = False
+    chars = deque(source)
+    quote = None
     word_start = True
     out = []
-    for line in source.split('\n'):
-        continued = False
-        index = 0
-        while index < len(line):
-            char = line[index]
-            following = line[index + 1:index + 2]
-            index += 1
-            if not single and not double and char == '#' and word_start:
-                out.append(line[index - 1:])
-                break
-            if char == '\\' and not single:
-                if not following:
-                    continued = True
-                else:
-                    out.append(char + following)
-                    word_start = False
-                    index += 1
-                continue
-            if char == "'" and not double:
-                single = not single
+    while chars:
+        char = chars.popleft()
+        if char == '\\' and quote != "'":
+            following = chars.popleft() if chars else ''
+            if following and following != '\n':
+                out.extend((char, following))
                 word_start = False
-            elif char == '"' and not single:
-                double = not double
-                word_start = False
-            elif not single and not double:
-                word_start = char in ' \t;&|()<>'
-                if char == ';' or char in '&|' and following == char:
-                    if out:
-                        yield ''.join(out)
-                    out = []
-                    if char != ';':
-                        index += 1
-                    continue
-            out.append(char)
-        if continued:
             continue
-        if out:
-            yield ''.join(out)
-        single = double = False
-        word_start = True
-        out = []
+        if char == '#' and quote is None and word_start:
+            out.append(char)
+            while chars and chars[0] != '\n':
+                out.append(chars.popleft())
+            continue
+        separator = quote is None and (
+            char == ';' or char in '&|' and chars and chars[0] == char
+        )
+        if char == '\n' or separator:
+            if char in '&|':
+                chars.popleft()
+            if out:
+                yield ''.join(out)
+            out = []
+            quote = None
+            word_start = True
+        else:
+            if char in "'\"" and quote in (None, char):
+                quote = None if quote == char else char
+            word_start = quote is None and char in ' \t;&|()<>'
+            out.append(char)
     if out:
         yield ''.join(out)
 
@@ -232,9 +219,8 @@ def check_file(event):
                     deny(reason)
                 for parent in candidate.parents:
                     if same_path(parent, root):
-                        relative = candidate.relative_to(parent)
-                        public_file = fnmatch.fnmatchcase(candidate.name, '*.pub') or (
-                            len(relative.parts) == 1 and any(fnmatch.fnmatchcase(candidate.name, name) for name in ('config', 'config.*', 'allowed_signers', 'known_hosts*'))
+                        public_file = candidate.name.endswith('.pub') or (
+                            parent == candidate.parent and (candidate.name in ('config', 'allowed_signers') or candidate.name.startswith(('config.', 'known_hosts')))
                         )
                         if not public_file or target.is_dir() or (is_grep and not target.is_file()):
                             deny(reason)
@@ -301,13 +287,11 @@ def check_command(words):
         if bre and not fixed:
             deny('rg-bre')
     if program in ('npm', 'pnpm', 'yarn', 'bun'):
-        index = 0
+        arguments = iter(tail)
         run = False
-        while index < len(tail):
-            arg = tail[index]
-            index += 1
+        for arg in arguments:
             if arg in ('--prefix', '--dir', '--cwd', '--filter', '--workspace', '-C', '-F') or program == 'npm' and arg == '-w':
-                index += 1
+                next(arguments, None)
             elif arg.startswith('-'):
                 continue
             elif arg == 'run' and not run:
@@ -334,18 +318,15 @@ done
 
 
 def check_commands(source):
-    pairs = shell_tokens(source)
+    pairs = iter(shell_tokens(source))
     words = []
     heredoc = False
-    index = 0
-    while index < len(pairs):
-        raw, value = pairs[index]
-        index += 1
+    for raw, value in pairs:
         if re.fullmatch(r'\d*<<-?', raw):
-            index += 1
+            next(pairs, None)
             heredoc = True
         elif re.fullmatch(r'(?:\d*(?:>|>>|<|<>|>&|<&|<<<|>\|)|&>|&>>)', raw):
-            index += 1
+            next(pairs, None)
         elif raw in ('(', '()', '((') or not words and raw in ('{', '[[', 'if', 'for', 'foreach', 'while', 'until', 'repeat', 'case', 'select', 'function', 'coproc'):
             check_command(words)
             return

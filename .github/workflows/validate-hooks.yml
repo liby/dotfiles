@@ -43,4 +43,5 @@ jobs:
             echo "== $t"
             bash "$t"
           done
+          python3 -I dot_claude/hooks/pre-tool-guard.test.py
           bun test dot_codex/managed-hooks/*.test.ts
