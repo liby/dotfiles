@@ -152,6 +152,19 @@ run_case BLOCK 'rg E2B_API_KEY .env.local'
 run_case BLOCK 'rg secret .env'
 run_case BLOCK 'rg -n foo /path/to/.env'
 run_case BLOCK 'rg API_KEY .env.production'
+run_case BLOCK 'rg -f .env README.md'
+run_case BLOCK 'grep --file=.env README.md'
+run_case BLOCK 'rg .env -e secret'
+run_case BLOCK 'rg -nf .env README.md'
+run_case BLOCK 'rg secret -- .env'
+run_case BLOCK 'rg secret -g .env src'
+run_case BLOCK 'rg secret -g=.env src'
+run_case BLOCK 'grep secret --include=.env src'
+run_case PASS  'rg -n "bucket|role" src -g "*.ts" | rg -v ".env"'
+run_case PASS  'rg .env README.md'
+run_case PASS  'grep -e .env README.md'
+run_case PASS  'rg secret src -g "!.env"'
+run_case PASS  'rg --files -g ".env*"'
 run_case BLOCK 'ag pattern .env'
 run_case BLOCK 'ack token .env.staging'
 run_case PASS  'cat .env.example'
@@ -295,7 +308,8 @@ run_case PASS  'gh auth status > -t'
 section "Compound commands and static words"
 run_case PASS  'grep foo log; rm .env'
 run_case BLOCK 'cd foo && cat .env'
-run_case BLOCK 'grep .env file; echo ok'
+run_case PASS  'grep .env file; echo ok'
+run_case BLOCK 'grep foo .env; echo ok'
 run_case BLOCK 'echo ok && cat ~/.ssh/id_rsa'
 run_case BLOCK 'test -e .env || cat .env'
 run_case BLOCK 'cd foo && env'
@@ -326,6 +340,8 @@ run_case PASS  $'# a comment ending in a backslash \\\necho safe'
 
 section "Command substitution (\$() and backticks)"
 run_case BLOCK 'echo $(cat .env)'
+run_case BLOCK 'echo $(rg secret .env)'
+run_case BLOCK 'rg "$(rg secret .env)" README.md'
 run_case BLOCK 'echo $(cat auth.json)'
 run_case BLOCK 'result=$(cat .env.production)'
 run_case BLOCK 'echo `cat .env`'
@@ -356,6 +372,7 @@ run_case PASS  "printf '%s' '$'API_KEY"
 section "Sensitive signatures do not depend on parsing native Zsh"
 run_case BLOCK 'repeat 2 do cat .env; done'
 run_case BLOCK 'repeat 2 cat .env'
+run_case BLOCK 'repeat 2 rg secret .env'
 run_case BLOCK '{ printf ready; } always { cat .env; }'
 run_case BLOCK 'repeat 2 do cat .env; done' "$TEST_ROOT"
 
@@ -365,6 +382,8 @@ run_case BLOCK "printf '%s' 'printenv'"
 run_case BLOCK $'python3 <<\'PY\'\nprint("cat .env")\nPY'
 run_case BLOCK $'python3 - <<\'PY\'\n# cat .env\nprint("done")\nPY'
 run_case BLOCK "python3 -c 'print(\"done\")' 'cat .env'"
+run_case BLOCK "printf '%s' 'rg secret .env'"
+run_case BLOCK 'rg secret README.md # rg secret .env'
 
 section "Normal clients consume their own credential inputs"
 run_case PASS  'node --env-file=.env.local app.js'

@@ -60,6 +60,59 @@ def bulk_dump(program, args):
     return None
 
 
+def check_search_files(program, args):
+    # Unknown options keep the signature check; getopt owns clusters and values.
+    short = 'e:f:A:B:C:m:FGHhilLnqsvVwxo'
+    long = ['regexp=', 'file=', 'after-context=', 'before-context=', 'context=', 'max-count=', 'fixed-strings', 'ignore-case', 'line-number', 'invert-match', 'help', 'version']
+    if program == 'rg':
+        short += 'g:t:T:E:'
+        long += ['glob=', 'iglob=', 'type=', 'type-not=', 'encoding=', 'replace=', 'color=', 'sort=', 'sortr=', 'files']
+    else:
+        short += 'ErR'
+        long += ['include=', 'exclude=', 'exclude-dir=']
+    try:
+        options, operands = getopt.gnu_getopt(args, short, long)
+    except getopt.GetoptError:
+        return False
+    if any(value.startswith('=') for _, value in options):
+        return False
+    if any(option in ('--help', '--version', '-V') or program == 'rg' and option in ('-h', '--files') for option, _ in options):
+        return True
+    explicit_pattern = any(option in ('-e', '--regexp', '-f', '--file') for option, _ in options)
+    files = operands if explicit_pattern else operands[1:]
+    for option, value in options:
+        if option in ('-f', '--file') or option in ('-g', '--glob', '--iglob', '--include') and not value.startswith('!'):
+            files.append(value)
+    for path in files:
+        if re.search(r'(?:^|/)' + ENV_NAMES + r'(?:$|/)', path):
+            deny('dotenv')
+    return True
+
+
+def search_signature_is_data(source):
+    # Refine a broad signature only for static search pipelines. All other forms
+    # retain the signature check, including comments and nested shell commands.
+    if any(char in source for char in '#$`(){}<>'):
+        return False
+    try:
+        tokens = shell_tokens(source)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+    words = []
+    for raw, value in tokens + [('|', '|')]:
+        if raw == '|':
+            if not words or Path(words[0]).name not in ('rg', 'grep'):
+                return False
+            if not check_search_files(Path(words[0]).name, words[1:]):
+                return False
+            words = []
+        elif raw in (';', '&', '&&', '||', '|&'):
+            return False
+        else:
+            words.append(value)
+    return True
+
+
 def split_segments(source):
     # Keep readers separate from unrelated commands' path arguments. Physical
     # lines stay independent so heredoc quotes cannot hide later commands.
@@ -122,7 +175,7 @@ def check_sensitive(source):
         if re.search(r'(^|\|)\s*set\s*(\||>|$)', segment) and not re.search(r'(^|\|)\s*set\s+-', segment):
             deny('set')
         reader = r'\b(?:' + READ_CMDS + r')\b.*'
-        if re.search(reader + r'''(^|[\s/="'])''' + ENV_NAMES + PATH_END, segment):
+        if re.search(reader + r'''(^|[\s/="'])''' + ENV_NAMES + PATH_END, segment) and not search_signature_is_data(segment):
             deny('dotenv')
         if re.search(reader + SENSITIVE_NAMES + PATH_END, segment):
             deny('sensitive')
@@ -226,6 +279,8 @@ def check_command(words):
         deny('gh-status')
     if program == 'find':
         deny('find')
+    if program in ('rg', 'grep'):
+        check_search_files(program, tail)
     if program == 'rg':
         fixed = bre = skip = False
         options = True
@@ -263,7 +318,7 @@ def check_command(words):
                 break
 
 
-def check_commands(source):
+def shell_tokens(source):
     # Native Zsh tokenization only: input never becomes executable shell source.
     lexer = r"""IFS= read -r -d '' command_text
 for token in ${(Z:C:)command_text}; do
@@ -275,7 +330,11 @@ done
     tokens = result.stdout.split('\0')
     if tokens.pop() or len(tokens) % 2:
         raise ValueError
-    pairs = list(zip(tokens[::2], tokens[1::2]))
+    return list(zip(tokens[::2], tokens[1::2]))
+
+
+def check_commands(source):
+    pairs = shell_tokens(source)
     words = []
     heredoc = False
     index = 0
