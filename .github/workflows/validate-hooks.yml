@@ -7,6 +7,8 @@ on:
       - ".chezmoitemplates/codex/requirements.toml"
       - ".github/workflows/validate-hooks.yml"
       - "dot_claude/hooks/**"
+      - "dot_claude/scripts/executable_statusline.sh"
+      - "dot_claude/scripts/statusline.test.sh"
       - "dot_codex/managed-hooks/**"
       - "dot_zsh/functions/claude"
       - "dot_zsh/functions/claude.test.zsh"
@@ -37,7 +39,7 @@ jobs:
         run: zsh dot_zsh/functions/claude.test.zsh
       - name: Test agent hooks
         run: |
-          for t in dot_claude/hooks/*.test.sh; do
+          for t in dot_claude/hooks/*.test.sh dot_claude/scripts/*.test.sh; do
             echo "== $t"
             bash "$t"
           done

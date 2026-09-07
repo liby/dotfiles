@@ -3,9 +3,9 @@
   "cleanupPeriodDays": 99999,
   "outputStyle": "Natural Technical Writing",
   "env": {
-    "ANTHROPIC_DEFAULT_FABLE_MODEL": "claude-fable-5",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL": "claude-fable-5-1[1m]",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5[1m]",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
     "CLAUDE_AUTO_BACKGROUND_TASKS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
@@ -160,22 +160,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/pre-bash-policy.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/pre-bash-guard-secrets.sh",
+            "command": "~/.claude/hooks/pre-tool-guard.py",
             "timeout": 10
           }
         ]
       },
       {
-        "matcher": "Read|Edit|Write",
+        "matcher": "Read|Edit|Write|Grep",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/pre-bash-guard-secrets.sh",
+            "command": "~/.claude/hooks/pre-tool-guard.py",
             "timeout": 10
           }
         ]
@@ -192,6 +187,18 @@
       }
     ],
     "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-bash-scan-secrets.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
       {
         "matcher": "Bash",
         "hooks": [

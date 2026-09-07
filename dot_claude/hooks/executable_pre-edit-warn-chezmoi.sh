@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 # Ask reasons are user-only; repeat modify_ warnings as additionalContext.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=_lib.sh
-source "$SCRIPT_DIR/_lib.sh"
-
-require_jq
+command -v jq &>/dev/null || exit 0
 command -v chezmoi &>/dev/null || exit 0
 
 input=$(cat) || exit 0

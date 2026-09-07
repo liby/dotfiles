@@ -1,0 +1,5 @@
+#!/bin/zsh
+set -euo pipefail
+
+defaults write com.openai.codex requirements_toml_base64 -string \
+  '{{ includeTemplate "codex/requirements.toml" . | b64enc }}'

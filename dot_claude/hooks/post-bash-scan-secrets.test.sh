@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Test harness for post-bash-scan-secrets.sh.
-# Pipes fake PostToolUse payloads into the hook and asserts whether the scanner
+# Pipes fake successful and failed Bash payloads into the hook and checks whether it
 # emits a leak warning. Each case states the categories it expects to fire
 # (comma-joined, in scanner order) or "none" for a clean output.
 # Run: bash post-bash-scan-secrets.test.sh
@@ -22,17 +22,19 @@ section() {
 }
 
 run_case() {
-  local expected="$1" payload="$2" warn actual
-  warn=$(printf '{"tool_response":{"stdout":%s,"stderr":""}}' \
-    "$(printf '%s' "$payload" | jq -Rs .)" \
-    | bash "$HOOK" \
-    | jq -r '.hookSpecificOutput.additionalContext // ""')
+  local expected="$1" payload="$2" event="${3:-PostToolUse}" result warn actual
+  result=$(jq -nc --arg text "$payload" --arg event "$event" '
+    {hook_event_name: $event, tool_name: "Bash"} +
+    if $event == "PostToolUseFailure" then {error: $text, is_interrupt: false}
+    else {tool_response: {stdout: $text, stderr: ""}} end' | bash "$HOOK")
+  warn=$(printf '%s' "$result" | jq -r '.hookSpecificOutput.additionalContext // ""')
   if [ -z "$warn" ]; then
     actual="none"
   else
     actual=$(echo "$warn" | sed -nE 's/.*potential secrets \(([^)]*)\).*/\1/p')
   fi
-  if [ "$actual" = "$expected" ]; then
+  if [ "$actual" = "$expected" ] && { [ -z "$warn" ] ||
+    [ "$(printf '%s' "$result" | jq -r '.hookSpecificOutput.hookEventName')" = "$event" ]; }; then
     printf '  ok   %-40s  %s\n' "$actual" "$payload"
     PASS=$((PASS + 1))
   else
@@ -69,6 +71,17 @@ section "Env secret assignments"
 run_case 'API key, env secret' 'TOKEN=ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 run_case 'env secret'          'PASSWORD=correcthorsebatterystaple'
 run_case 'env secret'          'PRIVATE_KEY="aaaaaaaaaaaaaaaaaaaaaaaa"'
+run_case 'env secret'          'ANTHROPIC_AUTH_TOKEN=synthetic_fixture_123456789'
+run_case 'env secret'          'CONTEXT7_API_KEY=synthetic_fixture_123456789'
+run_case 'env secret'          'RC_GATEWAY_API_KEY=synthetic_fixture_123456789'
+run_case none                  'SERVICE_TOKEN=${REAL_TOKEN}'
+run_case none                  'SERVICE_TOKEN={{ env.TOKEN }}'
+run_case none                  'CHECKSUM=synthetic_fixture_123456789'
+
+section "Failed command output"
+run_case 'Bearer token, auth header' $'Exit code 1\nAuthorization: Bearer synthetic_fixture_123456789' PostToolUseFailure
+run_case 'env secret' 'SERVICE_TOKEN=synthetic_fixture_123456789' PostToolUseFailure
+run_case none 'Exit code 1: file not found' PostToolUseFailure
 
 section "URL credentials"
 run_case 'URL credential' 'mysql://user:correcthorsebatterystaple@host'

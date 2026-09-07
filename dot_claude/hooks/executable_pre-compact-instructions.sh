@@ -5,13 +5,13 @@
 cat <<'EOF'
 <compaction-instructions>
 
-Goal: summarize so a fresh agent can continue the current work without re-deriving context. The post-compact session inherits only this summary.
+Goal: summarize so a fresh agent can continue the current work without re-deriving context.
 
 Identifier preservation: copy identifiers character for character (UUIDs, commit hashes, IPs, ports, URLs, file paths, branch names, PR numbers). A single altered character breaks downstream tool calls silently.
 
 Identifier preservation does not extend to credentials. Never copy secrets into the summary: no tokens, API keys, cookies, passwords, or .env values, even when earlier tool output displayed them. Name where the credential lives (file path, env var name) instead; the summary becomes the next agent's prompt.
 
-Don't duplicate artifacts; reference them. When work has been committed, pushed, or written to a durable artifact, cite the artifact (commit hash, PR URL, file path) and name which user request it resolved. Do not re-prose the diff or the file body; the next agent runs `git show <hash>` or opens the file when they need detail. Re-prosing committed work scatters the completion signal across the summary, and the post-compact agent treats already-resolved requests as still pending and re-launches them. For external references (PRDs, ADRs, third-party issues), cite plus one inline line on the working fact (decision, status, conclusion).
+Don't duplicate artifacts; reference them. When work has been committed, pushed, or written to a durable artifact, cite the artifact (commit hash, PR URL, file path) and state whether the user request is still open or resolved; the artifact alone does not establish completion. Do not re-prose the diff or the file body; the next agent runs `git show <hash>` or opens the file when they need detail. Re-prosing completed work scatters the completion signal across the summary, and the post-compact agent treats already-resolved requests as still pending and re-launches them. For external references (PRDs, ADRs, third-party issues), cite plus one inline line on the working fact (decision, status, conclusion).
 
 Preserve in priority order:
 

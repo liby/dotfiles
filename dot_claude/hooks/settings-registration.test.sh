@@ -53,11 +53,20 @@ section() {
 }
 
 section "registered end state"
-expect_registration PreToolUse "Bash" "~/.claude/hooks/pre-bash-policy.sh"
-expect_registration PreToolUse "Bash" "~/.claude/hooks/pre-bash-guard-secrets.sh"
+expect_registration PreToolUse "Bash" "~/.claude/hooks/pre-tool-guard.py"
+expect_registration PreToolUse "Read|Edit|Write|Grep" "~/.claude/hooks/pre-tool-guard.py"
 expect_registration PreToolUse "Edit|Write" "~/.claude/hooks/pre-edit-warn-chezmoi.sh"
 expect_registration PostToolUse "Bash" "~/.claude/hooks/post-bash-scan-secrets.sh"
+expect_registration PostToolUseFailure "Bash" "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_registration PreCompact "" "~/.claude/hooks/pre-compact-instructions.sh"
+check "event/matcher/command tuples are unique" "$(jq '
+  [to_entries[] | .key as $event | .value[] | (.matcher // "") as $matcher
+   | .hooks[] | [$event, $matcher, .command]]
+  | length == (unique | length)' <<<"$HOOKS_JSON")"
+
+check "Bash has one guard with the ten-second deadline" "$(jq '
+  [.PreToolUse[] | select(.matcher == "Bash") | .hooks[]]
+  | length == 1 and .[0].timeout == 10' <<<"$HOOKS_JSON")"
 
 section "registered command -> source script"
 while IFS= read -r cmd; do
@@ -74,12 +83,12 @@ while IFS= read -r cmd; do
 done < <(jq -r '.[][]?.hooks[]?.command' <<<"$HOOKS_JSON")
 
 section "source script -> registration"
-for src in "$HERE"/executable_pre-*.sh "$HERE"/executable_post-*.sh; do
+for src in "$HERE"/executable_pre-* "$HERE"/executable_post-*; do
   [ -e "$src" ] || continue
   base="$(basename "$src")"
   base="${base#executable_}"
   ok=$(jq --arg c "~/.claude/hooks/$base" \
-    '[.[][]?.hooks[]? | select(.command == $c)] | length == 1' <<<"$HOOKS_JSON")
+    '[.[][]?.hooks[]? | select(.command == $c)] | length >= 1' <<<"$HOOKS_JSON")
   check "$base is registered" "$ok"
 done
 

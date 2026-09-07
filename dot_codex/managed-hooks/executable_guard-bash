@@ -33,137 +33,280 @@ is_secret_name() {
      "$name" == *CREDENTIAL* || "$name" == *API_KEY* || "$name" == *PRIVATE_KEY* ]]
 }
 
-command_text=$(/usr/bin/plutil -extract tool_input.command raw -expect string -o - -) || exit 0
-typeset -a words
-words=(${(z)command_text}) || block 'Could not parse the Bash command.'
-(( ${#words} )) || exit 0
-words=("${(@Q)words}")
-while (( ${#words} )) && [[ "${words[1]}" =~ '^[A-Za-z_][A-Za-z0-9_]*=' ]]; do
-  words=("${(@)words[2,-1]}")
-done
-(( ${#words} )) || exit 0
+# Recognize direct expansions without evaluating them or losing single-quote literals.
+is_secret_expansion() {
+  local raw=$1
+  local -a match
+  [[ "$raw" == \"*\" ]] && raw=${raw[2,-2]}
+  if [[ "$raw" =~ '^\$([A-Za-z_][A-Za-z0-9_]*)$' ||
+        "$raw" =~ '^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$' ]]; then
+    is_secret_name "${match[1]}"
+  else
+    return 1
+  fi
+}
 
-launcher=${words[1]}
-program=${launcher:t}
-child=${${words[3]-}:t}
-claude_route_message='Run Claude as `claude ...`; the provider-aware launcher selects the persisted mode.'
+check_search_files() {
+  local program=${1:t} word pattern=false options=true
+  local -a files=()
+  shift
+  # Preserve pattern/value ownership for ordinary searches, not CLI option validity.
+  while (( $# )); do
+    word=$1
+    shift
+    if [[ "$options" == true ]]; then
+      case "$word" in
+        (--help|--version|--files|-V) return 0 ;;
+        (-h) [[ "$program" == rg ]] && return 0; continue ;;
+        (-E|--color) [[ "$program" == rg && $# -gt 0 ]] && shift; continue ;;
+        (--) options=false; continue ;;
+        (-e|--regexp) pattern=true; (( $# )) && shift; continue ;;
+        (-e?*|--regexp=*) pattern=true; continue ;;
+        (-f|--file) pattern=true; files+=("${1-}"); (( $# )) && shift; continue ;;
+        (-f?*) pattern=true; files+=("${word#-f}"); continue ;;
+        (--file=*) pattern=true; files+=("${word#*=}"); continue ;;
+        (-g|--glob|--iglob|-t|--type|-T|--type-not|-A|-B|-C|--after-context|--before-context|--context|-m|--max-count|--replace|--encoding|--sort|--sortr)
+          (( $# )) && shift
+          continue ;;
+        (-*) continue ;;
+      esac
+    fi
+    files+=("$word")
+  done
+  [[ "$pattern" == false ]] && files=("${(@)files[2,-1]}")
+  for word in "${files[@]}"; do
+    is_client_input "$word" &&
+      block 'Credential and environment files are opaque client inputs; do not display their contents.'
+  done
+  return 0
+}
 
-if [[ "$program" == env ]]; then
-  integer env_index=2
-  while (( env_index <= ${#words} )); do
-    case "${words[env_index]}" in
-      (-u|-P|-C) (( env_index += 2 )) ;;
-      (-i|-v) (( env_index++ )) ;;
-      (-S) exit 0 ;;
-      (--)
-        (( env_index++ ))
-        while (( env_index <= ${#words} )) &&
-              [[ "${words[env_index]}" =~ '^[A-Za-z_][A-Za-z0-9_]*=' ]]; do
-          (( env_index++ ))
-        done
-        break
-        ;;
-      (-*|*=*) (( env_index++ )) ;;
-      (*) break ;;
+gh_status_shows_token() {
+  local word
+  # An explicit token-display flag is disallowed even when another flag cancels it.
+  while (( $# )); do
+    word=$1
+    shift
+    case "$word" in
+      (--) break ;;
+      (--hostname|--jq|--json|--template|-h) (( $# )) && shift ;;
+      (--show-token|--show-token=*) return 0 ;;
+      (-*) [[ "$word" =~ '^-[at]*t' ]] && return 0 ;;
     esac
   done
-  (( env_index <= ${#words} )) || block 'Do not dump the process environment.'
-  words=("${(@)words[env_index,-1]}")
+  return 1
+}
+
+check_command() {
+  local -a raw_words=() words redirect_targets=()
+  # Redirections are not argv; file readers still need their targets.
+  while (( $# )); do
+    if [[ "$1" =~ "^([0-9]*(>|>>|<|<>|>&|<&|<<<|>[|])|&>|&>>)$" ]]; then
+      (( $# >= 2 )) || return 0
+      redirect_targets+=("${(Q)2}")
+      shift 2
+    else
+      raw_words+=("$1")
+      shift
+    fi
+  done
+  words=("${(@Q)raw_words}")
+  local launcher program child command_target claude_route_message
+  local word flat upper_word tracing authenticated
+  # Only unquoted nocorrect is a reserved word before other precommands.
+  while (( ${#words} )) && [[ "${words[1]}" =~ '^[A-Za-z_][A-Za-z0-9_]*=' || "${raw_words[1]}" == nocorrect ]]; do
+    words=("${(@)words[2,-1]}")
+    raw_words=("${(@)raw_words[2,-1]}")
+  done
+  local precommand=""
+  while (( ${#words} )) && [[ "${words[1]}" == (builtin|-|noglob) ]]; do
+    precommand=${words[1]}
+    words=("${(@)words[2,-1]}")
+    raw_words=("${(@)raw_words[2,-1]}")
+  done
+  (( ${#words} )) || return 0
+  # Direct builtin dispatch cannot select an external command or a path.
+  if [[ "$precommand" == builtin && "${words[1]}" != (echo|printf|export|typeset|declare|set|command) ]]; then
+    return 0
+  fi
+
   launcher=${words[1]}
   program=${launcher:t}
   child=${${words[3]-}:t}
-  [[ "$program" == claude ]] && block "$claude_route_message"
-fi
-if [[ "$program" == envchain ]]; then
-  if [[ "$child" == env || "$child" == printenv ]]; then
-    block 'Do not dump an envchain namespace.'
-  fi
-  [[ "$child" == claude ]] && block "$claude_route_message"
-  exit 0
-fi
-if [[ "$program" == command ]]; then
-  command_target=${words[2]-}
-  case "${words[2]-}" in
-    (-v|-V) exit 0 ;;
-    (--) command_target=${words[3]-} ;;
-  esac
-  [[ "${command_target:t}" == claude ]] && block "$claude_route_message"
-fi
-if [[ "$program" == claude ]]; then
-  [[ "$launcher" != claude ]] && block "$claude_route_message"
-  exit 0
-fi
+  claude_route_message='Run Claude as `claude ...`; the provider-aware launcher selects the persisted mode.'
 
-case "$program" in
-  (cat|head|tail|less|more|bat|sed|awk|jq|yq|base64|xxd|od|strings|diff|openssl|plutil)
-    for word in "${words[@]}"; do
-      is_client_input "$word" &&
-        block 'Credential and environment files are opaque client inputs; do not display their contents.'
+  if [[ "$program" == env ]]; then
+    integer env_index=2
+    while (( env_index <= ${#words} )); do
+      case "${words[env_index]}" in
+        (-u|-P|-C) (( env_index += 2 )) ;;
+        (-i|-v) (( env_index++ )) ;;
+        (-S) return 0 ;;
+        (--)
+          (( env_index++ ))
+          while (( env_index <= ${#words} )) &&
+                [[ "${words[env_index]}" =~ '^[A-Za-z_][A-Za-z0-9_]*=' ]]; do
+            (( env_index++ ))
+          done
+          break
+          ;;
+        (-*|*=*) (( env_index++ )) ;;
+        (*) break ;;
+      esac
     done
-    ;;
-  (printenv)
-    (( ${#words} == 1 )) && block 'Do not dump the process environment.'
-    for word in "${(@)words[2,-1]}"; do
-      is_secret_name "$word" && block 'Do not print credential environment variables.'
-    done
-    ;;
-  (export)
-    (( ${#words} == 1 )) && block 'Do not dump exported variables.'
-    for word in "${(@)words[2,-1]}"; do
-      if [[ "$word" == -* && "$word" != --* && "$word" == *p* ]]; then
-        block 'Do not dump exported variables.'
-      fi
-    done
-    ;;
-  (typeset|declare)
-    (( ${#words} == 1 )) && block 'Do not dump shell variables.'
-    if (( ${#words} == 2 )) && [[ "${words[2]}" == -* &&
-       "${words[2]}" != --* && "${words[2]}" == *[px]* ]]; then
-      block 'Do not dump shell variables.'
+    (( env_index <= ${#words} )) || block 'Do not dump the process environment.'
+    words=("${(@)words[env_index,-1]}")
+    raw_words=("${(@)raw_words[env_index,-1]}")
+    launcher=${words[1]}
+    program=${launcher:t}
+    child=${${words[3]-}:t}
+    [[ "$program" == claude ]] && block "$claude_route_message"
+  fi
+  if [[ "$program" == envchain ]]; then
+    if [[ "$child" == env || "$child" == printenv ]]; then
+      block 'Do not dump an envchain namespace.'
     fi
-    for word in "${(@)words[2,-1]}"; do
-      is_secret_name "$word" && block 'Do not print credential shell variables.'
-    done
-    ;;
-  (set)
-    (( ${#words} == 1 )) && block 'Do not dump shell variables.'
-    ;;
-  (gh|glab)
-    if [[ "${words[2]-}" == auth && "${words[3]-}" == token ]]; then
-      [[ "$program" == gh ]] && block 'Do not print Git hosting credentials.'
-    fi
-    if [[ "${words[2]-}" == auth && "${words[3]-}" == status ]]; then
-      for word in "${(@)words[4,-1]}"; do
-        if [[ "$word" == --show-token || "$word" == --show-token=* ||
-              ( "$word" == -* && "$word" != --* && "$word" == *t* ) ]]; then
-          block 'Do not print Git hosting credentials.'
+    [[ "$child" == claude ]] && block "$claude_route_message"
+    return 0
+  fi
+  if [[ "$program" == command ]]; then
+    command_target=${words[2]-}
+    case "${words[2]-}" in
+      (-v|-V) return 0 ;;
+      (--) command_target=${words[3]-} ;;
+    esac
+    [[ "${command_target:t}" == claude ]] && block "$claude_route_message"
+  fi
+  if [[ "$program" == claude ]]; then
+    [[ "$launcher" != claude ]] && block "$claude_route_message"
+    return 0
+  fi
+
+  [[ "$launcher" == */* && "$program" == (export|typeset|declare|set) ]] && return 0
+
+  case "$program" in
+    (cat|head|tail|less|more|bat|sed|awk|jq|yq|base64|xxd|od|strings|diff|openssl|plutil)
+      for word in "${words[@]}" "${redirect_targets[@]}"; do
+        is_client_input "$word" &&
+          block 'Credential and environment files are opaque client inputs; do not display their contents.'
+      done
+      ;;
+    (rg|grep)
+      for word in "${redirect_targets[@]}"; do
+        is_client_input "$word" &&
+          block 'Credential and environment files are opaque client inputs; do not display their contents.'
+      done
+      check_search_files "${words[@]}"
+      ;;
+    (echo|printf)
+      [[ "$program" == printf && "${words[2]-}" == -v ]] && return 0
+      for word in "${(@)raw_words[2,-1]}"; do
+        is_secret_expansion "$word" && block 'Do not print credential shell variables.'
+      done
+      ;;
+    (printenv)
+      (( ${#words} == 1 )) && block 'Do not dump the process environment.'
+      for word in "${(@)words[2,-1]}"; do
+        is_secret_name "$word" && block 'Do not print credential environment variables.'
+      done
+      ;;
+    (export)
+      (( ${#words} == 1 )) && block 'Do not dump exported variables.'
+      for word in "${(@)words[2,-1]}"; do
+        if [[ "$word" == -* && "$word" != --* && "$word" == *p* ]]; then
+          block 'Do not dump exported variables.'
         fi
       done
-    fi
-    ;;
-  (security)
-    flat=" ${(j: :)words} "
-    if [[ "$flat" == *' -w '* || "$flat" == *' -g '* ]]; then
-      block 'Do not extract credentials from the macOS Keychain.'
-    fi
-    ;;
-  (curl)
-    tracing=false
-    authenticated=false
-    for word in "${(@)words[2,-1]}"; do
-      upper_word=${word:u}
-      if [[ "$word" == --verbose || "$word" == --trace || "$word" == --trace-* ||
-            ( "$word" == -* && "$word" != --* && "$word" == *v* ) ]]; then
-        tracing=true
+      ;;
+    (typeset|declare)
+      (( ${#words} == 1 )) && block 'Do not dump shell variables.'
+      if (( ${#words} == 2 )) && [[ "${words[2]}" == -* &&
+         "${words[2]}" != --* && "${words[2]}" == *[px]* ]]; then
+        block 'Do not dump shell variables.'
       fi
-      if [[ "$upper_word" == *AUTHORIZATION* || "$upper_word" == *X-API-KEY* ||
-            "$upper_word" == *X-AUTH-TOKEN* || "$word" == -u* ||
-            "$word" == --user || "$word" == --user=* || "$word" == --netrc* ]]; then
-        authenticated=true
+      for word in "${(@)words[2,-1]}"; do
+        is_secret_name "$word" && block 'Do not print credential shell variables.'
+      done
+      ;;
+    (set)
+      (( ${#words} == 1 )) && block 'Do not dump shell variables.'
+      ;;
+    (gh|glab)
+      if [[ "${words[2]-}" == auth && "${words[3]-}" == token ]]; then
+        [[ "$program" == gh ]] && block 'Do not print Git hosting credentials.'
       fi
-    done
-    [[ "$tracing" == true && "$authenticated" == true ]] &&
-      block 'Authenticated curl tracing can print credential headers.'
-    ;;
-esac
+      if [[ "${words[2]-}" == auth && "${words[3]-}" == status ]]; then
+        if [[ "$program" == gh ]]; then
+          gh_status_shows_token "${(@)words[4,-1]}" && block 'Do not print Git hosting credentials.'
+        else
+          for word in "${(@)words[4,-1]}"; do
+            if [[ "$word" == --show-token || "$word" == --show-token=* ||
+                  ( "$word" == -* && "$word" != --* && "$word" == *t* ) ]]; then
+              block 'Do not print Git hosting credentials.'
+            fi
+          done
+        fi
+      fi
+      ;;
+    (security)
+      flat=" ${(j: :)words} "
+      if [[ "$flat" == *' -w '* || "$flat" == *' -g '* ]]; then
+        block 'Do not extract credentials from the macOS Keychain.'
+      fi
+      ;;
+    (curl)
+      tracing=false
+      authenticated=false
+      for word in "${(@)words[2,-1]}"; do
+        upper_word=${word:u}
+        if [[ "$word" == --verbose || "$word" == --trace || "$word" == --trace=* || "$word" == --trace-* ||
+              ( "$word" == -* && "$word" != --* && "$word" == *v* ) ]]; then
+          tracing=true
+        fi
+        if [[ "$upper_word" == *AUTHORIZATION* || "$upper_word" == *X-API-KEY* ||
+              "$upper_word" == *X-AUTH-TOKEN* || "$word" == -u* ||
+              "$word" == --user || "$word" == --user=* || "$word" == --netrc* ||
+              "$word" == --oauth2-bearer || "$word" == --oauth2-bearer=* ||
+              "$word" =~ '^-[sSvfLiIkN]*n' ]]; then
+          authenticated=true
+        fi
+      done
+      [[ "$tracing" == true && "$authenticated" == true ]] &&
+        block 'Authenticated curl tracing can print credential headers.'
+      ;;
+  esac
+  return 0
+}
+
+command_text=$(/usr/bin/plutil -extract tool_input.command raw -expect string -o - -) || exit 0
+typeset -a tokens words=()
+heredoc=false
+# Keep lexer quotes until after operator recognition; quoted separators are arguments.
+tokens=(${(Z:C:)command_text}) || block 'Could not parse the Bash command.'
+for (( token_index=1; token_index <= ${#tokens}; token_index++ )); do
+  token=${tokens[token_index]}
+  case "$token" in
+    ('<<'|'<<-'|<->'<<'|<->'<<-')
+      (( token_index++ ))
+      heredoc=true
+      ;;
+    ('('|'()'|'((')
+      # Compound bodies need a parser; check only the known prefix.
+      check_command "${words[@]}"
+      exit 0
+      ;;
+    (if|for|foreach|while|until|repeat|case|select|function|coproc|'{'|'[[')
+      (( ${#words} == 0 )) && exit 0
+      words+=("$token")
+      ;;
+    (';'|'&'|'&&'|'||'|'|'|'|&')
+      check_command "${words[@]}"
+      # The lexer makes newlines and semicolons identical; never enter a heredoc body.
+      [[ "$heredoc" == true && "$token" == ';' ]] && exit 0
+      words=()
+      ;;
+    (*) words+=("$token") ;;
+  esac
+done
+check_command "${words[@]}"
 exit 0

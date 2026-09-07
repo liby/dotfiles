@@ -40,6 +40,9 @@ if (( ${#npm_pending[@]} )); then
     -- "${npm_pending[@]}"
 fi
 
+# envchain seeding needs tomllib even when Pyright is already current.
+/opt/homebrew/bin/uv python install --no-bin '>=3.11'
+
 pyright_requirement="{{ include ".github/dev-tools/requirements.txt" | trim }}"
 pyright_version="${pyright_requirement#pyright==}"
 current_pyright="$(

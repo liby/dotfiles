@@ -5,11 +5,6 @@
 # CAUTION: The rate-limit rendering block runs at the TOP LEVEL, not inside
 # a function. Do NOT use `local` there — it silently fails outside functions.
 # Also, API values may be floats (e.g. 0.0); bash $(()) only handles integers.
-#
-# Verify after editing (CC sets CLAUDE_CODE_EFFORT_LEVEL from settings.env; pass
-# it explicitly here to exercise the same effort-resolution path the runtime uses):
-#   echo '{"model":{"display_name":"Fable 5"},"context_window":{"context_window_size":200000,"current_usage":{"input_tokens":50000,"output_tokens":10000}},"cwd":"/tmp"}' \
-#   | CLAUDE_CODE_EFFORT_LEVEL=high bash ~/.claude/scripts/statusline.sh
 
 set -f
 
@@ -39,12 +34,7 @@ reset='\033[0m'
 
 sep=" ${dim}∙${reset} " # U+2219 bullet operator: lower profile than │, distinct from the effort circle glyphs
 
-# ── Platform detection + epoch (single fork) ───────────
-if [[ "$OSTYPE" == darwin* ]]; then
-  _date_flavor=bsd
-else
-  _date_flavor=gnu
-fi
+# ── Epoch (single fork) ─────────────────────────────────
 read -r _now _month < <(date "+%s %m")
 
 # ── Terminal width (CC >= 2.1.153 passes COLUMNS/LINES as env to statusline) ──
@@ -59,11 +49,7 @@ fi
 
 # ── Helpers ─────────────────────────────────────────────
 file_mtime() {
-  if [ "$_date_flavor" = "bsd" ]; then
-    stat -f %m "$1" 2>/dev/null || echo 0
-  else
-    stat -c %Y "$1" 2>/dev/null || echo 0
-  fi
+  stat -f %m "$1" 2>/dev/null || echo 0
 }
 
 # Render helpers return via globals (_pct_color, _bar, _row, _dollars) instead
@@ -113,11 +99,7 @@ format_epoch() {
   # Round to nearest 5 minutes to avoid display jitter (e.g. 19:59 vs 20:00)
   local remainder=$(( epoch % 300 ))
   (( remainder >= 150 )) && epoch=$(( epoch + 300 - remainder )) || epoch=$(( epoch - remainder ))
-  if [ "$_date_flavor" = "bsd" ]; then
-    date -j -r "$epoch" +"$fmt"
-  else
-    date -d "@$epoch" +"$fmt"
-  fi
+  date -j -r "$epoch" +"$fmt"
 }
 
 cents_to_dollars() { # sets _dollars
@@ -178,6 +160,7 @@ queue_extra_rate_row() {
   read -r seven_day_reset_epoch
   read -r stdin_effort
   read -r model_name
+  read -r claude_version
 } < <(jq -r '
   (.context_window.context_window_size // 200000),
   (.context_window.current_usage.input_tokens // 0),
@@ -190,7 +173,8 @@ queue_extra_rate_row() {
   (.rate_limits.seven_day.used_percentage // ""),
   (.rate_limits.seven_day.resets_at // ""),
   (.effort.level // ""),
-  (.model.display_name // "")
+  (.model.display_name // ""),
+  .version
 ' <<< "$input")
 
 : "${size:=200000}"
@@ -308,12 +292,6 @@ get_oauth_token() {
     try_extract_token "$(<"$creds_file")" && return 0
   fi
 
-  if command -v secret-tool >/dev/null 2>&1; then
-    local blob
-    blob=$(timeout 2 secret-tool lookup service "Claude Code-credentials" 2>/dev/null)
-    [ -n "$blob" ] && try_extract_token "$blob" && return 0
-  fi
-
   echo ""
 }
 
@@ -333,20 +311,6 @@ retry_backoff_cold=300      # cold start or credential problem: retry soon
 cache_max_age_enabled=300   # 5 min when extra is active
 cache_max_age_disabled=10800 # 3h when extra is off (re-check if user enabled it)
 [ -d "$cache_dir" ] || mkdir -p -m 700 "$cache_dir"
-
-# Resolve version (cached to file — avoids fork on every tick)
-version_file="${cache_dir}/claude-version"
-version_max_age=3600
-claude_version=""
-if [ -f "$version_file" ] && (( _now - $(file_mtime "$version_file") < version_max_age )); then
-  claude_version=$(<"$version_file")
-fi
-if [ -z "$claude_version" ]; then
-  _link=$(readlink "$HOME/.local/bin/claude" 2>/dev/null)
-  claude_version=${_link##*/}
-  [ -z "$claude_version" ] && claude_version=$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-  [ -n "$claude_version" ] && echo "$claude_version" > "$version_file"
-fi
 
 # Decide refresh from on-disk state; refresh_usage_cache re-runs this under the
 # lock, since another session may have fetched or failed while this one queued
@@ -401,10 +365,12 @@ refresh_usage_cache() {
     if [ -n "$token" ] && [ "$token" != "null" ]; then
       local body_file http_code
       body_file=$(mktemp "${cache_dir}/usage-response.XXXXXX")
-      http_code=$(curl -s -o "$body_file" -w '%{http_code}' --max-time 5 \
+      # Keep the bearer header out of curl's argument vector.
+      http_code=$(printf 'Authorization: Bearer %s\n' "$token" |
+        curl -s -o "$body_file" -w '%{http_code}' --max-time 5 \
         -H "Accept: application/json" \
         -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $token" \
+        -H @- \
         -H "anthropic-beta: oauth-2025-04-20" \
         -H "User-Agent: claude-code/${claude_version}" \
         "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
