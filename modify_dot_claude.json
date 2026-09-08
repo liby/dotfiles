@@ -2,13 +2,19 @@
 {{- /* Partially manage ~/.claude.json and preserve undeclared state. */ -}}
 {{- $managed := `{
   "leftArrowOpensAgents": false,
-  "autoConnectIde": true
+  "autoConnectIde": true,
+  "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headersHelper": "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq -cen 'env.CONTEXT7_API_KEY | select(length > 0) | {Authorization: (\"Bearer \" + .)}'"
+    }
+  }
 }` | fromJson -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := dict -}}
 {{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
-{{- $out := deepCopy $current -}}
-{{- range $k, $v := $managed -}}{{- $out = set $out $k $v -}}{{- end -}}
+{{- $out := mergeOverwrite (deepCopy $current) $managed -}}
 {{- if deepEqual $current $out -}}
   {{- $stdin -}}
 {{- else -}}

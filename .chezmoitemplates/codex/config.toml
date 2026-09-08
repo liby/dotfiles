@@ -95,9 +95,8 @@ SNOWFLAKE_AUTH_FORCE_SERVER = "true"
 
 [mcp_servers.context7]
 enabled = true
-command = "/opt/homebrew/bin/envchain"
-# Intentionally follow the latest Context7 release.
-args = ["context7", "npx", "-y", "@upstash/context7-mcp"]
+url = "https://mcp.context7.com/mcp"
+http_headers_helper = "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq -cen 'env.CONTEXT7_API_KEY | select(length > 0) | {Authorization: (\"Bearer \" + .)}'"
 
 [mcp_servers.openaiDeveloperDocs]
 enabled = true

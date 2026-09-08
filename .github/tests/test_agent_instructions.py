@@ -90,10 +90,14 @@ CREDENTIAL_CONSUMERS = {
     },
     "context7": {
         ".chezmoitemplates/codex/config.toml": (
-            'command = "/opt/homebrew/bin/envchain"',
-            'args = ["context7", "npx", "-y", "@upstash/context7-mcp"]',
+            'http_headers_helper = "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq ',
+            "env.CONTEXT7_API_KEY",
         ),
-        "dot_claude/CLAUDE.md.tmpl": ("envchain context7",),
+        "modify_dot_claude.json": (
+            '"headersHelper"',
+            "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq ",
+            "env.CONTEXT7_API_KEY",
+        ),
     },
     "pi": {
         "private_dot_pi/private_agent/private_models.json.tmpl": (
