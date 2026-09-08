@@ -16,7 +16,7 @@ enabled = false
 [desktop]
 ambient-suggestions-enabled = false
 composerPlainTextMode = true
-enabled-reasoning-efforts = ["high", "xhigh", "max", "ultra"]
+enabled-reasoning-efforts = ["medium", "high", "max", "ultra"]
 # Keep the selected UI behavior when the desktop default writes queue.
 followUpQueueMode = "steer"
 git-always-force-push = true
