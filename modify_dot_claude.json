@@ -1,20 +1,13 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Partially manage ~/.claude.json and preserve undeclared state. */ -}}
-{{- $managed := `{
-  "leftArrowOpensAgents": false,
-  "autoConnectIde": true,
-  "mcpServers": {
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "headersHelper": "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq -cen 'env.CONTEXT7_API_KEY | select(length > 0) | {Authorization: (\"Bearer \" + .)}'"
-    }
-  }
-}` | fromJson -}}
+{{- /* Preserve runtime state outside source-declared MCP servers. */ -}}
+{{- $managed := includeTemplate "claude/claude.json" . | fromJson -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := dict -}}
 {{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
 {{- $out := mergeOverwrite (deepCopy $current) $managed -}}
+{{- range $name, $server := index $managed "mcpServers" -}}
+  {{- $out = setValueAtPath (list "mcpServers" $name) $server $out -}}
+{{- end -}}
 {{- if deepEqual $current $out -}}
   {{- $stdin -}}
 {{- else -}}

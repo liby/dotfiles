@@ -2,6 +2,7 @@ import re
 import tomllib
 import unittest
 from collections import Counter
+from fnmatch import fnmatchcase
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -93,7 +94,7 @@ CREDENTIAL_CONSUMERS = {
             'http_headers_helper = "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq ',
             "env.CONTEXT7_API_KEY",
         ),
-        "modify_dot_claude.json": (
+        ".chezmoitemplates/claude/claude.json": (
             '"headersHelper"',
             "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq ",
             "env.CONTEXT7_API_KEY",
@@ -157,6 +158,16 @@ class MarkdownLinkTest(unittest.TestCase):
 
 
 class MaintenanceRouteTest(unittest.TestCase):
+    def test_claude_config_templates_load_the_settings_rule(self):
+        rule = ROOT / ".claude" / "rules" / "claude-code-settings.md"
+        frontmatter = rule.read_text().split("---", 2)[1]
+        patterns = re.findall(r'^  - "(.+)"$', frontmatter, re.MULTILINE)
+        templates = (ROOT / ".chezmoitemplates" / "claude").glob("*.json")
+        for template in templates:
+            path = template.relative_to(ROOT).as_posix()
+            with self.subTest(template=path):
+                self.assertTrue(any(fnmatchcase(path, pattern) for pattern in patterns))
+
     def test_safety_owners_have_pre_action_routes(self):
         markdown = AGENTS.read_text()
         self.assertIn(

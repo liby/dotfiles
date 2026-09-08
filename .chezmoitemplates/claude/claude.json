@@ -1,0 +1,17 @@
+{{- /* Read modify_dot_claude.json before editing this template; the modifier controls how these values are merged into the live file. */ -}}
+{
+  "autoConnectIde": true,
+  "leftArrowOpensAgents": false,
+  "mcpServers": {
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest", "--autoConnect"]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headersHelper": "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq -cen 'env.CONTEXT7_API_KEY | select(length > 0) | {Authorization: (\"Bearer \" + .)}'"
+    }
+  }
+}

@@ -9,6 +9,19 @@
 {{- $out := mergeOverwrite (deepCopy $current) $managed -}}
 {{- $out = setValueAtPath (list "plugins") (index $managed "plugins") $out -}}
 {{- $out = setValueAtPath (list "permissions" "development") (index (index $managed "permissions") "development") $out -}}
+{{- /* Replace source-declared servers to remove stale transport fields.
+      Preserve only Desktop-generated node_repl environment fields. */ -}}
+{{- range $name, $server := index $managed "mcp_servers" -}}
+  {{- if eq $name "node_repl" -}}
+    {{- $live := get (get $current "mcp_servers" | default dict) $name | default dict -}}
+    {{- range $key := list "env" "env_vars" -}}
+      {{- if hasKey $live $key -}}
+        {{- $server = set $server $key (get $live $key) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $out = setValueAtPath (list "mcp_servers" $name) $server $out -}}
+{{- end -}}
 {{- /* Persistent absence: legacy sandbox selectors can override
       default_permissions. Do not add one-time retirements here. */ -}}
 {{- if hasKey $out "default_permissions" -}}
