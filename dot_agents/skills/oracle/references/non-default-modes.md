@@ -1,6 +1,22 @@
 # Oracle Non-Default Modes
 
-Load the matching section before a browser follow-up, Deep Research run, explicitly billed API run, or version/picker recovery.
+## Model and effort
+
+Use selection only for an explicit model, latest-model, or effort request. Inspect the installed version and its release-matched browser documentation/source when choosing an unfamiliar target, then dry-run the exact command. Help may omit browser flags; omission alone does not prove removal.
+
+For Oracle v0.20.0, an explicit latest-model + Pro request uses:
+
+```bash
+oracle --engine browser --browser-attach-running \
+  --browser-model-strategy select --model latest --browser-thinking-time pro \
+  -p "<task>" --file "<path-or-glob>"
+```
+
+This release maps `latest` to GPT-6 Astra and selects ChatGPT's Latest entry; it is not a promise that the same CLI understands every future generation. Legacy `gpt-5-pro` aliases still target GPT-5.6. Confirm the installed release's mapping after an upgrade instead of copying a historical alias. For an effort-only request, retain `current` and add only the requested `--browser-thinking-time` value.
+
+For a model-only request, omit `--browser-thinking-time` unless an explicit value is needed to preserve a tier the user requested. Selection mode can inherit configured `browser.thinkingTime`, so omission alone does not prove preservation: establish the current tier and preserve it before submission, using the manual browser path if the CLI cannot establish that boundary.
+
+Verify only the requested choices: model-selection evidence for a model constraint, and separate effort confirmation for an effort constraint. Pro selection fails closed. An unavailable requested selection is unresolved; do not quietly downgrade, switch to defaults, or claim a preview proves the UI selection. Manual fallback must verify the same requested choices visibly.
 
 ## Browser follow-up
 
@@ -10,22 +26,24 @@ Use repeated `--browser-follow-up "<message>"` options for planned turns in the 
 oracle --followup "<root-session-id>" -p "<message>"
 ```
 
-Add `--browser-archive never` when continuity is expected. A browser follow-up is valid when the verified GPT-5.6 Sol + Pro root completed, the child references that parent and its exact saved conversation URL, the conversation shows the follow-up message as its latest submitted user turn, and the child completes with a non-empty latest assistant answer to that turn. Command launch or child linkage alone is not lineage evidence. Its model selection is normally skipped and unverified; do not apply the fresh-root picker gate.
+In v0.20.0, browser `--followup` reuses the saved browser configuration; new model, effort, and other browser flags do not override it. If the requested selection differs from that configuration, including a later manual choice the user wants preserved, continue manually in the exact saved conversation and verify the choices before sending. Do not submit through the CLI and discover the ignored request afterward.
 
-Never guess a conversation from open tabs. If continuity is essential and Oracle cannot recover the URL, stop and report the gap; otherwise start a fresh, self-contained root in the requested Project.
+Set `--browser-archive never` on the root run when follow-up continuity is expected. Verify the completed root, the child's parent and saved conversation URL, the actual follow-up user turn, and a completed answer to that turn. Follow-ups normally skip model selection; do not require fresh-root picker evidence or infer that the model stayed unchanged from parent linkage alone.
+
+Never guess a conversation from open tabs. If continuity is essential and the saved URL cannot be recovered, report the gap; otherwise start a fresh, self-contained root in the requested Project only after resolving the original run.
 
 ## Deep Research
 
-Use `--browser-research deep` only when explicitly requested. Keep the browser, attach-running, `--model gpt-5.6-sol`, model-selection strategy, and Project route, but omit `--browser-thinking-time` because Deep Research owns its effort flow. Do not combine it with `--browser-follow-up`. Require terminal completion, a non-empty report, and usable citations.
+Use `--browser-research deep` only when explicitly requested. Keep browser attach, Project, and any requested model route; omit `--browser-thinking-time` because Deep Research owns its effort flow. Do not combine it with `--browser-follow-up`. Require terminal completion, a non-empty report, and usable citations.
 
 ## Explicit API mode
 
-After explicit API-billing consent, inspect current help and preflight only the requested model. Verify that `--route` matches the provider covered by the consent and pin that provider with current CLI flags when billing or data boundaries differ. Run with explicit `--engine api` and `--model`. Pro API runs detach by default: add `--wait`, or inspect an already detached run with `oracle session <id>`; a returned session ID is still pending.
+After explicit API-billing consent, inspect current help and preflight only the requested model. Verify that `--route` matches the consented provider and pin that provider when billing or data boundaries differ. Run with explicit `--engine api` and `--model`; use the installed release's model-specific reasoning options, not browser thinking-time flags. Pro API runs detach by default: add `--wait`, or follow `oracle session <id>`; a returned ID is still pending.
 
-For an explicitly requested GPT-5.6 Pro API run, use `--model gpt-5.6-sol`, `--reasoning-mode pro`, and `--reasoning-effort max` through a consented OpenAI or Azure Responses route. Do not invent a combined Pro model slug or apply the API reasoning flags to browser mode.
+API `--followup` applies to supported OpenAI or Azure Responses runs. Verify response/session lineage, requested model, and terminal output; browser picker and Project-URL gates do not apply. Never print credentials.
 
-API `--followup` applies to supported OpenAI or Azure Responses runs. Verify response/session lineage, the requested model, and terminal output; browser picker and conversation-URL gates do not apply. Avoid printing credentials, hardcoded provider catalogs, or arbitrary timeouts.
+## Upgrade and picker recovery
 
-## Version boundary
+After an upgrade, option rejection, or picker-routing failure, inspect the installed version, the relevant release notes/source, and the intended command's dry run. Update instructions only for changed behavior they depend on; provenance records their upstream source, not a required runtime version equality. Do not overwrite local routing, authorization, or recovery behavior with an upstream skill.
 
-Inspect the version, release, and exact-command dry run after install or upgrade, option rejection, or picker-routing failure. Browser flags may be intentionally hidden from help, so help omission alone does not prove removal; inspect the reviewed source when parsing or behavior differs. If the installed version and reviewed ref differ, re-identify the latest supported ChatGPT model and update the default model slug, expected target, provenance, and validator contract together. Do not assume a legacy Pro alias tracks the latest model, and do not add a compatibility branch without an observed caller.
+Keep the same saved session when recovering a submitted request. New CLI recovery may save an answer and mark the session completed, but conversation matching alone still does not prove it answered the intended user turn. Verify that turn and its material before accepting the recovered result.

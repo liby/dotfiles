@@ -66,6 +66,8 @@ alias ccm='claude --switch-provider'
 alias cm='chezmoi'
 alias cx='open -a /Applications/ChatGPT.app'
 alias hr='herdr'
+# Run outside Herdr; stopping the server terminates its pane processes.
+alias hrr='herdr server stop && herdr'
 alias ip="curl ip.sb"
 alias ipcn="curl myip.ipip.net"
 alias ka='caffeinate -is'

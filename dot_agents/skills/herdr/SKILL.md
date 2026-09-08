@@ -7,10 +7,10 @@ allowed-tools:
 license: Apache-2.0
 metadata:
     github-path: skills/herdr
-    github-pinned: v0.8.2
-    github-ref: refs/tags/v0.8.2
+    github-pinned: v0.9.0
+    github-ref: refs/tags/v0.9.0
     github-repo: https://github.com/herdrdev/herdr
-    github-tree-sha: f8bb649bb92ddc99e6af463ab9a635da98c7b129
+    github-tree-sha: b9dcfddcfa7ce43e2e4cf60e724c519be553f149
 name: herdr
 ---
 # Herdr
@@ -25,7 +25,7 @@ Before any control command, verify that this process belongs to Herdr:
 test "${HERDR_ENV:-}" = 1 && herdr pane current --current
 ```
 
-If either check fails, say that this process is outside Herdr and stop. Do not inspect or control whichever Herdr window another client has focused.
+If `HERDR_ENV` is not `1`, say that this process is outside Herdr and stop. If `pane current` fails with the environment check satisfied, report its connection or protocol error instead; it does not prove the process is outside Herdr. Do not inspect or control whichever Herdr window another client has focused.
 
 Treat the installed binary as the syntax authority. Inspect only the relevant group before relying on unfamiliar options:
 
@@ -36,7 +36,9 @@ herdr pane
 
 Never run bare `herdr` for discovery; it launches or attaches the TUI. Do not probe a mutating nested command by omitting required arguments. After a Herdr upgrade or an option rejection, inspect `herdr --version`, the relevant group, and `herdr --skill`; treat the latter as a release-matched upstream reference, not permission to overwrite this local policy.
 
-Parse IDs and state from command JSON. Use `--current`, an explicit pane ID, or a unique live agent name; never predict an ID or rely on UI focus or sidebar order.
+An upgraded client can keep using an older server. Before relying on a new server feature, check `herdr status`; a missing method is not permission to restart or replace the server and its running panes.
+
+Parse IDs and state from control-command JSON. `pane read` and `agent read` return terminal text, not JSON. Use `--current`, an explicit pane ID, or a unique live agent name; never predict an ID or rely on UI focus or sidebar order.
 
 ## Coordinate an agent
 
@@ -66,15 +68,13 @@ herdr agent start <agent-name> --kind <kind> --pane <returned-pane-id> -- <agent
 
 When starting Pi with an explicit model, pass `--provider <provider> --model <exact-model-id>` using the provider paired with that model in Pi's configured model list. Do not rely on `defaultProvider`: explicit `--model` resolution can select an unauthenticated built-in provider with the same model ID. Start Pi directly and let the selected provider resolve its own credentials; do not synthesize or remap credential environment variables.
 
-A successful `agent start` returns only after Herdr detects the expected agent and considers it ready for input. If startup is blocked, it returns `agent_not_ready` but keeps the name available. Read `visible`, ask the user to handle any trust, setup, hook, approval, or question prompt, and wait until the agent becomes idle before prompting it. Startup defaults to a 30-second timeout.
+A successful `agent start` returns only after Herdr detects the expected agent and considers it ready for input. If startup is blocked, it returns `agent_not_ready` but keeps the name available. Read `visible`, ask the user to handle any trust, setup, hook, approval, or question prompt, and wait until the agent becomes idle before prompting it.
 
 Submit a self-contained task with a finite timeout:
 
 ```bash
 herdr agent prompt <agent-name> "<task>" --wait --timeout <milliseconds>
 ```
-
-`agent prompt` rejects a recognized approval or question dialog with `agent_blocked` before sending text or Enter. Surface the dialog to the user instead of answering it automatically.
 
 Normal `--wait` already settles on `idle`, `done`, or `blocked`; do not narrow it to `--until done`. Waits observe screen-derived lifecycle, not a turn receipt. After every wait, inspect the returned state and read the result. Never blindly resend the prompt or press Enter when submission is ambiguous.
 
@@ -90,7 +90,7 @@ Read-only helpers may share the current checkout. Do not let concurrent writers 
 ## Pi agent delivery
 
 - Send slash commands with `pane run` and read `visible` to confirm the effect; `agent prompt` waits observe lifecycle state, which a slash command never changes.
-- Submit Pi tasks through `agent prompt` like other agents. Only after `agent_prompt_stalled` or visible evidence that Pi did not receive the task, use `pane send-text` followed by `send-keys enter` and confirm the receipt in `visible`. If interactive delivery remains unreliable for a long task, run `pi -p @<file>` through `pane run` and wait for a unique completion marker.
+- Submit Pi tasks through `agent prompt` like other agents. A stall does not prove non-delivery. Use `pane send-text` followed by `send-keys enter` only when the visible state confirms that Pi did not receive the task; confirm receipt afterward. If interactive delivery remains unreliable for a long task, run `pi -p @<file>` through `pane run` and wait for a unique completion marker.
 
 ## Run an ordinary command in another pane
 

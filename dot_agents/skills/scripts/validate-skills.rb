@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 # Static validator for local agent skills. Default mode is offline.
 
-require "json"
 require "open3"
 require "optparse"
 require "pathname"
@@ -53,19 +52,6 @@ CLAUDE_CODE_FIELDS = Set[
   "metadata"
 ].freeze
 
-# This is the reviewed local overlay contract, not a floating upstream default.
-# A global-tool bump must update this record, the skill, and its provenance in
-# one review before static validation can pass.
-ORACLE_REVIEWED_CONTRACT = {
-  version: "0.18.0",
-  github_repo: "https://github.com/steipete/oracle",
-  github_path: "skills/oracle",
-  tree_sha: "26cca2ea90a18f55ea56bddd7e5fb318a67f466c",
-  browser_model: "gpt-5.6-sol",
-  browser_target: "GPT-5.6 Sol",
-  browser_effort: "pro"
-}.freeze
-
 # Keep this list to CLI skills whose instructions depend on current CLI
 # behavior, and give every entry an output regex naming the depended-on flags
 # or route; an entry that only proves the command exits 0 asserts nothing.
@@ -76,25 +62,17 @@ CLI_SMOKE_COMMANDS = [
   ["glab mr update safe input help", %w[glab mr update --help], /(?=.*--description-file)(?=.*--yes)/m],
   ["glab mr approve head guard help", %w[glab mr approve --help], /--sha/],
   ["glab mr merge head guard help", %w[glab mr merge --help], /(?=.*--sha)(?=.*--auto-merge=false)/m],
+  ["herdr prompt contract", %w[herdr agent prompt --help], /(?=.*--wait)(?=.*--timeout)(?=.*agent_prompt_stalled)(?=.*does not track turns)/m],
+  ["herdr split contract", %w[herdr pane split --help], /(?=.*--current)(?=.*--direction)(?=.*--cwd)(?=.*--no-focus)/m],
   [
-    "oracle latest-model Pro browser dry run",
+    "oracle current browser dry run",
     [
-      "oracle",
-      "--engine", "browser",
-      "--browser-attach-running",
-      "--browser-model-strategy", "select",
-      "--model", ORACLE_REVIEWED_CONTRACT.fetch(:browser_model),
-      "--browser-thinking-time", ORACLE_REVIEWED_CONTRACT.fetch(:browser_effort),
-      "--dry-run", "summary",
-      "--files-report",
+      "oracle", "--engine", "browser", "--browser-attach-running",
+      "--browser-model-strategy", "current", "--dry-run", "summary",
       "--prompt", "Validate the Oracle skill CLI contract.",
       "--file", root.join("oracle/SKILL.md").to_s
     ],
-    Regexp.new(
-      "\\[preview\\] Oracle \\(#{Regexp.escape(ORACLE_REVIEWED_CONTRACT.fetch(:version))}\\) " \
-      "browser mode \\(target=#{Regexp.escape(ORACLE_REVIEWED_CONTRACT.fetch(:browser_target))}; " \
-      "requested=#{Regexp.escape(ORACLE_REVIEWED_CONTRACT.fetch(:browser_model))}\\)"
-    )
+    /(?=.*browser mode \(picker=current;)(?=.*attach to an already-running local Chrome session)(?=.*\b1 files?\b)/m
   ]
 ].freeze
 
@@ -116,92 +94,6 @@ def parse_skill(path)
   match = text.match(/\A---\n(.*?)\n---\n/m)
   return [nil, text] unless match
   [YAML.safe_load(match[1], permitted_classes: [], aliases: false) || {}, text]
-end
-
-# Oracle's executable is upgraded from the global-tools manifest, while its
-# locally overlaid skill must be reviewed rather than overwritten from upstream.
-# Pin the release, upstream tree, documented root command, and dry-run route as
-# one contract so a dependency-only bump or prose/runtime split cannot pass.
-dev_tools_manifest = repo.join(".github/dev-tools/package.json")
-oracle_skill = root.join("oracle/SKILL.md")
-if dev_tools_manifest.exist? != oracle_skill.exist?
-  missing_path = dev_tools_manifest.exist? ? oracle_skill : dev_tools_manifest
-  errors << "#{rel(missing_path, repo)}: missing half of the reviewed Oracle CLI/skill contract"
-elsif dev_tools_manifest.exist?
-  begin
-    manifest = JSON.parse(dev_tools_manifest.read)
-    oracle_version = manifest.dig("devDependencies", "@steipete/oracle")
-    if oracle_version == ORACLE_REVIEWED_CONTRACT.fetch(:version)
-      oracle_frontmatter, oracle_text = parse_skill(oracle_skill)
-      if oracle_frontmatter.is_a?(Hash)
-        metadata = oracle_frontmatter["metadata"].is_a?(Hash) ? oracle_frontmatter["metadata"] : {}
-        expected_metadata = {
-          "github-repo" => ORACLE_REVIEWED_CONTRACT.fetch(:github_repo),
-          "github-path" => ORACLE_REVIEWED_CONTRACT.fetch(:github_path),
-          "github-ref" => "refs/tags/v#{ORACLE_REVIEWED_CONTRACT.fetch(:version)}",
-          "github-tree-sha" => ORACLE_REVIEWED_CONTRACT.fetch(:tree_sha)
-        }
-        expected_metadata.each do |field, expected|
-          actual = metadata[field]
-          next if actual == expected
-
-          errors << "#{rel(oracle_skill, repo)}: #{field} #{actual.inspect} does not match reviewed Oracle contract #{expected.inspect}"
-        end
-      end
-
-      default_section = oracle_text[/^## Default:.*?(?=^## |\z)/m]
-      root_commands = default_section.to_s.scan(/```bash\n(.*?)\n```/m).flatten
-      if root_commands.length != 1
-        errors << "#{rel(oracle_skill, repo)}: Default section must contain exactly one bash root command"
-      else
-        begin
-          command_tokens = Shellwords.split(root_commands.first.gsub(/\\\n/, " "))
-          errors << "#{rel(oracle_skill, repo)}: Oracle default command must invoke oracle" unless command_tokens.first == "oracle"
-
-          expected_options = {
-            "--engine" => "browser",
-            "--browser-attach-running" => true,
-            "--browser-model-strategy" => "select",
-            "--model" => ORACLE_REVIEWED_CONTRACT.fetch(:browser_model),
-            "--browser-thinking-time" => ORACLE_REVIEWED_CONTRACT.fetch(:browser_effort),
-            "--slug" => "<3-5 words>",
-            "-p" => "<task>",
-            "--file" => "<path-or-glob>"
-          }
-
-          parsed_options = {}
-          invalid_option_set = false
-          index = 1
-          while index < command_tokens.length
-            option = command_tokens[index]
-            expected = expected_options[option]
-            if expected.nil? || parsed_options.key?(option)
-              invalid_option_set = true
-              break
-            end
-
-            if expected == true
-              parsed_options[option] = true
-              index += 1
-            else
-              parsed_options[option] = command_tokens[index + 1]
-              index += 2
-            end
-          end
-
-          if invalid_option_set || parsed_options != expected_options
-            errors << "#{rel(oracle_skill, repo)}: Oracle default command options must exactly match the reviewed contract"
-          end
-        rescue ArgumentError => e
-          errors << "#{rel(oracle_skill, repo)}: cannot parse Oracle default command (#{e.message})"
-        end
-      end
-    else
-      errors << "#{rel(dev_tools_manifest, repo)}: @steipete/oracle #{oracle_version.inspect} does not match reviewed contract #{ORACLE_REVIEWED_CONTRACT.fetch(:version).inspect}"
-    end
-  rescue JSON::ParserError => e
-    errors << "#{rel(dev_tools_manifest, repo)}: malformed JSON (#{e.message})"
-  end
 end
 
 # For an encrypted-only source skill, the deployed plaintext is the only

@@ -9,62 +9,55 @@ allowed-tools:
     - mcp__chrome-devtools__*
 metadata:
     github-path: skills/oracle
-    github-ref: refs/tags/v0.18.0
+    github-ref: refs/tags/v0.20.0
     github-repo: https://github.com/steipete/oracle
-    github-tree-sha: 26cca2ea90a18f55ea56bddd7e5fb318a67f466c
+    github-tree-sha: c6ede997dad62e888ac9aeb7c83d4eba8abc596f
 name: oracle
 ---
 # Oracle
 
-Use the reviewed globally installed `oracle` binary, not an unpinned `npx -y` download. Treat its answer as advisory and verify material claims against authoritative sources, repository behavior, and tests.
+Use the installed `oracle` binary. Treat its answer as advisory and verify material claims against the code and primary sources.
 
-## Default: latest reviewed ChatGPT model with Pro effort
+## Default: keep the browser's model and effort
 
-For the reviewed Oracle release, use the explicit GPT-5.6 Sol browser target with the independent `Pro` effort:
+For an ordinary consultation, open a dedicated tab in the signed-in browser and retain its model and effort:
 
 ```bash
 oracle --engine browser --browser-attach-running \
-  --browser-model-strategy select --model gpt-5.6-sol \
-  --browser-thinking-time pro --slug "<3-5 words>" \
+  --browser-model-strategy current --slug "<3-5 words>" \
   -p "<task>" --file "<path-or-glob>"
 ```
 
-The model slug pins the latest ChatGPT model verified for this CLI release; `Pro` is a separate effort selection. In v0.18.0 the generic current-Pro aliases also resolve to GPT-5.6 Sol, but they intentionally float with ChatGPT. Keep the model and effort flags explicit, let Oracle open a dedicated tab, and run any other consultant separately through its native route.
+Omit model and thinking-time flags unless requested. The explicit `current` flag skips model selection, implicit Pro effort, and inherited `browser.thinkingTime` configuration. It inherits the new tab's selection, which need not be the newest available model. A preview's `requested` alias is not evidence of the active model. Report a visible label as an observation, not verified model selection.
 
-For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Completion must retain that Project ID/path in the conversation URL or visibly confirm membership in the target Project. A generic `/c/<id>` URL or fallback to the ChatGPT home page leaves Project placement unverified.
+Before an explicit model, latest-model, or effort request, load the Model and effort section of the [non-default modes contract](references/non-default-modes.md). Do not silently replace that request with browser defaults.
 
-If attach-running fails, ask the user to enable or approve Chrome remote debugging, or use the manual path below. Never copy a personal browser profile or target an existing tab.
+For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Verify that the saved conversation retains that Project ID/path or visibly belongs to the requested Project; a generic `/c/<id>` URL alone does not prove membership.
+
+If attach-running fails, ask the user to enable or approve Chrome remote debugging, or use the manual path below. Never copy a personal browser profile or target an existing unrelated tab.
 
 ## Authorization and context
 
-An explicit request for Oracle's default browser consultation, ChatGPT Pro, Deep Research, or a ChatGPT Project consultation authorizes the requested subscription-backed browser run, model selection, and supplied Project target. That authorization carries through a same-task manual fallback which sends the same reviewed prompt and attachments to the same target; do not ask again unless the recipient, material content, paid route, or another external effect changes. API mode requires separate, explicit billing consent.
+An explicit browser consultation authorizes submitting its prompt and files to the requested ChatGPT target, including a same-task manual fallback. Ask again only if the recipient, material content, paid route, or another external effect changes. API mode requires separate, explicit billing consent. Ask the user to complete login, CAPTCHA, SSO, workspace selection, or another human check.
 
-Never attach secrets, credential files, private keys, shell history, browser storage, real environment files, or a broad home-directory tree. Ask the user to complete login, CAPTCHA, SSO, workspace selection, or another human check in the visible browser.
+Never attach secrets, credential files, private keys, shell history, browser storage, real environment files, or a broad home-directory tree. Make a fresh prompt self-contained: exact question, relevant facts and attempts, constraints, desired output, and the smallest files containing the evidence. Use a follow-up when continuity matters.
 
-A fresh root has no reliable task context beyond what you provide; account and Project memory may add context. Make the prompt self-contained with the exact question, verified facts, attempts and verbatim errors, constraints, desired output, and the smallest files containing the evidence. Use a follow-up when continuity matters.
+## Submit and complete
 
-## Run and prove
+For non-secret inputs whose expansion or contents need checking, add `--dry-run json` to the intended command and inspect the full `composerText` and attachments. This output contains the selected file contents; a browser summary reports only a count for inline files, and `--files-report` does not list them. A dry run proves parsing and bundle construction, not browser selection or completion. Confirm every required file is selected and every included file is intentional; bracketed paths can be glob patterns even when shell-quoted. If expansion selects the wrong set, stage byte-identical non-secret inputs under unambiguous temporary names and preview again. Correct the inputs before submitting, rather than requesting an abstract substitute. Narrow oversized bundles; use explicit dotfile paths and `!` exclusions.
 
-Preview directories, globs, generated or unfamiliar paths, and inputs of uncertain expansion or size by adding `--dry-run summary --files-report` to the exact root command above. The preview must parse every selected flag and report `target=GPT-5.6 Sol; requested=gpt-5.6-sol` without calling a model.
+Keep the process or session ID and follow the same run through finite waits. After detachment, compaction, a timeout, stale status, or ambiguous submission, inspect `oracle status` and `oracle session <id>` before doing anything that could resend. A `prompt-commit-timeout` may already have submitted. Use `oracle session <id> --live` to follow the bound page and `--harvest` to recover its current answer; use `--render` for a saved completed answer.
 
-Every included file must be intentional. Narrow an oversized bundle rather than raising its limit; use explicit dotfile paths and `!` exclusions. If attachment upload or send-button readiness times out, retry once with `--browser-bundle-files --browser-bundle-format auto`.
+Accept completion only when the answer is non-empty and complete, belongs to this request's actual submitted turn, includes the required material, and satisfies the requested Project and any explicit model/effort requirements. Normal automated completion also requires terminal `completed` status. After recovery, verify the actual user turn and its corresponding answer: matched conversation identity alone does not bind the turn. If only the visible page establishes completion, report a manual UI observation with the saved conversation URL instead of claiming the automated controller completed.
 
-Before submitting a review request, confirm that every material requested file or attachment will be present in the submitted turn. If one is absent, do not start an abstract substitute; attach it in the same conversation, then request the artifact-specific review.
+- If the exact page remains unchanged at `Finalizing answer` across a finite observation, or appears finished after controller loss while harvest is unexpectedly empty, reload that same conversation at most once and recheck its user turn and answer. Account for any reload already performed by Oracle. Changing Thinking text or other progress means keep waiting.
+- If harvest reports an identity mismatch, stop using that capture and resolve the exact saved conversation. Non-empty `--live`/`--harvest` output or stale `running` metadata alone does not prove completion or failure.
+- If upload or send readiness times out, establish whether submission occurred first. Only an unsubmitted attempt may be retried with `--browser-bundle-files --browser-bundle-format auto`.
 
-Wait on the running process without fixed sleeps or repeated polling. Treat a `prompt-commit-timeout` as possibly submitted. After it, detachment, resumption, compaction, a stale or finalizing controller, or a duplicate-running guard, inspect the exact existing session and saved conversation before resending or starting another: use `oracle status`, then `oracle session <id>` to follow its worker or saved log. Use `--live` only to tail the bound browser tab, `--harvest` to snapshot or recover its answer, and `--render` after completion.
+Use `--force` only after establishing that the worker, controller, and bound target are dead and the original conversation or answer cannot be recovered. While the requested consultation is pending, keep following it; do not substitute your own analysis for its result.
 
-Accept a fresh automated Pro result only when:
-
-- the session is terminal `completed` with a non-empty answer or artifact;
-- model-selection evidence records `requestedKey=gpt-5.6-sol`, `target=GPT-5.6 Sol`, `resolvedLabel=GPT-5.6 Sol`, `strategy=select`, and `verified=yes`;
-- the browser log separately confirms `Thinking time: Pro`; this selection is fail-closed; and
-- any supplied Project passes the Project-placement check above; and
-- the submitted turn contains every material requested file or attachment.
-
-If the exact bound page remains unchanged at `Finalizing answer` across one finite observation, or after controller loss looks completed while harvest remains unexpectedly empty, reload it at most once and recheck the same session; any other Thinking state or observed progress means keep waiting. A UI-visible answer after reload may be surfaced as a manual UI observation, but does not establish automated completion. In reviewed Oracle v0.18.0, missing-tab recovery does not bind the recovered user turn to this session and cannot override stale automated status; a separately verified visible answer remains a manual UI observation. Ordinary `--live` or `--harvest` output from a still-bound tab, Thinking UI, command launch, detachment, timeout, or stale `running` metadata do not establish completion. Use `--force` only when the worker, controller, and bound browser target are dead and the exact conversation or its output remains unrecoverable. While a run is pending or unrecovered, report that state; do not substitute the current agent's analysis for the requested second opinion.
-
-If automation cannot submit, rerun the original prompt and text-file arguments with `oracle --render-markdown`, inspect the rendered text, and submit it in the visible signed-in browser. Separately attach each original non-text file or a byte-preserving archive, and verify attachment readiness before sending. Verify the visible model version, `Pro` effort, and the Project; then require a visible completed answer and saved conversation URL. Report these as manual UI observations only. A preceding failed Oracle session supplies no picker, model, or completion evidence for the manually submitted answer.
+If automation cannot submit, run the original prompt and text-file arguments with `oracle --render-markdown`, inspect the rendered text, and submit it in the visible signed-in browser. Attach each original non-text file or a byte-preserving archive and verify readiness before sending. Preserve browser defaults unless selection was requested; verify any requested model/effort and Project, then require a completed answer to that turn and saved URL. A preceding failed session supplies no selection or completion evidence for this manual answer.
 
 ## Non-default modes
 
-Before a browser follow-up, Deep Research run, explicitly billed API run, or version/picker recovery, load the corresponding section of the [non-default modes contract](references/non-default-modes.md). Keep the API billing gate in Authorization and context in force before loading that contract.
+Before a browser follow-up, Deep Research run, explicitly billed API run, or upgrade/option/picker recovery, load the corresponding section of the [non-default modes contract](references/non-default-modes.md).
