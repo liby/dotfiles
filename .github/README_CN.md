@@ -51,6 +51,12 @@ chezmoi edit-encrypted <filename>  # 编辑未由 chezmoi 管理的加密文件
 
 其他命令参见 [chezmoi 日常操作指南](https://www.chezmoi.io/user-guide/daily-operations/)。
 
+## 更新已有配置的机器
+
+从 source 删除文件，不会删除 `$HOME` 中已有的副本。从共享的 `modify_` 配置中删除字段，也可能保留旧值。`chezmoi status` 不会报告已经退出管理的文件。
+
+本仓库不维护历史删除清单。涉及退役的提交会说明已有机器需要完成的清理。更新 Mac 或向 fork 合并上游变更时，请检查这台机器上次应用版本之后的变更，并在该机器上完成清理。删除旧路径或字段前，先核对当前内容；一台机器上的清理不会同步到其他机器。
+
 ## 取用
 
 可以 Fork 本仓库并根据自己的环境调整，也可以只取用需要的部分。若要应用整套配置，请先检查并调整 `.chezmoi.toml.tmpl`、`Brewfile` 和 `.chezmoiscripts/`。

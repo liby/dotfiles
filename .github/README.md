@@ -51,6 +51,12 @@ Editing encrypted files requires a YubiKey and should not be delegated to an age
 
 See chezmoi's [daily operations guide](https://www.chezmoi.io/user-guide/daily-operations/) for other commands.
 
+## Updating existing machines
+
+Removing a file from source does not delete its existing copy in `$HOME`. Removing a field from a shared `modify_` configuration can also leave the old value in place. `chezmoi status` does not report files that are no longer managed.
+
+This repository does not keep a historical deletion list. Retirement commits describe the cleanup needed on existing machines. When updating a Mac or merging upstream into a fork, review changes since the version last applied on that machine and complete the cleanup there. Check the current contents before deleting a retired path or field; cleanup on one machine does not update the others.
+
 ## Reuse
 
 Fork this repository and adapt it to your environment, or copy only the parts you need. Before applying the full setup, review and adjust `.chezmoi.toml.tmpl`, `Brewfile`, and `.chezmoiscripts/`.
