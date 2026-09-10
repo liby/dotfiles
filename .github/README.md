@@ -53,9 +53,7 @@ See chezmoi's [daily operations guide](https://www.chezmoi.io/user-guide/daily-o
 
 ## Updating existing machines
 
-Removing a file from source does not delete its existing copy in `$HOME`. Removing a field from a shared `modify_` configuration can also leave the old value in place. `chezmoi status` does not report files that are no longer managed.
-
-This repository does not keep a historical deletion list. Retirement commits describe the cleanup needed on existing machines. When updating a Mac or merging upstream into a fork, review changes since the version last applied on that machine and complete the cleanup there. Check the current contents before deleting a retired path or field; cleanup on one machine does not update the others.
+When updating an existing Mac or merging upstream into a fork, review commits since the version last applied on that machine for retired paths and fields. Check their current contents before removing them, keeping any local changes you still need. Applying the new source [does not clean up all retired configuration](CONCEPTS.md#configuration-ownership), even when `chezmoi status` is empty.
 
 ## Reuse
 

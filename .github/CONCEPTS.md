@@ -48,6 +48,8 @@ Not every configuration is fully replaced. Applications such as Codex and Claude
 
 Replace subtrees that source fully owns so that removed fields disappear from the destination. For shared subtrees, preserve application-owned fields through an overlay or explicit exceptions during replacement. Establish ownership from the application's writers rather than the shape of the configuration. An overlay preserves undeclared fields; removing a source declaration does not by itself retire its destination state.
 
+Deleting a source file likewise leaves its existing destination in place, and `chezmoi status` no longer reports that unmanaged path. The repository avoids persistent deletion lists and migration markers so source describes the current configuration without accumulating past removals. The trade-off is that existing machines need explicit cleanup; `.chezmoiremove` would automate file deletion but not cleanup of fields in shared configurations.
+
 The JSON and TOML modifiers compare parsed values before serializing, so reordering object keys in their fragments alone leaves the destination unchanged. Fragments embedded in scripts, such as [`codex/requirements.toml`](../.chezmoitemplates/codex/requirements.toml), also affect script trigger hashes; their ordering changes can rerun the consuming script.
 
 Chezmoi source manages portable, durable preferences, including established interaction habits, when they should remain consistent across machines. It leaves matching convenience defaults implicit unless an explicit value enforces a repository boundary or counters observed write-back drift. Generated runtime state, machine-specific paths, and settings synchronized elsewhere remain owned by their existing systems.
