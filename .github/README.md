@@ -51,6 +51,10 @@ Editing encrypted files requires a YubiKey and should not be delegated to an age
 
 See chezmoi's [daily operations guide](https://www.chezmoi.io/user-guide/daily-operations/) for other commands.
 
+## Updating existing machines
+
+When updating an existing Mac or merging upstream into a fork, review commits since the version last applied on that machine for retired paths and fields. Check their current contents before removing them, keeping any local changes you still need. Applying the new source [does not clean up all retired configuration](CONCEPTS.md#configuration-ownership), even when `chezmoi status` is empty.
+
 ## Reuse
 
 Fork this repository and adapt it to your environment, or copy only the parts you need. Before applying the full setup, review and adjust `.chezmoi.toml.tmpl`, `Brewfile`, and `.chezmoiscripts/`.
