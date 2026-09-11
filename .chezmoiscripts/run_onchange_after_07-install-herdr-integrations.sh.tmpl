@@ -1,0 +1,11 @@
+#!/bin/zsh
+set -euo pipefail
+
+# Embedding the version reruns the installers after a Herdr upgrade. Its guard
+# keeps whole-tree apply and diff usable while herdr is absent, because a failing
+# output call aborts the entire render, not just this script.
+# Herdr version: {{ if stat "/opt/homebrew/bin/herdr" }}{{ output "/opt/homebrew/bin/herdr" "--version" | trim }}{{ end }}
+
+/opt/homebrew/bin/herdr integration install pi
+/opt/homebrew/bin/herdr integration install claude
+/opt/homebrew/bin/herdr integration install codex

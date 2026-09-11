@@ -52,6 +52,10 @@ section() {
   printf '\n== %s ==\n' "$1"
 }
 
+# Mirror the installer's exact command, home-dir span blanked as above, so
+# `herdr integration install claude` finds this entry instead of adding a second.
+HERDR_HOOK="bash 'BLANKED/.claude/hooks/herdr-agent-state.sh' session"
+
 section "registered end state"
 expect_registration PreToolUse "Bash" "~/.claude/hooks/pre-tool-guard.py"
 expect_registration PreToolUse "Read|Edit|Write|Grep" "~/.claude/hooks/pre-tool-guard.py"
@@ -59,6 +63,7 @@ expect_registration PreToolUse "Edit|Write" "~/.claude/hooks/pre-edit-warn-chezm
 expect_registration PostToolUse "Bash" "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_registration PostToolUseFailure "Bash" "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_registration PreCompact "" "~/.claude/hooks/pre-compact-instructions.sh"
+expect_registration SessionStart "*" "$HERDR_HOOK"
 check "event/matcher/command tuples are unique" "$(jq '
   [to_entries[] | .key as $event | .value[] | (.matcher // "") as $matcher
    | .hooks[] | [$event, $matcher, .command]]
@@ -70,6 +75,8 @@ check "Bash has one guard with the ten-second deadline" "$(jq '
 
 section "registered command -> source script"
 while IFS= read -r cmd; do
+  # herdr owns the hook script it registers, so no executable_ source deploys it.
+  [ "$cmd" = "$HERDR_HOOK" ] && continue
   base="${cmd##*/}"
   # Only an executable_ source deploys as an executable hook; a plain source
   # deploys 0644 and a *.test.* name is chezmoi-ignored, so both would register

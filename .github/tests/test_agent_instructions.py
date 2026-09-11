@@ -55,6 +55,10 @@ ROUTE_EXPECTATIONS = {
         "`~/.pi/agent/**`",
         "(.github/CONCEPTS.md#pi-configuration)",
     ),
+    "Herdr integrations": (
+        "`.chezmoiscripts/run_onchange_after_09-install-herdr-integrations.sh.tmpl`",
+        "(.github/CONCEPTS.md#herdr-integrations)",
+    ),
     "Managed skills": (
         "`dot_agents/skills/**`",
         "`~/.agents/skills/**`",
