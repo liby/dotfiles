@@ -1,4 +1,4 @@
-# Global gitignore
+# Global gitignore. Sections reference https://github.com/github/gitignore.
 
 ## Claude Code runtime directories
 **/.claude/.cc-writes/
@@ -26,6 +26,7 @@ node_modules/
 ## Python
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
 ## Visual Studio Code
 .vscode/
