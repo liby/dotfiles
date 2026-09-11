@@ -70,7 +70,7 @@ When starting Pi with an explicit model, pass `--provider <provider> --model <ex
 
 A successful `agent start` returns only after Herdr detects the expected agent and considers it ready for input. If startup is blocked, it returns `agent_not_ready` but keeps the name available. Either way, read `visible` before prompting: a startup prompt can still be on screen while Herdr already reports `idle` and `interactive_ready`.
 
-A prompt inside another agent belongs to the user, with one exception: in an agent you started, a prompt that only asks whether to trust its working directory or the hooks already present there. Answer that one with `pane send-keys`: move to the option that grants trust, because the preselected one can be a review or decline step, then confirm. Everything else waits for the user, including login, model selection, and any approval or question raised during a turn.
+A prompt inside another agent belongs to the user, with one exception: in an agent you started, a prompt that only asks whether to trust its working directory or the hooks already present there. Answer that one with `pane send-keys`: move to the option that grants trust, because the preselected one can be a review or decline step, then confirm. Everything else waits for the user, including login, model selection, and any approval or question the agent raises about the task.
 
 Submit a self-contained task with a finite timeout:
 
@@ -78,12 +78,14 @@ Submit a self-contained task with a finite timeout:
 herdr agent prompt <agent-name> "<task>" --wait --timeout <milliseconds>
 ```
 
-Normal `--wait` already settles on `idle`, `done`, or `blocked`; do not narrow it to `--until done`. Waits observe screen-derived lifecycle, not a turn receipt. After every wait, inspect the returned state and read the result. Never blindly resend the prompt or press Enter when submission is ambiguous.
+Normal `--wait` already settles on `idle`, `done`, or `blocked`; do not narrow it to `--until done`. A wait tracks lifecycle state, not an individual turn or a successful result. After every wait, read the response to your prompt: confirm the outcome you asked for, and check for a question or a stated inability to proceed. Never blindly resend the prompt or press Enter when submission is ambiguous.
 
 ```bash
 herdr agent get <agent-name>
 herdr agent read <agent-name> --source recent-unwrapped --lines 120
 ```
+
+Raise `--lines` as needed to reach the complete response, including any questions or blockers. The read has a row cap, so a long turn can push its earlier output out of this interface's reach; when a larger read returns no older output and the response is still incomplete, use the fallback below.
 
 On `blocked`, timeout, `agent_prompt_stalled`, or unexpected output, inspect `agent get` and read `visible` before deciding whether a follow-up is safe.
 
@@ -108,7 +110,7 @@ herdr pane read <returned-pane-id> --source recent-unwrapped --lines 120
 
 ## Recover and clean up
 
-Prefer `recent-unwrapped` for logs and transcripts and `visible` for interactive prompts. If increasing `--lines` still cannot recover a completed response, the agent is probably using the terminal alternate screen. Only then ask it to write the complete response as Markdown in a runtime-provided temporary directory and reply with the path; do not make file output the default protocol.
+Prefer `recent-unwrapped` for logs and transcripts and `visible` for interactive prompts. When terminal reads cannot recover the complete response, whether because the agent uses the alternate screen or because the turn outran the row cap, ask it to write the complete response as Markdown in a runtime-provided temporary directory and reply with the path; do not make file output the default protocol.
 
 If a Codex or Claude subprocess cannot see `HERDR_*`, stop and report the environment boundary. Do not edit shell environment policy, install Herdr integrations, or kill a reused daemon as an automatic workaround.
 
