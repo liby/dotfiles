@@ -68,7 +68,9 @@ herdr agent start <agent-name> --kind <kind> --pane <returned-pane-id> -- <agent
 
 When starting Pi with an explicit model, pass `--provider <provider> --model <exact-model-id>` using the provider paired with that model in Pi's configured model list. Do not rely on `defaultProvider`: explicit `--model` resolution can select an unauthenticated built-in provider with the same model ID. Start Pi directly and let the selected provider resolve its own credentials; do not synthesize or remap credential environment variables.
 
-A successful `agent start` returns only after Herdr detects the expected agent and considers it ready for input. If startup is blocked, it returns `agent_not_ready` but keeps the name available. Read `visible`, ask the user to handle any trust, setup, hook, approval, or question prompt, and wait until the agent becomes idle before prompting it.
+A successful `agent start` returns only after Herdr detects the expected agent and considers it ready for input. If startup is blocked, it returns `agent_not_ready` but keeps the name available. Either way, read `visible` before prompting: a startup prompt can still be on screen while Herdr already reports `idle` and `interactive_ready`.
+
+A prompt inside another agent belongs to the user, with one exception: in an agent you started, a prompt that only asks whether to trust its working directory or the hooks already present there. Answer that one with `pane send-keys`: move to the option that grants trust, because the preselected one can be a review or decline step, then confirm. Everything else waits for the user, including login, model selection, and any approval or question raised during a turn.
 
 Submit a self-contained task with a finite timeout:
 
@@ -83,7 +85,7 @@ herdr agent get <agent-name>
 herdr agent read <agent-name> --source recent-unwrapped --lines 120
 ```
 
-On `blocked`, timeout, `agent_prompt_stalled`, or unexpected output, inspect `agent get` and read `visible` before deciding whether a follow-up is safe. Surface approvals and questions to the user; do not answer them automatically.
+On `blocked`, timeout, `agent_prompt_stalled`, or unexpected output, inspect `agent get` and read `visible` before deciding whether a follow-up is safe.
 
 Read-only helpers may share the current checkout. Do not let concurrent writers edit the same checkout. Keep extra agents read-only or sequential unless the user asks for isolated worktrees.
 
