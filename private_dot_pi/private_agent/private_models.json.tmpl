@@ -12,9 +12,9 @@
           "thinkingLevelMap": {
             "off": null,
             "minimal": null,
-            "low": null,
+            "low": "low",
             "medium": null,
-            "high": null,
+            "high": "high",
             "max": "max"
           },
           "input": ["text", "image"],
@@ -28,14 +28,31 @@
           "thinkingLevelMap": {
             "off": null,
             "minimal": null,
-            "low": null,
+            "low": "low",
             "medium": null,
-            "high": null,
+            "high": "high",
             "max": "max"
           },
           "input": ["text", "image"],
           "contextWindow": 1000000,
           "maxTokens": 131072
+        },
+        {
+          "id": "openai/gpt-6-astra",
+          "name": "GPT-6 Astra",
+          "reasoning": true,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          },
+          "input": ["text", "image"],
+          "contextWindow": 1050000,
+          "maxTokens": 128000
         },
         {
           "id": "zai/glm-5.3",
@@ -44,9 +61,9 @@
           "thinkingLevelMap": {
             "off": null,
             "minimal": null,
-            "low": null,
+            "low": "low",
             "medium": null,
-            "high": null,
+            "high": "high",
             "max": "max"
           },
           "input": ["text"],
