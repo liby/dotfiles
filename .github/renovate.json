@@ -36,6 +36,16 @@
       "groupName": "All dependencies",
       "groupSlug": "all-dependencies",
       "separateMajorMinor": false
+    },
+    {
+      "description": "Keep this at least as long as the min-release-age the dev-tools installer writes to ~/.npmrc, which rejects anything younger outright.",
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "1 day"
+    },
+    {
+      "description": "uv only resolves PyPI artifacts older than the exclude-newer window in dot_config/uv/uv.toml, so a pin newer than that window cannot be installed at all. Keep this value at least as long as that window.",
+      "matchDatasources": ["pypi"],
+      "minimumReleaseAge": "3 days"
     }
   ]
 }

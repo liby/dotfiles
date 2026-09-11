@@ -1,0 +1,3 @@
+# Keep the PyPI rule in .github/renovate.json at least this long, or it pins versions uv will
+# refuse to resolve. The dev-tools installer renders this value into its own `uv` command.
+exclude-newer = "3 days"

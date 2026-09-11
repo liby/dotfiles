@@ -14,6 +14,10 @@ export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
 export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
 npm_prefix="$NPM_CONFIG_PREFIX"
 
+# Keep this at most as long as the npm rule in .github/renovate.json, or the pins below
+# become unreachable.
+npm config set min-release-age 1
+
 npm_tools=(
 {{ range $name := keys $tools | sortAlpha -}}
   "{{ $name }}@{{ index $tools $name }}"
@@ -51,5 +55,9 @@ current_pyright="$(
 )"
 
 if [[ "$current_pyright" != "$pyright_version" ]]; then
-  uv tool install --force "$pyright_requirement"
+  # Renovate gates the pin but not Pyright's transitive dependencies. This `before` script runs
+  # before `~/.config/uv/uv.toml` is deployed, so take the window from source.
+  uv tool install --force \
+    --exclude-newer '{{ index (include "dot_config/uv/uv.toml" | fromToml) "exclude-newer" }}' \
+    "$pyright_requirement"
 fi
