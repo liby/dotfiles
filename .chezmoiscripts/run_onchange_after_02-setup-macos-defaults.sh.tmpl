@@ -3,21 +3,76 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
+# List sort order is Universal exactly when no collation override is stored.
+defaults delete NSGlobalDomain AppleCollationOrder 2>/dev/null || true
+# -dict-add keeps the medium, long, and full slots; -dict would replace the whole dictionary.
+defaults write NSGlobalDomain AppleICUDateFormatStrings -dict-add 1 "y-MM-dd"
 defaults write NSGlobalDomain AppleICUForce24HourTime -bool true
 defaults delete NSGlobalDomain AppleICUForce12HourTime 2>/dev/null || true
+defaults write NSGlobalDomain AppleInterfaceStyle -string Dark
+defaults write NSGlobalDomain AppleLanguages -array en-US zh-Hans-CN
+# First day of week is only honored through the ICU fw keyword; AppleFirstWeekday alone is ignored.
+defaults write NSGlobalDomain AppleLocale -string "en_US@fw=mon"
+defaults write NSGlobalDomain AppleMeasurementUnits -string Centimeters
+defaults write NSGlobalDomain AppleMetricUnits -bool true
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+defaults write NSGlobalDomain AppleTemperatureUnit -string Celsius
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
 defaults write NSGlobalDomain KeyRepeat -int 2
 defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+# Caps Lock switches to and from ABC.
+defaults write NSGlobalDomain TISRomanSwitchState -int 1
+
+# The Trackpad pane writes this gesture to all three of these domains.
+defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerVertSwipeGesture -int 0
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerVertSwipeGesture -int 0
+defaults -currentHost write NSGlobalDomain com.apple.trackpad.threeFingerVertSwipeGesture -int 0
 
 defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock orientation -string left
+# Hot corners: bottom left locks the screen, bottom right does nothing.
+defaults write com.apple.dock wvous-bl-corner -int 13
+defaults write com.apple.dock wvous-bl-modifier -int 0
+defaults write com.apple.dock wvous-br-corner -int 1
+defaults write com.apple.dock wvous-br-modifier -int 0
 
 defaults write com.apple.finder AppleShowAllFiles -bool true
+defaults write com.apple.finder FXDefaultSearchScope -string SCev
 defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+defaults write com.apple.finder FXPreferredViewStyle -string Nlsv
+defaults write com.apple.finder NewWindowTarget -string PfLo
+defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/Downloads/"
+defaults write com.apple.finder ShowHardDrivesOnDesktop -bool false
 
-defaults write com.apple.menuextra.clock DateFormat -string "EEE HH:mm"
+# System shortcuts freed for other launchers, by Apple's numeric identifier: 60 and 61 switch
+# input source, 64 and 65 open Spotlight and its Finder search window.
+# The old-style plist syntax `{enabled = 0;}` stores strings; XML keeps the boolean and integer
+# types these entries carry.
+disable_hotkey() {
+  local id=$1
+  if (( $# == 1 )); then
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$id" \
+      "<dict><key>enabled</key><false/></dict>"
+  else
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$id" \
+      "<dict><key>enabled</key><false/><key>value</key><dict><key>parameters</key><array><integer>$2</integer><integer>$3</integer><integer>$4</integer></array><key>type</key><string>standard</string></dict></dict>"
+  fi
+}
 
-# Reload processes that cache the Apple UI defaults.
+for id in 15 16 17 18 19 20 21 22 23 24 25 26; do
+  disable_hotkey "$id"
+done
+disable_hotkey 60 32 49 262144
+disable_hotkey 61 32 49 786432
+disable_hotkey 64 32 49 1048576
+disable_hotkey 65 32 49 1572864
+disable_hotkey 164 65535 65535 0
+disable_hotkey 260 65535 53 1048576
+
+# Reload processes that cache the Apple UI defaults. activateSettings applies the key repeat
+# values to the running session; the writes alone leave the old rate in place.
 killall ControlCenter Dock Finder
+/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+echo "AppleLanguages, AppleInterfaceStyle, and TISRomanSwitchState take effect at next login."
