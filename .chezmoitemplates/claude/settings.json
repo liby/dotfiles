@@ -97,7 +97,6 @@
       "docker:*",
       "git:*",
       "herdr:*",
-      "node *codex-companion.mjs*",
       "oracle:*",
       "snow:*"
     ],
