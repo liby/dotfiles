@@ -237,7 +237,11 @@
     "type": "command",
     "command": "~/.claude/scripts/statusline.sh"
   },
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "pyright-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
   "extraKnownMarketplaces": {},
   "spinnerTipsEnabled": false,
   "tui": "default",

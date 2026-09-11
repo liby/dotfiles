@@ -46,6 +46,11 @@
       "description": "uv only resolves PyPI artifacts older than the exclude-newer window in dot_config/uv/uv.toml, so a pin newer than that window cannot be installed at all. Keep this value at least as long as that window.",
       "matchDatasources": ["pypi"],
       "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "TypeScript 7 ships no lib/tsserver.js, which typescript-language-server launches.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
     }
   ]
 }
