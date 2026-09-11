@@ -5,6 +5,7 @@ on:
     paths: &paths
       - ".github/dev-tools/**"
       - ".github/workflows/validate-dev-tools.yml"
+      - "dot_config/uv/uv.toml"
   push:
     branches: [main]
     paths: *paths
@@ -32,9 +33,15 @@ jobs:
       - name: Resolve npm tools
         working-directory: .github/dev-tools
         run: npm install --dry-run --engine-strict --ignore-scripts --package-lock=false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      # pip ignores the release-age window in dot_config/uv/uv.toml and would accept versions
+      # the installer refuses.
       - name: Resolve Python tools
         run: |
-          python3 -m venv "$RUNNER_TEMP/dev-tools-venv"
-          "$RUNNER_TEMP/dev-tools-venv/bin/python" -m pip install \
+          uv venv "$RUNNER_TEMP/dev-tools-venv"
+          uv pip install \
             --dry-run \
+            --python "$RUNNER_TEMP/dev-tools-venv" \
+            --config-file dot_config/uv/uv.toml \
             --requirement .github/dev-tools/requirements.txt
