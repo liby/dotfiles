@@ -66,6 +66,7 @@ For `gh auth status`, an explicit token-display flag is rejected even if another
 - `disableClaudeAiConnectors=true` is the source of truth for blocking auto-fetched claude.ai connectors; explicitly configured MCP servers remain available.
 - `disableBundledSkills=true` keeps the repository-managed skill registry authoritative. Keep the separate `disableWorkflows` setting unset because `ultracode` depends on dynamic workflows.
 - `ENABLE_TOOL_SEARCH=1` forces MCP tool deferral through the custom gateway. Re-test after gateway changes because the gateway must preserve `tool_reference` blocks.
+- The `SessionStart` entry registers a hook owned by `herdr integration install claude`; see [Herdr integrations](../../.github/CONCEPTS.md#herdr-integrations). Keep the installer's exact `bash '<absolute path>' session` form, because with the repository's usual `~/.claude/hooks/...` form a reinstall appends a duplicate entry instead of recognizing this one.
 
 ## Sandbox
 
