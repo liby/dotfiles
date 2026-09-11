@@ -92,7 +92,11 @@ The [glab preference script](../.chezmoiscripts/run_onchange_after_05-configure-
 
 ### Pi configuration
 
-`~/.pi/agent/models.json` is fully managed, while `~/.pi/agent/settings.json` is partially managed. Pi rewrites `defaultProvider` and `defaultModel` together on every `/model` selection, so `defaultModel` is seed-only and `defaultProvider` can be enforced without drift only while `rc-gateway` is the sole provider. `defaultProjectTrust = "always"` intentionally lets every directory load project-local settings, resources, packages, and extensions without a trust prompt.
+`~/.pi/agent/models.json` is fully managed, while `~/.pi/agent/settings.json` is partially managed. The [settings modifier](../private_dot_pi/private_agent/modify_private_settings.json) replaces each top-level key declared in the [settings fragment](../.chezmoitemplates/pi/settings.json), including the entire `modelThinkingLevels` map, and preserves undeclared keys. Applies intentionally overwrite UI-saved startup and per-model defaults so devices share the source configuration.
+
+Temporary `/model` and `/thinking` selections remain available. After applying settings, use `/reload`, then select the model again with `/model` to activate the thinking defaults; resuming a session can restore its recorded model and thinking level. `defaultProjectTrust = "always"` intentionally lets every directory load project-local settings, resources, packages, and extensions without a trust prompt.
+
+`thinkingLevelMap` describes model controls, not preferred defaults. Expose documented controls for the serving route, not compatibility aliases: an HTTP 200 does not prove the requested effort was honored ([gateway mappings](https://vercel.com/docs/ai-gateway/models-and-providers/reasoning#how-reasoning-is-mapped), [Fireworks API](https://docs.fireworks.ai/api-reference/post-chatcompletions)).
 
 Credentials, sessions, installed packages, and recorded trust decisions under `~/.pi/agent` remain runtime-owned, so the directory must never be adopted wholesale. Both managed source directories stay `private_` to preserve mode `0700`. The gateway base URL comes from `.private.rcGatewayBaseUrl`, and the rendered model file resolves `RC_GATEWAY_API_KEY` at runtime from the `pi` envchain namespace instead of carrying a secret.
 
