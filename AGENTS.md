@@ -42,7 +42,7 @@ This repository targets Apple Silicon macOS only. Use the `/opt/homebrew` prefix
 Before inspecting, changing, or running a matching surface, read its narrowest owner:
 
 - **Repository validation**: For `.github/workflows/**` or `.github/tests/**`, read [Repository validation](.github/CONCEPTS.md#repository-validation), then read the owner for the behavior under test.
-- **Bootstrap and packages**: For `Brewfile`, `.chezmoiexternal.toml`, `.chezmoiscripts/**`, `.github/dev-tools/**`, or `.github/renovate.json`, read [Bootstrap](.github/CONCEPTS.md#bootstrap) and [Package and tool ownership](.github/CONCEPTS.md#package-and-tool-ownership).
+- **Bootstrap and packages**: For `Brewfile`, `.chezmoiexternal.toml`, `.chezmoiscripts/**`, `.github/dev-tools/**`, `.github/renovate.json`, or `dot_proto/dot_prototools`, read [Bootstrap](.github/CONCEPTS.md#bootstrap) and [Package and tool ownership](.github/CONCEPTS.md#package-and-tool-ownership).
 - **Git signing**: For `dot_config/git/executable_git-ssh-gpg-agent`, `.chezmoitemplates/git/**`, or `.chezmoiscripts/run_onchange_after_01-setup-gitconfig.sh.tmpl`, also read [Git identity and signing](.github/CONCEPTS.md#git-identity-and-signing).
 - **GitLab CLI**: For `.chezmoiscripts/run_onchange_after_05-configure-glab.sh` or glab's live configuration, also read [GitLab CLI configuration](.github/CONCEPTS.md#gitlab-cli-configuration).
 - **Codex**: For `.chezmoitemplates/codex/**`, `dot_codex/**`, `.chezmoiscripts/run_onchange_after_06-setup-codex-requirements.sh.tmpl`, `~/.codex/config.toml`, or the bundled Browser cache, read [Codex configuration](.github/CONCEPTS.md#codex-configuration).
