@@ -1,6 +1,9 @@
 # Read dot_codex/modify_private_config.toml before editing this template; the modifier controls how these values are merged into the live file.
 approval_policy = "on-request"
 approvals_reviewer = "auto_review"
+# Codex upgrades come from the pinned version in .github/dev-tools/package.json;
+# the startup check only adds a prompt that waits for a keypress.
+check_for_update_on_startup = false
 cli_auth_credentials_store = "keyring"
 default_permissions = "development"
 mcp_oauth_credentials_store = "keyring"
@@ -56,6 +59,11 @@ memories = true
 # Keep direct networking while the permission profile controls filesystem access.
 network_proxy = false
 prevent_idle_sleep = true
+
+[notice]
+# The answer here is always to keep the current model, and the prompt blocks the
+# session until someone answers it.
+hide_rate_limit_model_nudge = true
 
 [permissions.development.filesystem]
 ":root" = "write"
