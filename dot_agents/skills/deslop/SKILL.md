@@ -1,6 +1,6 @@
 ---
 name: deslop
-description: 'Clean changed code, tests, code comments, and ordinary project documentation before final validation: reuse established mechanisms, reduce accidental complexity and cost, remove AI artifacts, and verify type-driven refactors against runtime evidence. Use when the user invokes /deslop, asks to run deslop, or governing instructions require it. Not for correctness review or behavior-bearing agent instructions; route those to write-skill.'
+description: 'Clean changed code, tests, code comments, and ordinary project documentation before final validation: reuse established mechanisms, reduce accidental complexity and cost, remove AI artifacts, and verify type-driven refactors against runtime evidence. Use when a task calls for behavior-preserving cleanup or simplification of those changes. Not for correctness review or behavior-bearing agent instructions; route those to write-skill.'
 argument-hint: "[<target>]"
 allowed-tools:
   - Bash

@@ -5,6 +5,9 @@ allowed_approvals_reviewers = ["auto_review"]
 [allowed_permission_profiles]
 development = true
 
+[computer_use]
+allow_locked_computer_use = true
+
 [features]
 hooks = true
 
