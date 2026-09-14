@@ -3,7 +3,7 @@ name: validate-bootstrap
 on:
   pull_request:
     paths: &paths
-      - ".chezmoiscripts/run_once_before_04-setup-case-sensitive-volume.py"
+      - ".chezmoiscripts/run_once_before_setup-case-sensitive-volume.py"
       - ".github/tests/test_case_sensitive_volume.py"
       - ".github/workflows/validate-bootstrap.yml"
   push:

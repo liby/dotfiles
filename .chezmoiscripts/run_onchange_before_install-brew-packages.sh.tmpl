@@ -5,6 +5,20 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
+if [[ ! -x /opt/homebrew/bin/brew ]]; then
+  echo "Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  # Homebrew installer doesn't always set up .zprofile
+  zprofile="$HOME/.zprofile"
+  if [[ ! -e "$zprofile" ]] || ! grep -q "brew shellenv" "$zprofile"; then
+    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$zprofile"
+    echo "typeset -U path" >> "$zprofile"
+  fi
+
+  /opt/homebrew/bin/brew analytics off
+fi
+
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 brewfile="{{ .chezmoi.sourceDir }}/Brewfile"

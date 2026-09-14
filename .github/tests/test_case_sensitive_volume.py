@@ -11,7 +11,7 @@ from unittest.mock import call, patch
 SCRIPT = (
     Path(__file__).parents[2]
     / ".chezmoiscripts"
-    / "run_once_before_04-setup-case-sensitive-volume.py"
+    / "run_once_before_setup-case-sensitive-volume.py"
 )
 sys.dont_write_bytecode = True
 SPEC = importlib.util.spec_from_file_location("case_volume", SCRIPT)
