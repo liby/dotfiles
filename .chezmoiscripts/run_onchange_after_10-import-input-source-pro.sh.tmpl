@@ -1,0 +1,32 @@
+#!/bin/zsh
+set -euo pipefail
+
+# Settings hash: {{ include ".chezmoitemplates/input-source-pro/settings.json" | sha256sum }}
+
+[[ "$OSTYPE" == darwin* ]] || exit 0
+
+# Input Source Pro keeps its own settings in com.runjuu.Input-Source-Pro, where the shortcut and
+# rule values are archived blobs rather than plain defaults. The exported JSON is what this
+# repository tracks, and the app loads it through the import URL below.
+app="Input Source Pro"
+settings="{{ .chezmoi.sourceDir }}/.chezmoitemplates/input-source-pro/settings.json"
+
+# `open` returns as soon as LaunchServices takes the URL, so nothing here reports whether the
+# import ran. Send it only once the app is up: on a machine where it has never run, that launch
+# goes through Gatekeeper first, and the wait below is what absorbs the delay.
+echo "Starting $app (answer its first-launch prompts)..."
+open -a "$app"
+
+# Match on the bundle id: `lsappinfo info <name>` returns nothing while two copies of the app
+# run under the same name, such as a local Xcode build next to the /Applications copy.
+waited=0
+until [[ -n "$(lsappinfo find 'bundleid="com.runjuu.Input-Source-Pro"')" ]]; do
+  if (( ++waited > 60 )); then
+    print -u2 "$app did not start, so its settings were not imported; rerun chezmoi apply"
+    exit 1
+  fi
+  sleep 1
+done
+
+echo "Importing $app settings (confirm the Replace Current Settings prompt)..."
+open "inputsourcepro://import?path=$settings"

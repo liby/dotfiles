@@ -19,6 +19,8 @@ These dependencies shape the sequence:
 
 The bootstrap targets Apple Silicon macOS and uses `/opt/homebrew` directly.
 
+Input Source Pro cannot be expressed as `defaults` writes either: `com.runjuu.Input-Source-Pro` stores its shortcut and rule values as archived blobs. Its [exported JSON](../.chezmoitemplates/input-source-pro/settings.json) is the source of record, and [its import script](../.chezmoiscripts/run_onchange_after_10-import-input-source-pro.sh.tmpl) hands that file to the app through the `inputsourcepro://import` URL. `.chezmoitemplates` is never deployed, so the export needs no ignore entry. `open` returns as soon as LaunchServices takes the URL and a machine where the app has never run also goes through Gatekeeper first, so the script waits for the app's pid before importing; the app's replace prompt is the only report that the import ran.
+
 The unique case-sensitive `Code` volume belongs to the APFS container that stores `$HOME` and is mounted persistently by UUID through `vifs`. Provisioning must refuse a non-empty or differently mounted `~/Code` and must never unmount a volume automatically. The `run_once` script provisions fresh-machine state rather than reconciling later drift; its Python test covers deterministic logic, while APFS, Disk Arbitration, and reboot acceptance remain manual Mac checks.
 
 ## Package and tool ownership

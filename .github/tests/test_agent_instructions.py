@@ -28,6 +28,7 @@ ROUTE_EXPECTATIONS = {
         "`Brewfile`",
         "`.chezmoiexternal.toml`",
         "`.chezmoiscripts/**`",
+        "`.chezmoitemplates/input-source-pro/**`",
         "(.github/CONCEPTS.md#bootstrap)",
         "(.github/CONCEPTS.md#package-and-tool-ownership)",
     ),

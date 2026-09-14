@@ -1,0 +1,257 @@
+{
+  "app" : {
+    "buildVersion" : 706,
+    "bundleIdentifier" : "com.runjuu.Input-Source-Pro",
+    "shortVersion" : "2.11.0"
+  },
+  "appRules" : [
+    {
+      "bundleId" : "com.apple.finder",
+      "bundleName" : "Finder",
+      "createdAt" : "2024-05-31T14:01:02Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : false,
+      "removed" : false,
+      "url" : "file:///System/Library/CoreServices/Finder.app/"
+    },
+    {
+      "bundleId" : "com.nssurge.surge-dashboard",
+      "bundleName" : "Surge Dashboard",
+      "createdAt" : "2024-05-31T14:01:02Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : false,
+      "removed" : false,
+      "url" : "file:///Applications/Surge.app/Contents/Applications/Surge%20Dashboard.app/"
+    },
+    {
+      "bundleId" : "com.google.Chrome",
+      "bundleName" : "Google Chrome",
+      "createdAt" : "2024-05-31T14:01:02Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : false,
+      "removed" : false,
+      "url" : "file:///Applications/Google%20Chrome.app/"
+    },
+    {
+      "bundleId" : "com.microsoft.VSCode",
+      "bundleName" : "Visual Studio Code",
+      "createdAt" : "2024-05-31T14:01:02Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : false,
+      "inputSourceId" : "com.apple.keylayout.ABC",
+      "removed" : false,
+      "url" : "file:///Applications/Visual%20Studio%20Code.app/"
+    },
+    {
+      "bundleId" : "com.hezongyidev.Bob",
+      "bundleName" : "Bob",
+      "createdAt" : "2024-05-31T14:21:10Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : true,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : false,
+      "inputSourceId" : "com.apple.inputmethod.SCIM.ITABC",
+      "removed" : false,
+      "url" : "file:///Applications/Bob.app/"
+    },
+    {
+      "bundleId" : "com.raycast.macos",
+      "bundleName" : "Raycast",
+      "createdAt" : "2024-05-31T14:21:28Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : false,
+      "inputSourceId" : "com.apple.keylayout.ABC",
+      "removed" : false,
+      "url" : "file:///Applications/Raycast.app/"
+    },
+    {
+      "bundleId" : "com.zzd.Xnip",
+      "bundleName" : "Xnip",
+      "createdAt" : "2024-07-12T02:28:42Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : true,
+      "removed" : false,
+      "url" : "file:///Applications/Xnip.app/"
+    },
+    {
+      "bundleId" : "com.tencent.xinWeChat",
+      "bundleName" : "微信",
+      "createdAt" : "2024-09-03T06:12:03Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : true,
+      "inputSourceId" : "com.apple.inputmethod.SCIM.ITABC",
+      "removed" : false,
+      "url" : "file:///Applications/WeChat.app/"
+    },
+    {
+      "bundleId" : "com.mitchellh.ghostty",
+      "bundleName" : "Ghostty",
+      "createdAt" : "2025-07-01T02:06:21Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : false,
+      "inputSourceId" : "com.apple.keylayout.ABC",
+      "removed" : false,
+      "url" : "file:///Applications/Ghostty.app/"
+    },
+    {
+      "bundleId" : "com.jetbrains.pycharm",
+      "bundleName" : "PyCharm",
+      "createdAt" : "2025-07-02T05:25:29Z",
+      "doNotRestoreKeyboard" : false,
+      "doRestoreKeyboard" : false,
+      "forceEnglishPunctuation" : false,
+      "hideIndicator" : false,
+      "inputSourceId" : "com.apple.keylayout.ABC",
+      "removed" : false,
+      "url" : "file:///Applications/PyCharm.app/"
+    }
+  ],
+  "browserRules" : [
+    {
+      "createdAt" : "2024-05-31T14:19:40Z",
+      "disabled" : false,
+      "hideIndicator" : false,
+      "inputSourceId" : "com.apple.inputmethod.SCIM.ITABC",
+      "keyboardRestoreStrategyRaw" : "UseDefaultKeyboardInstead",
+      "sample" : "",
+      "typeValue" : 0,
+      "value" : "chatgpt.com"
+    },
+    {
+      "createdAt" : "2024-05-31T14:20:02Z",
+      "disabled" : false,
+      "hideIndicator" : true,
+      "inputSourceId" : "com.apple.keylayout.ABC",
+      "keyboardRestoreStrategyRaw" : "UseDefaultKeyboardInstead",
+      "sample" : "",
+      "typeValue" : 1,
+      "value" : "www.typescriptlang.org"
+    }
+  ],
+  "exportedAt" : "2026-09-14T04:06:42Z",
+  "hotKeyGroups" : [
+
+  ],
+  "keyboardConfigs" : [
+    {
+      "bgColorHex" : "000000ff",
+      "id" : "com.apple.inputmethod.SCIM.ITABC",
+      "textColorHex" : "ffffffff"
+    },
+    {
+      "bgColorHex" : "000000ff",
+      "id" : "com.apple.inputmethod.SCIM.ITABC::com.apple.inputmethod.SCIM.ITABC",
+      "textColorHex" : "ffffffff"
+    },
+    {
+      "bgColorHex" : "000000ff",
+      "id" : "com.apple.keylayout.ABC",
+      "textColorHex" : "ffffffff"
+    }
+  ],
+  "keyboardShortcuts" : {
+
+  },
+  "preferences" : {
+    "appearanceMode" : "Dark",
+    "browserAddressDefaultKeyboardId" : "",
+    "cJKVFixStrategy" : "previousInputSourceShortcut",
+    "functionKeysToggleModifierCombo" : [
+
+    ],
+    "functionKeysToggleShortcutMode" : "keyboardShortcut",
+    "functionKeysToggleSingleModifierTrigger" : "singlePress",
+    "indicatorBackground" : {
+      "dark" : "000000ff",
+      "light" : "fffffff2"
+    },
+    "indicatorForgeground" : {
+      "dark" : "ffffffff",
+      "light" : "000000ff"
+    },
+    "indicatorInfo" : {
+      "base" : "iconAndTitle"
+    },
+    "indicatorPosition" : {
+      "base" : "nearMouse"
+    },
+    "indicatorPositionAlignment" : {
+      "base" : 4
+    },
+    "indicatorPositionSpacing" : {
+      "base" : 2
+    },
+    "indicatorSize" : {
+      "base" : 2
+    },
+    "isActiveWhenFocusedElementChanges" : true,
+    "isActiveWhenLongpressLeftMouse" : true,
+    "isActiveWhenSwitchApp" : true,
+    "isActiveWhenSwitchInputSource" : true,
+    "isAutoAppearanceMode" : true,
+    "isCJKVFixEnabled" : false,
+    "isEnableAlwaysOnIndicator" : false,
+    "isEnableURLSwitchForArc" : false,
+    "isEnableURLSwitchForBrave" : false,
+    "isEnableURLSwitchForBraveBeta" : false,
+    "isEnableURLSwitchForBraveNightly" : false,
+    "isEnableURLSwitchForChrome" : true,
+    "isEnableURLSwitchForChromium" : true,
+    "isEnableURLSwitchForDia" : false,
+    "isEnableURLSwitchForEdge" : false,
+    "isEnableURLSwitchForFirefox" : false,
+    "isEnableURLSwitchForFirefoxDeveloperEdition" : false,
+    "isEnableURLSwitchForFirefoxNightly" : false,
+    "isEnableURLSwitchForOpera" : false,
+    "isEnableURLSwitchForSafari" : true,
+    "isEnableURLSwitchForSafariTechnologyPreview" : false,
+    "isEnableURLSwitchForThorium" : false,
+    "isEnableURLSwitchForVivaldi" : false,
+    "isEnableURLSwitchForZen" : false,
+    "isEnhancedModeEnabled" : true,
+    "isFunctionKeysEnabled" : false,
+    "isHideWhenSwitchAppWithForceKeyboard" : false,
+    "isLaunchAtLogin" : true,
+    "isRestorePreviouslyUsedInputSource" : false,
+    "isShowIconInMenuBar" : true,
+    "shortcutModeGroupMapping" : {
+
+    },
+    "shortcutModeInputSourceMapping" : {
+
+    },
+    "shortcutTriggerMode" : "keyboardShortcut",
+    "singleModifierGroupMapping" : {
+
+    },
+    "singleModifierInputSourceMapping" : {
+
+    },
+    "singleModifierTrigger" : "singlePress",
+    "singleModifierTriggerGroupMapping" : {
+
+    },
+    "singleModifierTriggerInputSourceMapping" : {
+
+    },
+    "systemWideDefaultKeyboardId" : "",
+    "tryToDisplayIndicatorNearCursor" : false
+  },
+  "schemaVersion" : 1
+}
