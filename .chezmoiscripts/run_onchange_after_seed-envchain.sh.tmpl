@@ -30,6 +30,8 @@ envchain_bin="$brew_prefix/bin/envchain"
   exit 1
 }
 
+# tomllib sets the >=3.11 floor, so this script provisions its own interpreter.
+"$uv_bin" python install --no-bin '>=3.11'
 python="$("$uv_bin" python find --no-project --managed-python '>=3.11')"
 
 "$chezmoi_bin" decrypt "$seed" | "$python" -c '

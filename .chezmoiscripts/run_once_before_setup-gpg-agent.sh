@@ -9,6 +9,16 @@ gpg_bin="$brew_prefix/bin/gpg"
 gpgconf_bin="$brew_prefix/bin/gpgconf"
 pinentry_bin="$brew_prefix/bin/pinentry-mac"
 
+# Brewfile's installer runs first in this phase only because `install-` sorts before `setup-`.
+# Check before writing anything, so a rename that breaks that order fails here rather than
+# after a half-written ~/.gnupg.
+for bin in "$gpg_bin" "$pinentry_bin"; do
+  [[ -x "$bin" ]] || {
+    print -u2 "Required Brewfile dependency not found: $bin"
+    exit 1
+  }
+done
+
 mkdir -p "$HOME/.gnupg"
 chmod 700 "$HOME/.gnupg"
 for f in "$HOME/.gnupg"/*(.N); do

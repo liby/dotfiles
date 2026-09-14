@@ -39,7 +39,7 @@ ROUTE_EXPECTATIONS = {
         "(.github/CONCEPTS.md#git-identity-and-signing)",
     ),
     "GitLab CLI": (
-        "`.chezmoiscripts/run_onchange_after_07-configure-glab.sh`",
+        "`.chezmoiscripts/run_onchange_after_configure-glab.sh`",
         "glab's live configuration",
         "(.github/CONCEPTS.md#gitlab-cli-configuration)",
     ),
@@ -63,7 +63,7 @@ ROUTE_EXPECTATIONS = {
         "(.github/CONCEPTS.md#pi-configuration)",
     ),
     "Herdr integrations": (
-        "`.chezmoiscripts/run_onchange_after_09-install-herdr-integrations.sh.tmpl`",
+        "`.chezmoiscripts/run_onchange_after_install-herdr-integrations.sh.tmpl`",
         "(.github/CONCEPTS.md#herdr-integrations)",
     ),
     "Managed skills": (

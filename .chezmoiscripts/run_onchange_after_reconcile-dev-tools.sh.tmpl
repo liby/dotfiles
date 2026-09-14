@@ -3,6 +3,7 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
+# prototools hash: {{ include "dot_proto/dot_prototools" | sha256sum }}
 {{- $manifest := include ".github/dev-tools/package.json" | fromJson -}}
 {{- $tools := index $manifest "devDependencies" }}
 
@@ -13,6 +14,12 @@ export PROTO_HOME="$HOME/.proto"
 export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
 export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
 npm_prefix="$NPM_CONFIG_PREFIX"
+
+# Tool declarations live in `~/.proto/.prototools`. The default `upwards` config mode walks up
+# from the working directory without merging that file, leaving a bare `proto install` nothing
+# to install. proto skips each declared version it already has. The fixed path keeps a lookup
+# from falling back to a self-managed proto in `$PROTO_HOME/bin`; Brewfile owns the executable.
+/opt/homebrew/bin/proto install --config-mode global
 
 # Keep this at most as long as the npm rule in .github/renovate.json, or the pins below
 # become unreachable.
@@ -43,9 +50,6 @@ if (( ${#npm_pending[@]} )); then
     --ignore-scripts \
     -- "${npm_pending[@]}"
 fi
-
-# envchain seeding needs tomllib even when Pyright is already current.
-/opt/homebrew/bin/uv python install --no-bin '>=3.11'
 
 pyright_requirement="{{ include ".github/dev-tools/requirements.txt" | trim }}"
 pyright_version="${pyright_requirement#pyright==}"
