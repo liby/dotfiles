@@ -53,7 +53,7 @@ Put supporting changes and material reasons, constraints, trade-offs, or non-obv
 For example, `chore: keep package binaries and store on one volume` names the outcome; a body can explain the evidenced cross-volume store recreation that motivated it. `chore: update package manager path` plus a body restating the move loses that reason.
 
 - Honor exact user wording and repository instructions first, then configured format limits and the stable recent dialect, tense, and subject case. Use a scope only when declarative configuration or contribution guidance defines it. If neither configuration nor history establishes a format, use imperative present tense, no trailing period, a subject near 50 characters, and an optional body wrapped near 72. Prefer accuracy over the fallback length preference.
-- Use backticks for code references. Mention another commit's short hash only when the result depends on it; omit self-references such as "this commit" or "this PR".
+- Use backticks for code references, and close each pair on the line it opens: nothing reflows a commit body, and viewers that highlight backticks match them line by line, so a pair split across a line break leaves a stray backtick that pairs with the next one and highlights the wrong text. Mention another commit's short hash only when the result depends on it; omit self-references such as "this commit" or "this PR".
 - For a standard fixup, use Git's target-derived `fixup!` subject. The patch corrects the target; do not invent a replacement message or treat an unsquashed fixup as completed consolidation.
 
 ## Commit and verify
