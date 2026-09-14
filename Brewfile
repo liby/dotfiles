@@ -1,4 +1,3 @@
-tap "domt4/autoupdate", trusted: { command: "autoupdate" }
 tap "resend/cli"
 
 # Official Amazon AWS command-line interface

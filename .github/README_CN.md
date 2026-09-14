@@ -21,17 +21,25 @@
 
 ## 初始化新 Mac
 
-在新 Mac 上打开 Terminal.app，运行以下命令：
+全新安装的 macOS 上，`git` 只是一个占位程序，调用它只会弹出命令行开发者工具的安装对话框并返回错误，`chezmoi init` 因此无法克隆本仓库。在新 Mac 上打开 Terminal.app，先安装命令行工具：
 
 ```sh
-sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply liby
+xcode-select --install
 ```
 
-这不是无人值守安装。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 Xcode 或 `sudo` 提示，并在需要时使用 YubiKey。
+等安装窗口结束，确认 `xcode-select -p` 和 `git --version` 都有输出，再运行：
 
-这条命令会安装 chezmoi，将本仓库克隆到 `~/.local/share/chezmoi`，运行初始化脚本，并将受 chezmoi 管理的文件同步到 `$HOME`。
+```sh
+sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply liby
+```
 
-如果这台 Mac 上已经安装了 chezmoi，只需运行：
+这不是无人值守安装。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 `sudo` 提示，并在需要时使用 YubiKey。
+
+这条命令会安装 chezmoi，将本仓库克隆到 `~/.local/share/chezmoi`，运行初始化脚本，并将受 chezmoi 管理的文件同步到 `$HOME`。`-b` 把这个临时用的二进制放进临时目录，而不是安装脚本默认在当前目录下创建的 `bin`，在 Terminal.app 里就是 `~/bin`：之后所有命令都应该用 `Brewfile` 安装的那个 chezmoi，而 `.zshrc` 把 `~/bin` 排在 Homebrew 之前，留在那里的副本会挡住它，并且不会再更新。
+
+初始化脚本失败会中断整个 apply。重新运行上面那条一键命令即可继续，它会把 chezmoi 装进一个新的临时目录，从失败的地方接着往下走。
+
+如果这台 Mac 上已经安装了 chezmoi，运行：
 
 ```sh
 chezmoi init --apply liby

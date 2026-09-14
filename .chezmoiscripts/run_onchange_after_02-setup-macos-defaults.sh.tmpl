@@ -46,8 +46,9 @@ defaults write com.apple.finder NewWindowTarget -string PfLo
 defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/Downloads/"
 defaults write com.apple.finder ShowHardDrivesOnDesktop -bool false
 
-# System shortcuts freed for other launchers, by Apple's numeric identifier: 60 and 61 switch
-# input source, 64 and 65 open Spotlight and its Finder search window.
+# System shortcuts disabled by Apple's numeric identifier. 64 and 65 open Spotlight and its
+# Finder search window, freed for other launchers. 60 and 61 are the Ctrl+Space and
+# Ctrl+Option+Space input source switches.
 # The old-style plist syntax `{enabled = 0;}` stores strings; XML keeps the boolean and integer
 # types these entries carry.
 disable_hotkey() {

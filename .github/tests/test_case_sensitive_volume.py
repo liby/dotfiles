@@ -11,7 +11,7 @@ from unittest.mock import call, patch
 SCRIPT = (
     Path(__file__).parents[2]
     / ".chezmoiscripts"
-    / "run_once_before_05-setup-case-sensitive-volume.py"
+    / "run_once_before_04-setup-case-sensitive-volume.py"
 )
 sys.dont_write_bytecode = True
 SPEC = importlib.util.spec_from_file_location("case_volume", SCRIPT)
@@ -178,6 +178,47 @@ class ProvisionTest(unittest.TestCase):
             case_volume.main()
         run.assert_not_called()
         self.assertEqual(self.fstab.read_text(), entry)
+
+    def owned_by(self, uid):
+        fields = list(os.stat(self.mount))
+        fields[4] = uid
+        return patch.object(
+            case_volume.os, "stat", return_value=os.stat_result(fields))
+
+    def test_root_owned_mount_is_handed_to_the_invoking_user(self):
+        with ExitStack() as stack:
+            stack.enter_context(self.owned_by(0))
+            stack.enter_context(patch.object(
+                case_volume.os, "getuid", return_value=501))
+            stack.enter_context(patch.object(case_volume.os, "getgid", return_value=20))
+            run = stack.enter_context(patch.object(case_volume.subprocess, "run"))
+            case_volume.ensure_owner()
+        run.assert_called_once_with(
+            [case_volume.SUDO, case_volume.CHOWN, "501:20", str(self.mount)],
+            check=True)
+
+    def test_ownership_is_repaired_before_the_case_sensitivity_probe(self):
+        # The probe creates a directory inside the volume, so it fails on the
+        # root-owned root that ensure_owner repairs.
+        order = []
+        entry = (f"UUID=11111111-1111-1111-1111-111111111111 "
+                 f"{self.mount} apfs rw 0 2\n")
+        self.fstab.write_text(entry)
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(
+                case_volume, "find_volume", return_value=("disk3", "disk3s7")))
+            stack.enter_context(patch.object(
+                case_volume, "target_device", return_value="disk3s7"))
+            stack.enter_context(patch.object(
+                case_volume, "volume_info", return_value=self.info(str(self.mount))))
+            stack.enter_context(patch.object(
+                case_volume, "ensure_owner", side_effect=lambda: order.append("own")))
+            stack.enter_context(patch.object(
+                case_volume, "verify_case_sensitive",
+                side_effect=lambda: order.append("probe")))
+            stack.enter_context(patch.object(case_volume, "print", create=True))
+            case_volume.main()
+        self.assertEqual(order, ["own", "probe"])
 
     def test_volume_mounted_elsewhere_fails_without_mutation(self):
         with ExitStack() as stack:

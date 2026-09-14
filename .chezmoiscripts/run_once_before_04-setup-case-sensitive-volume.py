@@ -8,7 +8,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-DISKUTIL, SUDO, VIFS = "/usr/sbin/diskutil", "/usr/bin/sudo", "/usr/sbin/vifs"
+CHOWN, DISKUTIL = "/usr/sbin/chown", "/usr/sbin/diskutil"
+SUDO, VIFS = "/usr/bin/sudo", "/usr/sbin/vifs"
 NAME = "Code"
 MOUNT, FSTAB = Path.home() / NAME, Path("/etc/fstab")
 
@@ -115,6 +116,16 @@ def require_empty_directory():
         fail(f"{MOUNT} must be empty")
 
 
+def ensure_owner():
+    # diskutil creates the volume root as root:wheel, so the account that uses
+    # ~/Code cannot write to it until ownership moves.
+    if os.stat(MOUNT).st_uid == os.getuid():
+        return
+    subprocess.run(
+        [SUDO, CHOWN, f"{os.getuid()}:{os.getgid()}", str(MOUNT)], check=True
+    )
+
+
 def verify_case_sensitive():
     probe = Path(tempfile.mkdtemp(prefix=".chezmoi-case-", dir=MOUNT))
     try:
@@ -168,6 +179,7 @@ def main():
     final = volume_info(device, container)
     if final.get("MountPoint") != str(MOUNT) or target_device() != device:
         fail(f"{device} did not mount at {MOUNT}")
+    ensure_owner()
     verify_case_sensitive()
     print(f"Case-sensitive {NAME} volume ready at {MOUNT}.")
 

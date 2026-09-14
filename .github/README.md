@@ -21,15 +21,23 @@ Some settings depend on my accounts, GPG keys, and filesystem layout. Adjust the
 
 ## Set up a new Mac
 
-Open Terminal.app on the new Mac and run:
+A fresh macOS install ships `git` as a stub that only opens the Command Line Tools installer dialog and exits with an error, so `chezmoi init` cannot clone this repository yet. Open Terminal.app on the new Mac and install the tools first:
 
 ```sh
-sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply liby
+xcode-select --install
 ```
 
-This starts an interactive setup, not an unattended installation. Keep Terminal.app open to enter private template values, respond to Xcode or `sudo` prompts, and use your YubiKey when needed.
+Wait for the installer window to finish, then confirm `xcode-select -p` and `git --version` both print something. Now run:
 
-The command installs chezmoi, clones this repository into `~/.local/share/chezmoi`, runs the bootstrap scripts, and applies the managed files to `$HOME`.
+```sh
+sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply liby
+```
+
+This starts an interactive setup, not an unattended installation. Keep Terminal.app open to enter private template values, respond to `sudo` prompts, and use your YubiKey when needed.
+
+The command installs chezmoi, clones this repository into `~/.local/share/chezmoi`, runs the bootstrap scripts, and applies the managed files to `$HOME`. `-b` puts that first binary in a temporary directory instead of the `bin` directory the install script creates in the working directory, which in Terminal.app is `~/bin`: `Brewfile` installs the chezmoi every later command should use, and `.zshrc` puts `~/bin` ahead of Homebrew on `PATH`, where a leftover copy would shadow it and never update.
+
+A bootstrap script that fails stops the apply. Run the same one-liner again to continue; it reinstalls chezmoi into a new temporary directory and picks up where the failed run left off.
 
 If chezmoi is already installed, run:
 

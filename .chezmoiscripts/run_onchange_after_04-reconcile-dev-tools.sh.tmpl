@@ -55,8 +55,8 @@ current_pyright="$(
 )"
 
 if [[ "$current_pyright" != "$pyright_version" ]]; then
-  # Renovate gates the pin but not Pyright's transitive dependencies. This `before` script runs
-  # before `~/.config/uv/uv.toml` is deployed, so take the window from source.
+  # Renovate gates the pin but not Pyright's transitive dependencies. Take the window from
+  # source so the command carries it without depending on uv discovering `~/.config/uv/uv.toml`.
   uv tool install --force \
     --exclude-newer '{{ index (include "dot_config/uv/uv.toml" | fromToml) "exclude-newer" }}' \
     "$pyright_requirement"
