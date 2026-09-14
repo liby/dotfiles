@@ -19,6 +19,7 @@ defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 defaults write NSGlobalDomain AppleTemperatureUnit -string Celsius
 defaults write NSGlobalDomain InitialKeyRepeat -int 15
 defaults write NSGlobalDomain KeyRepeat -int 2
+defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
@@ -46,34 +47,48 @@ defaults write com.apple.finder NewWindowTarget -string PfLo
 defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/Downloads/"
 defaults write com.apple.finder ShowHardDrivesOnDesktop -bool false
 
-# System shortcuts disabled by Apple's numeric identifier. 64 and 65 open Spotlight and its
-# Finder search window, freed for other launchers. 60 and 61 are the Ctrl+Space and
-# Ctrl+Option+Space input source switches.
+# The input source list, reset whole every time this script runs, so a machine comes back to ABC
+# and Pinyin - Simplified. The Input Sources panel shows only those two; the last three entries
+# are the parent method that owns the Pinyin input mode, the Emoji & Symbols viewer, and the
+# accent popup, carried over from the live list because a whole-array write replaces them too.
+defaults write com.apple.HIToolbox AppleEnabledInputSources -array \
+  "<dict><key>InputSourceKind</key><string>Keyboard Layout</string><key>KeyboardLayout ID</key><integer>252</integer><key>KeyboardLayout Name</key><string>ABC</string></dict>" \
+  "<dict><key>Bundle ID</key><string>com.apple.inputmethod.SCIM</string><key>Input Mode</key><string>com.apple.inputmethod.SCIM.ITABC</string><key>InputSourceKind</key><string>Input Mode</string></dict>" \
+  "<dict><key>Bundle ID</key><string>com.apple.inputmethod.SCIM</string><key>InputSourceKind</key><string>Keyboard Input Method</string></dict>" \
+  "<dict><key>Bundle ID</key><string>com.apple.CharacterPaletteIM</string><key>InputSourceKind</key><string>Non Keyboard Input Method</string></dict>" \
+  "<dict><key>Bundle ID</key><string>com.apple.PressAndHold</string><key>InputSourceKind</key><string>Non Keyboard Input Method</string></dict>"
+
+# System shortcuts by Apple's numeric identifier. 64 and 65 open Spotlight and its Finder
+# search window, freed for other launchers. 60 and 61 are the Ctrl+Space and Ctrl+Option+Space
+# input source switches.
 # The old-style plist syntax `{enabled = 0;}` stores strings; XML keeps the boolean and integer
 # types these entries carry.
-disable_hotkey() {
-  local id=$1
-  if (( $# == 1 )); then
+set_hotkey() {
+  local id=$1 enabled=$2
+  if (( $# == 2 )); then
     defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$id" \
-      "<dict><key>enabled</key><false/></dict>"
+      "<dict><key>enabled</key><$enabled/></dict>"
   else
     defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$id" \
-      "<dict><key>enabled</key><false/><key>value</key><dict><key>parameters</key><array><integer>$2</integer><integer>$3</integer><integer>$4</integer></array><key>type</key><string>standard</string></dict></dict>"
+      "<dict><key>enabled</key><$enabled/><key>value</key><dict><key>parameters</key><array><integer>$3</integer><integer>$4</integer><integer>$5</integer></array><key>type</key><string>standard</string></dict></dict>"
   fi
 }
 
 for id in 15 16 17 18 19 20 21 22 23 24 25 26; do
-  disable_hotkey "$id"
+  set_hotkey "$id" false
 done
-disable_hotkey 60 32 49 262144
-disable_hotkey 61 32 49 786432
-disable_hotkey 64 32 49 1048576
-disable_hotkey 65 32 49 1572864
-disable_hotkey 164 65535 65535 0
-disable_hotkey 260 65535 53 1048576
+set_hotkey 60 false 32 49 262144
+# Caps Lock switches input source only on the Mac its keyboard is attached to, not on a Mac
+# driven through Universal Control. 61 is enabled so that Mac has an ordinary shortcut for the
+# switch.
+set_hotkey 61 true 32 49 786432
+set_hotkey 64 false 32 49 1048576
+set_hotkey 65 false 32 49 1572864
+set_hotkey 164 false 65535 65535 0
+set_hotkey 260 false 65535 53 1048576
 
 # Reload processes that cache the Apple UI defaults. activateSettings applies the key repeat
 # values to the running session; the writes alone leave the old rate in place.
 killall ControlCenter Dock Finder
 /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-echo "AppleLanguages, AppleInterfaceStyle, and TISRomanSwitchState take effect at next login."
+echo "AppleLanguages, AppleInterfaceStyle, TISRomanSwitchState, and the input source list take effect at next login."
