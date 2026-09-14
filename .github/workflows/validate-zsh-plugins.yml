@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 15
     env:
       # renovate: datasource=github-releases depName=twpayne/chezmoi
-      CHEZMOI_VERSION: v2.72.1
+      CHEZMOI_VERSION: v2.72.2
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
