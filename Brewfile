@@ -70,6 +70,8 @@ cask "itsycal"
 cask "orbstack"
 # Control your tools with a few keystrokes
 cask "raycast"
+# Network toolbox
+cask "surge"
 # Open-source code editor
 cask "visual-studio-code"
 mas "Bob", id: 1630034110
