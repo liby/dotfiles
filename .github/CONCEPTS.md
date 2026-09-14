@@ -59,6 +59,8 @@ The JSON and TOML modifiers compare parsed values before serializing, so reorder
 
 Chezmoi source manages portable, durable preferences, including established interaction habits, when they should remain consistent across machines. It leaves matching convenience defaults implicit unless an explicit value enforces a repository boundary or counters observed write-back drift. Generated runtime state, machine-specific paths, and settings synchronized elsewhere remain owned by their existing systems.
 
+The [macOS defaults script](../.chezmoiscripts/run_onchange_after_02-setup-macos-defaults.sh.tmpl) owns the Apple UI preferences. Its whole-array writes replace a list wholesale, so a tile dragged into the Dock, a stack, or an input source added by hand does not survive a rerun, and its input source, language, and appearance values take effect at the next login rather than in the running session. Each key's own reason stays in that script's adjacent comment.
+
 ### Codex configuration
 
 [`.chezmoitemplates/codex/config.toml`](../.chezmoitemplates/codex/config.toml) declares the source-owned portion of `~/.codex/config.toml`. The modifier replaces `plugins`, `permissions.development`, and each source-declared `mcp_servers` table, carrying forward only the destination's existing `node_repl.env` and `node_repl.env_vars` within those server tables. All other declared configuration is deep-overlaid. Replacing server tables removes stale transport fields that can make Codex reject the whole configuration. Removing an entire server from source still requires explicit destination cleanup.

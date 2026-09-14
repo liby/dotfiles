@@ -33,6 +33,27 @@ defaults -currentHost write NSGlobalDomain com.apple.trackpad.threeFingerVertSwi
 
 defaults write com.apple.dock autohide -bool true
 defaults write com.apple.dock orientation -string left
+# The Launchpad pinch is a Dock preference even though the Trackpad pane toggles it. Show Desktop
+# is the inverse spread of the same fingers and keeps its own key.
+defaults write com.apple.dock showLaunchpadGestureEnabled -bool false
+# Pin what Raycast does not cover: notification badges (App Store, Messages), apps with no
+# Raycast route (System Settings), and the Apps launcher as the rescue path when a search misses.
+# Finder needs no entry because the Dock always shows it, and Apps.app exists only on macOS 26+.
+# Insert new apps in A-Z label order; the whole-array write also drops a fresh Mac's packaged apps.
+# An app tile is only its path: the Dock rebuilds the rest from the bundle. Only spaces are
+# encoded; a folder tile, or a path needing other encoding, needs its own form.
+dock_app_tile() {
+  local url="file://${1%/}/"
+  print -r -- "<dict><key>tile-type</key><string>file-tile</string><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>${url// /%20}</string><key>_CFURLStringType</key><integer>15</integer></dict></dict></dict>"
+}
+defaults write com.apple.dock persistent-apps -array \
+  "$(dock_app_tile '/System/Applications/App Store.app')" \
+  "$(dock_app_tile /System/Applications/Apps.app)" \
+  "$(dock_app_tile /System/Applications/Messages.app)" \
+  "$(dock_app_tile '/System/Applications/System Settings.app')"
+# This key holds only user-added files and folders, so emptying it drops the Downloads stack a
+# fresh Mac pins there. The Trash is an implicit tile the Dock renders on its own.
+defaults write com.apple.dock persistent-others -array
 # Hot corners: bottom left locks the screen, bottom right does nothing.
 defaults write com.apple.dock wvous-bl-corner -int 13
 defaults write com.apple.dock wvous-bl-modifier -int 0
@@ -46,6 +67,16 @@ defaults write com.apple.finder FXPreferredViewStyle -string Nlsv
 defaults write com.apple.finder NewWindowTarget -string PfLo
 defaults write com.apple.finder NewWindowTargetPath -string "file://$HOME/Downloads/"
 defaults write com.apple.finder ShowHardDrivesOnDesktop -bool false
+
+# The menu bar clock shows only the time. ShowDate is the 0/1/2 enum when space allows / always /
+# never, not a boolean: a boolean false left the date showing, so never is 2.
+defaults write com.apple.menuextra.clock ShowDate -int 2
+defaults write com.apple.menuextra.clock ShowDayOfWeek -bool false
+
+# Keep Spotlight and Timer out of the menu bar. Spotlight hides by its status-item key's absence;
+# the Timer's per-host mode (8 = off, 18 = always) is what ControlCenter turns into its item.
+defaults delete com.apple.Spotlight "NSStatusItem VisibleCC Item-0" 2>/dev/null || true
+defaults -currentHost write com.apple.controlcenter Timer -int 8
 
 # The input source list, reset whole every time this script runs, so a machine comes back to ABC
 # and Pinyin - Simplified. The Input Sources panel shows only those two; the last three entries
@@ -74,6 +105,8 @@ set_hotkey() {
   fi
 }
 
+# 15-26 are the Universal Access shortcuts. The Keyboard Shortcuts panel omits 16, 18, 20, 22, and
+# 24, but those ids are still registered hotkeys, so keep the whole block rather than pruning it.
 for id in 15 16 17 18 19 20 21 22 23 24 25 26; do
   set_hotkey "$id" false
 done
