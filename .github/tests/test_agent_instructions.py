@@ -32,6 +32,12 @@ ROUTE_EXPECTATIONS = {
         "(.github/CONCEPTS.md#bootstrap)",
         "(.github/CONCEPTS.md#package-and-tool-ownership)",
     ),
+    "Git signing": (
+        "`dot_config/git/executable_git-ssh-gpg-agent`",
+        "`.chezmoitemplates/git/**`",
+        "`private_dot_ssh/private_config`",
+        "(.github/CONCEPTS.md#git-identity-and-signing)",
+    ),
     "GitLab CLI": (
         "`.chezmoiscripts/run_onchange_after_07-configure-glab.sh`",
         "glab's live configuration",
