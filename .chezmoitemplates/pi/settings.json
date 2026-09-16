@@ -5,6 +5,7 @@
   "defaultThinkingLevel": "max",
   "modelThinkingLevels": {
     "rc-gateway/deepseek/deepseek-v4.1-flash": "max",
+    "rc-gateway/google/gemini-3.8-flash": "high",
     "rc-gateway/moonshotai/kimi-k3-fast": "max",
     "rc-gateway/openai/gpt-6-astra": "xhigh",
     "rc-gateway/zai/glm-5.3": "max"

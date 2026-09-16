@@ -18,8 +18,23 @@
             "max": "max"
           },
           "input": ["text", "image"],
-          "contextWindow": 1048576,
-          "maxTokens": 32768
+          "contextWindow": 400000,
+          "maxTokens": 384000
+        },
+        {
+          "id": "google/gemini-3.8-flash",
+          "name": "Gemini 3.8 Flash",
+          "reasoning": true,
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": "medium",
+            "high": "high"
+          },
+          "input": ["text", "image"],
+          "contextWindow": 400000,
+          "maxTokens": 65536
         },
         {
           "id": "moonshotai/kimi-k3-fast",
@@ -34,7 +49,7 @@
             "max": "max"
           },
           "input": ["text", "image"],
-          "contextWindow": 1000000,
+          "contextWindow": 400000,
           "maxTokens": 131072
         },
         {
@@ -51,7 +66,7 @@
             "max": "max"
           },
           "input": ["text", "image"],
-          "contextWindow": 1050000,
+          "contextWindow": 400000,
           "maxTokens": 128000
         },
         {
@@ -67,8 +82,8 @@
             "max": "max"
           },
           "input": ["text"],
-          "contextWindow": 1000000,
-          "maxTokens": 1000000
+          "contextWindow": 400000,
+          "maxTokens": 131072
         }
       ]
     }
