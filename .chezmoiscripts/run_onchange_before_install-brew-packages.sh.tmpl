@@ -95,7 +95,13 @@ fi
 
 echo "Installing brew packages..."
 reconcile_cask_pins
-brew bundle --file="$brewfile"
+# A transient brew bundle failure would abort the whole apply.
+attempt=1
+until brew bundle --file="$brewfile"; do
+  (( attempt++ < 3 )) || exit 1
+  echo "brew bundle failed; retrying (attempt $attempt/3)..."
+  sleep 10
+done
 reconcile_cask_pins
 
 autoupdate_label="com.github.liby.brew-autoupdate"
