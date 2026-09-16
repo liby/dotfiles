@@ -75,7 +75,6 @@ cask "surge"
 # Open-source code editor
 cask "visual-studio-code"
 mas "Bob", id: 1630034110
-mas "Hidden Bar", id: 1452453066
 mas "Slack", id: 803453959
 mas "The Unarchiver", id: 425424353
 mas "WeChat", id: 836500024

@@ -229,7 +229,7 @@
     "isHideWhenSwitchAppWithForceKeyboard" : false,
     "isLaunchAtLogin" : true,
     "isRestorePreviouslyUsedInputSource" : false,
-    "isShowIconInMenuBar" : true,
+    "isShowIconInMenuBar" : false,
     "shortcutModeGroupMapping" : {
 
     },

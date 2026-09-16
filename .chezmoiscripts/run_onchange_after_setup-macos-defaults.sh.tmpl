@@ -25,6 +25,9 @@ defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 # Caps Lock switches to and from ABC.
 defaults write NSGlobalDomain TISRomanSwitchState -int 1
+# macOS draws the active input source at the insertion point of every text field. This clears that
+# badge alone; the redesigned cursor and its Caps Lock badge stay.
+defaults write NSGlobalDomain TSMLanguageIndicatorEnabled -int 0
 
 # The Trackpad pane writes this gesture to all three of these domains.
 defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerVertSwipeGesture -int 0
@@ -124,4 +127,4 @@ set_hotkey 260 false 65535 53 1048576
 # values to the running session; the writes alone leave the old rate in place.
 killall ControlCenter Dock Finder
 /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-echo "AppleLanguages, AppleInterfaceStyle, TISRomanSwitchState, and the input source list take effect at next login."
+echo "Appearance, input source, and language changes take effect at next login."
