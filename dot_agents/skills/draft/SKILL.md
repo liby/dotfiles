@@ -24,7 +24,7 @@ Drafting from material, polishing an existing draft, and translating allow diffe
 
 What the user has told you, and what the destination requires, come first and are not up for rederivation. Existing artifacts settle what those leave open.
 
-Within that, this is the first action, not a check afterwards, and it settles more than any rule here can: measured across four models, supplying a repository's recent merge requests changed the output from four different title formats in the wrong language with two to five imposed headings, to the repository's own format every time - including in runs that were never told to match anything.
+Within that, this is the first action, not a check afterwards, and it settles more than any rule here can: measured across four models, each invented its own title format and imposed two to five headings when it had no history to read; with the repository's recent merge requests in front of them, all eight runs produced that repository's title format and all but one dropped the headings, including the four runs that were told nothing about matching anything.
 
 - MR or PR title and description: recent merged ones in this repository. `git log --oneline -20` for titles, then read two or three bodies through `glab mr list --state=merged` or `gh pr list --state=merged`.
 - Review comment: earlier comments on this MR, and on recent ones in the same repository.
