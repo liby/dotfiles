@@ -6,8 +6,6 @@ allowed-tools:
   - mcp__chrome-devtools__*
 ---
 
-# Snowflake Execution
-
 Own Snowflake CLI execution and authentication for every live query. When a workspace Snowflake skill also applies, follow its relation, query, limit, and interpretation guidance, but translate its CLI and bootstrap examples to the direct runtime below.
 
 Run only read-only SQL through the persistent `snow` executable and configured default connection. Do not run workspace `uvx`, connection synchronization, or wrapper commands; translate the query to `snow sql -q` instead. If the configured connection fails, report the non-sensitive failure rather than replacing it. Prefer server-side aggregation or an explicit `LIMIT`.

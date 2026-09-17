@@ -14,7 +14,6 @@ metadata:
     github-tree-sha: c6ede997dad62e888ac9aeb7c83d4eba8abc596f
 name: oracle
 ---
-# Oracle
 
 Use the installed `oracle` binary. Treat its answer as advisory and verify material claims against the code and primary sources.
 

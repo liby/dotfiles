@@ -11,8 +11,6 @@ allowed-tools:
   - WebSearch
 ---
 
-# Write Skill
-
 Write skills and reusable instructions that change agent behavior. Use established domain terms when they preserve the intended trigger and boundary. Keep routing, workflow, tool use, validation, examples, and rationale only when they change the next action or choice. Cut explanatory restatements, intermediate history, repeated best practice, and competent-agent defaults.
 
 ## Process

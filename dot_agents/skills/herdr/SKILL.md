@@ -13,7 +13,6 @@ metadata:
     github-tree-sha: b9dcfddcfa7ce43e2e4cf60e724c519be553f149
 name: herdr
 ---
-# Herdr
 
 Control the current Herdr session through the installed `herdr` CLI. Use pane commands for raw terminals and agent commands for recognized coding-agent lifecycle state.
 
