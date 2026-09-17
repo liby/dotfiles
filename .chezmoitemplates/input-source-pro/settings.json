@@ -1,43 +1,10 @@
 {
   "app" : {
-    "buildVersion" : 706,
+    "buildVersion" : 707,
     "bundleIdentifier" : "com.runjuu.Input-Source-Pro",
-    "shortVersion" : "2.11.0"
+    "shortVersion" : "2.12.0"
   },
   "appRules" : [
-    {
-      "bundleId" : "com.apple.finder",
-      "bundleName" : "Finder",
-      "createdAt" : "2024-05-31T14:01:02Z",
-      "doNotRestoreKeyboard" : false,
-      "doRestoreKeyboard" : false,
-      "forceEnglishPunctuation" : false,
-      "hideIndicator" : false,
-      "removed" : false,
-      "url" : "file:///System/Library/CoreServices/Finder.app/"
-    },
-    {
-      "bundleId" : "com.nssurge.surge-dashboard",
-      "bundleName" : "Surge Dashboard",
-      "createdAt" : "2024-05-31T14:01:02Z",
-      "doNotRestoreKeyboard" : false,
-      "doRestoreKeyboard" : false,
-      "forceEnglishPunctuation" : false,
-      "hideIndicator" : false,
-      "removed" : false,
-      "url" : "file:///Applications/Surge.app/Contents/Applications/Surge%20Dashboard.app/"
-    },
-    {
-      "bundleId" : "com.google.Chrome",
-      "bundleName" : "Google Chrome",
-      "createdAt" : "2024-05-31T14:01:02Z",
-      "doNotRestoreKeyboard" : false,
-      "doRestoreKeyboard" : false,
-      "forceEnglishPunctuation" : false,
-      "hideIndicator" : false,
-      "removed" : false,
-      "url" : "file:///Applications/Google%20Chrome.app/"
-    },
     {
       "bundleId" : "com.microsoft.VSCode",
       "bundleName" : "Visual Studio Code",
@@ -102,24 +69,12 @@
       "bundleName" : "Ghostty",
       "createdAt" : "2025-07-01T02:06:21Z",
       "doNotRestoreKeyboard" : false,
-      "doRestoreKeyboard" : false,
+      "doRestoreKeyboard" : true,
       "forceEnglishPunctuation" : false,
       "hideIndicator" : false,
       "inputSourceId" : "com.apple.keylayout.ABC",
       "removed" : false,
       "url" : "file:///Applications/Ghostty.app/"
-    },
-    {
-      "bundleId" : "com.jetbrains.pycharm",
-      "bundleName" : "PyCharm",
-      "createdAt" : "2025-07-02T05:25:29Z",
-      "doNotRestoreKeyboard" : false,
-      "doRestoreKeyboard" : false,
-      "forceEnglishPunctuation" : false,
-      "hideIndicator" : false,
-      "inputSourceId" : "com.apple.keylayout.ABC",
-      "removed" : false,
-      "url" : "file:///Applications/PyCharm.app/"
     }
   ],
   "browserRules" : [
@@ -132,19 +87,9 @@
       "sample" : "",
       "typeValue" : 0,
       "value" : "chatgpt.com"
-    },
-    {
-      "createdAt" : "2024-05-31T14:20:02Z",
-      "disabled" : false,
-      "hideIndicator" : true,
-      "inputSourceId" : "com.apple.keylayout.ABC",
-      "keyboardRestoreStrategyRaw" : "UseDefaultKeyboardInstead",
-      "sample" : "",
-      "typeValue" : 1,
-      "value" : "www.typescriptlang.org"
     }
   ],
-  "exportedAt" : "2026-09-14T04:06:42Z",
+  "exportedAt" : "2026-09-17T07:22:20Z",
   "hotKeyGroups" : [
 
   ],
@@ -170,7 +115,7 @@
   },
   "preferences" : {
     "appearanceMode" : "Dark",
-    "browserAddressDefaultKeyboardId" : "",
+    "browserAddressDefaultKeyboardId" : "com.apple.inputmethod.SCIM.ITABC::com.apple.inputmethod.SCIM.ITABC",
     "cJKVFixStrategy" : "previousInputSourceShortcut",
     "functionKeysToggleModifierCombo" : [
 
@@ -204,6 +149,7 @@
     "isActiveWhenLongpressLeftMouse" : true,
     "isActiveWhenSwitchApp" : true,
     "isActiveWhenSwitchInputSource" : true,
+    "isAlwaysDisplayIndicatorNearMouse" : false,
     "isAutoAppearanceMode" : true,
     "isCJKVFixEnabled" : false,
     "isEnableAlwaysOnIndicator" : false,
@@ -218,6 +164,7 @@
     "isEnableURLSwitchForFirefox" : false,
     "isEnableURLSwitchForFirefoxDeveloperEdition" : false,
     "isEnableURLSwitchForFirefoxNightly" : false,
+    "isEnableURLSwitchForHelium" : false,
     "isEnableURLSwitchForOpera" : false,
     "isEnableURLSwitchForSafari" : true,
     "isEnableURLSwitchForSafariTechnologyPreview" : false,
@@ -251,7 +198,7 @@
 
     },
     "systemWideDefaultKeyboardId" : "",
-    "tryToDisplayIndicatorNearCursor" : false
+    "tryToDisplayIndicatorNearCursor" : true
   },
   "schemaVersion" : 1
 }
