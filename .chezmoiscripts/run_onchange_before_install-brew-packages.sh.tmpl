@@ -27,55 +27,6 @@ if [[ ! -f "$brewfile" ]]; then
   exit 1
 fi
 
-# Brewfile installs these apps on new machines, while their own updaters own
-# later upgrades. This is the complete chezmoi-managed cask pin set.
-managed_cask_pins=(
-  chatgpt
-  ghostty
-  google-chrome
-  input-source-pro
-  itsycal
-  orbstack
-  raycast
-  surge
-  visual-studio-code
-)
-
-contains_cask() {
-  local needle="$1"
-  shift
-  local cask
-  for cask in "$@"; do
-    [[ "$cask" == "$needle" ]] && return 0
-  done
-  return 1
-}
-
-reconcile_cask_pins() {
-  local cask
-  local -a installed_casks current_cask_pins casks_to_pin casks_to_unpin
-
-  installed_casks=(${(f)"$(brew list --cask)"})
-  current_cask_pins=(${(f)"$(brew list --pinned --cask)"})
-
-  for cask in "${current_cask_pins[@]}"; do
-    contains_cask "$cask" "${managed_cask_pins[@]}" ||
-      casks_to_unpin+=("$cask")
-  done
-
-  for cask in "${managed_cask_pins[@]}"; do
-    if contains_cask "$cask" "${installed_casks[@]}" &&
-       ! contains_cask "$cask" "${current_cask_pins[@]}"; then
-      casks_to_pin+=("$cask")
-    fi
-  done
-
-  (( ${#casks_to_unpin} == 0 )) ||
-    brew unpin --cask "${casks_to_unpin[@]}"
-  (( ${#casks_to_pin} == 0 )) ||
-    brew pin --cask "${casks_to_pin[@]}"
-}
-
 # mas-cli requires en_US locale to search the App Store
 # https://github.com/mas-cli/mas/blob/ed676787f0a0a26e23a10548eb841bc15411fa52/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L23
 current_locale=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null || true)
@@ -94,7 +45,6 @@ if [[ -n "$current_locale" ]]; then
 fi
 
 echo "Installing brew packages..."
-reconcile_cask_pins
 # A transient brew bundle failure would abort the whole apply.
 attempt=1
 until brew bundle --file="$brewfile"; do
@@ -102,68 +52,3 @@ until brew bundle --file="$brewfile"; do
   echo "brew bundle failed; retrying (attempt $attempt/3)..."
   sleep 10
 done
-reconcile_cask_pins
-
-autoupdate_label="com.github.liby.brew-autoupdate"
-autoupdate_gui_domain="gui/$UID"
-autoupdate_service="$autoupdate_gui_domain/$autoupdate_label"
-autoupdate_plist="$HOME/Library/LaunchAgents/$autoupdate_label.plist"
-
-echo "Setting up brew autoupdate (10:00 daily and at load, with upgrade + cleanup)..."
-# A fresh macOS account has no LaunchAgents directory until something writes a job into it.
-mkdir -p "$HOME/Library/LaunchAgents"
-# launchd starts the job with a minimal environment, so it finds `brew` only through the
-# explicit PATH below. The background keys keep a daily upgrade off the foreground's I/O.
-cat > "$autoupdate_plist" <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>$autoupdate_label</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/bin/sh</string>
-        <string>-c</string>
-        <string>date; brew update &amp;&amp; brew upgrade --no-ask --formula &amp;&amp; brew upgrade --no-ask --cask &amp;&amp; brew cleanup</string>
-    </array>
-    <key>EnvironmentVariables</key>
-    <dict>
-        <key>PATH</key>
-        <string>$(brew --prefix)/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
-    </dict>
-    <key>ProcessType</key>
-    <string>Background</string>
-    <key>LowPriorityIO</key>
-    <true/>
-    <key>LowPriorityBackgroundIO</key>
-    <true/>
-    <key>StartCalendarInterval</key>
-    <dict>
-        <key>Hour</key>
-        <integer>10</integer>
-        <key>Minute</key>
-        <integer>0</integer>
-    </dict>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>StandardOutPath</key>
-    <string>$HOME/Library/Logs/$autoupdate_label.log</string>
-    <key>StandardErrorPath</key>
-    <string>$HOME/Library/Logs/$autoupdate_label.log</string>
-</dict>
-</plist>
-EOF
-
-# The job keeps running with the options it was loaded with, so replace it whenever this
-# run_onchange script changes.
-if launchctl print "$autoupdate_service" >/dev/null 2>&1; then
-  launchctl bootout "$autoupdate_service"
-fi
-launchctl bootstrap "$autoupdate_gui_domain" "$autoupdate_plist"
-
-# A gui domain in on-demand-only mode accepts the bootstrap without loading the job.
-launchctl print "$autoupdate_service" >/dev/null 2>&1 || {
-  print -u2 "Homebrew autoupdate was written to $autoupdate_plist but launchd did not load it"
-  exit 1
-}
