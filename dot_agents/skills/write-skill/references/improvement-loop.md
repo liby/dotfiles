@@ -9,10 +9,12 @@ For transcript-derived evidence, exclude duplicated forked or replayed material 
 Weight evidence by what it proves, not by raw volume:
 
 - Strong: a deterministic failure, an explicit user correction with the accepted outcome, or current runtime/source evidence that contradicts the instruction.
-- Supporting: the same failure across independent tasks, review feedback tied to a concrete artifact, or repeated defensive reminders traceable to an earlier failure.
+- Supporting: the same failure across independent tasks, review feedback tied to a concrete artifact, repeated defensive reminders traceable to an earlier failure, or a user question about what the agent's own output meant, which shows the output did not stand on its own.
 - Weak: an isolated preference without an accepted comparison, a defensive reminder with no recoverable failure, invocation counts, silence, or lack of complaint.
 
 One strong case can justify a narrow fix; many weak cases do not justify a rule. Preserve uncertainty instead of converting it into instruction text.
+
+Before mining artifacts for a preference, establish who wrote them. Output the user accepted without deciding about the feature under test shows toleration, not preference, and an artifact produced under the instruction being evaluated confirms nothing about it. Deliberate choice between versions differing in that one feature is what establishes a preference.
 
 ## Diagnose before changing text
 
@@ -26,7 +28,7 @@ Do not copy the failing instance into the skill; retain it as a regression case.
 
 ## Compare the smallest candidate
 
-Freeze baseline bytes and evidence cases before editing. Change one owning behavior at a time, remove obsolete or duplicated text in the same diff, and avoid unrelated style rewrites. Use the observed failures for diagnosis and regression; use fresh held-out cases for acceptance.
+Freeze baseline bytes and evidence cases before editing. Change one owning behavior at a time, remove obsolete or duplicated text in the same diff, and avoid unrelated style rewrites. Use the observed failures for diagnosis and regression; use fresh held-out cases for acceptance. Hold out the models too: an instruction validated only on the models it was written against encodes their reading of it. Check that a held-out case does not itself ask for the behavior being scored against it.
 
 When Process requires the evaluation protocol, compare the frozen baseline and candidate on the same runtime-visible inputs. For other changes, run the owning validator and the smallest direct reproducer. Present the evidence-to-change mapping and any unresolved trade-off so a human can judge the diff without rereading raw transcripts.
 
