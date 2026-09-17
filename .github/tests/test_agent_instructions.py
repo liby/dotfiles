@@ -91,6 +91,7 @@ CREDENTIAL_KEYS = {
     },
     "context7": {"CONTEXT7_API_KEY"},
     "pi": {"RC_GATEWAY_API_KEY"},
+    "typesafe": {"TYPESAFE_API_KEY"},
 }
 
 CREDENTIAL_CONSUMERS = {
@@ -115,6 +116,12 @@ CREDENTIAL_CONSUMERS = {
         "private_dot_pi/private_agent/private_models.json.tmpl": (
             "!envchain pi sh -c",
             "RC_GATEWAY_API_KEY",
+        ),
+    },
+    "typesafe": {
+        "dot_agents/skills/typesafe-ai/SKILL.md": (
+            "envchain typesafe <command>",
+            "TYPESAFE_API_KEY",
         ),
     },
 }

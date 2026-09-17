@@ -154,6 +154,9 @@ CONTEXT7_API_KEY = "replace-with-value"
 
 [pi]
 RC_GATEWAY_API_KEY = "replace-with-value"
+
+[typesafe]
+TYPESAFE_API_KEY = "replace-with-value"
 ```
 
-The [Claude launcher](../dot_zsh/functions/claude) injects the `claude-gateway` namespace only in gateway mode. The [Codex configuration](../.chezmoitemplates/codex/config.toml) and [Claude user configuration](../.chezmoitemplates/claude/claude.json) obtain Context7 request headers through `envchain context7`, because envchain injects credentials only into its child process. After a Context7 change, validate library resolution and returned documentation in a fresh client session. The [Pi model configuration](../private_dot_pi/private_agent/private_models.json.tmpl) reads `RC_GATEWAY_API_KEY` from the `pi` namespace. The [agent instruction contract test](tests/test_agent_instructions.py) parses the TOML block and verifies its exact keys, consumer paths, and local namespace wiring without reading the encrypted seed.
+The [Claude launcher](../dot_zsh/functions/claude) injects the `claude-gateway` namespace only in gateway mode. The [Codex configuration](../.chezmoitemplates/codex/config.toml) and [Claude user configuration](../.chezmoitemplates/claude/claude.json) obtain Context7 request headers through `envchain context7`, because envchain injects credentials only into its child process. After a Context7 change, validate library resolution and returned documentation in a fresh client session. The [Pi model configuration](../private_dot_pi/private_agent/private_models.json.tmpl) reads `RC_GATEWAY_API_KEY` from the `pi` namespace. The [TypeSafe skill](../dot_agents/skills/typesafe-ai/SKILL.md) uses `envchain typesafe <command>` only to launch user-approved local experiments or integration tests; application code remains portable and uses its own secret store. The [agent instruction contract test](tests/test_agent_instructions.py) parses the TOML block and verifies its exact keys, consumer paths, and local namespace wiring without reading the encrypted seed.
