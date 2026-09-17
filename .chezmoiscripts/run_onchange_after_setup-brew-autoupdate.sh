@@ -7,12 +7,31 @@ autoupdate_label="com.liby.brew-autoupdate"
 autoupdate_gui_domain="gui/$UID"
 autoupdate_service="$autoupdate_gui_domain/$autoupdate_label"
 autoupdate_plist="$HOME/Library/LaunchAgents/$autoupdate_label.plist"
+autoupdate_helper_dir="$HOME/Library/Application Support/$autoupdate_label"
+autoupdate_helper="$autoupdate_helper_dir/brew-autoupdate"
 
 echo "Setting up brew autoupdate (10:00 daily and at load, with upgrade + cleanup)..."
-# A fresh macOS account has no LaunchAgents directory until something writes a job into it.
-mkdir -p "$HOME/Library/LaunchAgents"
-# launchd starts the job with a minimal environment, so it finds `brew` only through the
-# explicit PATH below. The background keys keep a daily upgrade off the foreground's I/O.
+# A fresh macOS account may lack any of these; launchd creates a missing log file but not its
+# directory.
+mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Logs"
+
+# Login Items names a legacy job by the basename of the file launchd runs, so the commands live in
+# their own file, and the helper sets its own PATH because launchd gives it a minimal environment.
+# The steps are deliberately not chained, so a failure neither skips the rest nor goes unreported.
+cat > "$autoupdate_helper" <<'HELPER'
+#!/bin/sh
+export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+status=0
+date
+brew update || status=$?
+brew upgrade --no-ask || status=$?
+brew cleanup || status=$?
+exit "$status"
+HELPER
+chmod +x "$autoupdate_helper"
+
+# The background keys keep a daily upgrade off the foreground's I/O.
 cat > "$autoupdate_plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -22,15 +41,8 @@ cat > "$autoupdate_plist" <<EOF
     <string>$autoupdate_label</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/sh</string>
-        <string>-c</string>
-        <string>date; brew update &amp;&amp; brew upgrade --no-ask --formula &amp;&amp; brew upgrade --no-ask --cask &amp;&amp; brew cleanup</string>
+        <string>$autoupdate_helper</string>
     </array>
-    <key>EnvironmentVariables</key>
-    <dict>
-        <key>PATH</key>
-        <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
-    </dict>
     <key>ProcessType</key>
     <string>Background</string>
     <key>LowPriorityIO</key>
