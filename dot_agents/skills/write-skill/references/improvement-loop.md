@@ -28,7 +28,7 @@ Do not copy the failing instance into the skill; retain it as a regression case.
 
 ## Compare the smallest candidate
 
-Freeze baseline bytes and evidence cases before editing. Change one owning behavior at a time, remove obsolete or duplicated text in the same diff, and avoid unrelated style rewrites. Use the observed failures for diagnosis and regression; use fresh held-out cases for acceptance. Hold out the models too: an instruction validated only on the models it was written against encodes their reading of it. Check that a held-out case does not itself ask for the behavior being scored against it.
+Freeze baseline bytes and evidence cases before editing. Change one owning behavior at a time, remove obsolete or duplicated text in the same diff, and avoid unrelated style rewrites. Use the observed failures for diagnosis and regression; use fresh held-out cases for acceptance. Hold out the models too: an instruction validated only on the models it was written against encodes their reading of it. Check that a held-out case does not itself ask for the behavior being scored against it. When you edit a case to supply the variable under test, diff it against the case it replaces and against the runner's flags: an arm that also lost an instruction, or that gained tool access, measures both changes at once.
 
 When Process requires the evaluation protocol, compare the frozen baseline and candidate on the same runtime-visible inputs. For other changes, run the owning validator and the smallest direct reproducer. Present the evidence-to-change mapping and any unresolved trade-off so a human can judge the diff without rereading raw transcripts.
 
