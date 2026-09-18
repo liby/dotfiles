@@ -9,45 +9,45 @@ allowed-tools:
     - mcp__chrome-devtools__*
 metadata:
     github-path: skills/oracle
-    github-ref: refs/tags/v0.20.0
+    github-ref: refs/tags/v0.21.1
     github-repo: https://github.com/steipete/oracle
     github-tree-sha: c6ede997dad62e888ac9aeb7c83d4eba8abc596f
 name: oracle
 ---
 
-Use the installed `oracle` binary. Treat its answer as advisory and verify material claims against the code and primary sources.
+Use the installed `oracle` binary. Treat the answer as advisory and verify material claims against the code and primary sources.
 
-## Default: keep the browser's model and effort
+Before an explicit model, latest-model, or effort request, or an upgrade, option-rejection, or picker-routing recovery, load the Model and effort section of the [non-default modes contract](references/non-default-modes.md). Before a browser follow-up, a Deep Research run, or an explicitly billed API run, load its corresponding section. Do not silently replace such a request with browser defaults.
 
-For an ordinary consultation, open a dedicated tab in the signed-in browser and retain its model and effort:
-
-```bash
-oracle --engine browser --browser-attach-running \
-  --browser-model-strategy current --slug "<3-5 words>" \
-  -p "<task>" --file "<path-or-glob>"
-```
-
-Omit model and thinking-time flags unless requested. The explicit `current` flag skips model selection, implicit Pro effort, and inherited `browser.thinkingTime` configuration. It inherits the new tab's selection, which need not be the newest available model. A preview's `requested` alias is not evidence of the active model. Report a visible label as an observation, not verified model selection.
-
-Before an explicit model, latest-model, or effort request, load the Model and effort section of the [non-default modes contract](references/non-default-modes.md). Do not silently replace that request with browser defaults.
-
-For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Verify that the saved conversation retains that Project ID/path or visibly belongs to the requested Project; a generic `/c/<id>` URL alone does not prove membership.
-
-If attach-running fails, ask the user to enable or approve Chrome remote debugging, or use the manual path below. Never copy a personal browser profile or target an existing unrelated tab.
-
-## Authorization and context
+## Authorize and build the input
 
 An explicit browser consultation authorizes submitting its prompt and files to the requested ChatGPT target, including a same-task manual fallback. Ask again only if the recipient, material content, paid route, or another external effect changes. API mode requires separate, explicit billing consent. Ask the user to complete login, CAPTCHA, SSO, workspace selection, or another human check.
 
 Never attach secrets, credential files, private keys, shell history, browser storage, real environment files, or a broad home-directory tree. Make a fresh prompt self-contained: exact question, relevant facts and attempts, constraints, desired output, and the smallest files containing the evidence. Use a follow-up when continuity matters.
 
-## Submit and complete
-
 For non-secret inputs whose expansion or contents need checking, add `--dry-run json` to the intended command and inspect the full `composerText` and attachments. This output contains the selected file contents; a browser summary reports only a count for inline files, and `--files-report` does not list them. A dry run proves parsing and bundle construction, not browser selection or completion. Confirm every required file is selected and every included file is intentional; bracketed paths can be glob patterns even when shell-quoted. If expansion selects the wrong set, stage byte-identical non-secret inputs under unambiguous temporary names and preview again. Correct the inputs before submitting, rather than requesting an abstract substitute. Narrow oversized bundles; use explicit dotfile paths and `!` exclusions.
 
-Keep the process or session ID and follow the same run through finite waits. After detachment, compaction, a timeout, stale status, or ambiguous submission, inspect `oracle status` and `oracle session <id>` before doing anything that could resend. A `prompt-commit-timeout` may already have submitted. Use `oracle session <id> --live` to follow the bound page and `--harvest` to recover its current answer; use `--render` for a saved completed answer.
+## Run
 
-Accept completion only when the answer is non-empty and complete, belongs to this request's actual submitted turn, includes the required material, and satisfies the requested Project and any explicit model/effort requirements. Normal automated completion also requires terminal `completed` status. After recovery, verify the actual user turn and its corresponding answer: matched conversation identity alone does not bind the turn. If only the visible page establishes completion, report a manual UI observation with the saved conversation URL instead of claiming the automated controller completed.
+For an ordinary consultation, open a dedicated tab in the signed-in browser and retain its model and effort:
+
+```bash
+oracle --engine browser --browser-attach-running \
+  --browser-model-strategy current --browser-capture-provider-native \
+  --slug "<3-5 words>" -p "<task>" --file "<path-or-glob>"
+```
+
+`current` keeps the tab's model and effort. Omit model and thinking-time flags unless requested; asking to leave them unchanged is that default, not a selection request. With both omitted, `current` resolves the active model without opening the model picker or clicking a selection. It inherits the tab's selection, which need not be the newest model or the intended tier, and it neither warns about nor repairs a stale Instant or older selection. Report the inherited label as an observation, and when it is stale against the user's intent, say so and offer the explicit latest + Pro path instead of presenting the run as made at the intended tier.
+
+`--browser-capture-provider-native` saves ChatGPT's verbatim conversation record and independent text digests as private session artifacts, including prior turns, without changing the returned answer. It supplies the fidelity evidence checked under Accept: the session metadata's `browser.providerNativeCapture.answerFidelity`, also printed in the run log as `[capture] ... answer fidelity: <value>`.
+
+For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Verify that the saved conversation retains that Project ID/path or visibly belongs to the requested Project; a generic `/c/<id>` URL alone does not prove membership.
+
+If attach-running fails, ask the user to enable or approve Chrome remote debugging, or use the manual fallback below. Never copy a personal browser profile or target an existing unrelated tab.
+
+## Follow the run
+
+Keep the process or session ID and follow the same run through finite waits. After detachment, compaction, a timeout, stale status, or ambiguous submission, inspect `oracle status` and `oracle session <id>` before doing anything that could resend. A `prompt-commit-timeout` may already have submitted. Use `oracle session <id> --live` to follow the bound page and `--harvest` to recover its current answer; use `--render` for a saved completed answer.
 
 - If the exact page remains unchanged at `Finalizing answer` across a finite observation, or appears finished after controller loss while harvest is unexpectedly empty, reload that same conversation at most once and recheck its user turn and answer. Account for any reload already performed by Oracle. Changing Thinking text or other progress means keep waiting.
 - If harvest reports an identity mismatch, stop using that capture and resolve the exact saved conversation. Non-empty `--live`/`--harvest` output or stale `running` metadata alone does not prove completion or failure.
@@ -55,8 +55,17 @@ Accept completion only when the answer is non-empty and complete, belongs to thi
 
 Use `--force` only after establishing that the worker, controller, and bound target are dead and the original conversation or answer cannot be recovered. While the requested consultation is pending, keep following it; do not substitute your own analysis for its result.
 
-If automation cannot submit, run the original prompt and text-file arguments with `oracle --render-markdown`, inspect the rendered text, and submit it in the visible signed-in browser. Attach each original non-text file or a byte-preserving archive and verify readiness before sending. Preserve browser defaults unless selection was requested; verify any requested model/effort and Project, then require a completed answer to that turn and saved URL. A preceding failed session supplies no selection or completion evidence for this manual answer.
+## Accept and report
 
-## Non-default modes
+Accept the result only when all of these hold:
 
-Before a browser follow-up, Deep Research run, explicitly billed API run, or upgrade/option/picker recovery, load the corresponding section of the [non-default modes contract](references/non-default-modes.md).
+- a normal automated run has terminal `completed` status;
+- the answer is non-empty and complete, includes the required material, and satisfies the requested Project and any explicit model/effort requirements;
+- the answer belongs to this request's actual submitted turn; matched conversation identity alone does not bind it, including for a saved or recovered session;
+- when capture is enabled, `browser.providerNativeCapture.answerFidelity` is `matched` on the active branch's assistant message. `divergent` means the returned text differs from the provider record and is an unresolved answer; `unknown` means no message-bound evidence was available, including a Deep Research report without an assistant message ID.
+
+Report the inherited model/effort label as an observation, never as verified selection. Do not claim provider-native fidelity when it is `unknown` or missing. If only the visible page establishes completion, report a manual UI observation with the saved conversation URL instead of claiming the automated controller completed.
+
+## Manual fallback
+
+If automation cannot submit, run the original prompt and text-file arguments with `oracle --render-markdown`, inspect the rendered text, and submit it in the visible signed-in browser. Attach each original non-text file or a byte-preserving archive and verify readiness before sending. Preserve browser defaults unless selection was requested; verify any requested model/effort and Project, then require a completed answer to that turn and a saved URL. A preceding failed session supplies no selection or completion evidence for this manual answer. Apply the acceptance checklist except the automated-completion and provider-native fidelity items, which do not apply to a manual turn.

@@ -68,7 +68,8 @@ CLI_SMOKE_COMMANDS = [
     "oracle current browser dry run",
     [
       "oracle", "--engine", "browser", "--browser-attach-running",
-      "--browser-model-strategy", "current", "--dry-run", "summary",
+      "--browser-model-strategy", "current", "--browser-capture-provider-native",
+      "--dry-run", "summary",
       "--prompt", "Validate the Oracle skill CLI contract.",
       "--file", root.join("oracle/SKILL.md").to_s
     ],
