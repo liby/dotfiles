@@ -69,7 +69,7 @@ When asked to draft, create, or update a PR title or body:
 1. For an existing PR, resolve the base, head, head OID, and URL with `gh pr view <number-or-url> --json baseRefName,headRefName,headRefOid,url`.
 2. For a new PR, resolve the base from the user's request, the branch's `gh-merge-base` configuration, or the repository default branch. Do not hardcode `main` or `master`.
 3. For an existing PR, inspect its complete patch with `gh pr diff <number-or-url>` and use the resolved PR metadata for commits and files. For a new PR, inspect `git log <base>..HEAD`, the stat, and the complete `git diff <base>...HEAD`. Read the repository PR template when one exists.
-4. Draft from the actual branch changes and follow the user's requested structure. Do not invent release, rollback, impact, or testing claims.
+4. Write the title and body through `draft`, which owns their wording and reads this repository's recent merged PRs to match them. Supply it the actual branch changes, the PR template when one exists, and any structure the user asked for.
 5. Run `gh pr create` or `gh pr edit` only when the user explicitly asked for that write this turn. Otherwise keep the draft in chat.
 6. Return the final title and body. After a write, also return the PR URL.
 

@@ -73,7 +73,7 @@ When asked to draft or update an MR title and description:
    git diff <base>...HEAD --stat
    ```
 
-4. Draft a title and description from actual branch changes. Use the user's requested structure. Do not invent release, rollback, or testing claims.
+4. Write the title and description through `draft`, which owns their wording and reads this repository's recent merged MRs to match them. Supply it the actual branch changes and any structure the user asked for.
 5. If the user explicitly asked to update the MR, choose separate heredoc delimiters containing only letters, digits, and underscores which do not occur as complete lines in the generated title and description. Verify both comparisons before composing the command; replace the sample delimiters below for every payload, then run:
 
    ```bash

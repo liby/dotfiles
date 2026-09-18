@@ -3,9 +3,11 @@ name: draft
 description: Draft or revise text addressed to another person - MR/PR titles and descriptions, code review comments, GitHub issues, emails and support tickets, Slack announcements, replies and questions. Use when turning notes, findings, a diff, or an existing draft into text the user can send as is, in any language, and when asked to make wording sound less machine-written or more natural. This skill owns how the text reads and what it may claim; the platform tooling still owns gathering facts and posting. Not for explaining things to the user in chat, code comments, commit messages, or agent instructions.
 allowed-tools:
   - Read
-  - Bash(git:*)
-  - Bash(glab:*)
-  - Bash(gh:*)
+  - Bash(git log:*)
+  - Bash(glab mr list:*)
+  - Bash(glab mr view:*)
+  - Bash(gh pr list:*)
+  - Bash(gh pr view:*)
 ---
 
 Produce text the recipient understands and acts on, carrying the source material's facts and uncertainty unchanged, that the user can send with few or no edits.
@@ -24,7 +26,7 @@ Drafting from material, polishing an existing draft, and translating allow diffe
 
 What the user has told you, and what the destination requires, come first and are not up for rederivation. Existing artifacts settle what those leave open.
 
-Within that, this is the first action, not a check afterwards, and it settles more than any rule here can: measured across four models, each invented its own title format and imposed two to five headings when it had no history to read; with the repository's recent merge requests in front of them, all eight runs produced that repository's title format and all but one dropped the headings, including the four runs that were told nothing about matching anything.
+Within that, this is the first action, not a check afterwards, and what you find there settles more than any rule here can.
 
 - MR or PR title and description: recent merged ones in this repository. `git log --oneline -20` for titles, then read two or three bodies through `glab mr list --state=merged` or `gh pr list --state=merged`.
 - Review comment: earlier comments on this MR, and on recent ones in the same repository.
@@ -38,8 +40,6 @@ Do not take facts about your own change from it, and do not copy a claim, a numb
 What you match is what this destination currently looks like, for this draft. It is not evidence of what the user prefers, and a pattern does not become a standing rule by recurring - a repository that agents have been writing into returns their defaults, not the team's. When the existing artifacts conflict with each other or with what the user has said, the user wins and you say which you followed.
 
 Leave alone whatever already matches. A sentence is not defective for being formal, long, passive, or built on a word from somebody's list. An introduction followed by a real list, a supported summary after an explanation, and a condition attached to its main clause are all correct as they stand.
-
-Say which existing artifact you followed when it decided something the user might question.
 
 ## Keep the material's meaning
 
@@ -73,7 +73,7 @@ Treat headings, lists, and tables as structure the content either has or does no
 
 Write sentences rather than labelled fields. `**Account Details:** ...`, `**时间：**10 月 9 日`, and `What we tried:` turn a message into a filled-in form, and the labels carry none of the meaning. A form the recipient actually issued is the exception - fill that one out as written.
 
-Open where the reader needs to start, usually who is affected and what they have to do. End where a person would stop - what to do next, or where to take a problem - rather than at the last fact on the list.
+Open where the reader needs to start, usually who is affected and what they have to do. End where a person would stop - what to do next when there is such a step, or where to take a problem - rather than at the last fact on the list.
 
 ## When there is nothing to match
 
@@ -81,7 +81,7 @@ A new repository, an empty channel, or a kind of artifact the user has not writt
 
 Do not fill the gap with a standard layout for the artifact type. `背景 / 改动 / 测试`, a canonical bug-report skeleton, and a cover-letter template are the same move, and each produces exactly the imposed structure this skill tells you to avoid. Write the content as prose and add structure only where the content has parts.
 
-If you could not reach what you were told to read, say so in one line after the draft, never before it. The draft has to stand on its own as something the user can paste.
+The draft has to stand on its own as something the user can paste.
 
 Supply the rest yourself.
 
@@ -116,6 +116,6 @@ Write links as Markdown with readable text wherever Markdown renders. Never put 
 
 ## Deliver
 
-Return text that can be pasted where it is going, with no preamble and no explanation of your choices after it. When the user asked for something else as well - two versions, a comparison, your reasoning - give them that too.
+Return text that can be pasted where it is going, with no preamble. Anything you owe the user about the draft - which existing artifact decided something they might question, what you were told to read and could not reach - goes in one line after it, never before, and never as an explanation of choices they did not ask about. When the user asked for something else as well - two versions, a comparison, your reasoning - give them that too.
 
-Posting, sending, or updating the artifact is a separate action that needs the user to ask for it this turn. Drafting never implies sending.
+Drafting never implies sending. Posting, sending, or updating the artifact is a separate action under its own authorization.

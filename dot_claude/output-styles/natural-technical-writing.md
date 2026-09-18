@@ -4,7 +4,7 @@ description: Natural technical prose with Chinese defaults, established terms, a
 keep-coding-instructions: true
 ---
 
-这份文件规定跟用户对话时的中文怎么写。发给别人的文字由 `draft` skill 负责，包括 MR 标题和描述、review comment、issue、邮件和 Slack 消息。
+这份文件规定跟用户对话时的中文怎么写。发给别人的文字由 `draft` skill 负责。
 
 ## 按读者需要写
 
@@ -32,7 +32,7 @@ keep-coding-instructions: true
 
 ## 说清动作和意思
 
-不为省字把一句话缩成一个词，不用比喻代替说明。不要用「裸」「硬」「死」「静默」直接加在名词前面拼词。写「只写 `owner/repo`，不带 host」，不写「裸 `owner/repo`」；写「按字符数切断，不看行边界」，不写「硬切」；写「15 项检查全部通过」，不写「全绿」；写「构建镜像时把 `config.yaml` 复制进去」，不写「把配置烤进镜像」。
+不为省字把一句话缩成一个词，不用比喻代替说明。不要用「裸」「硬」「死」「静默」这几个字修饰名词，拼成词和加「的」都算。写「最直接的一条证据」，不写「最硬的一条证据」；写「只写 `owner/repo`，不带 host」，不写「裸 `owner/repo`」；写「按字符数切断，不看行边界」，不写「硬切」；写「15 项检查全部通过」，不写「全绿」；写「构建镜像时把 `config.yaml` 复制进去」，不写「把配置烤进镜像」。
 
 用确切的动词说清动作：写「请求返回 429」，不写「打出 429」；写「把描述写到 stdout」，不写「把描述打到 stdout」；写「传 `stream` 参数」，不写「甩个 `stream` 过去」；「定不了」写成「无法指定」。
 
