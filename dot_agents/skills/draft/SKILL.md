@@ -28,12 +28,17 @@ What the user has told you, and what the destination requires, come first and ar
 
 Within that, this is the first action, not a check afterwards, and what you find there settles more than any rule here can.
 
+Two reads, both before you write. Neighbouring artifacts of the same kind show you the form:
+
 - MR or PR title and description: recent merged ones in this repository. `git log --oneline -20` for titles, then read two or three bodies through `glab mr list --state=merged` or `gh pr list --state=merged`.
 - Review comment: earlier comments on this MR, and on recent ones in the same repository.
 - Slack or chat: the messages above it in that channel or thread.
 - Email: the thread it replies to.
+- Issue or issue comment: the repository's issue template when it has one, otherwise several recent issues there; before a follow-up, the issue thread itself.
 
-Take the language the body is written in, whether titles carry a ticket ID and where it sits, whether descriptions use headings at all, how much background they carry, how long they run, which English terms the team keeps in English, and how the people there open and close a message. Match those for this draft.
+The artifact this text attaches to shows you what the reader already knows. Read that one in full: the MR or PR description before a comment on that MR, the issue body before a reply, the thread above a message, your own side's last email. Whatever it already settles, you do not raise again.
+
+From the neighbours, take the language the body is written in, whether titles carry a ticket ID and where it sits, whether descriptions use headings at all, how much background they carry, how long they run, which English terms the team keeps in English, and how the people there open and close a message. Match those for this draft.
 
 Do not take facts about your own change from it, and do not copy a claim, a number, or a verification because a neighbouring artifact had one.
 
@@ -57,11 +62,17 @@ When the material will not support a more specific sentence, the permitted outco
 
 ## Who is reading it
 
+Start from what the user wants this message to achieve and what would make this recipient act on it, not from the wording of the request. The notes are the user's account, written in a hurry: they can leave out what the recipient needs and assert things the user has not checked. Supply what the goal implies from what you can read. Ask one question before drafting only when a gap is still open after reading and it would change a fact, a commitment, or what you deliver; a message you can complete as asked is completed, including a short factual one. When something in the notes is contradicted by what you read, do not carry it over as fact: ask, or write it as the user's understanding and say so in the line after the draft.
+
 Work out what the recipient can already see - the diff, the thread above, the ticket, the earlier message - and write what is not in it. Anything only you saw has to be stated rather than assumed, as far as they need it and it is appropriate to send them. Internal detail that is merely available stays out. In a PR or MR description, a release note, or a handoff, that rules out intermediate attempts, discarded options, unchanged implementation details, the internal tool that surfaced the issue, who reported it, unaffected services, and states that never shipped, unless one of them explains the final decision. Keep the links a reader would open: the Sentry issue, the ticket, the upstream commit.
+
+When the destination is public - an open-source issue or PR, a vendor's tracker, a status page - hostnames, local paths, internal URLs, email addresses, and raw debug output come out unless the reader needs that exact string to act.
 
 Drop the vocabulary to the level of the person reading. A vendor's support agent does not know your stack; someone outside engineering needs what they will see and what to do, not the service name.
 
 Pick what leads. People open with the one thing that matters most and treat the rest briefly; covering every input item at equal weight is what turns a message into a list.
+
+Every sentence gives this reader something to know or to do. What was not tested stays in, stated as what to watch; framed as a disclaimer, it protects the writer and tells the reader nothing. A reason clause that restates the obvious, a note explaining your own process or what you could not do, a section such as 风险 or 审核重点 that nobody asked for and the content does not fill, and a detail with no consequence for the reader all come out.
 
 Say what they should do or decide, when the message has such a point. Status notes, corrections, acknowledgements, and heads-ups do not, and should not be bent into a request.
 
@@ -75,6 +86,10 @@ Write sentences rather than labelled fields. `**Account Details:** ...`, `**时�
 
 Open where the reader needs to start, usually who is affected and what they have to do. End where a person would stop - what to do next when there is such a step, or where to take a problem - rather than at the last fact on the list.
 
+Do not coin a term. A compressed compound such as `留痕`, `查库`, or `一直打下去` replaces a sentence the reader has to unpack, and a word that translates an English term literally is not evidence that anyone says it. Spend the clause instead: who did what, under which condition, with what result.
+
+Concise is not clipped. Judge the register against the venue's current messages, not against a word list: keep the connectives and function words those messages keep, and the lead-in and close they use. Where they say 仍然, 不需要, 如果遇到, 这个, writing 仍为, 无需, 如遇, 该 reads as half-classical; where they open with a line before the topic and end with where to take a problem, a message that opens straight into the topic or stops on its last fact reads as curt, not efficient. Address people the way the sender does in that venue.
+
 ## When there is nothing to match
 
 A new repository, an empty channel, or a kind of artifact the user has not written before leaves nothing to derive from. A repository whose only history is machine-written is the same case: derive from that and you derive a model's defaults.
@@ -83,11 +98,7 @@ Do not fill the gap with a standard layout for the artifact type. `背景 / 改�
 
 The draft has to stand on its own as something the user can paste.
 
-Supply the rest yourself.
-
-Words the reader already uses. With nothing to take terms from, do not coin one. A compressed compound such as `留痕`, `查库`, or `一直打下去` replaces a sentence the reader has to unpack, and a word that translates an English term literally is not evidence that anyone says it. Spend the clause instead: who did what, under which condition, with what result.
-
-After that, the user's own standing instructions, then the destination's convention.
+Supply the rest yourself, in this order: words the reader already uses, then the user's own standing instructions, then the destination's convention.
 
 ## Things no author writes
 
@@ -110,7 +121,7 @@ A DM or a thread reply stays a message: no subject line, no headings. An email c
 
 Text the user pastes into the Slack client uses what that client renders: `*bold*` with single asterisks, `_italic_`, `` `code` ``, plain URLs. `**bold**` shows up as literal asterisks. `<https://url|text>` is API syntax and renders as raw text when a person pastes it, so use it only when a program will post the message. Headings and tables are not available there at all.
 
-Point at code with a link the reader can open. `xxx.ts:35` and `L35` are not clickable; when you cannot build a real link, name the file or function in backticks and say what to look for. An error message or quotation that already contains `foo.ts:35` is reproduced as it is.
+Point at code with a link the reader can open, and put the link on the words that name the thing: `only the [plan job](https://...) reads it`, not `only the plan job reads it ([data-platform.yml:209](https://...))`. A path in a trailing parenthesis tells the reader nothing until they click it, and the sentence still has to carry the meaning without it. `xxx.ts:35` and `L35` are not clickable; when you cannot build a real link, name the file or function in backticks and say what to look for. An error message or quotation that already contains `foo.ts:35` is reproduced as it is.
 
 Write links as Markdown with readable text wherever Markdown renders. Never put a bare URL next to its own link.
 
