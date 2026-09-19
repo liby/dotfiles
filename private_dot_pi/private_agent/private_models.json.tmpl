@@ -3,6 +3,9 @@
     "rc-gateway": {
       "baseUrl": "{{ .private.rcGatewayBaseUrl }}",
       "api": "openai-completions",
+      "headers": {
+        "User-Agent": "codex_cli_rs/0.121.0"
+      },
       "apiKey": "!envchain pi sh -c 'printf %s \"$RC_GATEWAY_API_KEY\"'",
       "models": [
         {
@@ -54,6 +57,7 @@
         },
         {
           "id": "openai/gpt-5.6-luna",
+          "api": "openai-responses",
           "name": "GPT-5.6 Luna",
           "reasoning": true,
           "thinkingLevelMap": {
@@ -71,6 +75,7 @@
         },
         {
           "id": "openai/gpt-5.6-sol",
+          "api": "openai-responses",
           "name": "GPT-5.6 Sol",
           "reasoning": true,
           "thinkingLevelMap": {
@@ -88,6 +93,7 @@
         },
         {
           "id": "openai/gpt-6-astra",
+          "api": "openai-responses",
           "name": "GPT-6 Astra",
           "reasoning": true,
           "thinkingLevelMap": {
