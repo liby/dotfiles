@@ -62,9 +62,11 @@ glab api projects/:fullpath/pipelines/<pipeline_id>/jobs | jq -r '
 
 ## Merge Requests
 
+At the first inspection of an existing MR, record its `web_url` and `sha` with the evidence. A review or inspection from another workflow can serve as a later approval or merge baseline only when it carries that exact URL and SHA.
+
 When asked to draft or update an MR title and description:
 
-1. Resolve the MR and target branch from `glab mr view <id> -F json` or the user's URL.
+1. Resolve the MR URL, head SHA, and target branch from `glab mr view <id> -F json` or the user's URL.
 2. If there is no MR yet, resolve the base from the target branch, repo default branch, or user-provided base. Do not hardcode `master`.
 3. Analyze all branch changes against the base:
 
@@ -93,7 +95,8 @@ GitLab writes include creating or updating issues/MRs, comments, approvals, labe
 
 For `mr approve` or `mr merge`:
 
-1. Immediately before the write, refresh the MR and resolve its current head SHA.
-2. If the action follows a review or earlier inspection, stop when that SHA differs from the reviewed SHA.
-3. Pass the refreshed SHA with `--sha`. For merge, add `--auto-merge=false` unless the user explicitly requested auto-merge.
-4. Refetch the MR after the command and verify the same head SHA and resulting approval or merge state.
+1. If the action relies on a review or earlier inspection, require its recorded MR URL and `sha`; stop if either is absent.
+2. Immediately before the write, refresh the MR and resolve its current `web_url` and `sha`.
+3. Stop when the refreshed URL or SHA differs from the recorded review/inspection baseline.
+4. Pass the refreshed, successfully compared SHA with `--sha`. For merge, add `--auto-merge=false` unless the user explicitly requested auto-merge.
+5. Refetch the MR after the command and verify the same head SHA and resulting approval or merge state.
