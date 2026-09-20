@@ -1,4 +1,3 @@
-export EDITOR="code --wait"
 export PNPM_HOME="$HOME/Code/.pnpm"
 export PROTO_HOME="$HOME/.proto"
 export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
