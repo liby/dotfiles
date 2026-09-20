@@ -92,7 +92,12 @@ enabled = true
 "{{ .chezmoi.homeDir }}/.gnupg/S.keyboxd" = "allow"
 
 [shell_environment_policy]
-inherit = "core"
+# `core` omits HERDR_*, which the herdr skill's boundary check needs, so it
+# silently breaks Codex-driven herdr control. Inherit the full environment
+# instead and keep the KEY/SECRET/TOKEN name filter on: this is safe only while
+# the ambient shell carries no secret values (credentials belong in envchain).
+inherit = "all"
+ignore_default_excludes = false
 
 [shell_environment_policy.set]
 # Keep Snowflake's localhost SAML listener alive so the snow skill can open an

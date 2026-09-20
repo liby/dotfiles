@@ -20,6 +20,8 @@ mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Lo
 # The steps are deliberately not chained, so a failure neither skips the rest nor goes unreported.
 # pi has no Homebrew channel and never updates itself, so the helper also runs `pi update --self`;
 # that step needs the proto environment on PATH to find Node and install into the proto prefix.
+# Codex is a binary-only cask, so unlike an app bundle it gets no upgrade-time approval and each
+# executable it ships prompts Gatekeeper after Homebrew's reinstall; no other cask this job upgrades needs it.
 cat > "$autoupdate_helper" <<'HELPER'
 #!/bin/sh
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
@@ -31,6 +33,7 @@ status=0
 date
 brew update || status=$?
 brew upgrade --no-ask || status=$?
+xattr -dr com.apple.quarantine /opt/homebrew/Caskroom/codex || status=$?
 "$NPM_CONFIG_PREFIX/bin/pi" update --self || status=$?
 brew cleanup || status=$?
 exit "$status"
