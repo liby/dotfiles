@@ -3,6 +3,9 @@
     "rc-gateway": {
       "baseUrl": "{{ .private.rcGatewayBaseUrl }}",
       "api": "openai-completions",
+      "compat": {
+        "sendSessionAffinityHeaders": true
+      },
       "headers": {
         "User-Agent": "codex_cli_rs/0.121.0"
       },
