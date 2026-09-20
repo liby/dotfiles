@@ -1,6 +1,6 @@
 ---
 name: draft
-description: Draft or revise text addressed to another person - MR/PR titles and descriptions, code review comments, GitHub issues, emails and support tickets, Slack announcements, replies and questions. Use when turning notes, findings, a diff, or an existing draft into text the user can send as is, in any language, and when asked to make wording sound less machine-written or more natural. This skill owns how the text reads and what it may claim; the platform tooling still owns gathering facts and posting. Not for explaining things to the user in chat, code comments, commit messages, or agent instructions.
+description: "Draft or revise text addressed to another person: MR/PR titles and descriptions, review comments, issues, emails, support tickets, Slack messages, replies and questions. Use when turning notes, findings, a diff, or an existing draft into sendable text, or improving its wording in any language. Not for the assistant's own chat, code comments, commit messages, or agent instructions."
 allowed-tools:
   - Read
   - Bash(git log:*)
@@ -10,123 +10,66 @@ allowed-tools:
   - Bash(gh pr view:*)
 ---
 
-Produce text the recipient understands and acts on, carrying the source material's facts and uncertainty unchanged, that the user can send with few or no edits.
+Produce the message the user needs this recipient to understand. Establish what may change and what the message must accomplish before choosing its wording. This skill governs the artifact even when it is displayed in chat; it does not govern the surrounding conversation.
 
-Not "text that reads as human-written". Aiming at that produces word substitution and invented specifics.
+## Establish the writing task
 
-## Which job this is
+Identify the recipient, the situation the message responds to, the result the user wants, and how the text will reach the recipient. Use the request and available exchange as evidence. Do not turn the user's narration into a list of equally important points or invent a motive to make it coherent.
 
-Drafting from material, polishing an existing draft, and translating allow different things. Default to drafting.
+Select the permitted transformation from the request. When its extent is unspecified, preserve the supplied draft's substantive content and structure while resolving the wording request.
 
-- **Drafting**, including turning one artifact into another: choose what to include, add the connective tissue, decide the structure. You may not add facts, positions, or commitments the material does not support.
-- **Polishing** wording the user already has: change how it reads. You may not summarize it, drop its qualifiers, or change how strongly it claims things. Leave everything you were not asked about alone.
-- **Translating or restating in full**: reorder and rephrase for the target language. Writing the two languages separately is not licence to drop content from either.
+- Drafting from notes, including adapting one artifact into another, permits selection and organization. It does not permit new facts, positions or commitments.
+- Polishing permits changes to wording within the requested scope. Preserve headings, examples, detail, claim strength and qualifications unless the user authorizes changing them.
+- Translation or complete restatement permits reordering for the target language while retaining all substantive content. Separate language versions carry the same facts and conditions.
 
-## Read what already exists before you write
+These limits apply throughout: a neighbouring artifact's format does not authorize restructuring a wording-only edit, and a preference for brevity does not authorize summarizing a full restatement.
 
-What the user has told you, and what the destination requires, come first and are not up for rederivation. Existing artifacts settle what those leave open.
+## Resolve the recipient's context
 
-Within that, this is the first action, not a check afterwards, and what you find there settles more than any rule here can.
+Follow explicit user instructions and destination requirements first. Read the material the message attaches to: the description and discussion before an MR comment, the issue before its reply, or the preceding exchange before an email or chat response. Establish what the recipient already knows, what only the sender knows, and what can appropriately be disclosed. For public drafts, omit internal hostnames, local paths, internal URLs, personal contact details and raw debug output unless the recipient needs those exact details to act.
 
-Two reads, both before you write. Neighbouring artifacts of the same kind show you the form:
+Use neighbouring artifacts only for choices still open. For an MR/PR, inspect authorship alongside titles and choose bodies with a comparable kind of change. For an issue, read its template and comparable reports; for messages, use the actual exchange. A bot's title convention, this session's own output, and a recent but structurally different change do not establish the convention for this task. Unknown authorship limits what the sample proves; it does not justify inventing an author or discarding an explicit template.
 
-- MR or PR title and description: recent merged ones in this repository. `git log --oneline -20` for titles, then read two or three bodies through `glab mr list --state=merged` or `gh pr list --state=merged`.
-- Review comment: earlier comments on this MR, and on recent ones in the same repository.
-- Slack or chat: the messages above it in that channel or thread.
-- Email: the thread it replies to.
-- Issue or issue comment: the repository's issue template when it has one, otherwise several recent issues there; before a follow-up, the issue thread itself.
+Stop sampling when the open choices are settled. Record a genuine conflict or inaccessible required source for the user; do not manufacture a house style when evidence is missing. With no applicable convention, organize the content according to the recipient's needs. A template the recipient requires remains binding.
 
-The artifact this text attaches to shows you what the reader already knows. Read that one in full: the MR or PR description before a comment on that MR, the issue body before a reply, the thread above a message, your own side's last email. Whatever it already settles, you do not raise again.
+Resolve language before formatting. Existing-file language and explicit instructions prevail. Otherwise PR/MR titles default to English; GitHub bodies and comments to English, GitLab's to Chinese. Match the relationship and the exchange's register, including how the sender addresses the recipient.
 
-From the neighbours, take the language the body is written in, whether titles carry a ticket ID and where it sits, whether descriptions use headings at all, how much background they carry, how long they run, which English terms the team keeps in English, and how the people there open and close a message. Match those for this draft.
+## Settle the facts before composing
 
-Do not take facts about your own change from it, and do not copy a claim, a number, or a verification because a neighbouring artifact had one.
+Separate established facts, the user's stated understanding, requested hypotheses, and unresolved information. A report from another model is a lead until checked against its primary evidence. Do not convert a documented mechanism into a runtime observation, a proposed action into a completed one, or an unknown into a fact.
 
-What you match is what this destination currently looks like, for this draft. It is not evidence of what the user prefers, and a pattern does not become a standing rule by recurring - a repository that agents have been writing into returns their defaults, not the team's. When the existing artifacts conflict with each other or with what the user has said, the user wins and you say which you followed.
+When an unresolved fact changes the message's purpose, a material claim or a sender commitment, perform the available evidence work within the task's authority before drafting. If the answer requires the user or unavailable access, ask the focused question that resolves it. A plausible sentence does not resolve a missing fact. Do not replace an unfinished authorized check with a disclaimer or an assignment to the recipient.
 
-Leave alone whatever already matches. A sentence is not defective for being formal, long, passive, or built on a word from somebody's list. An introduction followed by a real list, a supported summary after an explanation, and a condition attached to its main clause are all correct as they stand.
+Optional detail may be omitted when the selected transformation permits it and the omission does not change the reader's decision. A genuine limitation belongs in the artifact when the recipient needs it to judge or act; it belongs in operational reporting when only the user needs to know it. Explicitly requested hypotheses remain qualified hypotheses. Never conceal a material uncertainty to make a draft appear complete.
 
-## Keep the material's meaning
+Preserve retained identifiers, error text, numbers, conditions, exceptions, negations and causal or temporal relations exactly. Check the previous state before claiming something was added, removed or changed. Do not invent a test result, deployment step, recipient action, follow-up plan, signature or sender identity.
 
-This is the one thing reading the surrounding text does not fix, and the failure with the highest cost.
+## Compose around the message's purpose
 
-Do not add a number, a cause, a mechanism, a test result, a deployment step, a follow-up plan, a commitment, or a signature that is not in the material. A plan for a management page, a list of what was verified, and a request that reviewers check a path are all invented when the notes contain none of them.
+For a Chinese artifact, read [references/chinese.md](references/chinese.md) before composing or polishing unless that exact file is already present in the current context. These rules apply to the artifact, not its surrounding conversation. For English, use natural English syntax and the exchange's register.
 
-Before writing `Add`, `Remove`, `Update`, or `previously X`, confirm in the history that the prior state existed.
+Lead with the point that lets this recipient understand why the message matters. Develop the necessary explanation in the order they need it, giving each point the weight its consequence deserves. Supply background they cannot otherwise see without repeating what the attached diff, ticket or exchange already establishes.
 
-Do not drop what changes the reader's decision: identifiers, conditions, exceptions, negations, and stated uncertainty. Reproduce identifiers, error text, IDs, paths, and field names character for character - `ws_8812f` is not `ws_8812`, and a table named `dead_letter` keeps that name in every language.
+A request states the desired outcome and enough context for the recipient to consider it. It does not assign the recipient's internal procedure unless the sender has that authority or the recipient requested it. A status note, correction or acknowledgement need not end with a request. Stop when the communicative purpose is fulfilled; do not add a closing recap by habit.
 
-Match the strength of each claim to the strength of its evidence, in both directions. `可能` does not become `会`. A problem the material says the current code can reach is stated as a problem and says what it should become - not softened into a preference, and not turned into a question you already know the answer to.
+Use paragraphs for connected reasoning and lists or headings for independent parts the reader must navigate. Preserve a required form or requested structure. Do not turn an ordinary message into labelled fields merely because several facts are available, or strip useful structure merely to make it shorter.
 
-When the material will not support a more specific sentence, the permitted outcomes are to write it at the level the material supports, to say the gap is unknown, to omit an optional evaluation while drafting, or to ask one focused question. Filling it in is not one of them. A vague sentence you cannot legitimately sharpen stays as it is.
+PR/MR descriptions explain final behavior and material rationale or trade-offs the diff does not make apparent. Omit routine test, lint, typecheck and build commands and pass results unless a required template calls for them. Include informative manual or risk-specific results and material gaps affecting review. Intermediate attempts, discarded options, unaffected services and internal review mechanics stay out unless they explain the final decision.
 
-## Who is reading it
+For review comments, address one issue per comment. State the verified problem and its consequence or the genuinely unresolved question. Answer the author's concern first in a reply. Specify the required outcome; prescribe implementation only when requested, when earlier replies have not resolved the issue, or when the established repository approach is necessary to explain it. Wording does not reopen the finding's evidence or severity decision.
 
-The notes are the user's account, written in a hurry: they can leave out what the recipient needs and assert things the user has not checked. Supply what the goal implies from what you can read. Ask one question before drafting only when a gap is still open after reading and it would change a fact, a commitment, or what you deliver; a message you can complete as asked is completed, including a short factual one. When something in the notes is contradicted by what you read, do not carry it over as fact: ask, or write it as the user's understanding and say so in the line after the draft.
+Use the recipient's established terms. Explain an unfamiliar identifier on first use when needed, rather than substituting a vague label for it. Keep connective words that make sentences natural; compression is useful only while the reader can still follow the relationship between the facts.
 
-Work out what the recipient can already see - the diff, the thread above, the ticket, the earlier message - and write what is not in it. Anything only you saw has to be stated rather than assumed, as far as they need it and it is appropriate to send them. Internal detail that is merely available stays out. In a PR or MR description, a release note, or a handoff, that rules out intermediate attempts, discarded options, unchanged implementation details, the internal tool that surfaced the issue, who reported it, unaffected services, and states that never shipped, unless one of them explains the final decision. Keep the links a reader would open: the Sentry issue, the ticket, the upstream commit.
+## Render and deliver
 
-When the destination is public - an open-source issue or PR, a vendor's tracker, a status page - hostnames, local paths, internal URLs, email addresses, and raw debug output come out unless the reader needs that exact string to act.
+Keep a DM or thread reply in message form. Add an email subject, greeting or signature only when its purpose, requested format or exchange calls for it. Do not add formulaic courtesy, an announcement of what the message will say, an invented signature, emoji the user or exchange did not call for, or a recap that adds nothing.
 
-Drop the vocabulary to the level of the person reading. A vendor's support agent does not know your stack; someone outside engineering needs what they will see and what to do, not the service name.
+Where the destination renders Markdown, place each useful link on the words naming the fact, code or action it supports, in a sentence that carries the substance without a click. Do not create a links section, retain a bare location as a substitute for explanation, or print a URL alongside its own link. Preserve literal URLs when the destination requires them or they are protected source text. If no real code link can be built, name the file or function and explain what to inspect; do not invent a permalink.
 
-Pick what leads from what the user wants this message to achieve and what would make this recipient act, not from the wording of the request. People open with the one thing that matters most and treat the rest briefly; covering every input item at equal weight is what turns a message into a list.
+For Slack, return plain text the user can paste into the message composer, using paragraphs, simple lists and ordinary URLs.
 
-Every sentence gives this reader something to know or to do. What was not tested stays in, stated as what to watch; framed as a disclaimer, it protects the writer and tells the reader nothing. A reason clause that restates the obvious, a section such as 风险 or 审核重点 that nobody asked for and the content does not fill, and a detail with no consequence for the reader all come out.
+Before returning the artifact, read it from the recipient's position: can they identify the point, understand each necessary fact and qualification, and distinguish a request from a sender commitment? Confirm the requested transformation and protected spans survived. Remove only material the permitted scope allows removing.
 
-Say what they should do or decide, when the message has such a point. Status notes, corrections, acknowledgements, and heads-ups do not, and should not be bent into a request.
+Return the requested artifact without a preamble or unrequested explanation. Honor exact output constraints. A material question that prevents a trustworthy draft must be resolved before this step; an operational note does not belong inside the artifact. If the user also requested reasoning, variants or a comparison, provide those separately in the requested format.
 
-Politeness follows the relationship, the thread, and the purpose, not the language. Match the register of what you read; do not raise it because the topic feels important or lower it because the previous message was short.
-
-## Shape
-
-Treat headings, lists, and tables as structure the content either has or does not. Several independent parts a reader must navigate justify them; a single change does not.
-
-Write sentences rather than labelled fields. `**Account Details:** ...`, `**时间：**10 月 9 日`, and `What we tried:` turn a message into a filled-in form, and the labels carry none of the meaning. A form the recipient actually issued is the exception - fill that one out as written.
-
-Open where the reader needs to start, usually who is affected and what they have to do. End where a person would stop - what to do next when there is such a step, or where to take a problem - rather than at the last fact on the list.
-
-Do not coin a term. A compressed compound such as `留痕`, `查库`, or `一直打下去` replaces a sentence the reader has to unpack, and a word that translates an English term literally is not evidence that anyone says it. Spend the clause instead: who did what, under which condition, with what result.
-
-Concise is not clipped. Judge the register against the venue's current messages and the user's own examples, not against a word list: keep the connectives and function words those messages keep, and the lead-in and close they use. Where they say 仍然, 不需要, 如果遇到, 这个, writing 仍为, 无需, 如遇, 该 reads as half-classical. For an announcement, use the venue's form of advance notice when it has one: a heads-up such as `FYI`, then a one-line subject; introduce the points with a cue such as `需要注意的事项` or its local equivalent rather than dropping straight into bullets; and close by inviting a usable response path, such as replying in the current thread or contacting the owning channel, instead of ending with a clipped destination. These are venue cues, not a fixed template: use only the parts the message and surrounding examples call for. Address people the way the sender does in that venue.
-
-## When there is nothing to match
-
-A new repository, an empty channel, or a kind of artifact the user has not written before leaves nothing to derive from. A repository whose only history is machine-written is the same case: derive from that and you derive a model's defaults.
-
-Do not fill the gap with a standard layout for the artifact type. `背景 / 改动 / 测试`, a canonical bug-report skeleton, and a cover-letter template are the same move, and each produces exactly the imposed structure this skill tells you to avoid. Write the content as prose and add structure only where the content has parts.
-
-The draft has to stand on its own as something the user can paste.
-
-Supply the rest yourself, in this order: words the reader already uses, then the user's own standing instructions, then the destination's convention.
-
-## Things no author writes
-
-These are model defaults rather than anyone's voice, so removing them costs nothing:
-
-- Emoji, unless the user asked for them or the thread is full of them.
-- A signature block, a sender name, or a team name you invented.
-- `I hope this helps`, `Hope this makes sense`, `Let me know if you have any questions`.
-- An opening that announces the message: `I am writing to report`, `以下是本次改动的说明`.
-- A `Related` or `关联` list repeating a ticket already named in the title.
-- A closing paragraph that restates what the message just said.
-
-Everything not on this list is a judgement about this text and this reader, not a ban.
-
-## Destination
-
-Where the surrounding artifacts do not settle it, bodies and review comments default to English on GitHub and to Chinese on GitLab, and a PR or MR title defaults to English.
-
-A DM or a thread reply stays a message: no subject line, no headings. An email carries a subject, a greeting, or a signature only when its purpose, the requested format, or the thread it joins already calls for one.
-
-Text the user pastes into the Slack client uses what that client renders: `*bold*` with single asterisks, `_italic_`, `` `code` ``, plain URLs. `**bold**` shows up as literal asterisks. `<https://url|text>` is API syntax and renders as raw text when a person pastes it, so use it only when a program will post the message. Headings and tables are not available there at all.
-
-Point at code with a link the reader can open, and put the link on the words that name the thing: `only the [plan job](https://...) reads it`, not `only the plan job reads it ([data-platform.yml:209](https://...))`. A path in a trailing parenthesis tells the reader nothing until they click it, and the sentence still has to carry the meaning without it. `xxx.ts:35` and `L35` are not clickable; when you cannot build a real link, name the file or function in backticks and say what to look for. An error message or quotation that already contains `foo.ts:35` is reproduced as it is.
-
-Write links as Markdown with readable text wherever Markdown renders. Never put a bare URL next to its own link.
-
-## Deliver
-
-Return text that can be pasted where it is going, with no preamble. Anything you owe the user about the draft - which existing artifact decided something they might question, what you were told to read and could not reach - goes in one line after it, never before, and never as an explanation of choices they did not ask about. When the user asked for something else as well - two versions, a comparison, your reasoning - give them that too.
-
-Drafting never implies sending. Posting, sending, or updating the artifact is a separate action under its own authorization.
+Drafting does not authorize sending or publishing.

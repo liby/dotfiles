@@ -50,11 +50,11 @@ The `description` is the routing surface for model-invocable skills. Write it be
 
 ## Frontmatter
 
-Target this local Claude Code and Codex setup in one `SKILL.md`. Keep portable discovery fields (`name`, `description`) clear because both runtimes use them to route. Add `when_to_use` only when extra routing context is worth a field some clients may ignore. Treat the other fields as Claude Code-specific execution metadata; behavior required in both runtimes belongs in the body. Use the [Agent Skills frontmatter spec](https://agentskills.io/specification#frontmatter) for the portable `SKILL.md` baseline and the [Claude Code frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference) for Claude-specific fields, types, and defaults.
+Target the local Claude Code, Codex and Pi setup in one `SKILL.md`. Keep portable discovery fields (`name`, `description`) clear. Add `when_to_use` only when extra routing context is worth a field some clients may ignore. Check execution metadata against each target runtime; accepting a field does not prove that runtime enforces it. Shared behavioral requirements belong in the body. Use the [Agent Skills frontmatter spec](https://agentskills.io/specification#frontmatter) for the portable `SKILL.md` baseline and the [Claude Code frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference) for Claude-specific fields, types, and defaults.
 
 - Prefer a short, easy-to-type `name`/directory slug; drop category nouns the description already carries (a platform word in the name duplicates the description and invites renames).
 - Use `disable-model-invocation: true` only when Claude Code should never auto-load the workflow. Side effects, cost, or timing make a skill a candidate for manual invocation, not proof: first verify its actual human and model invocation paths, including sibling loads, because Claude treats a skill-from-skill load as model invocation. Write its `description` as a one-line human-facing `/` menu summary because Claude removes it from model context.
-- For Codex manual-only routing, set `policy.allow_implicit_invocation: false` in the skill's `agents/openai.yaml`. Treat the Claude Code and Codex policies independently and verify both intended invocation paths.
+- For Codex manual-only routing, set `policy.allow_implicit_invocation: false` in the skill's `agents/openai.yaml`. Pi uses `disable-model-invocation: true` to hide the skill from its system prompt while retaining `/skill:name`. Verify implicit and explicit invocation in each target runtime rather than assuming their policies are interchangeable.
 - Use `user-invocable: false` only to hide a skill from Claude Code's `/` menu; it does not block model invocation.
 - Use `context: fork` for explicit long-running tasks, independent review, or research. Do not put passive reference knowledge in a fork-only skill.
 - Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution. Keep shared skill behavior independent of host-specific argument interpolation; use invocation arguments or the user's accompanying request instead of embedding a runtime placeholder in body text.
@@ -72,17 +72,23 @@ Place an instruction at the cheapest layer that reliably reaches the first actio
 
 Splitting helps only when common runs avoid the moved material and target runs reliably follow the pointer. A file imported into the startup context is organization, not progressive disclosure. If every activation must read a reference, keep it inline; if the pointer cannot state when to load it, narrowing or deleting the material is safer than hiding it.
 
-Link bundled files relative to `SKILL.md`; both runtimes can resolve that path, unlike a host-specific skill-directory variable or hardcoded install directory. Derive temporary output paths from the runtime because fixed temp paths fail across sandboxed hosts. Use a one-hop format contract only when its schema must survive across sessions or writers; give it a write trigger and lifecycle, and require loading it before writing the artifact.
+Link bundled files relative to `SKILL.md` rather than using a host-specific skill-directory variable or hardcoded install directory. Derive temporary output paths from the runtime because fixed temp paths fail across sandboxed hosts. Use a one-hop format contract only when its schema must survive across sessions or writers; give it a write trigger and lifecycle, and require loading it before writing the artifact.
 
 Runtimes keep metadata broadly visible but may truncate, reattach, or omit body content under context limits. Keep routing in the description and critical safety or recovery rules near the top of the body.
 
-## Writing Rules
+## Write for the next decision
 
-- When one rule maps several conditions to different actions, use a condition -> action list. Leave a dense single-condition sentence intact when every clause changes behavior.
-- Prefer values the runtime or code can derive over counts, paths, or amounts hardcoded into prose. A literal like "the four flags" or an absolute path is a maintenance hazard the moment the underlying value changes; point at the source of truth or how to read it.
-- Keep examples only when they prove output shape, trigger boundaries, a failure mode, or a quality boundary (acceptable vs unacceptable output at the same correctness level). A worked example must obey the skill's own rules: when it conflicts with a stated rule, models copy the example, so fix whichever one is wrong. A labeled negative example is exempt from the one rule it demonstrates breaking.
-- Give every conditionally applicable template or output slot a legitimate empty form, such as "same as the minimal proposal; no structural change indicated"; a slot that must always be filled invites invented content. A slot whose absence must stop the workflow, such as a missing approval or an unresolved destructive target, keeps no empty form.
-- In every skill edit, mask project names, personal names, hosts, private paths, clients, internal URLs, credential variable names, token variables, repo paths, and customer data; use them only in a skill explicitly scoped to that private environment.
+Organize the instruction around the decisions the agent must make, with prerequisites before their dependent actions and the completion condition beside the step it closes. Each section should establish what the next section may assume. Review order, transitions and sentence construction as one instruction; a shorter file is not the objective.
+
+State the trigger, action and boundary using established domain terms. Use a condition-to-action list when branches differ; retain a dense single-condition sentence when every clause affects behavior. Do not turn a feedback example into a new universal prohibition or add a list of synonyms to make a rule appear comprehensive.
+
+Keep exact identifiers needed for execution, but derive changing counts, paths and amounts from their owning source rather than copying a current census into prose. Mask private project, personal, host, client, customer and credential identifiers in reusable skills; keep them only in skills explicitly scoped to that environment.
+
+An example must demonstrate an output shape, trigger boundary, failure mode or quality distinction that the rule alone leaves unclear. It must obey the instruction around it, except for the specific violation a labelled negative example demonstrates. A counterexample should expose a wrong decision rather than merely omit a required phrase.
+
+A conditional output slot needs a legitimate empty form when nothing belongs there; do not force the agent to invent content to fill a template. A missing prerequisite that must stop the workflow, such as authorization for a destructive target, still stops it.
+
+Preserve the operating meaning of instruction prose first; neither conversational style nor outbound-message conventions override a necessary trigger, exception or stopping condition.
 
 ## Rule Hygiene
 

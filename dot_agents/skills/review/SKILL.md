@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review remote merge requests or pull requests, branches, commits, diffs, and uncommitted code changes for correctness and regression risk, reporting only evidence-backed findings. Use for pre-merge code review, review findings, and MR/PR URLs. Not for prose review, skill-authoring audits, or implementation requests.
+description: Review remote merge requests or pull requests, branches, commits, diffs, and uncommitted code changes for correctness and regression risk, reporting only evidence-backed findings. Use for pre-merge code review, review findings, and MR/PR URLs. Not for prose review, standalone skill-authoring audits, or general implementation work.
 argument-hint: "[--fix] [MR/PR URL or notes]"
 allowed-tools:
   - Bash
@@ -97,12 +97,10 @@ A challenged or corrected finding re-enters verification as a new claim at the s
 
 ## Output
 
-Respect exact output contracts first: `approve`, `No blocking findings.`, verdict-only, blocker-only, or any user-provided shape override the default chat review.
+Resolve the output's consumer before rendering findings. Exact user contracts such as verdict-only, blocker-only or a specified schema override the default chat form. A clean verdict is valid only after the Finding Bar and any material validation gaps have been resolved.
 
-For normal chat, start each finding with one plain sentence showing the concrete trigger or violated repository rule and its result. Then give severity, `path:line`, decisive evidence, and the required outcome; add provenance and exact diff contribution only when they are not obvious. When the user asks whether the requirement or approach is reasonable, state the current problem and the patch's approach before the findings. Use `No blocking findings.` only when no material validation gap remains.
+For chat, state the current problem and approach first when the user asked whether the requirement or solution is reasonable. Start each finding with its concrete trigger or violated repository rule and consequence, then supply severity, location, decisive evidence and required outcome. Add provenance and diff contribution when they are not otherwise clear. Use `No blocking findings.` only when no material validation gap remains.
 
-When comments or replies are requested, address one issue per comment or reply and write each body through `draft`, which owns its wording and reads the earlier comments on this MR or PR to match how they are written. A comment is a message to the author, not a condensed finding: the `path:line`, evidence, and provenance requirements above do not apply to it; include a location or link only when the author must open that spot to act. State the verified problem or ask the one question needed to establish it. In a reply, answer the author's concern first with the verified fact that resolves it. If the concern is whether the patch changed behavior, state what was already true and whether the patch changes it. Add only the context needed to support that answer. Omit resolved points, review mechanics, and unsupported examples.
+For requested comments or replies, base the message on the verified finding and relevant exchange. Keep the review record, including severity and decisive evidence, available separately from the comment body.
 
-For a review comment or reply, prescribe implementation details or a particular approach only when the author asks, prior replies failed to resolve the same issue, or naming an established repository approach is necessary to explain the problem clearly. A confirmed issue may still request the required behavior or outcome without designing the solution. Use questions only for genuine uncertainty.
-
-Any condensing, restyling, or rendering pass keeps findings, severities, evidence, and `path:line` citations 1:1; readability never justifies merging distinct findings or dropping one.
+Preserve every distinct finding, severity and decisive condition when condensing or restyling, along with its corresponding evidence and `path:line` citation in the review record. Presentation may change; a confirmed finding may not disappear or become a different claim. Omit disproved and resolved points according to the review's disposition rules before producing requested comments.
