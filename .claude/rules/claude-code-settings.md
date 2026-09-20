@@ -41,6 +41,7 @@ Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONES
 
 ## Auto mode and file protection
 
+- `autoMode.environment` carries the machine-wide trust and sensitivity facts the auto-mode classifier needs (the envchain credential store and its legitimate use, so a credential mention is not read as exploration), not repo-specific ones; entries use the `**Slot**: value` form, and the list starts with `$defaults` so the built-in entries stay.
 - Keep bare `Bash` out of `permissions.allow`. Sandboxed Bash remains auto-approved, while commands that run outside the sandbox still use the regular auto-mode decision.
 - Keep `Bash(herdr:*)` and `Bash(oracle:*)` globally allowed because their panes or sessions can continue after the invoking Skill's turn, when frontmatter preapproval no longer applies. Keep `Bash(snow:*)` globally allowed for the standing direct-command and native-SSO execution path owned by [Shared agent execution](../../.github/CONCEPTS.md#shared-agent-execution). Do not mirror same-turn Git or other host-CLI commands globally unless a current-version reproducer shows that Claude denies the matching Skill grant. Their sandbox exclusions remain separately necessary for Herdr control, Oracle browser control, and native Snowflake SSO.
 - Do not mirror `excludedCommands` into `permissions.allow`: sandbox placement and permission approval are independent decisions. `chezmoi`, `docker`, and direct `codex` stay on the regular auto-mode path; Git commands receive narrower Skill approvals.

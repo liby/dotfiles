@@ -37,7 +37,16 @@
   "disableBundledSkills": true,
   "syncClaudeAiSkills": false,
   "syncClaudeAiPlugins": false,
+  "skillOverrides": {
+    "auto-mode-setup": "off"
+  },
   "disableDeepLinkRegistration": "disable",
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "**Secrets management**: envchain (namespaces in the macOS Keychain) is the personal credential store; legitimate use is `envchain <namespace> <command>` to inject a namespace's secrets into one command, and `envchain --list` enumerates namespaces; never print or echo values"
+    ]
+  },
   "permissions": {
     "defaultMode": "auto",
     "disableBypassPermissionsMode": "disable",
