@@ -3,7 +3,6 @@ name: validate-skills
 on:
   pull_request:
     paths: &paths
-      - ".github/dev-tools/package.json"
       - ".github/workflows/validate-skills.yml"
       - "dot_agents/skills/**"
   push:

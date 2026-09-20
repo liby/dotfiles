@@ -1,8 +1,7 @@
 # Read dot_codex/modify_private_config.toml before editing this template; the modifier controls how these values are merged into the live file.
 approval_policy = "on-request"
 approvals_reviewer = "auto_review"
-# Codex upgrades come from the pinned version in .github/dev-tools/package.json;
-# the startup check only adds a prompt that waits for a keypress.
+# Codex updates only through `codex update`; the startup check would just add a prompt that waits for a keypress.
 check_for_update_on_startup = false
 cli_auth_credentials_store = "keyring"
 default_permissions = "development"

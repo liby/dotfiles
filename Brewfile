@@ -1,4 +1,5 @@
 tap "resend/cli"
+tap "steipete/tap"
 
 # Official Amazon AWS command-line interface
 brew "awscli"
@@ -34,6 +35,8 @@ brew "herdr"
 brew "jq"
 # Mac App Store command-line interface
 brew "mas"
+# Bundle prompts + files for second-model review
+brew "steipete/tap/oracle", trusted: true
 # Pinentry for GPG on Mac
 brew "pinentry-mac"
 # Pluggable multi-language version manager
@@ -56,6 +59,8 @@ cask "anki"
 cask "appcleaner"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
+# OpenAI's coding agent that runs in your terminal
+cask "codex"
 # Inconsolata LGC Nerd Font
 cask "font-inconsolata-lgc-nerd-font"
 # Terminal emulator that uses platform-native UI and GPU acceleration

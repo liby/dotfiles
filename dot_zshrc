@@ -53,7 +53,6 @@ typeset -aU path
     "$HOMEBREW_PREFIX/opt/uv/bin"
     "$HOME/bin"
     "$HOME/.cargo/bin"
-    "$HOME/.local/bin"
   )
   # Re-front: /etc/zprofile's path_helper demoted the zshenv toolchain dirs.
   path=($__BRYAN_TOOLCHAIN_PATH $path_dirs $path[@])

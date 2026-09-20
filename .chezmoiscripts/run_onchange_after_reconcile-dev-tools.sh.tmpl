@@ -23,7 +23,7 @@ npm_prefix="$NPM_CONFIG_PREFIX"
 
 # Keep this at most as long as the npm rule in .github/renovate.json, or the pins below
 # become unreachable.
-npm config set min-release-age 1
+npm config set min-release-age 3
 
 npm_tools=(
 {{ range $name := keys $tools | sortAlpha -}}

@@ -10,6 +10,7 @@ __BRYAN_TOOLCHAIN_PATH=(
   "$PROTO_HOME/bin"
   "$NPM_CONFIG_PREFIX/bin"
   "$PNPM_HOME/bin"
+  "$HOME/.local/bin"
 )
 path=($__BRYAN_TOOLCHAIN_PATH $path)
 export PATH

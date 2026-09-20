@@ -10,7 +10,7 @@ autoupdate_plist="$HOME/Library/LaunchAgents/$autoupdate_label.plist"
 autoupdate_helper_dir="$HOME/Library/Application Support/$autoupdate_label"
 autoupdate_helper="$autoupdate_helper_dir/brew-autoupdate"
 
-echo "Setting up brew autoupdate (10:00 daily and at load, with upgrade + cleanup)..."
+echo "Setting up brew autoupdate (10:00 daily and at load)..."
 # A fresh macOS account may lack any of these; launchd creates a missing log file but not its
 # directory.
 mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Logs"
@@ -18,14 +18,20 @@ mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Lo
 # Login Items names a legacy job by the basename of the file launchd runs, so the commands live in
 # their own file, and the helper sets its own PATH because launchd gives it a minimal environment.
 # The steps are deliberately not chained, so a failure neither skips the rest nor goes unreported.
+# pi has no Homebrew channel and never updates itself, so the helper also runs `pi update --self`;
+# that step needs the proto environment on PATH to find Node and install into the proto prefix.
 cat > "$autoupdate_helper" <<'HELPER'
 #!/bin/sh
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
+export PROTO_HOME="$HOME/.proto"
+export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
+export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$NPM_CONFIG_PREFIX/bin:$PATH"
 
 status=0
 date
 brew update || status=$?
 brew upgrade --no-ask || status=$?
+"$NPM_CONFIG_PREFIX/bin/pi" update --self || status=$?
 brew cleanup || status=$?
 exit "$status"
 HELPER

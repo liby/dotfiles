@@ -2,9 +2,6 @@
   "name": "chezmoi-global-tools",
   "private": true,
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "0.85.1",
-    "@openai/codex": "0.155.1",
-    "@steipete/oracle": "0.21.1",
     "typescript": "6.0.3",
     "typescript-language-server": "6.0.0"
   }
