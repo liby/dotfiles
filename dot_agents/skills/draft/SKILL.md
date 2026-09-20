@@ -62,7 +62,7 @@ When the material will not support a more specific sentence, the permitted outco
 
 ## Who is reading it
 
-Start from what the user wants this message to achieve and what would make this recipient act on it, not from the wording of the request. The notes are the user's account, written in a hurry: they can leave out what the recipient needs and assert things the user has not checked. Supply what the goal implies from what you can read. Ask one question before drafting only when a gap is still open after reading and it would change a fact, a commitment, or what you deliver; a message you can complete as asked is completed, including a short factual one. When something in the notes is contradicted by what you read, do not carry it over as fact: ask, or write it as the user's understanding and say so in the line after the draft.
+The notes are the user's account, written in a hurry: they can leave out what the recipient needs and assert things the user has not checked. Supply what the goal implies from what you can read. Ask one question before drafting only when a gap is still open after reading and it would change a fact, a commitment, or what you deliver; a message you can complete as asked is completed, including a short factual one. When something in the notes is contradicted by what you read, do not carry it over as fact: ask, or write it as the user's understanding and say so in the line after the draft.
 
 Work out what the recipient can already see - the diff, the thread above, the ticket, the earlier message - and write what is not in it. Anything only you saw has to be stated rather than assumed, as far as they need it and it is appropriate to send them. Internal detail that is merely available stays out. In a PR or MR description, a release note, or a handoff, that rules out intermediate attempts, discarded options, unchanged implementation details, the internal tool that surfaced the issue, who reported it, unaffected services, and states that never shipped, unless one of them explains the final decision. Keep the links a reader would open: the Sentry issue, the ticket, the upstream commit.
 
@@ -70,9 +70,9 @@ When the destination is public - an open-source issue or PR, a vendor's tracker,
 
 Drop the vocabulary to the level of the person reading. A vendor's support agent does not know your stack; someone outside engineering needs what they will see and what to do, not the service name.
 
-Pick what leads. People open with the one thing that matters most and treat the rest briefly; covering every input item at equal weight is what turns a message into a list.
+Pick what leads from what the user wants this message to achieve and what would make this recipient act, not from the wording of the request. People open with the one thing that matters most and treat the rest briefly; covering every input item at equal weight is what turns a message into a list.
 
-Every sentence gives this reader something to know or to do. What was not tested stays in, stated as what to watch; framed as a disclaimer, it protects the writer and tells the reader nothing. A reason clause that restates the obvious, a note explaining your own process or what you could not do, a section such as 风险 or 审核重点 that nobody asked for and the content does not fill, and a detail with no consequence for the reader all come out.
+Every sentence gives this reader something to know or to do. What was not tested stays in, stated as what to watch; framed as a disclaimer, it protects the writer and tells the reader nothing. A reason clause that restates the obvious, a section such as 风险 or 审核重点 that nobody asked for and the content does not fill, and a detail with no consequence for the reader all come out.
 
 Say what they should do or decide, when the message has such a point. Status notes, corrections, acknowledgements, and heads-ups do not, and should not be bent into a request.
 
@@ -88,7 +88,7 @@ Open where the reader needs to start, usually who is affected and what they have
 
 Do not coin a term. A compressed compound such as `留痕`, `查库`, or `一直打下去` replaces a sentence the reader has to unpack, and a word that translates an English term literally is not evidence that anyone says it. Spend the clause instead: who did what, under which condition, with what result.
 
-Concise is not clipped. Judge the register against the venue's current messages, not against a word list: keep the connectives and function words those messages keep, and the lead-in and close they use. Where they say 仍然, 不需要, 如果遇到, 这个, writing 仍为, 无需, 如遇, 该 reads as half-classical; where they open with a line before the topic and end with where to take a problem, a message that opens straight into the topic or stops on its last fact reads as curt, not efficient. Address people the way the sender does in that venue.
+Concise is not clipped. Judge the register against the venue's current messages and the user's own examples, not against a word list: keep the connectives and function words those messages keep, and the lead-in and close they use. Where they say 仍然, 不需要, 如果遇到, 这个, writing 仍为, 无需, 如遇, 该 reads as half-classical. For an announcement, use the venue's form of advance notice when it has one: a heads-up such as `FYI`, then a one-line subject; introduce the points with a cue such as `需要注意的事项` or its local equivalent rather than dropping straight into bullets; and close by inviting a usable response path, such as replying in the current thread or contacting the owning channel, instead of ending with a clipped destination. These are venue cues, not a fixed template: use only the parts the message and surrounding examples call for. Address people the way the sender does in that venue.
 
 ## When there is nothing to match
 
