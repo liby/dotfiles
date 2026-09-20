@@ -1,6 +1,6 @@
 {{- /* Read modify_dot_claude.json before editing this template; the modifier controls how these values are merged into the live file. */ -}}
 {
-  "autoConnectIde": true,
+  "externalEditorContext": true,
   "leftArrowOpensAgents": false,
   "mcpServers": {
     "chrome-devtools": {

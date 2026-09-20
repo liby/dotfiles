@@ -31,7 +31,11 @@ Keep main-conversation presentation and terminology defaults in `dot_claude/outp
 
 ## Privacy and feature delivery
 
-`DISABLE_TELEMETRY=1` also disables server-side feature-flag fetching. Keep `CLAUDE_CODE_FORK_SUBAGENT=1` and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` as explicit opt-ins because both workflows are intentionally enabled here.
+`DISABLE_TELEMETRY=1` also disables the client that evaluates server-side feature flags, so every gated feature falls back to its default. `CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF=1` restores evaluation from the flag cache already in `~/.claude.json` without re-enabling telemetry. It is undocumented, and it only applies on the first-party route: gateway, Vertex, Bedrock and Foundry sessions keep the defaults regardless. The cache only refreshes in sessions where the client runs, so on a machine that always has telemetry off it stays empty and the variable has nothing to read.
+
+Because that variable restores every cached flag rather than one feature, `syncClaudeAiSkills=false` and `syncClaudeAiPlugins=false` are what keep account-synced skills and plugins out of sessions; without them the flag pulls claude.ai skills into context and the repository-managed registry stops being the only source. One of the gated features is the built-in `agents-md` mod that reads `AGENTS.md` directly, which is why `.claude/CLAUDE.md` keeps its `@../AGENTS.md` import: gateway sessions cannot reach the mod at all.
+
+Keep `CLAUDE_CODE_FORK_SUBAGENT=1` and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` as explicit opt-ins because both workflows are intentionally enabled here.
 
 Do not consolidate the separate privacy controls into `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`; it would also disable automatic updates.
 
@@ -79,5 +83,5 @@ For `gh auth status`, an explicit token-display flag is rejected even if another
 
 ## Worktrees and runtime-owned state
 
-- `worktree.baseRef="head"` makes isolated sessions include local commits and feature-branch state instead of starting from the upstream default branch.
+- `worktree.baseRef` stays unset (default `fresh`), so new worktrees branch from `origin/<default-branch>` instead of carrying local HEAD state.
 - Keep `CLAUDE_CODE_EFFORT_LEVEL` unset so `/effort` remains the session-level control; the environment variable overrides both `/effort` and the persisted setting.

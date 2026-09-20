@@ -15,6 +15,7 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS": "125000",
     "CLAUDE_CODE_FORK_SUBAGENT": "1",
+    "CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF": "1",
     "CLAUDE_CODE_RETRY_WATCHDOG": "1",
     "DISABLE_ERROR_REPORTING": "1",
     "DISABLE_EXTRA_USAGE_COMMAND": "1",
@@ -34,6 +35,8 @@
   "disableRemoteControl": true,
   "disableClaudeAiConnectors": true,
   "disableBundledSkills": true,
+  "syncClaudeAiSkills": false,
+  "syncClaudeAiPlugins": false,
   "disableDeepLinkRegistration": "disable",
   "permissions": {
     "defaultMode": "auto",
@@ -84,8 +87,7 @@
       "Read(~/*/auth.json*)",
       "RemoteTrigger",
       "ReportFindings",
-      "ScheduleWakeup",
-      "TaskOutput"
+      "ScheduleWakeup"
     ]
   },
   "sandbox": {
@@ -254,14 +256,12 @@
   "alwaysThinkingEnabled": true,
   "autoCompactWindow": 400000,
   "precomputeCompactionEnabled": true,
-  "worktree": {
-    "baseRef": "head"
-  },
   "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
   "autoDreamEnabled": true,
   "showThinkingSummaries": true,
   "showTurnDuration": false,
+  "timeFormat": "24-hour",
   "skipAutoPermissionPrompt": true,
   "skipWorkflowUsageWarning": true
 }
