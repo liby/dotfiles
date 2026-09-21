@@ -9,6 +9,4 @@ Never start gpg-agent or keyboxd from a sandboxed shell: inherited sandboxing pr
 - `no running gpg-agent` or `No pinentry`: `gpgconf --kill gpg-agent && launchctl kickstart gui/$UID/org.gnupg.gpg-agent`.
 - `no keyboxd running in this session`: `gpgconf --kill keyboxd && launchctl kickstart gui/$UID/org.gnupg.keyboxd`.
 
-Long-lived dev, start, and serve commands can collide with the user's own instances through shared ports and orphaned processes; Authority owns whether to start one.
-
 Retain the supported progress signal and recovery handle for long-running calls. When completion is required, follow the same live run across finite waits; stop only on user request, a verified stall, or an unavoidable caller or platform limit.
