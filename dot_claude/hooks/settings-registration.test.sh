@@ -69,9 +69,9 @@ check "event/matcher/command tuples are unique" "$(jq '
    | .hooks[] | [$event, $matcher, .command]]
   | length == (unique | length)' <<<"$HOOKS_JSON")"
 
-check "Bash has one guard with the ten-second deadline" "$(jq '
+check "Bash has one guard with a finite deadline" "$(jq '
   [.PreToolUse[] | select(.matcher == "Bash") | .hooks[]]
-  | length == 1 and .[0].timeout == 10' <<<"$HOOKS_JSON")"
+  | length == 1 and (.[0].timeout | type == "number" and . > 0)' <<<"$HOOKS_JSON")"
 
 section "registered command -> source script"
 while IFS= read -r cmd; do

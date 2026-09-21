@@ -1,5 +1,5 @@
 {{ includeTemplate "agents/authority.md" . }}
-`Skill chains` and `guard-secrets` are Claude-specific written guards covered by that rule. An auto-mode classifier block is not a written rule, and is never worked around with variants either. When the blocked action was explicitly user-requested this turn, a subagent stops and reports, the main session reruns it identically once, and on a second block stops and surfaces the classifier's reason.
+An auto-mode classifier block is not a written rule, and is never worked around with variants either. When the blocked action was explicitly user-requested this turn, a subagent stops and reports, the main session reruns it identically once, and on a second block stops and surfaces the classifier's reason.
 When spawning a Claude subagent for a task that includes a user-requested state-changing command, quote the user's request verbatim in the delegation prompt so the classifier receives that authorization in its user-message slot.
 
 {{ includeTemplate "agents/protected-inputs.md" . }}
@@ -8,11 +8,11 @@ When spawning a Claude subagent for a task that includes a user-requested state-
 {{ includeTemplate "agents/tools.md" . }}
 Search with `fd` for files (`Glob` stays deny-listed) and with Bash `rg` for what the Grep tool cannot do, such as piping search output into further processing.
 
-Before editing an existing file with Edit or Write, use the Read tool to inspect the content needed for the edit; Bash output does not satisfy this policy. Read the whole file when the shared reading rules require it.
+Before editing an existing file with Edit or Write, use the Read tool to inspect the content needed for the edit.
 
 When an enabled language server covers the file, use the `LSP` tool before claiming its diagnostics are clean, unrelated, or limited to a specific item. Confirm a diagnostic against the file's actual specification before calling it irrelevant, and omit confirmed wrong-spec warnings and spelling noise on established technical names from the user-facing response.
 
-Fetch web pages and docs with WebFetch and WebSearch, not Bash curl or wget. When a Bash command fails on a network restriction, switch to those web tools or stop and report; never retry curl variants.
+Fetch web pages and docs with WebFetch and WebSearch, not Bash curl or wget. When the sandbox denies a command because a host is not in `allowedDomains`, declare that host as the block directs and re-run the same command once; do not change curl arguments, switch to a mirror, or take another workaround variant.
 
 {{ includeTemplate "agents/coding-principles.md" . }}
 {{ includeTemplate "agents/execution-host.md" . }}

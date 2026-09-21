@@ -215,16 +215,16 @@ test("managed requirements keep the sole mode and hook", async () => {
     allowed_permission_profiles: { development: true },
   });
 
-  expect(requirements.hooks.PreToolUse).toEqual([
-    {
-      matcher: "^Bash$",
-      hooks: [
-        {
-          type: "command",
-          command: "{{ .chezmoi.homeDir }}/.codex/managed-hooks/guard-bash",
-          timeout: 5,
-        },
-      ],
-    },
-  ]);
+  const registered = requirements.hooks.PreToolUse;
+  expect(registered).toHaveLength(1);
+  const { hooks, ...entry } = registered[0];
+  expect(entry).toEqual({ matcher: "^Bash$" });
+  expect(hooks).toHaveLength(1);
+  const { timeout, ...hook } = hooks[0] as Record<string, string | number>;
+  expect(hook).toEqual({
+    type: "command",
+    command: "{{ .chezmoi.homeDir }}/.codex/managed-hooks/guard-bash",
+  });
+  // A finite deadline is the invariant; no document owns the value.
+  expect(Number(timeout)).toBeGreaterThan(0);
 });

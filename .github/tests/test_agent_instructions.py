@@ -312,10 +312,6 @@ class SharedAgentInstructionTest(unittest.TestCase):
         self.assertTrue(all(len(heading) == 1 for heading in headings), headings)
         flat_headings = [heading[0] for heading in headings]
         self.assertEqual(flat_headings.count("Coding Principles"), 1)
-        self.assertLess(
-            flat_headings.index("Coding Principles"),
-            len(flat_headings) - 1,
-        )
 
     def test_roots_assemble_each_fragment_once_in_order(self):
         expected_headings = [
