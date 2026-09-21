@@ -8,10 +8,11 @@
 
 ## Prior review state
 
-Split what enters context before discovery:
+Split what enters the main review and an independent delegated review:
 
 - Pre-read deliberate decisions: accepted trade-offs and behavior choices that change correctness judgment, each with the evidence that would reopen it. These are specification input, not reviewer opinion.
-- Do not pre-read prior finding narratives, reviewer reasoning, or full discussion transcripts; they anchor discovery. When dispatching reviewers, keep dispositions with the coordinator and reconcile candidates during post-verification dedup; in a single-context review, pre-read only the disposition lines and apply the Flow rule for resolved and reasoned-dismissed points.
+- The coordinator or single-context reviewer reads the current discussions under the main Flow before judging implementation, then records one semantic claim and disposition per issue so an existing point is not repeated without different evidence, consequence, or insight.
+- An independent delegated reviewer does not receive prior finding narratives, reviewer reasoning, full discussion transcripts, or dispositions before discovery. Keep that state with the coordinator and reconcile the independent candidates during post-verification dedup.
 - An accepted fix from a prior round is itself review state: recommending its reversal requires evidence that refutes the original finding, not a fresh preference.
 
 A disposition record is one line per semantic claim: key, status (`fixed` or `dismissed`), one-line basis, reopen condition. The invoker owns storage and pruning; per-change records die with the change. A decision that recurs across changes belongs in the repository's own instructions, promoted by its owner, not by a reviewer.

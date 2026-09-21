@@ -28,15 +28,21 @@ Default review is read-only for the reviewed project: do not edit reviewed files
    - branch: parse `git diff -z --name-status <base>...HEAD`; for `R*` and `C*`, inspect both source and destination paths before any full diff
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`
    - MR/PR: compare host changed files with the local checkout or diff
-4. From the revision being reviewed, discover and read the root and path-scoped `CLAUDE.md`, `AGENTS.md`, `README.md`, `REVIEW.md`, `CODE_REVIEW.md`, project review commands, and review skills under `.claude/` or `.agents/`. Follow one-hop documents selected by their path rules. Do not treat the current checkout or automatically injected instructions as proof of the reviewed revision; use the exact ref (`git show <head>:<path>`) or the host's raw-file API when they differ.
+4. Read the MR/PR description and current discussions when available before judging the implementation.
+   - Treat discussion claims, replies, resolution state, and bot findings as review state, not proof. Build a semantic claim-and-disposition set: omit an already-open claim unless this review adds different decisive evidence, consequence, or insight; omit resolved or reasoned-dismissed claims unless new evidence meets their reopen condition. Re-report a reverified `P1` as "previously dismissed, re-raised because X". An invoker-supplied record of prior findings and dispositions is review state under the same rule.
+   - Comment order records the discussion timeline, not what a reviewer read first. Independent delegated reviewers remain blind to prior finding narratives under the applicable workflow; the coordinator reconciles their candidates with this review state afterward.
+5. Before line-level review, evaluate the requested outcome and the proposed approach from the description, discussion state, and changed-file map.
+   - Requirement: identify the intended outcome and its source owner; distinguish it from the supplied implementation. Challenge an incoherent, contradictory, unowned, or operationally ineffective requirement, and preserve material ambiguity instead of choosing a convenient interpretation.
+   - Approach: assess whether the proposal addresses that outcome at the owning boundary, includes its direct dependents, uses established project mechanisms, and justifies added state, abstraction, compatibility, or operational cost.
+
+   Keep both assessments provisional until repository rules and code evidence verify them; preference alone is not a finding. Done when the requirement and approach are each supported, named as unresolved, or represented by a concrete concern to verify. A supported requirement or approach needs no invented comment.
+6. From the revision being reviewed, discover and read the root and path-scoped `CLAUDE.md`, `AGENTS.md`, `README.md`, `REVIEW.md`, `CODE_REVIEW.md`, project review commands, and review skills under `.claude/` or `.agents/`. Follow one-hop documents selected by their path rules. Do not treat the current checkout or automatically injected instructions as proof of the reviewed revision; use the exact ref (`git show <head>:<path>`) or the host's raw-file API when they differ.
 
    Done when every changed path has either its applicable repository rules loaded or a recorded `no matching repository rule` disposition.
-5. Read the MR/PR description and discussions when available.
-   - Treat discussion claims as review state, not proof. Omit resolved or reasoned-dismissed points unless new evidence reopens them; re-report a reverified `P1` as "previously dismissed, re-raised because X". An invoker-supplied record of prior findings and dispositions is review state under the same rule.
-6. Read touched files, adjacent code, direct call sites, and relevant tests. For exported or deleted symbols, schemas, events, and shared helpers, search writers, readers, generated output, and peer surfaces by both symbol and changed concept.
-7. Load every matching surface rule and apply every Universal Review Lens below.
-8. Verify each candidate against the applicable code, source-owned contract, tests, or runtime evidence; run the cheapest existing validation that covers the changed path.
-9. Finish only after every changed path, matching repository rule, and loaded shared rule is accounted for, then report findings that pass the Finding Bar or a clean verdict.
+7. Read touched files, adjacent code, direct call sites, and relevant tests. For exported or deleted symbols, schemas, events, and shared helpers, search writers, readers, generated output, and peer surfaces by both symbol and changed concept.
+8. Load every matching surface rule and apply every Universal Review Lens below.
+9. Verify each candidate against the applicable code, source-owned contract, tests, or runtime evidence; run the cheapest existing validation that covers the changed path.
+10. Finish only after every changed path, matching repository rule, loaded shared rule, requirement question, and approach concern is accounted for, then report findings that pass the Finding Bar or a clean verdict.
 
 ## Rule Precedence
 
@@ -62,6 +68,7 @@ Apply every lens; load its file when the change exercises it.
 ## Variants
 
 - `--fix`: finish the normal review first; when accepted findings and a writable local checkout exist, load [fix](references/workflows/fix.md) before mutation.
+- Reviewer simulation: when the caller explicitly names a reviewer and supplies or selects a local reviewer profile, load [reviewer-simulation](references/workflows/reviewer-simulation.md). Keep predicted reviewer candidates separate from verified findings.
 - Spec-backed review: map each requirement to the diff; review missing, partial, and unrequested behavior separately.
 - Large or high-risk review: dispatch independent reviewers only for distinct risk areas, after loading [second-opinion](references/workflows/second-opinion.md).
 - Repeat review after fixes or of a previously reviewed scope: load [re-review](references/workflows/re-review.md) before resolving scope.
