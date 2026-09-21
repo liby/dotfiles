@@ -34,13 +34,15 @@ herdr pane current --pane "$HERDR_PANE_ID"
 
 If that fails with the environment check satisfied, report its connection or protocol error instead; it does not prove the process is outside Herdr. Do not inspect or control whichever Herdr window another client has focused.
 
-Anything you did not create belongs to the user: read it when the task needs its state, and do not close, replace, relabel, or rearrange it unless the user asks. Prompting an existing agent is ordinary use of it, not a change of ownership. What you created stays yours to name, drive, and close for as long as the task runs, across later turns as well. Never stop the Herdr server or kill its main process without a specific request. If a Codex or Claude subprocess cannot see `HERDR_*`, stop and report the environment boundary; do not edit shell environment policy, install Herdr integrations, or kill a reused daemon as an automatic workaround.
+Anything you did not create belongs to the user: read it when the task needs its state, and do not close, replace, relabel, resize, or rearrange it unless the user asks. Prompting an existing agent is ordinary use of it, not a change of ownership. What you created stays yours to name, drive, and close for as long as the task runs, across later turns as well. Never stop the Herdr server or kill its main process without a specific request. If a Codex or Claude subprocess cannot see `HERDR_*`, stop and report the environment boundary; do not edit shell environment policy, install Herdr integrations, or kill a reused daemon as an automatic workaround.
 
 Treat the installed binary as the syntax authority. Inspect only the relevant group before relying on unfamiliar options:
 
 ```bash
 herdr agent
 herdr pane
+herdr tab
+herdr workspace
 ```
 
 Never run bare `herdr` for discovery; it launches or attaches the TUI. Do not probe a mutating nested command by omitting required arguments. After a Herdr upgrade or an option rejection, inspect `herdr --version`, the relevant group, and `herdr --skill` for current syntax and capabilities, and keep this skill's authorization, ownership, and workflow rules where the bundled text differs. If the installed version cannot satisfy those rules, report the incompatibility rather than retrying syntax this file happens to show.
@@ -51,7 +53,9 @@ Parse IDs and state from control-command JSON. `pane read` and `agent read` retu
 
 ## Place the work
 
-New work goes in a sibling pane of the caller's tab, in the caller's working directory, without taking focus. Inspect the layout first and read the new pane ID from `.result.pane.pane_id`:
+A pane is one participant or terminal process. A tab groups panes the user should view together, usually one round or phase of the work. A workspace is the context and lifetime boundary the user navigates by, holding one piece of work and all of its rounds.
+
+Default to the nearest place: a sibling pane in the caller's tab, in the caller's working directory, without taking focus. Inspect the layout first and read the new pane ID from `.result.pane.pane_id`:
 
 ```bash
 herdr pane layout --pane "$HERDR_PANE_ID"
@@ -64,15 +68,20 @@ Split right while the pane is wide and down when it is narrow or tall. Choose th
 herdr pane rename <returned-pane-id> <label>
 ```
 
-Stay inside that default topology. Do not create a workspace, do not rename the workspace or the tab you were called in, and do not move work into a worktree or a different working directory unless the user asks for that topology. Treat the workspace label as the user's, so a round of work is neither a reason to rename one nor a reason to create one carrying the round's name.
+Create a container when the work's purpose or lifetime no longer matches where you were called, not because the current tab has filled. One helper stays a sibling pane. A round with several participants gets its own tab: it lays the round out across the full window width, keeps the caller's pane clean, and lets the round be switched to and closed as one. Stay in the caller's tab only when it already holds that round's panes, as when a later batch of the same round joins the earlier one. Pass the caller's workspace, an explicit `--cwd`, `--no-focus`, and a label saying what the round is; split from the root pane its response returns, not from `--current`, which still points at the caller's original tab.
 
-`pane layout` reports the rectangle every pane in the tab keeps, so you can tell before splitting what both halves of the split would get. Width is what has actually been observed to break: an agent TUI squeezed to around 60 columns is unreadable to the user even though your own reads still succeed, and 80 columns is the usual comfortable floor. Budget against every pane in the tab, the user's included, rather than only the ones you would add, and against the window you actually have rather than a remembered number. Inspect the layout again after creating the pane, since the split you got may not be the one you predicted.
+When the work should be navigated and managed on its own, or its context is not the caller's workspace, create a workspace with an explicit `--label`: the default label follows the current directory, so different workspaces can otherwise share one name.
 
-Place the round by capacity, and say which placement you chose:
+A named session is a separate server with its own workspaces, sockets, and persisted runtime state, not a security or filesystem boundary; reach for one only when the work needs that server-level isolation, the user has asked for or authorized it, and you have verified a control path that can address that server. Persistence is not the trigger: tabs and workspaces already survive in this server, and a long or recurring investigation stays a workspace.
 
-- The caller's tab has room for the next helper: split there. When more participants want to run than fit, run them in batches, starting the next batch only after closing the last; holding the simultaneous count down is what keeps the remaining panes wide.
-- The caller's tab has no room even for one helper, because panes you may not touch already fill it: create one tab for the round in the caller's workspace, passing the caller's working directory explicitly and `--no-focus`, and label it after the round. Split from the root pane its response returns, not from `--current`, which still points at the caller's original tab. Close that tab when the round ends.
-- Neither placement fits: report the capacity limit and what you could not start. Do not close, resize, or rearrange the user's panes to make room.
+```bash
+herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label "<round>" --no-focus
+herdr workspace create --cwd "$PWD" --label "<work>" --no-focus
+```
+
+`pane layout` reports the rectangle every pane in the tab keeps, so you can tell before splitting what both halves would get; budget against every pane in the tab, the user's included, and against the window you actually have rather than a remembered number. Width is what has actually been observed to break: an agent TUI squeezed to around 60 columns is unreadable to the user even though your own reads still succeed, and 80 columns is the usual comfortable floor; both are calibration points, and the user's own answer decides. A tab cannot widen a window that is itself too narrow. Inspect the layout again after creating the pane, since the split you got may not be the one you predicted. When a round does not fit in one tab, run it in batches or give it another tab, and say which you chose; when even an unsplit pane stays unreadable, report the capacity limit and what you could not start.
+
+Do not move work into a different working directory or worktree unless the user asks for that topology.
 
 ## Run a command in a pane
 
@@ -96,9 +105,9 @@ Inspect the live agents before creating or prompting one:
 herdr agent list
 ```
 
-Reuse a settled live agent only when its role and context match the new task and continuity is useful. Never prompt an agent already classified as `working`: its current turn can finish and incorrectly satisfy the new wait. Treat `unknown` as unresolved, not complete.
+`agent list` is how you find a free name, not how you find an agent to reuse: names are unique only among live agents and are released when one exits, so a name that was yours can now belong to another instance. Reuse a settled live agent only when the user asked to continue that instance, or this task started it, and in either case its role and context still match; a call for a new participant needs a fresh agent. Never prompt an agent already classified as `working`: its current turn can finish and incorrectly satisfy the new wait. Treat `unknown` as unresolved, not complete.
 
-Agent names match `[a-z][a-z0-9_-]{0,31}`. Name an agent for its role plus whatever separates it from its siblings, which is the model when several models share a role and the target when several instances share a model. Address agents by name after creation instead of passing pane IDs between prompts.
+Name an agent for its role plus whatever separates it from its siblings, which is the model when several models share a role and the target when several instances share a model. Start each participant you were asked to create in a newly created pane.
 
 Read-only helpers may share the current checkout. Do not let concurrent writers edit the same checkout. Keep extra agents read-only or sequential unless the user asks for isolated worktrees.
 
@@ -150,7 +159,7 @@ The user names participants by model nickname. Pass the exact model ID the user 
 
 One round asks one question. Write the brief once and give every participant the same one, including the context they cannot see, because a fresh agent has neither your conversation nor the other participants' answers.
 
-Independence is what a panel buys, and it is easy to lose. Start a fresh agent for each participant rather than reusing one that has been reading around the repository, confirm that the fresh start did not resume an earlier conversation, and give simultaneous rounds distinct agent names, since a name collision with another lead's round is not permission to reuse that agent. Keep the other participants' answers out of the brief and out of the working directory until the comparison step, and write the round's own outputs under a directory belonging to this round; remove only the files you put there, never a shared temporary root another round may still be using. Because a participant can go looking on its own, the brief itself has to say not to read the other participants' panes, sessions, or verdicts before comparison. Exposure to another verdict does not guarantee copying, but agreement after it is not independent confirmation, so when you find that a participant saw one, say which result is affected rather than counting it. Fix the inputs before dispatching and leave them alone until the round ends: the files as they stand, or a named base plus the complete uncommitted diff. Editing the checkout mid-round, which is tempting while early answers arrive, means the later participants reviewed something else and their verdicts cannot be pooled with the earlier ones. Ask for a written verdict in the pane and name what you want compared; reserve the file fallback for a response you could not read back.
+Start a fresh agent for each participant rather than reusing one that has been reading around the repository, confirm that the fresh start did not resume an earlier conversation, and give simultaneous rounds distinct agent names, since a name collision with another lead's round is not permission to reuse that agent. Keep the other participants' answers out of the brief and out of the working directory until the comparison step, and write the round's own outputs under a directory belonging to this round; remove only the files you put there, never a shared temporary root another round may still be using. Because a participant can go looking on its own, the brief itself has to say not to read the other participants' panes, sessions, or verdicts before comparison. Exposure to another verdict does not guarantee copying, but agreement after it is not independent confirmation, so when you find that a participant saw one, say which result is affected rather than counting it. Fix the inputs before dispatching and leave them alone until the round ends: the files as they stand, or a named base plus the complete uncommitted diff. Editing the checkout mid-round, which is tempting while early answers arrive, means the later participants reviewed something else and their verdicts cannot be pooled with the earlier ones. Ask for a written verdict in the pane and name what you want compared; reserve the file fallback for a response you could not read back.
 
 Dispatch the whole batch before collecting any of it. `agent prompt --wait` blocks until that one agent settles, so issuing the prompts one after another turns a panel into a queue, and a dialog in the first participant stalls participants that were never prompted. Where your host runs tool calls concurrently, issue the waiting prompts together. Otherwise prompt without `--wait`, confirm from each pane that the task arrived, and collect afterwards with `herdr agent wait <agent-name> --timeout <milliseconds>`, which bounds the wait the same way without resubmitting anything; an `idle` state proves nothing about a task that was never delivered.
 
@@ -162,9 +171,11 @@ This covers the helpers you started for your own work, not a process the user as
 
 ```bash
 herdr pane close <pane-id>
+herdr tab close <tab-id>
+herdr workspace close <workspace-id>
 ```
 
-Starting a helper inside a pane the user already had does not make that pane yours, and once the user takes a session over it stops being yours to close. Keep a helper whose work you still need, whose output you have not read, or that holds an open question for the user, and name in your answer which ones you kept and why; a `blocked` state is a dialog to resolve or report, not a reason to keep anything, and a turn that has become pointless is not work worth protecting. Closing a tab shuts down the panes inside it, so close a tab you created only after every pane still in it is one you could close on its own; if the user has put something there, leave the tab. When you cannot establish that a pane is yours, leave it and say so.
+Starting a helper inside a pane the user already had does not make that pane yours, and once the user takes a session over it stops being yours to close. Keep a helper whose work you still need, whose output you have not read, or that holds an open question for the user, and name in your answer which ones you kept and why; a `blocked` state is a dialog to resolve or report, not a reason to keep anything, and a turn that has become pointless is not work worth protecting. Closing a tab shuts down the panes inside it, so close a tab you created only after every pane still in it is one you could close on its own; if the user has put something there, leave the tab. A container is not finished when its helpers are: collecting their output does not mean the tab or workspace you created has served its purpose. Close it only when that purpose is complete; leave it and say what you left when the user has taken it over or it is part of the work you are handing back. A workspace linked to a worktree refuses to close with `workspace_group_close_required`; leave it rather than adding `--group` to close more than you created. When you cannot establish that a pane is yours, leave it and say so.
 
 ## Pi
 
@@ -173,7 +184,6 @@ Herdr takes a Pi pane's status from the lifecycle hook, not the screen (`screen_
 Use each layer for what it owns:
 
 - When starting Pi with an explicit model, pass `--provider <provider> --model <exact-model-id>`, using the provider paired with that model in Pi's configured model list. Do not rely on `defaultProvider`: explicit `--model` resolution can select an unauthenticated built-in provider with the same model ID. Start Pi directly and let the selected provider resolve its own credentials; do not synthesize or remap credential environment variables.
-- Submit a task through `agent prompt` like any other agent.
 - Send slash commands with `pane run` and read `visible` to confirm the effect, since a command that only changes the editor or the session leaves lifecycle state untouched and an `agent prompt` wait would never settle on it.
 - Stop a running turn with `herdr agent send-keys <agent-name> esc`, which is Pi's documented abort in its default bindings; Ctrl+C clears the editor instead.
 

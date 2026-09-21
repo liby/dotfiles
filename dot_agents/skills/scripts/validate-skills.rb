@@ -67,6 +67,8 @@ CLI_SMOKE_COMMANDS = [
   ["glab mr merge head guard help", %w[glab mr merge --help], /(?=.*--sha)(?=.*--auto-merge=false)/m],
   ["herdr prompt contract", %w[herdr agent prompt --help], /(?=.*--wait)(?=.*--timeout)(?=.*agent_prompt_stalled)(?=.*does not track turns)/m],
   ["herdr split contract", %w[herdr pane split --help], /(?=.*--current)(?=.*--direction)(?=.*--cwd)(?=.*--no-focus)/m],
+  ["herdr tab create contract", %w[herdr tab create --help], /(?=.*--workspace)(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
+  ["herdr workspace create contract", %w[herdr workspace create --help], /(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
   [
     "oracle current browser dry run",
     [
