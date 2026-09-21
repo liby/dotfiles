@@ -56,6 +56,9 @@ CLAUDE_CODE_FIELDS = Set[
 # behavior, and give every entry an output regex naming the depended-on flags
 # or route; an entry that only proves the command exits 0 asserts nothing.
 CLI_SMOKE_COMMANDS = [
+  ["context7 global options", %w[ctx7 --help], /--base-url <url>/],
+  ["context7 library resolve contract", %w[ctx7 library --help], /(?=.*<name>)(?=.*\[query\])/m],
+  ["context7 docs query contract", %w[ctx7 docs --help], /(?=.*<libraryId>)(?=.*<query>)/m],
   ["gh skill install help", %w[gh skill install --help], /(?=.*--agent)(?=.*--allow-hidden-dirs)(?=.*--dir)(?=.*--from-local)(?=.*--scope)/m],
   ["gh skill update help", %w[gh skill update --help], /(?=.*gh skill update \[<skill>\.\.\.\])(?=.*--all)(?=.*--dir)(?=.*--dry-run)/m],
   ["gh pr merge head guard help", %w[gh pr merge --help], /--match-head-commit/],

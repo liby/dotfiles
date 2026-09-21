@@ -7,6 +7,8 @@ brew "awscli"
 brew "chezmoi"
 # Cross-platform make
 brew "cmake"
+# Context7 documentation lookup for coding agents
+brew "ctx7"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
 # Diff that understands syntax

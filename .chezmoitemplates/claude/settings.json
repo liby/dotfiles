@@ -23,6 +23,7 @@
     "DISABLE_TELEMETRY": "1",
     "ENABLE_PROMPT_CACHING_1H": "1",
     "ENABLE_TOOL_SEARCH": "1",
+    "NODE_USE_ENV_PROXY": "1",
     "USE_BUILTIN_RIPGREP": "0"
   },
   "attribution": {

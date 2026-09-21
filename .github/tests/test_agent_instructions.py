@@ -132,14 +132,9 @@ CREDENTIAL_CONSUMERS = {
         ),
     },
     "context7": {
-        ".chezmoitemplates/codex/config.toml": (
-            'http_headers_helper = "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq ',
-            "env.CONTEXT7_API_KEY",
-        ),
-        ".chezmoitemplates/claude/claude.json": (
-            '"headersHelper"',
-            "/opt/homebrew/bin/envchain context7 /opt/homebrew/bin/jq ",
-            "env.CONTEXT7_API_KEY",
+        "dot_agents/skills/context7/SKILL.md": (
+            "envchain context7 sh -c 'CTX7_TELEMETRY_DISABLED=1 exec ctx7 --base-url",
+            "CONTEXT7_API_KEY",
         ),
     },
     "pi": {
