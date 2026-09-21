@@ -17,6 +17,24 @@ INSTRUCTION_FILES = (
 )
 CLAUDE_SETTINGS_TEMPLATE = ROOT / ".chezmoitemplates" / "claude" / "settings.json"
 CLAUDE_OUTPUT_STYLE = ROOT / "dot_claude" / "output-styles" / "natural-technical-writing.md"
+AGENT_FRAGMENTS = ROOT / ".chezmoitemplates" / "agents"
+
+EXPECTED_AGENT_FRAGMENTS = (
+    "authority.md",
+    "protected-inputs.md",
+    "evidence.md",
+    "tools.md",
+    "coding-principles.md",
+    "execution-host.md",
+    "completion.md",
+    "deliverables.md",
+)
+
+AGENT_ROOTS = {
+    ROOT / "dot_claude" / "CLAUDE.md.tmpl": 7,
+    ROOT / "dot_codex" / "AGENTS.md.tmpl": 0,
+    ROOT / "private_dot_pi" / "private_agent" / "private_AGENTS.md.tmpl": 0,
+}
 
 ROUTE_EXPECTATIONS = {
     "Repository validation": (
@@ -56,11 +74,23 @@ ROUTE_EXPECTATIONS = {
         "`~/.claude/settings.json`",
         "(.claude/rules/claude-code-settings.md)",
     ),
+    "Shared agent instructions": (
+        "`.chezmoitemplates/agents/**`",
+        "`dot_claude/CLAUDE.md.tmpl`",
+        "`dot_codex/AGENTS.md.tmpl`",
+        "`private_dot_pi/private_agent/private_AGENTS.md.tmpl`",
+        "(.github/CONCEPTS.md#shared-agent-instructions)",
+    ),
     "Pi": (
         "`.chezmoitemplates/pi/**`",
         "`private_dot_pi/**`",
         "`~/.pi/agent/**`",
         "(.github/CONCEPTS.md#pi-configuration)",
+    ),
+    "Oracle": (
+        "`private_dot_oracle/**`",
+        "`~/.oracle/config.json`",
+        "(.github/CONCEPTS.md#oracle-configuration)",
     ),
     "Herdr integrations": (
         "`.chezmoiscripts/run_onchange_after_install-herdr-integrations.sh.tmpl`",
@@ -192,9 +222,14 @@ class MaintenanceRouteTest(unittest.TestCase):
             "Before inspecting, changing, or running a matching surface",
             markdown,
         )
-        matches = re.findall(r"^- \*\*([^*]+)\*\*: (.+)$", markdown, re.MULTILINE)
-        counts = Counter(label for label, _ in matches)
-        routes = dict(matches)
+        rows = re.findall(r"^\| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|$", markdown, re.MULTILINE)
+        rows = [
+            (area.strip(), trigger.strip(), read.strip())
+            for area, trigger, read in rows
+            if not area.strip().startswith("---") and area.strip() != "Area"
+        ]
+        counts = Counter(area for area, _, _ in rows)
+        routes = {area: f"{trigger} {read}" for area, trigger, read in rows}
         for label, snippets in ROUTE_EXPECTATIONS.items():
             with self.subTest(route=label):
                 self.assertEqual(counts[label], 1)
@@ -242,6 +277,91 @@ class ClaudeOutputStyleContractTest(unittest.TestCase):
         selected_styles = re.findall(r'"outputStyle": "([^"]+)"', template)
         self.assertEqual(selected_styles, [name.group(1)])
         self.assertRegex(frontmatter, r"(?m)^keep-coding-instructions: true$")
+
+
+class SharedAgentInstructionTest(unittest.TestCase):
+    INCLUDE = re.compile(
+        r'\{\{ includeTemplate "agents/([^"]+)" \. (-?)\}\}(\n?)'
+    )
+
+    def render(self, root):
+        return self.INCLUDE.sub(
+            lambda match: (AGENT_FRAGMENTS / match.group(1)).read_text()
+            + (match.group(3) if not match.group(2) else ""),
+            root.read_text(),
+        )
+
+    def fragment_headings(self):
+        return [
+            re.findall(
+                r"(?m)^## (.+)$",
+                (AGENT_FRAGMENTS / name).read_text(),
+            )
+            for name in EXPECTED_AGENT_FRAGMENTS
+        ]
+
+    def local_lines(self, root):
+        without_includes = self.INCLUDE.sub("", root.read_text())
+        return [line for line in without_includes.splitlines() if line.strip()]
+
+    def test_fragments_define_the_shared_sections(self):
+        self.assertEqual(
+            {path.name for path in AGENT_FRAGMENTS.glob("*.md")},
+            set(EXPECTED_AGENT_FRAGMENTS),
+        )
+        headings = self.fragment_headings()
+        self.assertTrue(all(len(heading) == 1 for heading in headings), headings)
+        flat_headings = [heading[0] for heading in headings]
+        self.assertEqual(flat_headings.count("Coding Principles"), 1)
+        self.assertLess(
+            flat_headings.index("Coding Principles"),
+            len(flat_headings) - 1,
+        )
+
+    def test_roots_assemble_each_fragment_once_in_order(self):
+        expected_headings = [
+            title
+            for headings in self.fragment_headings()
+            for title in headings
+        ]
+        for root in AGENT_ROOTS:
+            with self.subTest(root=root.relative_to(ROOT)):
+                source = root.read_text()
+                includes = [match[0] for match in self.INCLUDE.findall(source)]
+                self.assertEqual(includes, list(EXPECTED_AGENT_FRAGMENTS))
+                self.assertNotRegex(source, r"(?m)^## ")
+                rendered = self.render(root)
+                self.assertNotRegex(rendered, self.INCLUDE)
+                self.assertEqual(
+                    re.findall(r"(?m)^## (.+)$", rendered),
+                    expected_headings,
+                )
+                sections = re.findall(
+                    r"(?ms)^## Coding Principles\n.*?(?=^## )",
+                    rendered,
+                )
+                self.assertEqual(len(sections), 1)
+                self.assertNotIn(
+                    "## Coding Principles",
+                    rendered.replace(sections[0], ""),
+                )
+
+    def test_root_local_lines_stay_local(self):
+        shared = "\n".join(
+            (AGENT_FRAGMENTS / name).read_text()
+            for name in EXPECTED_AGENT_FRAGMENTS
+        )
+        rendered = {root: self.render(root) for root in AGENT_ROOTS}
+        for owner, expected_count in AGENT_ROOTS.items():
+            local_lines = self.local_lines(owner)
+            self.assertEqual(len(local_lines), expected_count)
+            for line in local_lines:
+                with self.subTest(owner=owner.relative_to(ROOT), line=line):
+                    self.assertNotIn(line, shared)
+                    self.assertEqual(
+                        sum(document.count(line) for document in rendered.values()),
+                        1,
+                    )
 
 
 if __name__ == "__main__":

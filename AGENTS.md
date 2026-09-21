@@ -3,11 +3,9 @@ Dotfiles managed by [chezmoi](https://www.chezmoi.io/) from `~/.local/share/chez
 ## Workflow
 
 - After editing `.chezmoi.toml.tmpl`, run `chezmoi init` to regenerate `~/.config/chezmoi/chezmoi.toml`; never edit that generated file directly.
-- Edit `Brewfile` in source. It is ignored for deployment and consumed by a `run_onchange` script whose template hash retriggers on content changes.
-- Scripts carry no ordering prefix: chezmoi runs them by phase (`before`, `after`) and then by target name. When a new script needs a sibling from the same phase to run first, fold the two or let the dependent script provide the prerequisite itself; when neither fits, pick a name that sorts after the sibling and check for the prerequisite at the top of the script before it writes anything, as the GPG script does for Brewfile.
 - On a fresh `chezmoi init`, `R` status for every `run_once` script is expected.
 - Before committing, run `chezmoi status --exclude=encrypted <dest-path>` and `chezmoi diff <dest-path>` for each changed non-secret managed target in scope; never run bare `chezmoi status` or `chezmoi diff`, which can generate decrypted target content. Reserve repository-wide status checks for requested drift audits, and report inaccessible targets as gaps in those audits without widening permissions. Read `-` as destination-only and `+` as rendered-target-only. Re-add destination-only drift only when it belongs to the requested change; report unrelated drift without modifying it. When both destination and target changed, show the scoped diff.
-- Use `chezmoi merge <dest-path>` only for an explicitly selected non-secret, non-`modify_` target; a templated target requires manual review to preserve template directives.
+- Use `chezmoi merge <dest-path>` only for an explicitly selected non-encrypted, non-`modify_` target; a templated target requires manual review to preserve template directives.
 - Fold a follow-up change to the same logical unit into its existing unpushed commit (`git commit --amend` or fixup) instead of appending a commit per request; append-only committing turns one feature into a chain that later needs a history rewrite. Start a new commit only for a separate concern, a pushed base, or another author's commit.
 - When retiring or replacing a managed path, verify the exact non-secret destination, then delete the obsolete source and the existing live destination in the same change. Never add `remove_` entries, compatibility readers, or other migration markers; handle any later residue through an explicit audit. In retirement commits, name the affected non-secret target paths or fields, explain why they were removed, and note any local content to preserve.
 - For agent skill changes, run `ruby dot_agents/skills/scripts/validate-skills.rb --smoke`. Keep `CLI_SMOKE_COMMANDS` in sync only for skills whose instructions depend on current CLI behavior.
@@ -28,27 +26,34 @@ Protect the plaintext boundary, not repository-declared ciphertext. Treat a trac
 
 Keep prose only when omission can cause a realistic wrong edit or operation. Place it at the first decision it must change:
 
-- **Agent entrypoint**: This file owns actions needed before choosing or reading a narrower owner.
-- **Human setup and reuse**: The READMEs own user-facing setup, operation, and adaptation guidance.
-- **Cross-file contract**: [`.github/CONCEPTS.md`](.github/CONCEPTS.md) owns design, lifecycle, and operator rationale that spans sources.
-- **Path or capability instruction**: The narrowest path rule or skill owns instructions needed only when that path or capability is active.
-- **Exact edit rationale**: An adjacent comment owns a non-obvious reason or invalidation condition needed at that line or block.
-- **Deterministic requirement**: A schema, test, or hook owns enforcement that should not depend on Agent recall.
+| Surface | Owns |
+| --- | --- |
+| Agent entrypoint | Actions needed before choosing or reading a narrower owner |
+| Human setup and reuse | User-facing setup, operation, and adaptation guidance |
+| Cross-file contract | Design, lifecycle, and operator rationale that spans sources |
+| Path or capability instruction | Instructions needed only when that path or capability is active |
+| Exact edit rationale | A non-obvious reason or invalidation condition at that line or block |
+| Deterministic requirement | Enforcement that should not depend on Agent recall |
 
 Keep one owner per action. Retain overlap only when each surface constrains a different decision, boundary, or audience, and link rather than restate supporting detail.
 
 This repository targets Apple Silicon macOS only. Use the `/opt/homebrew` prefix directly; do not add Intel `/usr/local` branches until a supported machine requires them.
 
-Before inspecting, changing, or running a matching surface, read its narrowest owner:
+## Before inspecting, changing, or running a matching surface
 
-- **Repository validation**: For `.github/workflows/**` or `.github/tests/**`, read [Repository validation](.github/CONCEPTS.md#repository-validation), then read the owner for the behavior under test.
-- **Bootstrap and packages**: For `Brewfile`, `.chezmoiexternal.toml`, `.chezmoiscripts/**`, `.chezmoitemplates/input-source-pro/**`, `.github/dev-tools/**`, `.github/renovate.json`, `dot_config/uv/uv.toml`, or `dot_proto/dot_prototools`, read [Bootstrap](.github/CONCEPTS.md#bootstrap) and [Package and tool ownership](.github/CONCEPTS.md#package-and-tool-ownership); for a script that writes preferences, also read [Configuration ownership](.github/CONCEPTS.md#configuration-ownership).
-- **Git signing**: For `dot_config/git/executable_git-ssh-gpg-agent`, `.chezmoitemplates/git/**`, `private_dot_ssh/private_config`, or `.chezmoiscripts/run_onchange_after_setup-gitconfig.sh.tmpl`, also read [Git identity and signing](.github/CONCEPTS.md#git-identity-and-signing).
-- **GitLab CLI**: For `.chezmoiscripts/run_onchange_after_configure-glab.sh` or glab's live configuration, also read [GitLab CLI configuration](.github/CONCEPTS.md#gitlab-cli-configuration).
-- **Codex**: For `.chezmoitemplates/codex/**`, `dot_codex/**`, `.chezmoiscripts/run_onchange_after_setup-codex-requirements.sh.tmpl`, `~/.codex/config.toml`, or the bundled Browser cache, read [Codex configuration](.github/CONCEPTS.md#codex-configuration).
-- **Claude Code**: For `.chezmoitemplates/claude/**`, `modify_dot_claude.json`, `dot_claude/**`, or `~/.claude/settings.json`, read [`.claude/rules/claude-code-settings.md`](.claude/rules/claude-code-settings.md). For changes shared with Codex, also read [Shared agent execution](.github/CONCEPTS.md#shared-agent-execution).
-- **Pi**: For `.chezmoitemplates/pi/**`, `private_dot_pi/**`, or `~/.pi/agent/**`, read [Pi configuration](.github/CONCEPTS.md#pi-configuration).
-- **Oracle**: For `private_dot_oracle/**` or `~/.oracle/config.json`, read [Oracle configuration](.github/CONCEPTS.md#oracle-configuration). Treat the deployed file as credential-bearing: inspect the overlay source, and do not read, diff, or re-add the destination.
-- **Herdr integrations**: For `.chezmoiscripts/run_onchange_after_install-herdr-integrations.sh.tmpl`, also read [Herdr integrations](.github/CONCEPTS.md#herdr-integrations).
-- **Managed skills**: For `dot_agents/skills/**` or `~/.agents/skills/**`, use `write-skill` and read [Managed skill registry](.github/CONCEPTS.md#managed-skill-registry) before editing. For `dot_agents/skills/snow/**`, also read [Shared agent execution](.github/CONCEPTS.md#shared-agent-execution).
-- **Credentials**: Before inspecting or changing `.chezmoi.toml.tmpl`, `.secrets/**`, `.chezmoiscripts/run_onchange_after_seed-envchain.sh.tmpl`, or any source that invokes `envchain`, read [Identity and encrypted data](.github/CONCEPTS.md#identity-and-encrypted-data) and the [Credential-backed features](.github/CONCEPTS.md#credential-backed-features) consumer contract. [Encrypted Files](#encrypted-files) remains authoritative for plaintext and ciphertext handling.
+Read its narrowest owner, then read the owner for the behavior under test.
+
+| Area | Trigger | Read |
+| --- | --- | --- |
+| Repository validation | `.github/workflows/**`, `.github/tests/**` | [Repository validation](.github/CONCEPTS.md#repository-validation) |
+| Bootstrap and packages | `Brewfile`, `.chezmoiexternal.toml`, `.chezmoiscripts/**`, `.chezmoitemplates/input-source-pro/**`, `.github/dev-tools/**`, `.github/renovate.json`, `dot_config/uv/uv.toml`, `dot_proto/dot_prototools` | [Bootstrap](.github/CONCEPTS.md#bootstrap), [Package and tool ownership](.github/CONCEPTS.md#package-and-tool-ownership); for a script that writes preferences, also [Configuration ownership](.github/CONCEPTS.md#configuration-ownership) |
+| Git signing | `dot_config/git/executable_git-ssh-gpg-agent`, `.chezmoitemplates/git/**`, `private_dot_ssh/private_config`, `.chezmoiscripts/run_onchange_after_setup-gitconfig.sh.tmpl` | [Git identity and signing](.github/CONCEPTS.md#git-identity-and-signing) |
+| GitLab CLI | `.chezmoiscripts/run_onchange_after_configure-glab.sh`, glab's live configuration | [GitLab CLI configuration](.github/CONCEPTS.md#gitlab-cli-configuration) |
+| Codex | `.chezmoitemplates/codex/**`, `dot_codex/**`, `.chezmoiscripts/run_onchange_after_setup-codex-requirements.sh.tmpl`, `~/.codex/config.toml`, the bundled Browser cache | [Codex configuration](.github/CONCEPTS.md#codex-configuration) |
+| Claude Code | `.chezmoitemplates/claude/**`, `modify_dot_claude.json`, `dot_claude/**`, `~/.claude/settings.json` | [`.claude/rules/claude-code-settings.md`](.claude/rules/claude-code-settings.md); for changes shared with Codex, also [Shared agent instructions](.github/CONCEPTS.md#shared-agent-instructions) |
+| Shared agent instructions | `.chezmoitemplates/agents/**`, `dot_claude/CLAUDE.md.tmpl`, `dot_codex/AGENTS.md.tmpl`, `private_dot_pi/private_agent/private_AGENTS.md.tmpl` | [Shared agent instructions](.github/CONCEPTS.md#shared-agent-instructions), then the runtime-specific owner for every root template in scope |
+| Pi | `.chezmoitemplates/pi/**`, `private_dot_pi/**`, `~/.pi/agent/**` | [Pi configuration](.github/CONCEPTS.md#pi-configuration) |
+| Oracle | `private_dot_oracle/**`, `~/.oracle/config.json` | [Oracle configuration](.github/CONCEPTS.md#oracle-configuration). Treat the deployed file as credential-bearing: inspect the overlay source, and do not read, diff, or re-add the destination |
+| Herdr integrations | `.chezmoiscripts/run_onchange_after_install-herdr-integrations.sh.tmpl` | [Herdr integrations](.github/CONCEPTS.md#herdr-integrations) |
+| Managed skills | `dot_agents/skills/**`, `~/.agents/skills/**` | `write-skill` and [Managed skill registry](.github/CONCEPTS.md#managed-skill-registry); for `dot_agents/skills/snow/**`, also [Shared agent execution](.github/CONCEPTS.md#shared-agent-execution) |
+| Credentials | `.chezmoi.toml.tmpl`, `.secrets/**`, `.chezmoiscripts/run_onchange_after_seed-envchain.sh.tmpl`, any source that invokes `envchain` | [Identity and encrypted data](.github/CONCEPTS.md#identity-and-encrypted-data) and the [Credential-backed features](.github/CONCEPTS.md#credential-backed-features) consumer contract. [Encrypted Files](#encrypted-files) remains authoritative for plaintext and ciphertext handling |

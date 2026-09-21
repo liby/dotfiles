@@ -51,8 +51,8 @@ chezmoi init --apply liby
 chezmoi status                     # Show configuration status
 chezmoi diff <target>              # Inspect changes to one configuration file
 chezmoi apply                      # Apply configuration to $HOME
-chezmoi edit <target>              # Edit a managed encrypted file
-chezmoi edit-encrypted <filename>  # Edit an encrypted file not managed by chezmoi
+chezmoi edit <target>              # Edit a managed file (pass its target path)
+chezmoi edit-encrypted <filename>  # Edit an encrypted file (pass its source path)
 ```
 
 Editing encrypted files requires a YubiKey and should not be delegated to an agent.

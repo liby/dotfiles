@@ -1,6 +1,9 @@
 {{- /* chezmoi:modify-template */ -}}
 {{- /* Partially manage Browser Use defaults while preserving App-written site
-      authorization and other runtime state. */ -}}
+      authorization and other runtime state. The no-prompt full-CDP values below
+      are deliberate: the user accepts unattended Browser control rather than a
+      confirmation gate at the keyboard. Revisit if Codex renames these keys or
+      the Browser tool stops being used. */ -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := dict -}}
 {{- if $stdin -}}
