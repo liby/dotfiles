@@ -30,11 +30,15 @@ EXPECTED_AGENT_FRAGMENTS = (
     "deliverables.md",
 )
 
-AGENT_ROOTS = {
-    ROOT / "dot_claude" / "CLAUDE.md.tmpl": 7,
-    ROOT / "dot_codex" / "AGENTS.md.tmpl": 0,
-    ROOT / "private_dot_pi" / "private_agent" / "private_AGENTS.md.tmpl": 0,
-}
+AGENT_ROOTS = (
+    ROOT / "dot_claude" / "CLAUDE.md.tmpl",
+    ROOT / "dot_codex" / "AGENTS.md.tmpl",
+    ROOT / "private_dot_pi" / "private_agent" / "private_AGENTS.md.tmpl",
+)
+SHARED_ONLY_ROOTS = (
+    ROOT / "dot_codex" / "AGENTS.md.tmpl",
+    ROOT / "private_dot_pi" / "private_agent" / "private_AGENTS.md.tmpl",
+)
 
 ROUTE_EXPECTATIONS = {
     "Repository validation": (
@@ -347,10 +351,11 @@ class SharedAgentInstructionTest(unittest.TestCase):
             for name in EXPECTED_AGENT_FRAGMENTS
         )
         rendered = {root: self.render(root) for root in AGENT_ROOTS}
-        for owner, expected_count in AGENT_ROOTS.items():
-            local_lines = self.local_lines(owner)
-            self.assertEqual(len(local_lines), expected_count)
-            for line in local_lines:
+        for owner in SHARED_ONLY_ROOTS:
+            with self.subTest(owner=owner.relative_to(ROOT)):
+                self.assertEqual(self.local_lines(owner), [])
+        for owner in AGENT_ROOTS:
+            for line in self.local_lines(owner):
                 with self.subTest(owner=owner.relative_to(ROOT), line=line):
                     self.assertNotIn(line, shared)
                     self.assertEqual(

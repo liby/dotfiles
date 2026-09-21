@@ -64,6 +64,8 @@ glab api projects/:fullpath/pipelines/<pipeline_id>/jobs | jq -r '
 
 At the first inspection of an existing MR, record its `web_url` and `sha` with the evidence. A review or inspection from another workflow can serve as a later approval or merge baseline only when it carries that exact URL and SHA.
 
+A GitLab draft MR is visible to the project, and creating it can run pipelines. The `draft` label does not make MR creation an unpublished staging step; when the user authorized only draft text, keep it in chat.
+
 When asked to draft or update an MR title and description:
 
 1. Resolve the MR URL, head SHA, and target branch from `glab mr view <id> -F json` or the user's URL.

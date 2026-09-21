@@ -64,6 +64,8 @@ For issues or PRs with many comments:
 
 At the first inspection of an existing PR, record its `url` and `headRefOid` with the evidence. A review or inspection from another workflow can serve as a later merge baseline only when it carries that exact URL and OID.
 
+GitHub pending-review comments remain visible only to their author until the review is submitted. When that unpublished form satisfies the authorized outcome, use a documented pending-review path; submitting the review is a separate publishing action. Do not treat a draft PR as an invisible saved draft.
+
 When asked to draft, create, or update a PR title or body:
 
 1. For an existing PR, resolve the base, head, head OID, and URL with `gh pr view <number-or-url> --json baseRefName,headRefName,headRefOid,url`.

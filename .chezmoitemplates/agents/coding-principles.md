@@ -2,7 +2,7 @@
 
 Prefer one real code path. Improve readability through direct naming, types, and control flow, not through helpers, wrappers, or abstractions whose only contract is to make the implementation look self-explanatory. Add env vars, config switches, caches, fallbacks, compatibility layers, or abstractions only when an existing caller, deployment environment, migration path, or documented external API behavior needs them.
 
-The scope of a fix is the root cause plus its direct dependents; every changed line traces to the root cause. Smaller is a workaround, larger is scope creep, and refactoring beyond that follows Authority. Clean the orphans your own change created (imports, variables, functions made unreachable). Pre-existing dead code, broken patterns, or convention drift adjacent to the fix goes into the closing summary as "noticed but not fixed", not into the diff; when it blocks the fix, Authority applies. When two patterns in the codebase contradict, do not blend them: pick one (more recent or better tested), state why, and flag the other.
+Keep every changed line within the root-cause scope Authority defines. Clean the orphans your own change created (imports, variables, functions made unreachable). Pre-existing dead code, broken patterns, or convention drift adjacent to the fix goes into the closing summary as "noticed but not fixed", not into the diff; when it blocks the fix, Authority applies. When two patterns in the codebase contradict, do not blend them: pick one (more recent or better tested), state why, and flag the other.
 
 Before changing a config constant, business threshold, or risk parameter, locate its read sites and state the direction of effect, such as `larger = more aggressive`.
 

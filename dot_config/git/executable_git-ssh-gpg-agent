@@ -1,7 +1,32 @@
 #!/bin/sh
 set -eu
 
-export SSH_AUTH_SOCK="$HOME/.gnupg/S.gpg-agent.ssh"
+agent_socket="$HOME/.gnupg/S.gpg-agent.ssh"
+
+# Only the transport and signing paths read the private key through the agent.
+# `ssh-keygen -Y verify` works from public material, so a missing agent must not
+# block signature verification.
+needs_agent=0
+if [ "${1:-}" = "--transport" ]; then
+  needs_agent=1
+else
+  previous=
+  for argument in "$@"; do
+    if [ "$previous" = "-Y" ] && [ "$argument" = "sign" ]; then
+      needs_agent=1
+    fi
+    previous="$argument"
+  done
+fi
+
+if [ "$needs_agent" = 1 ] && [ ! -S "$agent_socket" ]; then
+  printf '%s\n' \
+    "git-ssh-gpg-agent: gpg-agent SSH socket is unavailable: $agent_socket" \
+    'Recover as the login user with escalation, never sudo: gpgconf --kill gpg-agent && launchctl kickstart gui/$UID/org.gnupg.gpg-agent' >&2
+  exit 1
+fi
+
+export SSH_AUTH_SOCK="$agent_socket"
 
 if [ "${1:-}" = "--transport" ]; then
   shift
