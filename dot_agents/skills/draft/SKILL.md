@@ -64,7 +64,7 @@ Use the recipient's established terms. Explain an unfamiliar identifier on first
 
 Keep a DM or thread reply in message form. Add an email subject, greeting or signature only when its purpose, requested format or exchange calls for it. Do not add formulaic courtesy, an announcement of what the message will say, an invented signature, emoji the user or exchange did not call for, or a recap that adds nothing.
 
-Where the destination renders Markdown, place each useful link on the words naming the fact, code or action it supports, in a sentence that carries the substance without a click. Do not create a links section, retain a bare location as a substitute for explanation, or print a URL alongside its own link. Preserve literal URLs when the destination requires them or they are protected source text. If no real code link can be built, name the file or function and explain what to inspect; do not invent a permalink.
+Where the destination renders Markdown, resolve the commit, the file path and the line, and build the permalink form that destination uses, before composing the sentence. Place the link on the words naming the fact, code or action it supports, in a sentence that carries the substance without a click. Do not create a links section, retain a bare location as a substitute for explanation, or print a URL alongside its own link. Preserve literal URLs when the destination requires them or they are protected source text. If no real code link can be built, name the file or function and explain what to inspect; do not invent a permalink.
 
 For Slack, return plain text the user can paste into the message composer, using paragraphs, simple lists and ordinary URLs.
 
