@@ -2,80 +2,72 @@
 name: commit
 description: Create or amend local Git commits from the relevant changes. Use for every commit operation, regardless of how the request arrived, which repository it targets, or what tooling wraps git. Stage only in-scope files and write repository-matching messages. Not for message drafts or branch creation.
 argument-hint: "[additional context]"
-background: false
 allowed-tools:
   - Bash(git:*)
   - Bash(rg:*)
-  - Bash(fd:*)
   - Bash(jq:*)
   - Read
-  - WebFetch
-  - WebSearch
 ---
 
-Create coherent local history for the requested work. Determine the delivery and its authorized content before choosing commit mode or wording.
+Create coherent local history for the requested work. Decide what is being delivered and what is authorized before choosing commit mode or wording.
 
-## Authority and protected content
+## Authority
 
-- Commit when the user requested a commit or the requested workflow requires one, such as creating an MR/PR or an explicitly requested release step. An implementation request alone does not authorize a commit; report the prepared state instead.
-- Honor explicit scope, grouping, staged-only choices, and authorized amend or fixup targets without asking again. Push, discard operations, and history rewrites require authorization for the operation; a fixup commit does not authorize a later rebase.
-- Resolve the delivery repository, checkout, and branch or detached HEAD from the request and governing source ownership before choosing where to commit. Record that target separately from the execution cwd; linked worktrees share a repository but can have different delivery states. Use `git -C <delivery-checkout>` for its operations. For literal filenames passed to Git commands that accept pathspecs, quote each argument with per-path literal magic, such as `':(literal)src/[id]/file.ts'`. `--` ends options but does not disable pathspec matching. Keep literalization per argument; process-wide `--literal-pathspecs` also changes Git calls inside hooks.
-- Before reading bodies from the working tree or a relevant history range, use governing instructions and non-value evidence to distinguish ordinary content, protected plaintext, and opaque ciphertext. A name containing `secret`, `credential`, or `token` alone does not classify a source or fixture. Do not read or stage declared environment files, private keys, credential stores, or unresolved potentially secret plaintext. Resolve uncertainty through bounded non-value evidence or one focused classification question; continue independent safe inspection, but do not silently omit required content from the delivery.
-- Keep established ciphertext bodies out of every diff, including history. Metadata and authorized Git operations remain available. Describe encrypted changes generically using user or project classification; never infer plaintext behavior.
-- Do not read shell history or dump raw transcripts. Load [transcript recovery](references/transcript-recovery.md) only when commit motivation remains missing or relevant prior work must be recovered.
+- Commit when the user asked for one or the requested workflow needs one, such as creating an MR/PR or an explicitly requested release step. An implementation request alone does not authorize a commit; report the prepared state instead. A repository instruction that prescribes amend or fixup for follow-ups is authorization for that mode.
+- Honor explicit scope, grouping, staged-only choices, and authorized amend or fixup targets without asking again; a fixup does not authorize a later rebase.
+- Resolve the delivery repository, checkout, and branch or detached HEAD from the request and governing source ownership, not from the cwd: linked worktrees share a repository but not a delivery state. Run its operations as `git -C <delivery-checkout>`. Quote literal filenames per argument with literal magic, such as `':(literal)src/[id]/file.ts'`; `--` ends options but does not stop pathspec matching. Do not set process-wide literal pathspec behavior, which also changes Git calls inside hooks.
+- Do not commit or stage declared environment files, private keys, credential stores, or unresolved potentially secret plaintext, and keep established ciphertext bodies out of every diff; this covers content a previous step already staged, so a staged-only request that would include one stops and leaves the index as it is. Load [transcript recovery](references/transcript-recovery.md) only when the commit's motivation is still missing after the request and diff are read.
 
-## Inspect and group
+## Decide the unit
 
-1. Identify any in-progress merge, cherry-pick, revert, or rebase and confirm that completing it is authorized. Gather changed path names before content: tracked changes against `HEAD`, staged and unstaged names separately, and untracked names. Use NUL-delimited Git output for path comparisons. Keep intermediate inspection, staging, and verification records in memory; scratch files require an explicitly authorized location. Record the original index hunks and current `HEAD` before mutations. Use the empty tree as the baseline when no commit or parent exists.
-2. Read ordinary staged and unstaged diffs separately, including safe untracked files needed for the task. Use committed content to establish the baseline, prospective hunks for the delta, and the request or recovered context for motivation. Motivation explains why changes belong together; it cannot prove that a behavior changed. Local environment state, skipped checks, and rejected alternatives belong in the final report, not the commit message.
-3. Reconstruct the requested observable outcomes and each hunk's purpose. Keep implementation, migration cleanup, tests, and supporting guidance together when they complete one evidenced delivery. Separate independent requested outcomes or delivery decisions unless the user deliberately bundles them. Different paths, types, or independent revertibility alone do not justify splitting. Type and subject length must not determine the boundary.
-4. Choose ordinary commit, authorized `HEAD` amend, or fixup against the recorded target identity. A follow-up completing the same delivery belongs with that commit when the operation is authorized. For amend, inspect the target and prospective replacement relative to its parent, including rationale that must survive. For fixup, inspect the specified target and verify the correction belongs to it; do not substitute the current `HEAD` or rewrite intervening commits.
-5. Read recent full human-authored commit messages and applicable message configuration. Limit content searches to known safe configuration and contribution files. Derive any type from the verified primary change; use analogous history as evidence, not a vote. Resolve active commit hooks through Git configuration, including `core.hooksPath`, and inspect the applicable hooks before running them under the repository's execution rules.
+Check for an in-progress merge, cherry-pick, revert, or rebase, and finish one only when finishing it is authorized. Establish staged, unstaged, and untracked state separately, read the safe content needed to determine and verify the authorized commit, and reconstruct what each hunk delivers against the committed baseline. Record `HEAD` and the original index before any mutation, and the unborn state when the repository has no commit.
 
-## Prepare the commit content
+One commit is one requested observable outcome. Implementation, migration cleanup, tests, and the guidance that documents them belong together when they complete that outcome. Different paths, different types, and independent revertibility do not justify a split, and neither do type prefixes or subject length. Separate genuinely independent outcomes unless the user bundled them.
 
-The planned content is a set of hunks for the current unit, not merely a list of paths. Map pre-staged content to the requested units; authorization to split task-owned content permits staging those units in turn, while preserving the working tree and unrelated staging choices. Compare `HEAD`, the original index, the working tree, and task evidence before staging:
+Then choose ordinary commit, authorized `HEAD` amend, or fixup against the recorded target. For an amend, compare the replacement against the target's parent, or against the empty tree for a root commit, so rationale that must survive is carried over. For a fixup, verify the correction belongs to the specified target; never substitute the current `HEAD` or rewrite intervening commits.
 
-- Explicit staged-only: commit the existing index and leave unstaged content unchanged. A partially staged file is not a blocker.
-- Deliberate batches or selected hunks: preserve that boundary even if the remaining edits concern the same feature. A general commit request does not override an explicit staging choice.
-- Attributable follow-up: include unstaged revisions when conversation or tool evidence establishes that they complete the same authorized delivery and no deliberate boundary excludes them. Partial staging alone does not require confirmation. Use whole-path staging only when every staged and unstaged change in that path belongs in this commit; otherwise stage the exact patch.
-- Unrelated or uncertain unstaged edits: leave them intact and stage only established in-scope hunks. Ask only if the missing attribution prevents an exact authorized commit.
-- Unrelated pre-staged content: do not include it or change its real-index entries, even temporarily, unless that staging change is explicitly authorized. Saving and restoring entries afterward does not satisfy a boundary that must hold throughout. For an ordinary commit consisting of complete tracked paths, `git commit --only ... -- ':(literal)<path>' ...` can preserve other index entries; first verify that every working-tree hunk in those paths belongs in the commit. Never use this mode for staged-only or mixed-hunk paths. When whole-path isolation does not apply, use another exact method that preserves those real-index entries, or report the conflict before mutation.
+## Stage exactly the unit
 
-For an index commit, stage the current unit using exact paths or patches and verify the complete staged path set and each staged hunk against the plan. For exact-hunk staging, construct and review the patch in memory, then send identical bytes through a quoted heredoc or `printf` pipe to `git apply --cached --check -` and `git apply --cached -`. Do not create an intermediate patch file unless its location is within an explicitly authorized scratch scope. For a whole-path commit, verify the complete `HEAD`-to-working-tree delta of the selected paths and record the unrelated index entries to preserve. In either mode, check for extra and missing content. For amend, also verify the complete prospective replacement relative to the target's parent. Keep opaque ciphertext checks metadata-only.
+The index belongs to the user. Do not add, remove, or temporarily alter an index entry outside the unit, and do not rely on restoring it afterwards.
 
-## Compose the message
+- Staged-only request: commit the index as it stands. A partially staged file is not a blocker.
+- Deliberate batches or hand-picked hunks: that boundary holds even when the remaining edits concern the same feature.
+- Unstaged work that conversation or tool evidence shows completes the same authorized delivery: include it. Otherwise leave it intact, and ask only when the missing attribution blocks an exact commit.
 
-Write from the verified planned commit content. The subject must let a repository reader recover the primary changed behavior or boundary without the request or body. Do not hide a replacement, removal, or direction of change behind an area name or a generic improvement claim. An established domain term carries only its evidenced meaning.
+Stage whole paths only when every working-tree hunk in them belongs in this commit; `git commit --only -F - -- ':(literal)<path>' ...` then preserves the other index entries but still takes those paths' working-tree contents. An ordinary `git commit` consumes the whole index, so when a path holds excluded hunks, or unrelated content is already staged, isolate the unit through a separate index, and after that commit reconcile the shared index for the unit paths to the new commit so a later ordinary commit cannot revert them; applying a patch to the shared index does not by itself exclude those entries. For an amend, `git commit --amend --only` commits no staged change and needs no paths. Verify the committed tree against the plan, and if no method preserves the required boundary, stop before mutating and report the conflict. A patch file belongs only inside an explicitly authorized scratch location. Before writing, check the staged set against the plan for both extra and missing content, and for an amend check the complete prospective replacement against the target's parent, or against the empty tree for a root commit.
 
-Put supporting changes and material reasons, constraints, trade-offs, or non-obvious consequences in the body when the subject cannot preserve them. Preserve this rationale when amending or consolidating; rewrite around the final net result. Check each factual claim against the committed baseline and planned delta, and each reason against recovered motivation. Remove unsupported causes, file inventories, subject restatements, and investigation or validation narration.
+## Write the message
 
-For example, `chore: keep package binaries and store on one volume` names the outcome; a body can explain the evidenced cross-volume store recreation that motivated it. `chore: update package manager path` plus a body restating the move loses that reason.
+Read any message configuration and several recent messages in this repository, and follow that dialect, tense, ordinary subject case, and scope convention; exact user wording and repository instructions come first. Only when none of those establishes a convention, use imperative present tense, no trailing period, a subject near 50 characters, and a body wrapped near 72. Accuracy beats the length preference.
 
-- Honor exact user wording and repository instructions first, then configured format limits and the stable recent dialect, tense, and subject case. Use a scope only when declarative configuration or contribution guidance defines it. If neither configuration nor history establishes a format, use imperative present tense, no trailing period, a subject near 50 characters, and an optional body wrapped near 72. Prefer accuracy over the fallback length preference.
-- Use backticks for code references, and close each pair on the line it opens: nothing reflows a commit body, and viewers that highlight backticks match them line by line, so a pair split across a line break leaves a stray backtick that pairs with the next one and highlights the wrong text. Mention another commit's short hash only when the result depends on it; omit self-references such as "this commit" or "this PR".
-- For a standard fixup, use Git's target-derived `fixup!` subject. The patch corrects the target; do not invent a replacement message or treat an unsquashed fixup as completed consolidation.
+The subject must let a repository reader recover the primary changed behavior or boundary without the request or the body; when the repository uses type prefixes, derive the type from the verified primary change. Do not hide a replacement, a removal, or a direction of change behind an area name or a generic improvement claim. Put supporting changes and the material reasons, constraints, trade-offs, or non-obvious consequences in the body when the subject cannot carry them, and preserve that rationale when amending or consolidating. Check each claim against the committed baseline and the delta, and each reason against recovered motivation. Leave out unsupported causes, file inventories, subject restatements, and narration of investigation, local environment, or skipped checks; those belong in the final report, along with a rejected alternative that only records an attempt. When the implementation is authorized but the diff contradicts the stated motivation, describe the diff and put the contradiction in the report instead of stopping to ask.
+
+`chore: keep package binaries and store on one volume` names the outcome, with a body for the cross-volume store recreation that motivated it. `chore: update package manager path` plus a body restating the move loses the reason.
+
+- Use backticks for code references and keep each pair on one line; a literal longer than the wrap width may exceed it.
+- Name another commit's short hash only when the result depends on it, and omit self-references such as "this commit".
+- For a standard fixup, keep Git's target-derived `fixup!` subject, or `fixup! <target-hash>` when two commits share a title, so the marker uniquely identifies the recorded target; an unsquashed fixup is not completed consolidation.
 
 ## Commit and verify
 
-Immediately before committing, recheck that `HEAD`, the complete planned content, the preserved index entries, and the message still match the plan. If concurrent changes invalidate it, reconcile from fresh evidence before writing. For ordinary commits and amends, read the subject alone to check the primary change, then the complete message to check material meaning and rationale. For fixups, check that the generated subject identifies the recorded target.
+Resolve active commit hooks through Git configuration, and inspect them before running when their content or execution authorization is not already established for this task.
 
-Use a single-quoted heredoc so shell expansion cannot change the message:
+Recheck `HEAD` and the staged content against the plan. For a message you authored, read it once more: does the subject alone identify the primary change, does the body carry the material meaning and rationale, and does each name you wrote follow the naming rule, leaving quoted text, trailers, and wording the user dictated exactly as given? For a fixup, only check that the generated subject uniquely identifies the recorded target.
 
 ```bash
-git commit -F - <<'COMMIT_MSG_END'
+git -C "<delivery-checkout>" commit -F - <<'COMMIT_MSG_END'
 <message>
 COMMIT_MSG_END
 ```
 
-For verified whole-path isolation, use `git commit -F - --only -- ':(literal)<path>' ...` with the same heredoc. For authorized `HEAD` amend, use `git commit --amend -F -` with the same heredoc. For a standard fixup, use `git commit --fixup=<recorded-target>`; leave autosquash or other history rewriting to its separately authorized workflow.
+For whole-path isolation write the options before `--`, which ends option parsing: `git commit -F - --only -- ':(literal)<path>' ... <<'COMMIT_MSG_END'`. Use `--amend -F -`, or `--amend --only` to leave the index untouched, for an authorized amend, and `git commit --fixup=<recorded-target>` for a fixup; autosquash belongs to its own authorized workflow.
 
-Never bypass a failure with `--no-verify`. On hook or commit failure, inspect the resulting `HEAD`, index, and working tree before any retry: a failed hook may already have changed files. Report the actionable error without exposing protected output; resolve only repairs within the task's authorization.
+Do not bypass configured hooks, whether through `--no-verify` or by changing `core.hooksPath`. A failing hook may already have changed files, so inspect `HEAD`, the index, and the working tree before any retry, and report the actionable error without exposing protected output.
 
-After success, verify the actual commit's parent, tree, and message in the recorded delivery checkout and branch or detached HEAD, and check that checkout's remaining index and working tree. A commit in another worktree or a matching copied file does not complete a required delivery to this target. Complete any remaining authorized delivery step; if it requires missing authorization, report the unmet target rather than declaring completion. Hooks can alter the result after the pre-commit check. Do not report success or rewrite an unexpected commit automatically; reconcile the discrepancy within existing authority or report what needs resolution. Refresh the remaining units against the new history without repeating unchanged style or motivation discovery.
+After success, verify the new commit's parent, tree, and message in the recorded checkout and branch or detached HEAD, and check what its index and working tree still hold. Do not rewrite an unexpected commit automatically: reconcile it within existing authority or report what needs resolving. Reuse the style and motivation already established for further units.
 
-## Output
+## Report
 
-- Commit: verified delivery checkout and branch or detached HEAD, with the short hash and subject for each created or amended commit, or `none` with the blocking reason.
-- Included beyond initial staging: safe paths or additional hunks actually included beyond the original index, or `none`. This includes whole-path commits and revisions to already staged files.
-- Leftover: preserved staged content and remaining modified or untracked paths with their known task relationship; use counts for protected or unresolved material. Include unresolved failures or verification gaps. An incomplete requested delivery remains incomplete even if some commits succeeded.
+- Commit: the delivery checkout and branch or detached HEAD, with the short hash and subject of each created or amended commit, or `none` with the blocking reason.
+- Included beyond initial staging: paths or hunks included beyond the original index, or `none`.
+- Leftover: preserved staged content and remaining modified or untracked paths with their task relationship, counts only for protected or unresolved material, plus any unresolved failure or verification gap. An incomplete requested delivery stays incomplete even when some commits succeeded.
