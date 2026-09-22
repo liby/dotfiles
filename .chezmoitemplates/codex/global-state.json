@@ -4,6 +4,7 @@
     "electron:onboarding-welcome-pending": false,
     "git-active-line-blame-enabled": true,
     "has-seen-fast-mode-announcement": true,
+    "has-seen-fast-mode-home-banner": true,
     "has-seen-realtime-voice-nux-v1": true,
     "home-composer-mode-v1": "work",
     "last-explicit-review-diff-filter": "branch"

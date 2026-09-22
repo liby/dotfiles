@@ -115,6 +115,22 @@ command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
 args = []
 startup_timeout_sec = 120
 
+# Sites
+[apps.connector_20205bf7d4e99a89d7154bb849718324]
+enabled = false
+
+[apps.connector_openai_codex_document_control]
+enabled = true
+
+[apps.connector_openai_default_templates]
+enabled = false
+
+[apps.connector_openai_hotline]
+enabled = false
+
+[apps.connector_openai_plugin_management]
+enabled = false
+
 [plugins."codex-app-tools@openai-bundled"]
 enabled = true
 
@@ -131,7 +147,7 @@ enabled = true
 enabled = true
 
 [plugins."documents@openai-primary-runtime"]
-enabled = false
+enabled = true
 
 [plugins."pdf@openai-primary-runtime"]
 enabled = true
@@ -149,4 +165,4 @@ enabled = true
 enabled = false
 
 [plugins."visualize@openai-bundled"]
-enabled = false
+enabled = true
