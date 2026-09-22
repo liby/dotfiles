@@ -11,5 +11,7 @@ Host *
 Host github.com
   Hostname ssh.github.com
   Port 443
-  # The card's authentication key is served by gpg-agent, not the macOS agent.
+
+# The card's authentication key is served by gpg-agent, not the macOS agent.
+Host github.com gitlab.*
   IdentityAgent ~/.gnupg/S.gpg-agent.ssh
