@@ -1,5 +1,11 @@
 #!/bin/zsh
 set -euo pipefail
 
-defaults write com.openai.codex requirements_toml_base64 -string \
-  '{{ includeTemplate "codex/requirements.toml" . | b64enc }}'
+# Codex ignores requirements in an unforced user preference, so install them
+# as the system requirements file.
+requirements=$(mktemp)
+trap 'rm -f "$requirements"' EXIT
+print -r -- '{{ includeTemplate "codex/requirements.toml" . | b64enc }}' |
+  base64 -D >"$requirements"
+sudo install -d -o root -g wheel -m 0755 /etc/codex
+sudo install -o root -g wheel -m 0644 "$requirements" /etc/codex/requirements.toml
