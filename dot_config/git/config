@@ -41,6 +41,12 @@
   editor = vim
   quotepath = false
 
+# Drop the system-level catch-all osxkeychain helper (Homebrew and Apple Git) so hosts get only the helpers declared below;
+# otherwise Git stores the Claude Code sandbox's per-session localhost proxy credential in the login keychain.
+# The empty value clears every helper configured before it, so keep it above the per-host sections.
+[credential]
+  helper =
+
 [credential "https://gist.github.com"]
   helper = 
   helper = !gh auth git-credential
