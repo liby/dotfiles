@@ -1,11 +1,14 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Partially manage ~/.claude/settings.json. Managed top-level subtrees
-      replace live values, so nested removals apply; removing a top-level key
-      only stops ownership and requires separate live cleanup. Preserve
-      undeclared keys; seed model and effort only when missing. */ -}}
+{{- /* Partially manage ~/.claude/settings.json; the Ownership section of
+      .claude/rules/claude-code-settings.md decides each key's role. Managed
+      top-level subtrees replace live values, so nested removals apply;
+      removing a top-level key only stops ownership and requires separate
+      live cleanup. Seeds are written only when the key is missing, so a
+      changed seed value never reaches existing machines. Undeclared keys
+      pass through. */ -}}
 {{- $managed := includeTemplate "claude/settings.json" . | fromJson -}}
 {{- $seeds := `{
-  "model": "claude-fable-5-1[1m]",
+  "model": "opus",
   "effortLevel": "high"
 }` | fromJson -}}
 {{- $stdin := .chezmoi.stdin -}}

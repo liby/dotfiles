@@ -1,17 +1,19 @@
 {{- /* Read dot_claude/modify_private_settings.json before editing this template; the modifier controls how these values are merged into the live file. */ -}}
 {
+  "advisorModel": "fable",
   "cleanupPeriodDays": 99999,
   "outputStyle": "Natural Technical Writing",
   "env": {
     "ANTHROPIC_DEFAULT_FABLE_MODEL": "claude-fable-5-1[1m]",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5[1m]",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5-5[1m]",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5",
     "CLAUDE_AUTO_BACKGROUND_TASKS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
     "CLAUDE_CODE_DISABLE_CRON": "1",
     "CLAUDE_CODE_DISABLE_MOUSE": "1",
     "CLAUDE_CODE_ENABLE_CFC": "0",
+    "CLAUDE_CODE_ENABLE_EXPERIMENTAL_ADVISOR_TOOL": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS": "125000",
     "CLAUDE_CODE_FORK_SUBAGENT": "1",

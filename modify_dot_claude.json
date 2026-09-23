@@ -1,5 +1,6 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Preserve runtime state outside source-declared MCP servers. */ -}}
+{{- /* Overlay declared keys and replace each source-declared MCP server whole;
+      undeclared keys and servers pass through. */ -}}
 {{- $managed := includeTemplate "claude/claude.json" . | fromJson -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := dict -}}
