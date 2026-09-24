@@ -9,7 +9,7 @@ An explicit model or latest-model request must pass `--browser-model-strategy se
 For an explicit latest-model + Pro request, use:
 
 ```bash
-oracle --engine browser --browser-attach-running \
+oracle --engine browser --browser-attach-running --browser-approval-wait 30m \
   --browser-model-strategy select --model latest --browser-thinking-time pro \
   -p "<task>" --file "<path-or-glob>"
 ```
