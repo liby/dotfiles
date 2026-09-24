@@ -16,7 +16,7 @@ name: herdr
 
 Control the current Herdr session through the installed `herdr` CLI. Pane commands control raw terminals; agent commands control the lifecycle state of a recognized coding agent.
 
-Give a control command the shell invocation to itself. Where the host sandbox exempts `herdr` by command name, as Claude Code does, the exemption survives only if every command in the invocation is exempt, and a newline separates commands exactly as `|`, `;`, and `&&` do. A single `jq`, `head`, or `test` anywhere in the call sandboxes all of it, and the socket call then fails with `Operation not permitted`, a denial that reads like a Herdr fault. Several `herdr` commands together are fine, and a leading `cd` is looked through.
+Where the host sandbox exempts `herdr` by command name, as Claude Code does, give a control command the shell invocation to itself: keep every command in it an exempt one, split at shell separators such as `|`, `&&`, `;`, and a newline, and put nothing else in the call but those commands' own arguments and a file-descriptor duplication such as `2>&1`; a command substitution or heredoc sandboxes it even inside an argument. An inline assignment before the command name sandboxes the call, unless the name is one the CLI treats as inert, such as `TERM` or `LANG`. A sandboxed socket call then fails with `Operation not permitted` rather than a recognizable permission error, and a `2>/dev/null` hides that message while the call still fails.
 
 ## Establish the boundary
 
@@ -83,6 +83,22 @@ herdr workspace create --cwd "$PWD" --label "<work>" --no-focus
 
 Do not move work into a different working directory or worktree unless the user asks for that topology.
 
+## Name what you own
+
+There is no dispatcher role in Herdr, so refusing to rename because you are "not the main dispatcher" is the wrong test. Ownership is creation: you own a workspace, tab, or pane only when a `create` or `split` you ran returned its ID. The pane you occupy and the tab and workspace you were called from are not yours, whoever started you. Rename only what you own, and only while the user has not taken it over.
+
+- A workspace label names the piece of work it holds. Its creator renames it when that work changes, including on a later turn; a round inside a workspace is not a workspace rename.
+- A tab label names the round. Its creator renames it when the round's purpose changes; a new round gets a new tab rather than a seized label.
+- A pane label names the participant. Its creator sets it at creation and may correct it when the pane is repurposed. An occupant never renames the pane it sits in: the pane's terminal title already tracks what its agent is doing, so leave activity to that field, do not copy the task into the pane label, and never rename a live agent to follow a task, because the agent name is the handle your prompts, waits, and resume commands use.
+
+Another participant changing a label you own does not transfer ownership, so you may correct it; a name the user set, or a container the user has taken over, stays. Read the label with `herdr workspace get`, `herdr tab get`, or `herdr pane get` before renaming and leave it if it changed against you, since Herdr has no atomic compare-and-set. Report a stale label on a container you do not own instead of renaming it.
+
+```bash
+herdr workspace rename <workspace-id> "<work>"
+herdr tab rename <tab-id> "<round>"
+herdr pane rename <pane-id> "<participant>"
+```
+
 ## Run a command in a pane
 
 For a shell command that does not need agent lifecycle, run it, wait with a finite timeout, and read:
@@ -117,7 +133,7 @@ Helpers that only read may share the current checkout; concurrent writers may no
 herdr agent start <agent-name> --kind <kind> --pane <returned-pane-id> -- <agent-args...>
 ```
 
-Start Codex on the profile its `default_permissions` setting selects, and pass no `-s` / `--sandbox` value unless the user names a sandbox mode for this launch. The flag does not narrow that profile: it selects Codex's older sandbox settings in its place, and a managed `allowed_permission_profiles` requirement alone keeps the profile. Where the flag takes effect, `-s read-only` turns off the network the configured profile keeps enabled; the launch that prompted this rule failed with `Could not resolve host`.
+Start Codex on the profile its `default_permissions` setting selects, and pass no `-s` / `--sandbox` value unless the user names a sandbox mode for this launch. The flag does not narrow that profile: it selects Codex's older sandbox settings in its place, and a managed `allowed_permission_profiles` requirement alone keeps the profile, so if the user asks for a read-only launch, say that under that requirement the flag cannot remove the profile's write access. Where the flag takes effect, `-s read-only` turns off the network the configured profile keeps enabled; the launch that prompted this rule failed with `Could not resolve host`.
 
 A successful `agent start` returns only after Herdr detects the expected agent and considers it ready for input. If startup is blocked, it returns `agent_not_ready` but keeps the name available. Either way, read `visible` before prompting: a startup prompt can still be on screen while Herdr already reports `idle` and `interactive_ready`.
 
@@ -129,7 +145,7 @@ herdr agent prompt <agent-name> '<task>' --wait --timeout <milliseconds>
 
 When the text itself contains quotes, write it to a file under this task's own directory and prompt the agent to read that path, which keeps the shell out of it entirely.
 
-`--wait` settles on `idle`, `done`, or `blocked`; do not narrow it to `--until done`, and keep it whenever you pass `--timeout`, which requires it. A wait tracks lifecycle state, not an individual turn or a successful result. A timeout ends only the wait and does not prove the agent is still working; before waiting again, read the pane to judge whether a turn is still live. After every wait, read the response to your prompt: confirm the outcome you asked for, and check for a question or a stated inability to proceed. Never blindly resend the prompt or press Enter when submission is ambiguous.
+`--wait` settles on `idle`, `done`, or `blocked`; do not narrow it to `--until done`, and keep it whenever you pass `--timeout`, which requires it. A wait tracks lifecycle state, not an individual turn or a successful result. A timeout ends only the wait and does not prove the agent is still working. After every wait, read the response to your prompt and check for a question or a stated inability to proceed. Never blindly resend the prompt or press Enter when submission is ambiguous.
 
 ```bash
 herdr agent get <agent-name>
@@ -166,6 +182,14 @@ Start a fresh agent for each participant rather than reusing one that has been r
 Dispatch the whole batch before collecting any of it. `agent prompt --wait` blocks until that one agent settles, so issuing the prompts one after another turns a panel into a queue, and a dialog in the first participant stalls participants that were never prompted. Where your host runs tool calls concurrently, issue the waiting prompts together. Otherwise prompt without `--wait`, confirm from each pane that the task arrived, and collect afterwards with `herdr agent wait <agent-name> --timeout <milliseconds>`, which bounds the wait the same way without resubmitting anything; an `idle` state proves nothing about a task that was never delivered.
 
 Attribute each finding to the model that produced it, and report agreement and disagreement separately. A second model repeating a claim is not evidence that the claim is true: check it against the source before carrying it into your own answer. When the round is a discussion rather than a poll, quote the other positions verbatim in the follow-up prompt, since the participants share no context.
+
+## Finish the round before you yield
+
+Nothing resumes you. Your host runs you only while you keep emitting tool calls, and once your turn ends only a new user message starts it again; Herdr has no message that reaches another agent, and its notifications reach the human, never this conversation. So "I'll summarize when they finish" or "I'll watch it" leaves the round stalled until the user notices.
+
+A round is done only when every participant you prompted is accounted for: for each, wait on a finite timeout, then read its answer to this prompt and judge it, counting a question, blocker, or stated failure as part of your answer. A settled state is not a result, and for a prompt sent without `--wait` confirm delivery first, because `idle` proves nothing about a task that never arrived. When a wait times out, the wait ended and the work did not: read the pane, and if a live turn is on screen, wait again in this turn, keeping the re-waits bounded. Where a reported state disagrees with the pane, the pane decides; on Pi the hook can stay `working` after the answer is on screen (see Pi).
+
+Yield with work outstanding only when the user asked to leave it running, only the user can answer a dialog, or the host will not accept another wait. Then say that only a new user message resumes the round, and for each unfinished participant give its agent name, pane ID, and last observed state, the containers you own, and the exact `herdr agent wait <agent-name> --timeout <milliseconds>` and `herdr agent read <agent-name>` commands. `herdr notification show` can alert the human before such a yield; it cannot wake you.
 
 ## Close what you opened
 
