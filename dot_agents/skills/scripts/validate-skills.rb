@@ -70,10 +70,11 @@ CLI_SMOKE_COMMANDS = [
   ["herdr tab create contract", %w[herdr tab create --help], /(?=.*--workspace)(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
   ["herdr workspace create contract", %w[herdr workspace create --help], /(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
   ["herdr codex sandbox flag", %w[codex --help], /(?=.*-s, --sandbox)(?=.*read-only)/m],
+  ["oracle browser approval wait", %w[oracle --help], /--browser-approval-wait <duration>/],
   [
     "oracle current browser dry run",
     [
-      "oracle", "--engine", "browser", "--browser-attach-running",
+      "oracle", "--engine", "browser", "--browser-attach-running", "--browser-approval-wait", "30m",
       "--browser-model-strategy", "current", "--browser-capture-provider-native",
       "--dry-run", "summary",
       "--prompt", "Validate the Oracle skill CLI contract.",

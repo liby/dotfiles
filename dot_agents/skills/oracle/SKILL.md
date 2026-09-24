@@ -19,9 +19,9 @@ Use the installed `oracle` binary. Treat the answer as advisory and verify mater
 
 Before an explicit model, latest-model, or effort request, or an upgrade, option-rejection, or picker-routing recovery, load the Model and effort section of the [non-default modes contract](references/non-default-modes.md). Before a browser follow-up, a Deep Research run, or an explicitly billed API run, load its corresponding section. Do not silently replace such a request with browser defaults.
 
-## Authorize and build the input
+## Build the input
 
-An explicit browser consultation authorizes submitting its prompt and files to the requested ChatGPT target, including a same-task manual fallback. Ask again only if the recipient, material content, paid route, or another external effect changes. API mode requires separate, explicit billing consent. Ask the user to complete login, CAPTCHA, SSO, workspace selection, or another human check.
+Authorization for a consultation, its recipient, and any paid route follows Authority; this skill adds no authorization of its own. API mode bills the user's API account, so it runs only when the user names that billed route; a consultation request alone does not. Ask the user to complete login, CAPTCHA, SSO, workspace selection, or another human check.
 
 Never attach secrets, credential files, private keys, shell history, browser storage, real environment files, or a broad home-directory tree. Make a fresh prompt self-contained: exact question, relevant facts and attempts, constraints, desired output, and the smallest files containing the evidence. Use a follow-up when continuity matters.
 
@@ -32,7 +32,7 @@ For non-secret inputs whose expansion or contents need checking, add `--dry-run 
 For an ordinary consultation, open a dedicated tab in the signed-in browser and retain its model and effort:
 
 ```bash
-oracle --engine browser --browser-attach-running \
+oracle --engine browser --browser-attach-running --browser-approval-wait 30m \
   --browser-model-strategy current --browser-capture-provider-native \
   --slug "<3-5 words>" -p "<task>" --file "<path-or-glob>"
 ```
@@ -43,7 +43,7 @@ oracle --engine browser --browser-attach-running \
 
 For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Verify that the saved conversation retains that Project ID/path or visibly belongs to the requested Project; a generic `/c/<id>` URL alone does not prove membership.
 
-If attach-running fails, ask the user to enable or approve Chrome remote debugging, or use the manual fallback below. Never copy a personal browser profile or target an existing unrelated tab.
+Attaching raises Chrome's remote-debugging prompt, which only the user can allow, and every new attach raises it again. `--browser-approval-wait` keeps the run waiting for that click instead of failing after the short default wait; pass it on every browser attach, including the commands in the non-default modes contract. If attaching still fails, ask the user to enable remote debugging, or use the manual fallback below. Never copy a personal browser profile or submit into an existing unrelated tab.
 
 ## Follow the run
 
@@ -51,7 +51,7 @@ Keep the process or session ID and follow the same run through finite waits. Aft
 
 - If the exact page remains unchanged at `Finalizing answer` across a finite observation, or appears finished after controller loss while harvest is unexpectedly empty, reload that same conversation at most once and recheck its user turn and answer. Account for any reload already performed by Oracle. Changing Thinking text or other progress means keep waiting.
 - If harvest reports an identity mismatch, stop using that capture and resolve the exact saved conversation. Non-empty `--live`/`--harvest` output or stale `running` metadata alone does not prove completion or failure.
-- If upload or send readiness times out, establish whether submission occurred first. Only an unsubmitted attempt may be retried with `--browser-bundle-files --browser-bundle-format auto`.
+- If upload or send readiness times out, establish whether submission occurred first. Only an attempt that did not submit and can no longer submit, because its process has exited or been stopped, may be retried with `--browser-bundle-files --browser-bundle-format auto`.
 
 Use `--force` only after establishing that the worker, controller, and bound target are dead and the original conversation or answer cannot be recovered. While the requested consultation is pending, keep following it; do not substitute your own analysis for its result.
 
@@ -62,10 +62,10 @@ Accept the result only when all of these hold:
 - a normal automated run has terminal `completed` status;
 - the answer is non-empty and complete, includes the required material, and satisfies the requested Project and any explicit model/effort requirements;
 - the answer belongs to this request's actual submitted turn; matched conversation identity alone does not bind it, including for a saved or recovered session;
-- when capture is enabled, `browser.providerNativeCapture.answerFidelity` is `matched` on the active branch's assistant message. `divergent` means the returned text differs from the provider record and is an unresolved answer; `unknown` means no message-bound evidence was available, including a Deep Research report without an assistant message ID.
+- when capture is enabled, `browser.providerNativeCapture.answerFidelity` is one of: `matched` on the active branch's assistant message; `divergent` reconciled against that message's text in `~/.oracle/sessions/<session-id>/artifacts/conversation-<id>-raw.json`, where a difference limited to the page's rendering (padded table columns, heading markers, file-citation chips) is the same answer, any other difference makes the provider record the answer, and a missing record or message leaves the result unresolved; or `unknown` for a Deep Research report without an assistant message ID. Any other `unknown` is unresolved.
 
-Report the inherited model/effort label as an observation, never as verified selection. Do not claim provider-native fidelity when it is `unknown` or missing. If only the visible page establishes completion, report a manual UI observation with the saved conversation URL instead of claiming the automated controller completed.
+Report the inherited model/effort label as an observation, never as verified selection. Report a reconciled `divergent` result as such rather than as `matched`, and do not claim provider-native fidelity when it is `unknown` or missing. If only the visible page establishes completion, report a manual UI observation with the saved conversation URL instead of claiming the automated controller completed.
 
 ## Manual fallback
 
-If automation cannot submit, run the original prompt and text-file arguments with `oracle --render-markdown`, inspect the rendered text, and submit it in the visible signed-in browser. Attach each original non-text file or a byte-preserving archive and verify readiness before sending. Preserve browser defaults unless selection was requested; verify any requested model/effort and Project, then require a completed answer to that turn and a saved URL. A preceding failed session supplies no selection or completion evidence for this manual answer. Apply the acceptance checklist except the automated-completion and provider-native fidelity items, which do not apply to a manual turn.
+If automation did not submit and can no longer submit, established as under Follow the run, run the original prompt and text-file arguments with `oracle --render-markdown`, inspect the rendered text, and submit it in a new tab of the signed-in browser opened at the requested target, such as the supplied Project URL. Attach each original non-text file or a byte-preserving archive and verify readiness before sending. Preserve browser defaults unless selection was requested; verify any requested model/effort and Project, then require a completed answer to that turn and a saved URL. A preceding failed session supplies no selection or completion evidence for this manual answer. Apply the acceptance checklist except the automated-completion and provider-native fidelity items, which do not apply to a manual turn.
