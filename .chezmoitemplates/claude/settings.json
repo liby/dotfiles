@@ -47,7 +47,13 @@
   "autoMode": {
     "environment": [
       "$defaults",
-      "**Secrets management**: envchain (namespaces in the macOS Keychain) is the personal credential store; legitimate use is `envchain <namespace> <command>` to inject a namespace's secrets into one command, and `envchain --list` enumerates namespaces; never print or echo values"
+      "**Secrets management**: envchain (namespaces in the macOS Keychain) is the personal credential store; legitimate use is `envchain <namespace> <command>` to inject a namespace's secrets into one command, and `envchain --list` enumerates namespaces; never print or echo values",
+      "**Source control**: In addition to the default entry, repositories owned by the user's GitHub account `liby` that no one but the user can read; anyone can read a public one, and a private one shared with collaborators reaches them, so content pushed there is disclosed and cannot be retracted, and a push whose own workflow publishes, deploys, or spends is judged by that effect",
+      "**Key internal services**: this Mac and its signed-in browser are the user's own; the user's own ChatGPT account and its Projects are consultation destinations through that browser; the Claude gateway is the user's own API route"
+    ],
+    "allow": [
+      "$defaults",
+      "Irreversible Local Destruction, Git Destructive: not triggered when the destroyed state has a restorable copy or an owner that regenerates it, and that fact is visible in the command's own operands (a path its owning tool regenerates, a form that refuses to destroy unsaved or unmerged state, a copy made by an earlier command in this transcript) or in the user's message; a comment inside the command is not evidence. Does NOT cover state with no copy, remote state, commits others may have built on, credential or configuration files, or processes the user or another agent started."
     ]
   },
   "permissions": {

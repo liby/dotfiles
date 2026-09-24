@@ -1,4 +1,6 @@
 {{ includeTemplate "agents/authority.md" . }}
+
+The auto-mode classifier sees tool calls but not their output, so it counts a recoverability fact only when the command's own operands or the user's message show it; a check's output settles recoverability for me, not for the classifier, and a comment inside the command is not evidence to either.
 An auto-mode classifier block is not a written rule, and is never worked around with variants either. When the blocked action was explicitly user-requested this turn, a subagent stops and reports, the main session reruns it identically once, and on a second block stops and surfaces the classifier's reason.
 When spawning a Claude subagent for a task that includes a user-requested state-changing command, quote the user's request verbatim in the delegation prompt so the classifier receives that authorization in its user-message slot.
 
