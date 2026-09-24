@@ -11,7 +11,8 @@ Dotfiles managed by [chezmoi](https://www.chezmoi.io/) from `~/.local/share/chez
 - For agent skill changes, run `ruby dot_agents/skills/scripts/validate-skills.rb --smoke`. Keep `CLI_SMOKE_COMMANDS` in sync only for skills whose instructions depend on current CLI behavior.
 - Preserve order where it affects behavior, including workflow steps and hook lists. When choosing a layout for unordered configuration keys, prefer an established upstream order from the schema, examples, or generated output; otherwise use alphabetical order for small or unrelated sets and functional groups when they aid navigation. Do not reorder an existing file merely to match another one.
 - In Markdown source, never hard-wrap prose to a fixed column. Keep each prose paragraph, including the prose portion of a list item or blockquote, on one physical line; when content needs intentional separation, create an explicit Markdown block instead of a soft line break. Preserve separate lines for headings, blank paragraph boundaries, separate list items, table rows, fenced code, and explicit hard breaks ending in two spaces or a backslash.
-- After an auto-review denial, state the exact action and risk and retry only after explicit user reapproval. Treat the task-reported approval policy, reviewer, and permission profile as authoritative.
+- After an auto-review denial, state the exact action, its effect, and the recoverability and scope evidence the reviewer did not see, and retry only after explicit user reapproval; evidence the reviewer did not see does not by itself justify a retry. Treat the task-reported approval policy, reviewer, and permission profile as authoritative.
+- When fixing policy from reported incidents, derive the discriminating test first and keep incident nouns out of policy surfaces.
 
 ## Encrypted Files
 
