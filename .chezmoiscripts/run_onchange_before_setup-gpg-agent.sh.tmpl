@@ -3,6 +3,13 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
+# Rerunning on a keg change restarts the daemons with the upgraded binaries, so the rendered kegs
+# are an input, not documentation. They are gpg-agent and keyboxd's linked Homebrew kegs: a
+# library-only upgrade replaces the files under the running daemons without changing the GnuPG
+# version. readlink failures are dropped so a machine without Homebrew renders empty values
+# instead of errors.
+# GnuPG kegs: {{ output "/bin/sh" "-c" `for keg in gnupg gettext libassuan libgcrypt libgpg-error libksba npth; do printf '%s=%s ' "$keg" "$(/usr/bin/readlink "/opt/homebrew/opt/$keg" 2>/dev/null)"; done` | trim }}
+
 brew_prefix="/opt/homebrew"
 
 gpg_bin="$brew_prefix/bin/gpg"
@@ -106,12 +113,16 @@ EOF
   launchctl print "$service" | grep -q 'runs = [1-9]' || launchctl kickstart "$service"
 done
 
-# Neither bootstrap nor kickstart waits for the daemon's socket; the card
-# commands below need both.
+# Neither bootstrap nor kickstart waits for the daemon's socket. A daemon left
+# over from before the restart is also reachable, so a bare reply is not enough:
+# both must report the version now on disk, or a stale binary serves the
+# encrypted-file decryption below.
+installed_gpg_version=$("$gpg_bin" --version | /usr/bin/awk 'NR == 1 { print $NF }')
 for _ in {1..50}; do
   ready=1
   for daemon_flag in "" --keyboxd; do
-    "$brew_prefix/bin/gpg-connect-agent" $daemon_flag --no-autostart 'getinfo pid' /bye 2>/dev/null | grep -q '^D ' || ready=0
+    running_version=$("$brew_prefix/bin/gpg-connect-agent" $daemon_flag --no-autostart 'getinfo version' /bye 2>/dev/null | /usr/bin/awk '$1 == "D" { print $2; exit }') || ready=0
+    [[ "$running_version" == "$installed_gpg_version" ]] || ready=0
   done
   (( ready )) && break
   sleep 0.2
