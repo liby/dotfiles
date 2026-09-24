@@ -69,6 +69,7 @@ CLI_SMOKE_COMMANDS = [
   ["herdr split contract", %w[herdr pane split --help], /(?=.*--current)(?=.*--direction)(?=.*--cwd)(?=.*--no-focus)/m],
   ["herdr tab create contract", %w[herdr tab create --help], /(?=.*--workspace)(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
   ["herdr workspace create contract", %w[herdr workspace create --help], /(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
+  ["herdr codex sandbox flag", %w[codex --help], /(?=.*-s, --sandbox)(?=.*read-only)/m],
   [
     "oracle current browser dry run",
     [

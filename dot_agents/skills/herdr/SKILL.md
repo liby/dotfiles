@@ -109,13 +109,15 @@ herdr agent list
 
 Name an agent for its role plus whatever separates it from its siblings, which is the model when several models share a role and the target when several instances share a model. Start each participant you were asked to create in a newly created pane.
 
-Read-only helpers may share the current checkout. Do not let concurrent writers edit the same checkout. Keep extra agents read-only or sequential unless the user asks for isolated worktrees.
+Helpers that only read may share the current checkout; concurrent writers may not. Limit extra agents to reading, or run writers one at a time, unless the user asks for isolated worktrees, and state that limit in the task text: it is a constraint on what the helper does, not a sandbox setting.
 
 `agent start` requires an existing pane at an interactive shell prompt. Start the kind the user asked for, and pass native arguments such as the model only after `--`:
 
 ```bash
 herdr agent start <agent-name> --kind <kind> --pane <returned-pane-id> -- <agent-args...>
 ```
+
+Start Codex on the profile its `default_permissions` setting selects, and pass no `-s` / `--sandbox` value unless the user names a sandbox mode for this launch. The flag does not narrow that profile: it selects Codex's older sandbox settings in its place, and a managed `allowed_permission_profiles` requirement alone keeps the profile. Where the flag takes effect, `-s read-only` turns off the network the configured profile keeps enabled; the launch that prompted this rule failed with `Could not resolve host`.
 
 A successful `agent start` returns only after Herdr detects the expected agent and considers it ready for input. If startup is blocked, it returns `agent_not_ready` but keeps the name available. Either way, read `visible` before prompting: a startup prompt can still be on screen while Herdr already reports `idle` and `interactive_ready`.
 
