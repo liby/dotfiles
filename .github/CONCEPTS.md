@@ -126,7 +126,7 @@ Pi consumes the shared core through [`~/.pi/agent/AGENTS.md`](../private_dot_pi/
 
 ## Shared agent execution
 
-The installed Homebrew `snow` command has one native-SSO execution identity. Codex Rules own both broad approval and inner-sandbox exclusion for Codex; Claude's `permissions.allow` and `sandbox.excludedCommands` own those decisions separately. The personal `snow` skill owns query and same-task SSO behavior, while Snowflake RBAC owns server authorization. Do not narrow the route to `snow sql -q` or restore workspace `uvx` runtimes.
+The installed Homebrew `snow` command has one native-SSO execution identity. Claude's `permissions.allow` and `sandbox.excludedCommands` own approval and exclusion, so on Claude a direct `snow` call runs outside the sandbox and opens the browser itself. On Codex no rule can move it out: a permission profile with any denied-read entry holds every command in the inner sandbox, which also defeats an exec-policy allow and an explicit escalation. `snow` therefore runs sandboxed there — a cached token just works, and a cold SSO emits the login URL for the agent's browser tool to open, which needs `SNOWFLAKE_AUTH_FORCE_SERVER`, loopback, and an identity-provider session in that browser. Dropping the `~/.ssh` deny would not by itself restore the old outside-the-sandbox route: with the allow rule gone, an unescalated `snow` stays in the sandbox, so that route needs the allow rule back or an approved escalation on each call, and it costs the sandbox's protection of `~/.ssh`. The personal `snow` skill owns query and same-task SSO behavior, and Snowflake RBAC owns server authorization. Do not narrow the route to `snow sql -q` or restore workspace `uvx` runtimes.
 
 ## Managed skill registry
 
@@ -140,7 +140,7 @@ A managed skill preapproves every tool and command family needed by its normal c
 
 Encrypted files use GPG, with private keys stored on a YubiKey. Repository-only encrypted data can seed envchain namespaces in the macOS Keychain instead of deploying credentials as ordinary dotfiles. Adapting the full repository therefore requires replacing or removing its GPG recipients and personal encrypted data.
 
-Agents may read `~/.ssh` client config (`config`, `config.*`), public keys, `allowed_signers`, and `known_hosts`, and nothing else under that directory. The Claude and Codex Bash guards, Claude's file-tool hook, and Claude's sandbox enforce that list by directory, so private keys deployed there need no naming convention and no per-key rule. The Codex sandbox reopens only the exact files ssh and Git signature verification need, because its read rules take no globs; public keys stay unreadable inside that sandbox.
+Agents may read `~/.ssh` client config (`config`, `config.*`), public keys, `allowed_signers`, and `known_hosts`, and nothing else under that directory. The Claude and Codex Bash guards, Claude's file-tool hook, and Claude's sandbox enforce that list by directory, so private keys deployed there need no naming convention and no per-key rule. The Codex sandbox reopens only the exact files ssh and Git signature verification need, because its read entries take exact paths or a trailing `/**` while git-style globs (`*`, `?`, `[`, `]`) are accepted only for deny; public keys stay unreadable inside that sandbox.
 
 ### Git identity and signing
 
