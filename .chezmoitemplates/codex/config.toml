@@ -67,9 +67,12 @@ hide_rate_limit_model_nudge = true
 [permissions.development.filesystem]
 ":root" = "write"
 "{{ .chezmoi.homeDir }}/.codex/plugins/cache/openai-bundled/browser" = "read"
-# Codex read rules take exact paths, so ~/.ssh is denied as a whole and only the
-# files ssh and Git signature verification need are reopened; public keys stay
-# unreadable here.
+# Codex read entries take exact paths or a trailing `/**`, while git-style globs
+# (`*`, `?`, `[`, `]`) are accepted only for deny, so ~/.ssh is denied as a whole
+# and only the files ssh and Git signature verification need are reopened by exact
+# path; public keys stay unreadable here. Any denied-read entry, this one
+# included, also holds every command inside the inner sandbox: exec-policy allow
+# and explicit escalation cannot move one out while it is present.
 "{{ .chezmoi.homeDir }}/.ssh" = "deny"
 "{{ .chezmoi.homeDir }}/.ssh/config" = "read"
 "{{ .chezmoi.homeDir }}/.ssh/allowed_signers" = "read"

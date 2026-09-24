@@ -79,6 +79,14 @@ herdr tab create --workspace "$HERDR_WORKSPACE_ID" --cwd "$PWD" --label "<round>
 herdr workspace create --cwd "$PWD" --label "<work>" --no-focus
 ```
 
+Only the pane's terminal title follows the agent on its own, through the agent's OSC title; a tab and a workspace keep the label they were created or last renamed with, and a workspace label defaults to its working directory. Whenever the task behind a container or participant changes, rename that level yourself, even when the current name is a default, the agent's own terminal title, or a name you or another participant set earlier, so the sidebar and window title keep naming the current work, and keep the agent name aligned with the pane label:
+
+```bash
+herdr workspace rename <workspace-id> "<work>"
+herdr tab rename <tab-id> "<round>"
+herdr pane rename <pane-id> "<participant>"
+```
+
 `pane layout` reports the rectangle every pane in the tab keeps, so you can tell before splitting what both halves would get; budget against every pane in the tab, the user's included, and against the window you actually have rather than a remembered number. Width is what has actually been observed to break: an agent TUI squeezed to around 60 columns is unreadable to the user even though your own reads still succeed, and 80 columns is the usual comfortable floor; both are calibration points, and the user's own answer decides. A tab cannot widen a window that is itself too narrow. Inspect the layout again after creating the pane, since the split you got may not be the one you predicted. When a round does not fit in one tab, run it in batches or give it another tab, and say which you chose; when even an unsplit pane stays unreadable, report the capacity limit and what you could not start.
 
 Do not move work into a different working directory or worktree unless the user asks for that topology.
