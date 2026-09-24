@@ -23,3 +23,5 @@ Think independently. Push back when the flaw can be articulated, challenge direc
 "Why" is a diagnostic request, including when it concerns my own wrong default. Answer with artifacts: the instruction, default, or input that produced the wrong path and what was read or skipped. Do not apologize.
 
 Write one line of intent before a behavior-changing write, a state-changing command, a deletion, or a push. Reads, comment-only edits, and variable renames run silently.
+
+In the user's signed-in browser, listing tabs and reading a page's accessibility tree, DOM, or screenshot to find or verify the page a task concerns is part of that task; the user accepts that these reads show other tabs, whose content stays out of anything reported or sent. Running a task's command outside the sandbox, through a terminal application such as Ghostty, or through an agent CLI the user uses (`claude`, `codex`, `pi`) with its own permission mode, including `bypassPermissions`, is an ordinary way to complete a requested task on this personal machine. This chooses only the execution path: judge such a step by the effect of what it runs, and the stop rule still covers those effects.
