@@ -33,6 +33,20 @@ status=0
 date
 brew update || status=$?
 brew upgrade --no-ask || status=$?
+# gpg-agent and keyboxd keep the pre-upgrade binary and libraries mapped, and
+# no-autostart stops clients from starting replacements, so restart them here;
+# the chezmoi GPG script only reruns on a later apply. Check both daemons, or a
+# keyboxd left down by a partial restart is skipped on the next run; skip only
+# when both already match, so an unrelated upgrade does not clear the PIN cache.
+installed=$(/opt/homebrew/bin/gpg --version 2>/dev/null | /usr/bin/awk 'NR == 1 { print $NF }')
+agent_version=$(/opt/homebrew/bin/gpg-connect-agent --no-autostart 'getinfo version' /bye 2>/dev/null | /usr/bin/awk '$1 == "D" { print $2; exit }')
+keyboxd_version=$(/opt/homebrew/bin/gpg-connect-agent --keyboxd --no-autostart 'getinfo version' /bye 2>/dev/null | /usr/bin/awk '$1 == "D" { print $2; exit }')
+if [ "$installed" != "$agent_version" ] || [ "$installed" != "$keyboxd_version" ]; then
+  /opt/homebrew/bin/gpgconf --kill gpg-agent || status=$?
+  /opt/homebrew/bin/gpgconf --kill keyboxd || status=$?
+  /bin/launchctl kickstart "gui/$UID/org.gnupg.gpg-agent" || status=$?
+  /bin/launchctl kickstart "gui/$UID/org.gnupg.keyboxd" || status=$?
+fi
 xattr -dr com.apple.quarantine /opt/homebrew/Caskroom/codex || status=$?
 "$NPM_CONFIG_PREFIX/bin/pi" update --self || status=$?
 brew cleanup || status=$?
