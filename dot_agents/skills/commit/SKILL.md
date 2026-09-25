@@ -13,10 +13,10 @@ Create coherent local history for the requested work. Decide what is being deliv
 
 ## Authority
 
-- Commit when the user asked for one or the requested workflow needs one, such as creating an MR/PR or an explicitly requested release step. An implementation request alone does not authorize a commit; report the prepared state instead. A repository instruction that prescribes amend or fixup for follow-ups is authorization for that mode.
+- Commit when the user asked for one or the requested workflow needs one, such as creating an MR/PR or an explicitly requested release step. An implementation request alone does not need a commit; report the prepared state instead. A repository instruction that prescribes amend or fixup for follow-ups is authorization for that mode.
 - Honor explicit scope, grouping, staged-only choices, and authorized amend or fixup targets without asking again; a fixup does not authorize a later rebase.
 - Resolve the delivery repository, checkout, and branch or detached HEAD from the request and governing source ownership, not from the cwd: linked worktrees share a repository but not a delivery state. Run its operations as `git -C <delivery-checkout>`. Quote literal filenames per argument with literal magic, such as `':(literal)src/[id]/file.ts'`; `--` ends options but does not stop pathspec matching. Do not set process-wide literal pathspec behavior, which also changes Git calls inside hooks.
-- Do not commit or stage declared environment files, private keys, credential stores, or unresolved potentially secret plaintext, and keep established ciphertext bodies out of every diff; this covers content a previous step already staged, so a staged-only request that would include one stops and leaves the index as it is. Load [transcript recovery](references/transcript-recovery.md) only when the commit's motivation is still missing after the request and diff are read.
+- Do not commit or stage secret plaintext or unresolved potentially secret plaintext, and keep established ciphertext bodies out of every diff; this covers content a previous step already staged, so a staged-only request that would include one stops and leaves the index as it is. Load [transcript recovery](references/transcript-recovery.md) only when the commit's motivation is still missing after the request and diff are read.
 
 ## Decide the unit
 

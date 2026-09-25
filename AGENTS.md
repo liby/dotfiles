@@ -16,7 +16,7 @@ Dotfiles managed by [chezmoi](https://www.chezmoi.io/) from `~/.local/share/chez
 
 ## Encrypted Files
 
-Protect the plaintext boundary, not repository-declared ciphertext. Treat a tracked ciphertext source as an opaque artifact: agents may inspect its metadata and encryption marker and may stage, commit, rename, or delete it when project documentation or the user supplies the change intent. Do not read its body for semantic evidence, infer plaintext changes, or describe them in a commit message. If encryption is not established, stop before reading the body.
+[Protected Inputs](.chezmoitemplates/agents/protected-inputs.md) owns the ciphertext rule: a tracked ciphertext source is an opaque artifact whose metadata may be inspected and that may be staged, committed, renamed, or deleted when the change intent comes from project documentation or the user, while its body is never read, inferred, or described. The operations below are this repository's.
 
 - Hand every operation that can expose or derive secret plaintext to the user, including add or re-encrypt from a real secret, decrypt, `chezmoi edit`, `chezmoi re-add`, and `chezmoi merge`. Never run `chezmoi merge` for any encrypted target.
 - Add a non-secret encrypted file with `chezmoi add --encrypt <file>`. Edit encrypted non-secret content through `chezmoi edit <dest-path>` or edit its deployed plaintext and run `chezmoi re-add`; never edit an `encrypted_*.asc` source directly. Decryption requires a YubiKey.

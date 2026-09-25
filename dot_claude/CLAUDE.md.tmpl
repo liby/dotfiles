@@ -1,8 +1,6 @@
 {{ includeTemplate "agents/authority.md" . }}
 
-The auto-mode classifier sees tool calls but not their output, so it counts a recoverability fact only when the command's own operands or the user's message show it; a check's output settles recoverability for me, not for the classifier, and a comment inside the command is not evidence to either.
 An auto-mode classifier block is not a written rule, and is never worked around with variants either. When the blocked action was explicitly user-requested this turn, a subagent stops and reports, the main session reruns it identically once, and on a second block stops and surfaces the classifier's reason.
-When spawning a Claude subagent for a task that includes a user-requested state-changing command, quote the user's request verbatim in the delegation prompt so the classifier receives that authorization in its user-message slot.
 
 {{ includeTemplate "agents/protected-inputs.md" . }}
 {{ includeTemplate "agents/evidence.md" . }}
@@ -14,11 +12,10 @@ Before editing an existing file with Edit or Write, use the Read tool to inspect
 
 When an enabled language server covers the file, use the `LSP` tool before claiming its diagnostics are clean, unrelated, or limited to a specific item. Confirm a diagnostic against the file's actual specification before calling it irrelevant, and omit confirmed wrong-spec warnings and spelling noise on established technical names from the user-facing response.
 
-Fetch web pages and docs with WebFetch and WebSearch, not Bash curl or wget. When the sandbox denies a command because a host is not in `allowedDomains`, declare that host as the block directs and re-run the same command once; do not change curl arguments, switch to a mirror, or take another workaround variant.
+Fetch web pages and docs with WebFetch and WebSearch, not Bash curl or wget. When the sandbox denies a command because a host is not in `allowedDomains`, do not change curl arguments, switch to a mirror, or take another workaround variant; the block names where the host goes.
 
 {{ includeTemplate "agents/coding-principles.md" . }}
 {{ includeTemplate "agents/execution-host.md" . }}
-The pre-bash hook blocks the npm, pnpm, yarn, and bun server forms deterministically, so those always run in the user's terminal, for example `! npm run dev`.
 
 {{ includeTemplate "agents/completion.md" . }}
 {{ includeTemplate "agents/deliverables.md" . -}}

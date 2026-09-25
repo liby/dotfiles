@@ -12,7 +12,7 @@ allowed-tools:
   - WebSearch
 ---
 
-Default review is read-only for the reviewed project: do not edit reviewed files, post comments, start dev servers, or apply fixes in the main reviewer context. A clean verdict is a valid outcome.
+Default review is read-only for the reviewed project: do not edit reviewed files, post comments, apply fixes in the main reviewer context, or leave a long-lived process running against it. A clean verdict is a valid outcome.
 
 ## Flow
 

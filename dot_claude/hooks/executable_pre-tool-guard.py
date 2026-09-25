@@ -24,7 +24,6 @@ MESSAGES = {
     'rg-replace': 'rg -r means --replace. Drop -r; use -n when you need line numbers. For intentional replacement, spell --replace VALUE.',
     'rg-include': "rg has no --include flag. Filter files with -g GLOB (e.g. -g '*.ts') or a type filter like -t ts.",
     'rg-bre': 'rg regex is not grep BRE: a\\|b matches literal a|b. Write alternation as a|b; to match a literal pipe intentionally, use [|] or -F.',
-    'server': 'Do not run dev/start/serve commands, even when explicitly asked; do not retry. If a running app is needed, ask the user to run it in their own terminal (e.g. ! npm run dev). Otherwise use relevant finite checks such as tests, type checking, or linting.',
 }
 READ_CMDS = r'cat|head|tail|less|more|bat|grep|rg|ag|ack|sed|awk|base64|xxd|od|openssl|cp|tee|tar|source'
 SENSITIVE_NAMES = r'(?:\.npmrc|\.zsh_history|\.zprofile|private-keys-v1\.d|\.pem|\.key|auth\.json|\.credentials\.json|\.aws/credentials)'
@@ -286,20 +285,6 @@ def check_command(words):
                 deny('rg-include')
         if bre and not fixed:
             deny('rg-bre')
-    if program in ('npm', 'pnpm', 'yarn', 'bun'):
-        arguments = iter(tail)
-        run = False
-        for arg in arguments:
-            if arg in ('--prefix', '--dir', '--cwd', '--filter', '--workspace', '-C', '-F') or program == 'npm' and arg == '-w':
-                next(arguments, None)
-            elif arg.startswith('-'):
-                continue
-            elif arg == 'run' and not run:
-                run = True
-            else:
-                if re.match(r'^(dev|start|serve)($|[^A-Za-z0-9_])', arg):
-                    deny('server')
-                break
 
 
 def shell_tokens(source):
