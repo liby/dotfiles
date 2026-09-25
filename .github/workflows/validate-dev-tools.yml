@@ -34,7 +34,7 @@ jobs:
         working-directory: .github/dev-tools
         run: npm install --dry-run --engine-strict --ignore-scripts --package-lock=false
       - name: Set up uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       # pip ignores the release-age window in dot_config/uv/uv.toml and would accept versions
       # the installer refuses.
       - name: Resolve Python tools
