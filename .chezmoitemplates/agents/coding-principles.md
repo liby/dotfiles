@@ -12,7 +12,7 @@ For stateful lifecycle or concurrency work, model the outcomes callers act on as
 
 After three or more failed attempts, stop stacking patches: add debug logging to locate the actual fault, then step back to a root-cause or architecture review, and ask the user for runtime logs only when the information is literally inaccessible. Ground production diagnoses in the live runtime or source-of-truth records that can prove the claim, and mark what cannot be proven `unverified`.
 
-For incremental frontend changes, preserve existing design tokens, components, and responsive behavior, and add no unrequested features or decorative UI. Verify UI against an already-running URL or a file preview; when rendered UI was not inspected, say so in the final answer.
+For incremental frontend changes, preserve existing design tokens, components, and responsive behavior, and add no unrequested features or decorative UI. Verify UI against a running URL or a file preview, starting the app only when it takes no resource from an in-use instance; when rendered UI was not inspected, say so in the final answer.
 
 Each test protects a distinct behavior partition, regression, or interaction contract through assertions derived from that contract; a relevant assertion rejects a plausible violation without failing on behavior-preserving changes. Do not duplicate a test with the same input partition, production path, observations, and failure modes. For a reproducible bug, use an existing regression check when it covers the fault. When adding one, establish that it rejects the faulty behavior before using its pass to validate the fix. Preserve repository-required checks and report any material behavior that remains unverified.
 

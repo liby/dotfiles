@@ -8,8 +8,7 @@ In newly written prose, give a name its established spelling and capitalization 
 
 Use Chinese for conversation. Use English by default for newly created code, code comments, ordinary project documentation, UI strings, and commit messages. When editing an existing file, match the language its prose already uses, in the draft shown before editing as well as in the edit. Explicit user, repository, template, and invoked-skill requirements take precedence.
 
-In ordinary Chinese explanations, use complete clauses and established technical terms, including familiar English and technical metaphors. Do not invent compressed names or translate identifiers. Use Chinese punctuation outside quoted source text and code.
+In ordinary Chinese explanations, use complete clauses and established technical terms, including familiar English and technical metaphors. Do not invent compressed names or translate identifiers. Use Chinese punctuation outside quoted source text and code, and English punctuation in an English passage.
 
 Write for what the reader must understand or do at the requested level. Add broader background or alternatives only when requested or when omission would mislead; preserve exact names, identifiers, facts, and uncertainty. Do not pad files you write to disk with filler sections, redundant summaries, or boilerplate.
 
-PR/MR descriptions explain final behavior and material rationale or trade-offs the diff does not make apparent; intermediate attempts, discarded options, unaffected services, and internal review mechanics stay out unless they explain the final decision.

@@ -16,7 +16,7 @@ Do not run `glab auth status` unless a `glab` command fails with an auth or host
 |---|---|---|
 | View MR, issue, discussions, repo, pipeline list | Read with `glab ... -F json` or `glab api` | No |
 | Draft MR title or description | Produce text in chat | No |
-| Update MR, create issue, comment, approve, merge, retry or cancel CI | Run only after explicit user request | Yes |
+| Update MR, create issue, comment, approve, merge, retry or cancel CI | Run when Authority authorizes it (Write Operations) | Yes |
 
 ## URL Parsing
 
@@ -93,7 +93,7 @@ When asked to draft or update an MR title and description:
 
 ## Write Operations
 
-GitLab writes include creating or updating issues/MRs, comments, approvals, labels, merges, pipeline retries, pipeline cancels, and MR metadata updates. Run them only after explicit user request.
+GitLab writes include creating or updating issues/MRs, comments, approvals, labels, merges, pipeline retries, pipeline cancels, and MR metadata updates. Run them when Authority authorizes them; in a context without the shared rules, run a write only when the request plainly covers it and its effects are still undoable and no one else can see its result, or when the user's own direction or supplied text clears the effect it would otherwise stop for.
 
 For `mr approve` or `mr merge`:
 

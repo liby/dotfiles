@@ -11,14 +11,16 @@ gh skill preview <owner/repo> <skill>
 gh skill update <skill> --all --dry-run --dir <skill-directory>
 ```
 
-Write path, only after explicit request:
+Write path, when Authority authorizes it:
 
 ```bash
 gh skill install <owner/repo> <skill> --dir <skill-directory>
 gh skill update <skill> --all --dir <skill-directory>
 ```
 
-Use the exact requested skill names for preview and update. `--all` suppresses the confirmation after that name filter; never run it without explicit skill names. When current and candidate metadata expose comparable release refs, stop on a version regression unless the user explicitly requested the downgrade. Review the whole directory replacement before applying an update: the current implementation can remove extra local files despite its help text.
+Use the exact requested skill names for preview and update. `--all` suppresses the confirmation after that name filter; never run it without explicit skill names. When current and candidate metadata expose comparable release refs, treat a version regression as a mismatch with the task and stop, unless the user asked for that downgrade. Review the whole directory replacement before applying an update: the current implementation can remove extra local files despite its help text.
+
+When the candidate's frontmatter adds or widens tool approval (such as `allowed-tools`) against the installed version, or a first install carries any such approval, that write changes which tools run without asking, so state which frontmatter changed and wait unless the user's direction or a standing authorization already covers that approval change; otherwise handle it under Write Operations.
 
 Use `--from-local` only when the user asks to install from a local directory. Use `--allow-hidden-dirs` only when the source repo stores skills under hidden directories.
 

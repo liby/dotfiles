@@ -21,7 +21,7 @@ Before an explicit model, latest-model, or effort request, or an upgrade, option
 
 ## Build the input
 
-Authorization for a consultation, its recipient, and any paid route follows Authority; this skill adds no authorization of its own. API mode bills the user's API account, so it runs only when the user names that billed route; a consultation request alone does not. Ask the user to complete login, CAPTCHA, SSO, workspace selection, or another human check.
+Authorization for a consultation, its recipient, and any paid route follows Authority; this skill adds no authorization of its own. Ask the user to complete login, CAPTCHA, SSO, workspace selection, or another human check.
 
 Never attach secrets, credential files, private keys, shell history, browser storage, real environment files, or a broad home-directory tree. Make a fresh prompt self-contained: exact question, relevant facts and attempts, constraints, desired output, and the smallest files containing the evidence. Use a follow-up when continuity matters.
 
@@ -44,6 +44,8 @@ oracle --engine browser --browser-attach-running --browser-approval-wait 30m \
 For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Verify that the saved conversation retains that Project ID/path or visibly belongs to the requested Project; a generic `/c/<id>` URL alone does not prove membership.
 
 Attaching raises Chrome's remote-debugging prompt, which only the user can allow, and every new attach raises it again. `--browser-approval-wait` keeps the run waiting for that click instead of failing after the short default wait; pass it on every browser attach, including the commands in the non-default modes contract. If attaching still fails, ask the user to enable remote debugging, or use the manual fallback below. Never copy a personal browser profile or submit into an existing unrelated tab.
+
+A build that predates the upstream DOM fix cannot detect a submitted turn under ChatGPT's Chat/Work layout: the page no longer exposes `data-message-author-role`, so a run submits, then times out at `prompt-commit-timeout`, `--harvest` reports no submitted turn, and the answer can only be read from the saved conversation (upstream issue #517, fix PR #516). No release includes that fix yet (PR #516 is open); until one does, run an authorized consultation as usual but read the answer from the conversation URL instead of relying on the automated capture.
 
 ## Follow the run
 

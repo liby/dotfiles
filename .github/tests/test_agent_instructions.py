@@ -313,6 +313,18 @@ class SharedAgentInstructionTest(unittest.TestCase):
         flat_headings = [heading[0] for heading in headings]
         self.assertEqual(flat_headings.count("Coding Principles"), 1)
 
+    def test_scope_predicate_matches_between_policy_and_classifier(self):
+        policy = (AGENT_FRAGMENTS / "authority.md").read_text()
+        classifier = CLAUDE_SETTINGS_TEMPLATE.read_text()
+        for phrase in (
+            "the user's own tools",
+            "for the task or as a standing choice",
+            "without the user choosing it is an outside reader",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, policy)
+                self.assertIn(phrase, classifier)
+
     def test_roots_assemble_each_fragment_once_in_order(self):
         expected_headings = [
             title

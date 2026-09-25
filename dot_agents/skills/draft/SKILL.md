@@ -36,7 +36,7 @@ Resolve language before formatting. Existing-file language and explicit instruct
 
 ## Settle the facts before composing
 
-Separate established facts, the user's stated understanding, requested hypotheses, and unresolved information. A report from another model is a lead until checked against its primary evidence. Do not convert a documented mechanism into a runtime observation, a proposed action into a completed one, or an unknown into a fact.
+Separate established facts, the user's stated understanding, requested hypotheses, and unresolved information. Do not convert a documented mechanism into a runtime observation, a proposed action into a completed one, or an unknown into a fact.
 
 When an unresolved fact changes the message's purpose, a material claim or a sender commitment, perform the available evidence work within the task's authority before drafting. If the answer requires the user or unavailable access, ask the focused question that resolves it. A plausible sentence does not resolve a missing fact. Do not replace an unfinished authorized check with a disclaimer or an assignment to the recipient.
 

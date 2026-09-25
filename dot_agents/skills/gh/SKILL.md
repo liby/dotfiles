@@ -17,9 +17,9 @@ Use `gh` for GitHub operations. Verify command syntax with `gh <command> --help`
 | View issue, PR, repo, comments, workflow data | Read with `gh ... --json` and `jq` | No |
 | Long discussion analysis | Fetch body, timeline, and high-signal comments | No |
 | Draft PR title or body | Resolve the base and inspect the complete branch change; return text in chat | No |
-| Create or update a PR | Draft from the verified branch change, then write only after an explicit request | Yes |
+| Create or update a PR | Draft from the verified branch change, then write when Authority authorizes it (Write Operations) | Yes |
 | Preview GitHub skill | `gh skill preview` and inspect bundled files | No |
-| Install or update a skill; create an issue; comment, label, close, or merge; any other write | Explain target and run only after explicit user request | Yes |
+| Install or update a skill; create an issue; comment, label, close, or merge; any other write | Explain target and run when Authority authorizes it (Write Operations) | Yes |
 
 Do not run `gh auth status` unless a `gh` command fails with an auth or host error. Report the failing account or host without printing tokens. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, because it rewrites Git's global credential-helper configuration.
 
@@ -72,7 +72,7 @@ When asked to draft, create, or update a PR title or body:
 2. For a new PR, resolve the base from the user's request, the branch's `gh-merge-base` configuration, or the repository default branch. Do not hardcode `main` or `master`.
 3. For an existing PR, inspect its complete patch with `gh pr diff <number-or-url>` and use the resolved PR metadata for commits and files. For a new PR, inspect `git log <base>..HEAD`, the stat, and the complete `git diff <base>...HEAD`. Read the repository PR template when one exists.
 4. Write the title and body through `draft`, which owns their wording and reads this repository's recent merged PRs to match them. Supply it the actual branch changes, the PR template when one exists, and any structure the user asked for.
-5. Run `gh pr create` or `gh pr edit` only when the current task or a standing authorization explicitly covers that write and target. Otherwise keep the draft in chat.
+5. Run `gh pr create` or `gh pr edit` only when Authority authorizes that write for that target. Otherwise keep the draft in chat.
 6. Return the final title and body. After a write, also return the PR URL.
 
 ## Agent Skills From GitHub
@@ -81,7 +81,7 @@ Before the first `gh skill` command for preview, install, or update, load and fo
 
 ## Write Operations
 
-GitHub writes include issue creation, comments, labels, closes, merges, releases, workflow dispatches, skill installs, and skill updates. Run them only after explicit user request.
+GitHub writes include issue creation, comments, labels, closes, merges, releases, workflow dispatches, skill installs, and skill updates. Run them when Authority authorizes them; in a context without the shared rules, run a write only when the request plainly covers it and its effects are still undoable and no one else can see its result, or when the user's own direction or supplied text clears the effect it would otherwise stop for.
 
 For `gh pr merge`:
 
