@@ -78,7 +78,6 @@ jobs:
           TERM: xterm-256color
         run: |
           set -euo pipefail
-          fpath=("$HOME/.zsh/plugins/zsh-completions/src" $fpath)
           autoload -Uz compinit
           compinit -u -d "$HOME/.zcompdump"
           source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
