@@ -5,15 +5,12 @@ eval "$(env -u HOMEBREW_BREW_FILE -u HOMEBREW_PATH /opt/homebrew/bin/brew shelle
 
 # Homebrew zsh completion path
 __BRYAN_HOMEBREW_ZSH_COMPLETION="${HOMEBREW_PREFIX}/share/zsh/site-functions"
-__BRYAN_ZSH_COMPLETION_SRC="${HOME}/.zsh/plugins/zsh-completions/src"
 
 # ZSH completions
 # https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh
 if (( ! ${fpath[(I)${__BRYAN_HOMEBREW_ZSH_COMPLETION}]} && $+commands[brew] )); then
   fpath+=${__BRYAN_HOMEBREW_ZSH_COMPLETION}
 fi
-## https://github.com/zsh-users/zsh-completions
-[[ -d ${__BRYAN_ZSH_COMPLETION_SRC} ]] && fpath+=${__BRYAN_ZSH_COMPLETION_SRC}
 fpath+=$HOME/.zsh/functions
 ## Initialize the completion system
 ## This must be done after all fpath modifications
