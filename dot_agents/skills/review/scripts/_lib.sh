@@ -14,18 +14,23 @@ validate_path_file_nul() {
   while IFS= read -r -d '' entry; do
     [ -z "$entry" ] && continue
     case "$entry" in
-      .env.example|*/.env.example) ;;
       .env.age|*/.env.age|.env.gpg|*/.env.gpg|.env.asc|*/.env.asc) ciphertext_candidates=$((ciphertext_candidates + 1)) ;;
       encrypted_*.asc|*/encrypted_*.asc) ciphertext_candidates=$((ciphertext_candidates + 1)) ;;
       .secrets/*.age|*/.secrets/*.age|.secrets/*.gpg|*/.secrets/*.gpg|.secrets/*.asc|*/.secrets/*.asc) ciphertext_candidates=$((ciphertext_candidates + 1)) ;;
-      .env*|.env*/*|*/.env*|*/.env*/*) refused=$((refused + 1)) ;;
       .secrets|.secrets/*|*/.secrets|*/.secrets/*) refused=$((refused + 1)) ;;
+      # The workspace env files Protected Inputs declares.
+      .env|*/.env|.env.local|*/.env.local) refused=$((refused + 1)) ;;
       *.key|*.p12|*.pfx) refused=$((refused + 1)) ;;
+      id_rsa|id_dsa|id_ecdsa|id_ed25519|*/id_rsa|*/id_dsa|*/id_ecdsa|*/id_ed25519) refused=$((refused + 1)) ;;
+      *.history|.*_history|*/.*_history) refused=$((refused + 1)) ;;
+      # Case patterns let * cross "/", so .env* directories must match before the name rules below;
+      # every refusal above must stay ahead of this ambiguous branch.
+      .env*/*|*/.env*/*) ambiguous=$((ambiguous + 1)) ;;
+      .env*.example|*/.env*.example|.env*.sample|*/.env*.sample|.env*.template|*/.env*.template) ;;
+      .env*|*/.env*) ambiguous=$((ambiguous + 1)) ;;
       *.pem) ambiguous=$((ambiguous + 1)) ;;
       .ssh/config|*/.ssh/config|authorized_keys|*/authorized_keys|known_hosts|*/known_hosts|*.pub) ;;
-      id_rsa|id_dsa|id_ecdsa|id_ed25519|*/id_rsa|*/id_dsa|*/id_ecdsa|*/id_ed25519) refused=$((refused + 1)) ;;
       .ssh|*/.ssh|*/.ssh/*|.ssh/*) ambiguous=$((ambiguous + 1)) ;;
-      *.history|.*_history|*/.*_history|*.log|*.log/*|log|logs|*/log|*/logs|log/*|logs/*|*/log/*|*/logs/*) refused=$((refused + 1)) ;;
     esac
   done < <(LC_ALL=C tr '[:upper:]' '[:lower:]' < "$1")
   if [ "$ciphertext_candidates" -gt 0 ]; then
