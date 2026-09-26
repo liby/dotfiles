@@ -171,8 +171,33 @@ if options[:smoke]
   if lib.exist?
     # exit codes: 0 allow, 4 raw secret, 5 ambiguous
     smoke_cases = {
-      ".ENV.production" => 4,
+      ".ENV.local" => 4,
+      "apps/web/.env" => 4,
+      ".env.local.bak" => 5,
+      ".env.development.local" => 5,
+      "apps/web/.env.local.example" => 0,
+      "deploy/.env.d/.env.local" => 4,
+      ".env/certs/server.key" => 4,
+      ".env/.bash_history" => 4,
+      ".env/id_ed25519" => 4,
+      ".env.d/cache/config.local" => 5,
+      "apps/web/.env.example" => 0,
+      ".env.production.sample" => 0,
+      ".env.template" => 0,
+      ".ENV.production" => 5,
+      ".envrc" => 5,
+      ".env/pyvenv.cfg" => 5,
+      "apps/web/.env/production.example" => 5,
+      ".secrets/.env.local.example" => 4,
+      ".secrets/.env.production" => 4,
+      ".secrets/.env.example" => 4,
+      "server.log" => 0,
+      "logs/app.txt" => 0,
+      ".zsh_history" => 4,
+      ".local/share/fish/fish_history" => 4,
+      "certs/server.key" => 4,
       ".secrets/plain.toml" => 4,
+      ".secrets/deploy.pub" => 4,
       "identity.pem" => 5,
       ".secrets/seed.asc" => 0,
       "encrypted_private_dot_env.asc" => 0,
@@ -180,8 +205,12 @@ if options[:smoke]
       "certificate.crt" => 0,
       ".ssh/config" => 0,
       ".ssh/id_ed25519.pub" => 0,
+      ".ssh/.bash_history" => 4,
+      ".ssh/agent.sock" => 5,
       "src/app.ts" => 0
     }
+    # Ciphertext candidates exit 0 like ordinary paths; only the stderr notice tells them apart.
+    ciphertext_cases = Set[".secrets/seed.asc", "encrypted_private_dot_env.asc", ".env.age"]
     %w[bash zsh].each do |shell|
       unless system("which", shell, out: File::NULL, err: File::NULL)
         warnings << "smoke: #{shell} not found, skipped _lib.sh runtime smoke"
@@ -190,9 +219,13 @@ if options[:smoke]
       smoke_cases.each do |entry, expected|
         cmd = "source #{lib.to_s.shellescape} && " \
               "printf '%s\\0' #{entry.shellescape} | validate_path_file_nul /dev/stdin"
-        _out, _err, status = Open3.capture3(shell, "-c", cmd)
-        next if status.exitstatus == expected
-        errors << "#{rel(lib.to_s, repo)}: #{shell} smoke #{entry.inspect} exited #{status.exitstatus}, expected #{expected}"
+        _out, err, status = Open3.capture3(shell, "-c", cmd)
+        unless status.exitstatus == expected
+          errors << "#{rel(lib.to_s, repo)}: #{shell} smoke #{entry.inspect} exited #{status.exitstatus}, expected #{expected}"
+        end
+        if err.include?("ciphertext candidate") != ciphertext_cases.include?(entry)
+          errors << "#{rel(lib.to_s, repo)}: #{shell} smoke #{entry.inspect} ciphertext notice #{ciphertext_cases.include?(entry) ? 'missing' : 'unexpected'}"
+        end
       end
     end
   end
