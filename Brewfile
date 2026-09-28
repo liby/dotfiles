@@ -1,6 +1,9 @@
+tap "loophubs/tap"
 tap "resend/cli"
 tap "steipete/tap"
 
+# macOS pre-tool guard for coding agents
+brew "loophubs/tap/agent-guard", trusted: true
 # Official Amazon AWS command-line interface
 brew "awscli"
 # Manage your dotfiles across multiple diverse machines, securely

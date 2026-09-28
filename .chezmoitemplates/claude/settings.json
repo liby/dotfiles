@@ -173,7 +173,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/pre-tool-guard.py",
+            "command": "/opt/homebrew/bin/agent-guard --runtime claude",
             "timeout": 10
           }
         ]
@@ -183,7 +183,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/pre-tool-guard.py",
+            "command": "/opt/homebrew/bin/agent-guard --runtime claude",
             "timeout": 10
           }
         ]
