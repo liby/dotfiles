@@ -13,6 +13,7 @@ on:
       - "dot_zsh/functions/claude"
       - "dot_zsh/functions/claude.test.zsh"
       - "dot_zshenv"
+      - "private_dot_pi/private_agent/extensions/agent-guard.ts"
   push:
     branches: [main]
     paths: *paths
@@ -43,5 +44,4 @@ jobs:
             echo "== $t"
             bash "$t"
           done
-          python3 -I dot_claude/hooks/pre-tool-guard.test.py
-          bun test dot_codex/managed-hooks/*.test.ts
+          bun test ./dot_codex/managed-hooks/

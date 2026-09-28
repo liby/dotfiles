@@ -1,0 +1,4 @@
+# Keep recursive ripgrep and fd runs from descending into the macOS app-data
+# trees when they start at $HOME. The leading slash anchors each pattern to this
+# directory only, so a project's own Library/ stays searchable.
+/Library/
