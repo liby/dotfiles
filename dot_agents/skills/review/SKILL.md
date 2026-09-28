@@ -12,7 +12,7 @@ allowed-tools:
   - WebSearch
 ---
 
-Default review is read-only for the reviewed project: do not edit reviewed files, post comments, apply fixes in the main reviewer context, or leave a long-lived process running against it. A clean verdict is a valid outcome.
+Do not apply fixes in the main reviewer context. A clean verdict is a valid outcome.
 
 ## Flow
 
@@ -39,7 +39,7 @@ Default review is read-only for the reviewed project: do not edit reviewed files
 6. From the revision being reviewed, discover and read the root and path-scoped `CLAUDE.md`, `AGENTS.md`, `README.md`, `REVIEW.md`, `CODE_REVIEW.md`, project review commands, and review skills under `.claude/` or `.agents/`. Follow one-hop documents selected by their path rules. Do not treat the current checkout or automatically injected instructions as proof of the reviewed revision; use the exact ref (`git show <head>:<path>`) or the host's raw-file API when they differ.
 
    Done when every changed path has either its applicable repository rules loaded or a recorded `no matching repository rule` disposition.
-7. Read touched files, adjacent code, direct call sites, and relevant tests. For exported or deleted symbols, schemas, events, and shared helpers, search writers, readers, generated output, and peer surfaces by both symbol and changed concept.
+7. Read touched files, adjacent code, direct call sites, and relevant tests. For exported or deleted symbols, schemas, events, and shared helpers, search writers, readers, generated output, and peer surfaces by both symbol and changed concept. When the change passes a runtime value, such as a locale, credential scope, or configuration setting, into one execution environment, list the other environments that run the same kind of work, such as sandboxes, workers, scheduled jobs, and subprocesses, and check for each whether its contract requires the value and whether it receives it; a surface that lacks the value shares no symbol with the change, so a symbol search cannot find it.
 8. Load every matching surface rule and apply every Universal Review Lens below.
 9. Verify each candidate against the applicable code, source-owned contract, tests, or runtime evidence; run the cheapest existing validation that covers the changed path.
 10. Finish only after every changed path, matching repository rule, loaded shared rule, requirement question, and approach concern is accounted for, then report findings that pass the Finding Bar or a clean verdict.
@@ -104,7 +104,7 @@ A challenged or corrected finding re-enters verification as a new claim at the s
 
 ## Output
 
-Resolve the output's consumer before rendering findings. Exact user contracts such as verdict-only, blocker-only or a specified schema override the default chat form. A clean verdict is valid only after the Finding Bar and any material validation gaps have been resolved.
+Resolve the output's consumer before rendering findings. A clean verdict is valid only after the Finding Bar and any material validation gaps have been resolved.
 
 For chat, state the current problem and approach first when the user asked whether the requirement or solution is reasonable. Start each finding with its concrete trigger or violated repository rule and consequence, then supply severity, location, decisive evidence and required outcome. Add provenance and diff contribution when they are not otherwise clear. Use `No blocking findings.` only when no material validation gap remains.
 
