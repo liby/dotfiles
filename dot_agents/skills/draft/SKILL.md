@@ -71,5 +71,3 @@ For Slack, return plain text the user can paste into the message composer, using
 Before returning the artifact, read it from the recipient's position: can they identify the point, understand each necessary fact and qualification, and distinguish a request from a sender commitment? Confirm the requested transformation and protected spans survived. Remove only material the permitted scope allows removing.
 
 Return the requested artifact without a preamble or unrequested explanation. Honor exact output constraints. A material question that prevents a trustworthy draft must be resolved before this step; an operational note does not belong inside the artifact. If the user also requested reasoning, variants or a comparison, provide those separately in the requested format.
-
-Drafting does not authorize sending or publishing.
