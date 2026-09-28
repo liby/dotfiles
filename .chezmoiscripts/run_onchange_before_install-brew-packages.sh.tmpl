@@ -56,3 +56,8 @@ until brew bundle --file="$brewfile"; do
   echo "brew bundle failed; retrying (attempt $attempt/3)..."
   sleep 10
 done
+
+# Approval of the CLI does not cover its helper executables or carry over on upgrade.
+if [ -d /opt/homebrew/Caskroom/codex ]; then
+  xattr -dr com.apple.quarantine /opt/homebrew/Caskroom/codex
+fi
