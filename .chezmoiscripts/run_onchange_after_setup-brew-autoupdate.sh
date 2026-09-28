@@ -20,8 +20,6 @@ mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Lo
 # The steps are deliberately not chained, so a failure neither skips the rest nor goes unreported.
 # pi has no Homebrew channel and never updates itself, so the helper also runs `pi update --self`;
 # that step needs the proto environment on PATH to find Node and install into the proto prefix.
-# Codex is a binary-only cask, so unlike an app bundle it gets no upgrade-time approval and each
-# executable it ships prompts Gatekeeper after Homebrew's reinstall; no other cask this job upgrades needs it.
 cat > "$autoupdate_helper" <<'HELPER'
 #!/bin/sh
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
@@ -33,6 +31,10 @@ status=0
 date
 brew update || status=$?
 brew upgrade --no-ask || status=$?
+# Approval of the CLI does not cover its helper executables or carry over on upgrade.
+if [ -d /opt/homebrew/Caskroom/codex ]; then
+  xattr -dr com.apple.quarantine /opt/homebrew/Caskroom/codex
+fi || status=$?
 # gpg-agent and keyboxd keep the pre-upgrade binary and libraries mapped, and
 # no-autostart stops clients from starting replacements, so restart them here;
 # the chezmoi GPG script only reruns on a later apply. Check both daemons, or a
@@ -47,7 +49,6 @@ if [ "$installed" != "$agent_version" ] || [ "$installed" != "$keyboxd_version" 
   /bin/launchctl kickstart "gui/$UID/org.gnupg.gpg-agent" || status=$?
   /bin/launchctl kickstart "gui/$UID/org.gnupg.keyboxd" || status=$?
 fi
-xattr -dr com.apple.quarantine /opt/homebrew/Caskroom/codex || status=$?
 "$NPM_CONFIG_PREFIX/bin/pi" update --self || status=$?
 brew cleanup || status=$?
 exit "$status"
