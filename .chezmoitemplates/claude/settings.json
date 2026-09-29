@@ -48,6 +48,10 @@
       "$defaults",
       "**Secrets management**: envchain (namespaces in the macOS Keychain) is the personal credential store; legitimate use is `envchain <namespace> <command>` to inject a namespace's secrets into one command, and `envchain --list` enumerates namespaces; never print or echo values",
       "**Scope**: the user's own non-public scope is this machine and the accounts and services whose content reaches only the user, the user's own tools, and the services the user chose for the task; a service that stores content at the user's direction is its custodian, not a reader; a user-installed tool that works inside the user's account, and the agent runtime or model route the user has set up on this machine for the task or as a standing choice, are the user's own; an application that sends the content elsewhere without the user choosing it is an outside reader"
+    ],
+    "allow": [
+      "$defaults",
+      "**Git**: in any local Git repository on this machine, exactly these operations are routine, even in a session where an earlier action was denied or used a sandbox-bypass flag: read-only inspection (history, status, object display, diffs), staging, committing, and creating a local tag. This covers the operation, not what it carries or discards: every rule about the content of a commit or tag still applies, such as one that adds secrets or code that leaks them when run, and discarding uncommitted work, pushing, publishing a tag or release, rewriting a commit that was already pushed, and any Git command that itself carries the sandbox-bypass flag stay under the other rules"
     ]
   },
   "permissions": {
@@ -55,8 +59,10 @@
     "disableBypassPermissionsMode": "disable",
     "allow": [
       "Agent",
+      "Bash(codex:*)",
       "Bash(herdr:*)",
       "Bash(oracle:*)",
+      "Bash(pi:*)",
       "Bash(snow:*)",
       "Edit",
       "LSP",
