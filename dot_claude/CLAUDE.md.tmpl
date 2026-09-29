@@ -14,6 +14,8 @@ When an enabled language server covers the file, use the `LSP` tool before claim
 
 Fetch web pages and docs with WebFetch and WebSearch, not Bash curl or wget. When the sandbox denies a command because a host is not in `allowedDomains`, do not change curl arguments, switch to a mirror, or take another workaround variant; the block names where the host goes.
 
+Sandboxed commands write only this session's working directories and the configured tool paths. A Bash call runs outside the sandbox without the bypass when every command in it is a plain `git` invocation: `git` with its own arguments, `--no-pager`, and at most a descriptor duplication such as `2>&1`. An option that selects another repository or configuration (`-C`, `-c`, `--git-dir`, `--work-tree`), a redirection to a file or `/dev/null`, a heredoc or command substitution, and any command in the call that the sandbox does not exempt, such as `cd` or a pipe into `head`, keep the call sandboxed, and a `cd` does not carry over to the next call, so Git reaches a repository other than the session's working directory only from inside the sandbox. Do not run local Git work (inspection, staging, committing, tagging, signature checks) with the sandbox bypass: the classifier has denied it and can then deny ordinary commands for the rest of the session. When such a write fails because the repository or another project directory lies outside the writable paths, ask the user to add it with `/add-dir`; Git there then stages, commits, and signs inside the sandbox.
+
 {{ includeTemplate "agents/coding-principles.md" . }}
 {{ includeTemplate "agents/execution-host.md" . }}
 
