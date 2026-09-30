@@ -69,8 +69,13 @@ CLI_SMOKE_COMMANDS = [
   ["herdr split contract", %w[herdr pane split --help], /(?=.*--current)(?=.*--direction)(?=.*--cwd)(?=.*--no-focus)/m],
   ["herdr tab create contract", %w[herdr tab create --help], /(?=.*--workspace)(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
   ["herdr workspace create contract", %w[herdr workspace create --help], /(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
+  ["herdr saved machine routing", %w[herdr --help], /--machine <label-or-id>/],
+  ["herdr saved machine status", %w[herdr machine status --help], /(?=.*\[LABEL_OR_ID\])(?=.*--json)(?=.*without prompting for authentication)/m],
+  ["herdr saved machine setup", %w[herdr machine add --help], /(?=.*<SSH_TARGET>)(?=.*--label <LABEL>)(?=.*--remote-session <NAME>)/m],
   ["herdr codex sandbox flag", %w[codex --help], /(?=.*-s, --sandbox)(?=.*read-only)/m],
+  ["herdr codex queue contract", %w[codex help queue], /(?=.*--thread <THREAD>)(?=.*--message <TEXT>)(?=.*Session UUID or exact session name)/m],
   ["oracle browser approval wait", %w[oracle --help], /--browser-approval-wait <duration>/],
+  ["oracle exact conversation recovery", %w[oracle session --help], /(?=.*--harvest)(?=.*--browser-tab <ref>)/m],
   [
     "oracle current browser dry run",
     [
@@ -147,7 +152,7 @@ skill_files.each do |path|
   text.scan(/\[[^\]]+\]\(([^)#][^)]+)\)/).flatten.each do |target|
     next if target.match?(/\A[a-z][a-z0-9+.-]*:/i) || target.start_with?("#")
     target = target.split(/\s+/, 2).first if target.start_with?("<")
-    resolved = File.expand_path(target.delete_prefix("<").delete_suffix(">"), File.dirname(path))
+    resolved = File.expand_path(target.delete_prefix("<").delete_suffix(">").split("#", 2).first, File.dirname(path))
     errors << "#{label}: missing linked file #{target}" unless File.exist?(resolved)
   end
 end

@@ -9,15 +9,17 @@ allowed-tools:
     - mcp__chrome-devtools__*
 metadata:
     github-path: skills/oracle
-    github-ref: refs/tags/v0.21.1
+    github-ref: refs/tags/v0.21.3
     github-repo: https://github.com/steipete/oracle
     github-tree-sha: c6ede997dad62e888ac9aeb7c83d4eba8abc596f
 name: oracle
 ---
 
-Use the installed `oracle` binary.
+Use the installed `oracle` binary. Preserve the ordinary browser route; explicit choices and recovery are separate branches.
 
-Before an explicit model, latest-model, or effort request, or an upgrade, option-rejection, or picker-routing recovery, load the Model and effort section of the [non-default modes contract](references/non-default-modes.md). Before a browser follow-up, a Deep Research run, or an explicitly billed API run, load its corresponding section. Do not silently replace such a request with browser defaults.
+Before an explicit model, latest-model, or effort request, or an upgrade, option-rejection, or picker-routing recovery, load the Model and effort section of the [non-default modes contract](references/non-default-modes.md). Before a browser follow-up, Deep Research run, or explicitly billed API run, load its corresponding section.
+
+Before recovering a submission, connection, upload, or capture failure, or accepting a provider capture whose fidelity is not `matched`, read the [recovery contract](references/recovery.md). This includes resumed or stale sessions and manual fallback; load it before harvest, reload, retry, force, or another submission. An uncertain submission never authorizes a resend.
 
 ## Build the input
 
@@ -37,35 +39,16 @@ oracle --engine browser --browser-attach-running --browser-approval-wait 30m \
 
 `current` keeps the tab's model and effort. Omit model and thinking-time flags unless requested; asking to leave them unchanged is that default, not a selection request. With both omitted, `current` resolves the active model without opening the model picker or clicking a selection. It inherits the tab's selection, which need not be the newest model or the intended tier, and it neither warns about nor repairs a stale Instant or older selection. Report the inherited label as an observation, and when it is stale against the user's intent, say so and offer the explicit latest + Pro path instead of presenting the run as made at the intended tier.
 
-`--browser-capture-provider-native` saves ChatGPT's verbatim conversation record and independent text digests as private session artifacts, including prior turns, without changing the returned answer. It supplies the fidelity evidence checked under Accept: the session metadata's `browser.providerNativeCapture.answerFidelity`, also printed in the run log as `[capture] ... answer fidelity: <value>`.
+`--browser-capture-provider-native` saves ChatGPT's verbatim conversation record and independent text digests as private session artifacts, including prior turns, without changing the returned answer. It supplies the fidelity evidence required to accept the result: the session metadata's `browser.providerNativeCapture.answerFidelity`, also printed in the run log as `[capture] ... answer fidelity: <value>`.
 
 For a supplied ChatGPT Project, add `--chatgpt-url "<project-url>"`. Verify that the saved conversation retains that Project ID/path or visibly belongs to the requested Project; a generic `/c/<id>` URL alone does not prove membership.
 
-Attaching raises Chrome's remote-debugging prompt, which only the user can allow, and every new attach raises it again. `--browser-approval-wait` keeps the run waiting for that click instead of failing after the short default wait; pass it on every browser attach, including the commands in the non-default modes contract. When the page shows a login, CAPTCHA, SSO, workspace selection, or another human check, ask the user to complete it. If attaching still fails, ask the user to enable remote debugging, or use the manual fallback below. Never copy a personal browser profile or submit into an existing unrelated tab.
+Attaching raises Chrome's remote-debugging prompt, which only the user can allow, and every new attach raises it again. `--browser-approval-wait` keeps the run waiting for that click instead of failing after the short default wait; pass it on every browser attach, including the commands in the non-default modes contract. When the page shows a login, CAPTCHA, SSO, workspace selection, or another human check, ask the user to complete it. If attaching still fails, ask the user to enable remote debugging, or use the [manual fallback](references/recovery.md#manual-fallback). Never copy a personal browser profile or submit into an existing unrelated tab.
 
-A build that predates the upstream DOM fix cannot detect a submitted turn under ChatGPT's Chat/Work layout: the page no longer exposes `data-message-author-role`, so a run submits, then times out at `prompt-commit-timeout`, `--harvest` reports no submitted turn, and the answer can only be read from the saved conversation (upstream issue #517, fix PR #516). No release includes that fix yet (PR #516 is open); until one does, run an authorized consultation as usual but read the answer from the conversation URL instead of relying on the automated capture.
+## Follow and accept the result
 
-## Follow the run
+Keep the process or session ID and follow that same run through finite waits. If status, submission, or capture becomes uncertain, load the recovery contract and establish what happened to the bound conversation before acting. Wait for the requested consultation; do not replace a pending result with your own answer.
 
-Keep the process or session ID and follow the same run through finite waits. After detachment, compaction, a timeout, stale status, or ambiguous submission, inspect `oracle status` and `oracle session <id>` before doing anything that could resend. A `prompt-commit-timeout` may already have submitted. Use `oracle session <id> --live` to follow the bound page and `--harvest` to recover its current answer; use `--render` for a saved completed answer.
+Accept a normal automated result only when its status is terminal `completed`, its answer is non-empty and complete, and it belongs to this request's actual submitted user turn. Verify any requested Project, model, or effort separately. A conversation URL, elapsed wait, non-empty output, or parent linkage alone does not prove those constraints.
 
-- If the exact page remains unchanged at `Finalizing answer` across a finite observation, or appears finished after controller loss while harvest is unexpectedly empty, reload that same conversation at most once and recheck its user turn and answer. Account for any reload already performed by Oracle. Changing Thinking text or other progress means keep waiting.
-- If harvest reports an identity mismatch, stop using that capture and resolve the exact saved conversation. Non-empty `--live`/`--harvest` output or stale `running` metadata alone does not prove completion or failure.
-- If upload or send readiness times out, establish whether submission occurred first. Only an attempt that did not submit and can no longer submit, because its process has exited or been stopped, may be retried with `--browser-bundle-files --browser-bundle-format auto`.
-
-Use `--force` only after establishing that the worker, controller, and bound target are dead and the original conversation or answer cannot be recovered. While the requested consultation is pending, keep following it; do not substitute your own analysis for its result.
-
-## Accept and report
-
-Accept the result only when all of these hold:
-
-- a normal automated run has terminal `completed` status;
-- the answer is non-empty and complete, includes the required material, and satisfies the requested Project and any explicit model/effort requirements;
-- the answer belongs to this request's actual submitted turn; matched conversation identity alone does not bind it, including for a saved or recovered session;
-- when capture is enabled, `browser.providerNativeCapture.answerFidelity` is one of: `matched` on the active branch's assistant message; `divergent` reconciled against that message's text in `~/.oracle/sessions/<session-id>/artifacts/conversation-<id>-raw.json`, where a difference limited to the page's rendering (padded table columns, heading markers, file-citation chips) is the same answer, any other difference makes the provider record the answer, and a missing record or message leaves the result unresolved; or `unknown` for a Deep Research report without an assistant message ID. Any other `unknown` is unresolved.
-
-Report the inherited model/effort label as an observation, never as verified selection. Report a reconciled `divergent` result as such rather than as `matched`, and do not claim provider-native fidelity when it is `unknown` or missing. If only the visible page establishes completion, report a manual UI observation with the saved conversation URL instead of claiming the automated controller completed.
-
-## Manual fallback
-
-If automation did not submit and can no longer submit, established as under Follow the run, run the original prompt and text-file arguments with `oracle --render-markdown`, inspect the rendered text, and submit it in a new tab of the signed-in browser opened at the requested target, such as the supplied Project URL. Attach each original non-text file or a byte-preserving archive and verify readiness before sending. Preserve browser defaults unless selection was requested; verify any requested model/effort and Project, then require a completed answer to that turn and a saved URL. A preceding failed session supplies no selection or completion evidence for this manual answer. Apply the acceptance checklist except the automated-completion and provider-native fidelity items, which do not apply to a manual turn.
+With provider capture enabled, require `matched` fidelity on the active branch's assistant message, or follow the recovery contract's reconciliation before accepting another fidelity value. Report the inherited model/effort label as an observation. Report a reconciled `divergent` result as divergent. If only the saved conversation's visible answer establishes completion, report manual UI evidence and its URL; do not claim the automated controller completed or provider-native fidelity was verified.

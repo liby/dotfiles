@@ -8,16 +8,20 @@ allowed-tools:
 license: Apache-2.0
 metadata:
     github-path: skills/herdr
-    github-pinned: v0.9.1
-    github-ref: refs/tags/v0.9.1
+    github-pinned: v0.9.3
+    github-ref: refs/tags/v0.9.3
     github-repo: https://github.com/herdrdev/herdr
-    github-tree-sha: 6985a5e8418d43171c45c2a9e04b02de7308e1d8
+    github-tree-sha: 67042ed7910d4177a9000e0679e78b0346060927
 name: herdr
 ---
 
-Control the current Herdr session through the installed `herdr` CLI. Pane commands control raw terminals; agent commands control the lifecycle state of a recognized coding agent.
+Control the current Herdr session through the installed `herdr` CLI. Pane commands drive terminals; agent commands bind input and waits to a recognized coding agent.
 
-Where the host sandbox exempts `herdr` by command name, as Claude Code does, give a control command the shell invocation to itself: keep every command in it an exempt one, split at shell separators such as `|`, `&&`, `;`, and a newline, and put nothing else in the call but those commands' own arguments and a file-descriptor duplication such as `2>&1`; a command substitution or heredoc sandboxes it even inside an argument. An inline assignment before the command name sandboxes the call, unless the name is one the CLI treats as inert, such as `TERM` or `LANG`. A sandboxed socket call then fails with `Operation not permitted` rather than a recognizable permission error, and a `2>/dev/null` hides that message while the call still fails.
+Load the branch before its first action:
+
+- Before inspecting, starting, or prompting an agent, read the [agent workflow](references/agents.md). For several participants, also read the [panel workflow](references/panels.md) before placing or dispatching the round.
+- When Claude Code is the host, read its [runtime section](references/runtimes.md#claude-code-host) before the first Herdr control call. Before launching or sending input to Codex or Pi, read the corresponding section of the same file.
+- Before saved-machine discovery or remote control, read the [remote-machine contract](references/remote.md).
 
 ## Establish the boundary
 
@@ -46,21 +50,17 @@ herdr workspace
 
 Never run bare `herdr` for discovery; it launches or attaches the TUI. Do not probe a mutating nested command by omitting required arguments. After a Herdr upgrade or an option rejection, inspect `herdr --version`, the relevant group, and `herdr --skill` for current syntax and capabilities, and keep this skill's authorization, ownership, and workflow rules where the bundled text differs. If the installed version cannot satisfy those rules, report the incompatibility rather than retrying syntax this file happens to show.
 
-An upgraded client can keep using an older server. Before relying on a new server feature, check `herdr status`; a missing method is not permission to restart or replace the server and its running panes. Never stop the Herdr server or kill its main process without a specific request.
+Before relying on a new server feature, check `herdr status`; a missing method is not permission to restart or replace the server and its running panes. Never stop the Herdr server or kill its main process without a specific request.
 
-Parse IDs and state from control-command JSON. `pane read` and `agent read` return terminal text, not JSON. Target a pane by the ID a response returned and an agent by its unique live name; `--current` works only on the commands whose help lists it, and the read, run, and wait commands take the pane ID as a positional argument. Never predict an ID or rely on UI focus or sidebar order.
+Parse IDs and state from control-command JSON. `pane read` and `agent read` return terminal text, not JSON. Target a pane by the ID a response returned and an agent by its unique live name; `--current` works only on the commands whose help lists it; use each command's documented positional target. Never predict an ID or rely on UI focus or sidebar order.
 
-## Own only what you create
+## Ownership and labels
 
-Ownership is creation: you own a workspace, tab, or pane only when a `create` or `split` you ran returned its ID, and it stays yours to name, drive, and close for as long as the task runs, across later turns as well, until the user takes it over. There is no dispatcher role in Herdr, so being or not being "the main dispatcher" does not decide this. The pane you occupy and the tab and workspace you were called from are not yours, whoever started you. Anything you did not create belongs to the user: read it when the task needs its state, and do not close, replace, relabel, resize, or rearrange it unless the user asks. Prompting an existing agent is ordinary use of it, not a change of ownership. The one exception is the caller's default workspace label, which Place the work tells you when to rename.
+A returned `create` or `split` ID establishes ownership of that container until the user takes it over, including across later turns. The caller's pane, tab, and workspace are not yours. Read their state when needed; do not close, replace, resize, rearrange, or relabel them without authorization. Prompting an existing agent does not transfer ownership.
 
-Only the pane's terminal title follows the agent on its own, through the agent's OSC title; a tab and a workspace keep the label they were created or last renamed with, and a workspace label defaults to its working directory. So whenever the task behind something you own changes, rename that level yourself, even when the current name is a default, the agent's own terminal title, or a name you or another participant set earlier, so the sidebar and window title keep naming the current work:
+Set labels when creating containers. A workspace names the piece of work, a tab the round, and a pane the participant. Keep owned labels aligned with those roles when their purpose changes. A pane's terminal title already follows the agent's activity; its occupant does not rename its pane or live agent to follow a task. The agent name is the stable prompt, wait, and recovery handle.
 
-- A workspace label names the piece of work it holds. Its creator renames it when that work changes, including on a later turn; a round inside a workspace is not a workspace rename.
-- A tab label names the round. Its creator renames it when the round's purpose changes; a new round gets a new tab rather than a seized label.
-- A pane label names the participant. Its creator sets it at creation, keeps it aligned with the agent name, and may correct it when the pane is repurposed. An occupant never renames the pane it sits in: the pane's terminal title already tracks what its agent is doing, so leave activity to that field, do not copy the task into the pane label, and never rename a live agent to follow a task, because the agent name is the handle your prompts, waits, and resume commands use.
-
-Another participant changing a label you own does not transfer ownership, so you may correct it; a name the user set, or a container the user has taken over, stays. Read the label with `herdr workspace get`, `herdr tab get`, or `herdr pane get` before renaming and leave it if it changed against you, since Herdr has no atomic compare-and-set. Report a stale label on any other container you do not own instead of renaming it.
+Read an existing label before changing it and preserve a user-set label or a taken-over container. Herdr has no atomic compare-and-set: when authorization depends on a caller workspace still having its default directory label, a preceding read cannot bind the rename to that label. Obtain authorization for that workspace's new label without that precondition before renaming it. Creation ownership permits renaming your own container; another participant's label change alone does not transfer ownership.
 
 ```bash
 herdr workspace rename <workspace-id> "<work>"
@@ -70,9 +70,7 @@ herdr pane rename <pane-id> "<participant>"
 
 ## Place the work
 
-A pane is one participant or terminal process. A tab groups panes the user should view together, usually one round or phase of the work. A workspace is the context and lifetime boundary the user navigates by, holding one piece of work and all of its rounds.
-
-Before placing work in the caller's workspace, read its label with `herdr workspace get <workspace-id>`. When that label is still the default, the directory name, and this task is what the workspace now holds, rename it to name this task, because nothing else will; any other label may be the user's, so report it if stale instead of renaming it. Default to the nearest place: a sibling pane in the caller's tab, in the caller's working directory, without taking focus. Inspect the layout first and read the new pane ID from `.result.pane.pane_id`:
+A pane is the participant, a tab is the round, and a workspace is the work's context and lifetime. Default to a sibling pane in the caller's tab and working directory, without taking focus. Inspect the layout first and use the new pane ID from `.result.pane.pane_id`:
 
 ```bash
 herdr pane layout --pane "$HERDR_PANE_ID"
@@ -96,12 +94,12 @@ A named session is a separate server with its own workspaces, sockets, and persi
 
 Do not move work into a different working directory or worktree unless the user asks for that topology.
 
-## Run a command in a pane
+## Run and read a pane command
 
-For a shell command that does not need agent lifecycle, run it, wait with a finite timeout, and read:
+For a shell command that does not need agent lifecycle, pass its text as one literal argument: shell substitutions and `$?` must be evaluated in the target pane, not by the controller's shell. Run it, wait with a finite timeout, and read:
 
 ```bash
-herdr pane run <pane-id> "<command>"
+herdr pane run <pane-id> '<command>'
 herdr pane wait-output <pane-id> --match "<fresh expected text>" --timeout <milliseconds>
 herdr pane read <pane-id> --source recent-unwrapped --lines 120
 ```
@@ -109,97 +107,6 @@ herdr pane read <pane-id> --source recent-unwrapped --lines 120
 `wait-output` searches existing output immediately, and the command you sent is itself on screen, so match something the submitted text cannot contain: a marker the command assembles while running, or a result it prints afterwards together with its exit status. A literal you typed into the command is already on screen and matches its own echo however unique it is, which ends the wait before anything has run.
 
 Choose the read source for the task: `recent-unwrapped` for logs and transcripts, `visible` for interactive prompts, `recent` for recent rendered output. An agent TUI indents its own output, and that margin reaches every text source, so a pattern anchored at the start of a line can miss what it is looking for; `recent-unwrapped` additionally joins soft-wrapped rows, which removes the row boundaries a greedy extraction pattern relies on to stop. A larger read can also collect an idle agent's application-owned history, so treat the alternate screen as hard to reach only when that read still returns no older output. When a larger read still cannot recover the complete response, ask the agent to write it as Markdown under this task's own directory in runtime-provided temporary space and reply with the path; do not make file output the default protocol, and on hosts that cannot share that directory read the file on the same machine.
-
-## Start and drive an agent
-
-Inspect the live agents before creating or prompting one:
-
-```bash
-herdr agent list
-```
-
-`agent list` is how you find a free name, not how you find an agent to reuse: names are unique only among live agents and are released when one exits, so a name that was yours can now belong to another instance. Reuse a settled live agent only when the user asked to continue that instance, or this task started it, and in either case its role and context still match; a call for a new participant needs a fresh agent. Never prompt an agent already classified as `working`: its current turn can finish and incorrectly satisfy the new wait. Treat `unknown` as unresolved, not complete.
-
-Name an agent for its role plus whatever separates it from its siblings, which is the model when several models share a role and the target when several instances share a model. Start each participant you were asked to create in a newly created pane.
-
-Helpers that only read may share the current checkout; concurrent writers may not. Limit extra agents to reading, or run writers one at a time, unless the user asks for isolated worktrees, and state that limit in the task text: it is a constraint on what the helper does, not a sandbox setting.
-
-### Resolve the runtime and model
-
-Users usually name a participant by model, not by program. `--kind` names the agent program that runs in the pane, and the kinds `herdr agent` lists are programs, some of which share a vendor's or model's name, so a model name is never itself a kind. Resolve each participant in this order before starting it:
-
-1. When the user names the runtime, use it.
-2. Otherwise use the model vendor's own agent when it is installed and offers the model, such as Claude Code for Claude models and Codex for OpenAI models.
-3. Otherwise use an installed runtime whose own list of usable models contains it. For Pi, `pi --list-models <search>` lists only models whose configured provider can serve them.
-4. When no installed runtime offers it, report the runtimes you checked and ask. A missing CLI named after the model, or a kind Herdr lists but this machine has not installed, settles only that one route.
-
-Pass the exact model ID the user gave, or the one the runtime's listing or configuration pairs with the user's name for it; an alias the runtime resolves natively can pass through as it stands. Never invent an ID: a name you cannot resolve that way is worth one question rather than a guess. For Pi, pass both `--provider` and `--model`, taking the provider from the same listing row, even when a default provider is configured: `--model` alone can resolve to a built-in provider that has the same model ID but no credentials. Start the runtime directly and let the selected provider resolve its own credentials; do not synthesize or remap credential environment variables.
-
-### Start, prompt, and read
-
-`agent start` requires an existing pane at an interactive shell prompt. Pass the resolved kind, and pass native arguments such as the provider and model only after `--`:
-
-```bash
-herdr agent start <agent-name> --kind <kind> --pane <returned-pane-id> -- <agent-args...>
-```
-
-Start Codex on the profile its `default_permissions` setting selects, and pass no `-s` / `--sandbox` value unless the user names a sandbox mode for this launch. The flag does not narrow that profile: it selects Codex's older sandbox settings in its place, and a managed `allowed_permission_profiles` requirement alone keeps the profile, so if the user asks for a read-only launch, say that under that requirement the flag cannot remove the profile's write access. Where the flag takes effect, `-s read-only` turns off the network the configured profile keeps enabled; the launch that prompted this rule failed with `Could not resolve host`.
-
-A successful `agent start` returns only after Herdr detects the expected agent and considers it ready for input. If startup is blocked, it returns `agent_not_ready` but keeps the name available. Either way, read `visible` before prompting: a startup prompt can still be on screen while Herdr already reports `idle` and `interactive_ready`.
-
-Submit a self-contained task with a finite timeout, passing it as one literal argument. Task text and quoted findings routinely contain backticks and `$(...)`, which your own shell expands inside double quotes before Herdr ever sees the argument, so keep the task in single quotes:
-
-```bash
-herdr agent prompt <agent-name> '<task>' --wait --timeout <milliseconds>
-```
-
-When the text itself contains quotes, write it to a file under this task's own directory and prompt the agent to read that path, which keeps the shell out of it entirely.
-
-Deliver tasks and follow-ups through `agent prompt`, not by typing them into the agent's pane with `pane send-text`: long multi-line text typed that way has reached Claude Code agents with its beginning cut off, and each acted on the tail alone. The only typed delivery is the one-line pointer Pi's recovery allows (see Pi). To add to what a `working` agent is doing, wait for its turn to end, judged from the pane where the reported state can lag, and prompt it then.
-
-`--wait` settles on `idle`, `done`, or `blocked`; do not narrow it to `--until done`, and keep it whenever you pass `--timeout`, which requires it. A wait tracks lifecycle state, not an individual turn or a successful result. A timeout ends only the wait and does not prove the agent is still working. After every wait, read the response to your prompt and check for a question or a stated inability to proceed. Never blindly resend the prompt or press Enter when submission is ambiguous.
-
-```bash
-herdr agent get <agent-name>
-herdr agent read <agent-name> --source recent-unwrapped --lines 120
-```
-
-Raise `--lines` as needed to reach the complete response, including any questions or blockers. The read has a row cap, so a long turn can push earlier output out of reach; when a larger read returns no older output and the response is still incomplete, use the file fallback under Run a command in a pane. On `agent_blocked`, `blocked`, timeout, `agent_prompt_stalled`, or unexpected output, inspect `agent get` and read `visible` before deciding whether a follow-up is safe.
-
-## Answer a dialog inside an agent you started
-
-A dialog blocks the agent it appears in and everything waiting on that agent, so leaving one on screen costs the whole round. A dialog inside an agent you did not start belongs to the user. Inside one you started, `agent prompt` refuses with `agent_blocked` instead of sending input, which is usually how you find out. Read `visible` before pressing anything, and identify both the option you intend and the one currently selected. `visible` returns the viewport, so raising `--lines` cannot bring an option that is off screen into view; use the dialog's own non-submitting navigation and read again. If you still cannot see the full option list, do not press a confirmation key.
-
-Answer it yourself when the option you mean to choose has no stop requirement left to clear under Authority (without the shared rules in context, answer only when the action is still undoable and no one else can see its result, or when the user's own direction or supplied text clears the effect it would otherwise stop for), the answer does not need the user personally, and answering stays inside what the user authorized for this task. Judge the option by the action it lets through rather than by the keypress: approving a command inside a helper inherits that command's consequences, and that helper's permission boundary is the user's configuration, not budget for you to spend. Wait when a stop effect remains uncleared, when only the user holds the answer, or when answering would claim authority the task never granted. A question is not the user's merely because the dialog phrases it as one: answer a model prompt from the ID the user named or the one configuration pairs with it, and wait only when a materially different choice is still open and the task did not delegate it.
-
-Two cases recur. A prompt asking whether to trust the working directory or the hooks already present there writes the configuration that decides what may run without asking, so it is subject to that stop effect: let the repository's hooks run with the user's permissions only when the user's direction or a standing authorization already covers that checkout, and otherwise name what those hooks do and ask. Reading files in a checkout is not by itself authorization to execute hooks a branch introduced. When you do accept, move to the option that grants trust, because the preselected one can be a review or decline step, then confirm. An agent's own onboarding or configuration offer, such as `Teach auto mode about your environment?`, is yours to decline with whichever option defers it, never with the variant that writes a setting on the user's behalf; read which key that is rather than assuming Escape. After any keypress, read again: a startup sequence can raise a second dialog, and one keystroke is not proof the agent reached a usable prompt.
-
-```bash
-herdr agent send-keys <agent-name> down enter
-herdr agent send-keys <agent-name> esc
-```
-
-When you do wait, name the blocked agent and pane and quote the dialog with its options, and let the participants that are not blocked keep working.
-
-## Run a panel of models
-
-Use a pane for a participant that needs a different agent binary, a different model vendor, a session the user can watch and take over, or simply because the user asked for one. Where your own runtime offers in-process subagents they cost no pane and no screen space, which makes them the cheaper choice for the rest; panes are the supported mechanism when no such equivalent exists. Resolve every participant's runtime and model as Start and drive an agent describes.
-
-One round asks one question. Write the brief once and give every participant the same one, including the context they cannot see, because a fresh agent has neither your conversation nor the other participants' answers.
-
-Start a fresh agent for each participant rather than reusing one that has been reading around the repository, confirm that the fresh start did not resume an earlier conversation, and give simultaneous rounds distinct agent names, since a name collision with another lead's round is not permission to reuse that agent. Keep the other participants' answers out of the brief and out of the working directory until the comparison step, and write the round's own outputs under a directory belonging to this round; remove only the files you put there, never a shared temporary root another round may still be using. Because a participant can go looking on its own, the brief itself has to say not to read the other participants' panes, sessions, or verdicts before comparison. Exposure to another verdict does not guarantee copying, but agreement after it is not independent confirmation, so when you find that a participant saw one, say which result is affected rather than counting it. Fix the inputs before dispatching and leave them alone until the round ends: the files as they stand, or a named base plus the complete uncommitted diff. Editing the checkout mid-round, which is tempting while early answers arrive, means the later participants reviewed something else and their verdicts cannot be pooled with the earlier ones. Ask for a written verdict in the pane and name what you want compared; reserve the file fallback for a response you could not read back.
-
-Dispatch the whole batch before collecting any of it. `agent prompt --wait` blocks until that one agent settles, so issuing the prompts one after another turns a panel into a queue, and a dialog in the first participant stalls participants that were never prompted. Where your host runs tool calls concurrently, issue the waiting prompts together. Otherwise prompt without `--wait`, confirm from each pane that the task arrived, and collect afterwards with `herdr agent wait <agent-name> --timeout <milliseconds>`, which bounds the wait the same way without resubmitting anything.
-
-Attribute each finding to the model that produced it, and report agreement and disagreement separately. A second model repeating a claim is not evidence that the claim is true: check it against the source before carrying it into your own answer. When the round is a discussion rather than a poll, quote the other positions verbatim in the follow-up prompt, since the participants share no context.
-
-## Finish the round before you yield
-
-Herdr never resumes you: it has no message that reaches another agent, and its notifications reach the human, never this conversation. Once your turn ends, only a new user message starts it again, unless your host re-invokes you when a background command exits, as Claude Code does for a Bash command run in the background; only there is a backgrounded `herdr agent wait <agent-name> --timeout <milliseconds>` a way to be resumed. Otherwise "I'll summarize when they finish" or "I'll watch it" leaves the round stalled until the user notices.
-
-A round is done only when every participant you prompted is accounted for: for each, wait on a finite timeout, then read its answer to this prompt and judge it, counting a question, blocker, or stated failure as part of your answer. A settled state is not a result, and for a prompt sent without `--wait` confirm delivery first, because `idle` proves nothing about a task that never arrived. When a wait times out, the wait ended and the work did not: read the pane, and if a live turn is on screen, wait again in this turn, keeping the re-waits bounded. Where a reported state disagrees with the pane, the pane decides; on Pi the hook can stay `working` after the answer is on screen (see Pi).
-
-Yield with work outstanding only when the user asked to leave it running, only the user can answer a dialog, the host will not accept another wait, or a background wait your host re-invokes you on is pending. Then say what resumes the round, a new user message or a background wait your host re-invokes you on, and for each unfinished participant give its agent name, pane ID, and last observed state, the containers you own, and the exact `herdr agent wait <agent-name> --timeout <milliseconds>` and `herdr agent read <agent-name>` commands. `herdr notification show` can alert the human before such a yield; it cannot wake you.
 
 ## Close what you opened
 
@@ -212,19 +119,3 @@ herdr workspace close <workspace-id>
 ```
 
 Starting a helper inside a pane the user already had does not make that pane yours, and once the user takes a session over it stops being yours to close. Keep a helper whose work you still need, whose output you have not read, or that holds an open question for the user, and name in your answer which ones you kept and why; a `blocked` state is a dialog to resolve or report, not a reason to keep anything, and a turn that has become pointless is not work worth protecting. Closing a tab shuts down the panes inside it, so close a tab you created only after every pane still in it is one you could close on its own; if the user has put something there, leave the tab. A container is not finished when its helpers are: collecting their output does not mean the tab or workspace you created has served its purpose. Close it only when that purpose is complete; leave it and say what you left when the user has taken it over or it is part of the work you are handing back. A workspace linked to a worktree refuses to close with `workspace_group_close_required`; leave it rather than adding `--group` to close more than you created. When you cannot establish that a pane is yours, leave it and say so.
-
-## Pi
-
-Herdr takes a Pi pane's status from the lifecycle hook, not the screen (`screen_detection_skip_reason: full_lifecycle_hook_authority`), so the reported turn state can be stale.
-
-Use each layer for what it owns:
-
-- Send slash commands with `pane run` and read `visible` to confirm the effect, since a command that only changes the editor or the session leaves lifecycle state untouched and an `agent prompt` wait would never settle on it.
-- Stop a running turn with `herdr agent send-keys <agent-name> esc`, which is Pi's documented abort in its default bindings; Ctrl+C clears the editor instead.
-
-When the hook's report and the pane disagree, decide from the pane:
-
-- A stall does not prove non-delivery, and `agent get` can report `working` after the pane has returned to its prompt. Read `visible` and reconcile what you sent against what the pane shows: an idle pane can mean the task finished as easily as it can mean the task never arrived. Collect the result if the turn completed, resend only once non-delivery is established or repeating the task is harmless, and otherwise report the ambiguity rather than replaying work.
-- Use `pane send-text` followed by `send-keys enter` only when the visible state confirms that Pi did not receive the task, and type a one-line pointer to a file holding the task rather than the task itself; confirm receipt afterward.
-- If interactive delivery stays unreliable for a long task, fall back to print mode, but only from a pane at a real shell prompt: `pane run` types into whatever holds the foreground, which in the agent's own pane is the Pi editor, so split a pane for it rather than reusing that one. Establish first that the interactive turn is no longer running, keep the provider, exact model, and full task from the original invocation, and check the exit status as well as the output.
-- A persistent disagreement between the hook's report and the pane is worth reporting with the versions and what you observed; do not repair the integration yourself, and do not name a cause you have not isolated.

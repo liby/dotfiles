@@ -132,7 +132,10 @@ function headingAnchors(markdown: string): Set<string> {
 // resolves, which would route an agent to a missing owner.
 test("local links and anchors resolve", () => {
   let checked = 0;
-  for (const source of [AGENTS, CONCEPTS, SETTINGS_RULE]) {
+  const skillSources = ["*/SKILL.md", "*/references/**/*.md"].flatMap((pattern) =>
+    [...new Bun.Glob(pattern).scanSync(join(ROOT, "dot_agents/skills"))].map((name) => `dot_agents/skills/${name}`),
+  );
+  for (const source of [AGENTS, CONCEPTS, SETTINGS_RULE, ...skillSources]) {
     for (const [, target] of read(source).matchAll(/(?<!!)\[[^\]]+\]\(([^)]+)\)/g)) {
       if (/^[a-z][a-z0-9+.-]*:/.test(target)) continue;
       const [pathText, fragment] = target.split("#", 2);
