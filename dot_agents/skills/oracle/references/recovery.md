@@ -1,0 +1,29 @@
+# Oracle recovery
+
+## Recover the bound run
+
+Keep the process or session ID and follow the same run through finite waits. After detachment, compaction, a timeout, stale status, or ambiguous submission, inspect `oracle status` and `oracle session <id>` before doing anything that could resend. An error status, an exited worker, or a submit-stage timeout does not establish that the prompt was never sent; a `promptSubmitted` flag alone does not establish its actual user turn. Use `oracle session <id> --live` to follow the bound page and `--harvest` to recover its current answer; use `--render` for a saved completed answer.
+
+When the saved session has no confirmed submitted turn or recoverable conversation URL and the user supplies the exact conversation URL, inspect `oracle session --help`, then read that page explicitly:
+
+```bash
+oracle session <id> --harvest --browser-tab "<conversation-url>"
+```
+
+The override selects an existing tab; it does not open a missing one. It bypasses the saved prompt fingerprint, so verify the actual user turn, attached inputs, corresponding answer, and requested Project before using its output. If no live tab matches, inspect `oracle status --browser-tabs` or open that exact URL in the signed-in browser; never substitute the current tab or a title match. If the exact page has an answer but capture still fails, inspect it through an available browser read path and apply the main skill's manual UI acceptance conditions. If no such read path is available, report that access gap. Do not append a follow-up just to retrieve an existing answer.
+
+- If the exact page remains unchanged at `Finalizing answer` across a finite observation, or appears finished after controller loss while harvest is unexpectedly empty, reload that same conversation at most once and recheck its user turn and answer. Account for any reload already performed by Oracle. Changing Thinking text or other progress means keep waiting.
+- If harvest reports an identity mismatch, stop using that capture and resolve the exact saved conversation. Non-empty `--live`/`--harvest` output or stale `running` metadata alone does not prove completion or failure.
+- If upload or send readiness times out, establish whether submission occurred first. Only an attempt that did not submit and can no longer submit, because its process has exited or been stopped, may be retried with `--browser-bundle-files --browser-bundle-format auto`.
+
+Use `--force` only after establishing that the worker, controller, and bound target are dead and the original conversation or answer cannot be recovered. While the requested consultation is pending, keep following it; do not substitute your own analysis for its result.
+
+## Reconcile provider fidelity
+
+When capture is enabled, `browser.providerNativeCapture.answerFidelity` is one of: `matched` on the active branch's assistant message; `divergent` reconciled against that message's text in `~/.oracle/sessions/<session-id>/artifacts/conversation-<id>-raw.json`, where a difference limited to the page's rendering (padded table columns, heading markers, file-citation chips) is the same answer, any other difference makes the provider record the answer, and a missing record or message leaves the result unresolved; or `unknown` for a Deep Research report without an assistant message ID. Any other `unknown` is unresolved.
+
+For an ordinary answer, require the actual user turn and corresponding assistant message, not just the same conversation; a missing provider record or message leaves required reconciliation unresolved. For Deep Research's allowed `unknown`, verify the completed report for this request and its usable citations without requiring an assistant message ID, and report completion without claiming provider-native fidelity.
+
+## Manual fallback
+
+If automation did not submit and can no longer submit, established under Recover the bound run, run the original prompt and text-file arguments with `oracle --render-markdown`, inspect the rendered text, and submit it in a new tab of the signed-in browser opened at the requested target, such as the supplied Project URL. Attach each original non-text file or a byte-preserving archive and verify readiness before sending. Preserve browser defaults unless selection was requested; verify any requested model/effort and Project, then require a completed answer to that turn and a saved URL. A preceding failed session supplies no selection or completion evidence for this manual answer. Apply the main skill's acceptance conditions except the automated-completion and provider-native fidelity items, which do not apply to a manual turn.

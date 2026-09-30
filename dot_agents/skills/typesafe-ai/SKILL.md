@@ -28,7 +28,7 @@ TypeSafe makes units of AI intelligence usable like programming primitives: smal
 | Prepare inputs and questions | [State](https://docs.typesafe.ai/concepts/state.md), [primitives](https://docs.typesafe.ai/primitives.md), then the chosen primitive's page |
 | Decide how to handle uncertainty | [Confidence](https://docs.typesafe.ai/confidence.md) |
 | Write API code | [HTTP API](https://docs.typesafe.ai/api.md), [Python SDK](https://docs.typesafe.ai/sdk/python.md), or [JavaScript SDK](https://docs.typesafe.ai/sdk/javascript.md) |
-| Update an older integration | [Migration guide](https://docs.typesafe.ai/migrating-to-v1.md) and the installed SDK's current reference |
+| Update an older integration | The chosen SDK's changelog and current reference, discovered from the documentation index; follow a migration guide only when the live docs list it |
 
 ## Find the useful shape
 
@@ -73,6 +73,6 @@ Test representative cases and the resulting application behavior. For failures, 
 
 ## Run live calls on this machine
 
-When running or verifying integration code in this managed macOS environment, make a live request only when the user asks for or approves the experiment. Before launching it, verify the namespace name without reading a value: `envchain --list | grep -qx typesafe`. `TYPESAFE_API_KEY` is available to a child process only through `envchain typesafe <command>`, for example `envchain typesafe python -m pytest`; if `envchain` or that namespace is unavailable, stop and report it rather than asking for or reconstructing the key. Use minimal, sanitized state. Never print, inspect, copy, log, interpolate, or pass `TYPESAFE_API_KEY` as a command-line argument, dump the injected environment, or enable shell tracing around a credential-bearing command.
+For a user-approved local experiment or integration test in this managed macOS environment, confirm the namespace name without reading a value: `envchain --list | grep -qx typesafe`. Launch the consumer with `envchain typesafe <command>` so the SDK receives `TYPESAFE_API_KEY` only inside its process. If envchain or the namespace is unavailable, report the missing prerequisite; do not reconstruct credentials. Use minimal, sanitized state and expose only the needed response.
 
-Keep integrations portable: application code should read `TYPESAFE_API_KEY` through the SDK's normal environment or the application's existing secret store. Do not make `envchain` a runtime dependency of project code; use it only to launch local development or test processes in this environment.
+Application code uses the SDK's normal environment or its existing secret store. Keep `envchain` as a local process launcher, not an application runtime dependency.
