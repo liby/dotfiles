@@ -105,8 +105,11 @@ const CREDENTIAL_CONSUMERS: Record<string, Record<string, string[]>> = {
   context7: {
     "dot_agents/skills/context7/SKILL.md": ["envchain context7 sh -c 'CTX7_TELEMETRY_DISABLED=1 exec ctx7 --base-url", "CONTEXT7_API_KEY"],
   },
-  pi: { "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain pi sh -c", "RC_GATEWAY_API_KEY"] },
-  typesafe: { "dot_agents/skills/typesafe-ai/SKILL.md": ["envchain typesafe <command>", "TYPESAFE_API_KEY"] },
+  pi: { "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain pi printenv", "RC_GATEWAY_API_KEY"] },
+  typesafe: {
+    "dot_agents/skills/typesafe-ai/SKILL.md": ["envchain typesafe <command>", "TYPESAFE_API_KEY"],
+    "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain typesafe printenv", "TYPESAFE_API_KEY"],
+  },
 };
 
 // GitHub's heading anchors: lowercase, drop punctuation, spaces to hyphens,
