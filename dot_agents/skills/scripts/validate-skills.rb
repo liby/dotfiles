@@ -66,7 +66,7 @@ CLI_SMOKE_COMMANDS = [
   ["glab mr approve head guard help", %w[glab mr approve --help], /--sha/],
   ["glab mr merge head guard help", %w[glab mr merge --help], /(?=.*--sha)(?=.*--auto-merge=false)/m],
   ["herdr prompt contract", %w[herdr agent prompt --help], /(?=.*--wait)(?=.*--timeout)(?=.*agent_prompt_stalled)(?=.*does not track turns)/m],
-  ["herdr split contract", %w[herdr pane split --help], /(?=.*--current)(?=.*--direction)(?=.*--cwd)(?=.*--no-focus)/m],
+  ["herdr split contract", %w[herdr pane split --help], /(?=.*\[PANE_ID\])(?=.*--direction)(?=.*--cwd)(?=.*--no-focus)/m],
   ["herdr tab create contract", %w[herdr tab create --help], /(?=.*--workspace)(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
   ["herdr workspace create contract", %w[herdr workspace create --help], /(?=.*--cwd)(?=.*--label)(?=.*--no-focus)/m],
   ["herdr saved machine routing", %w[herdr --help], /--machine <label-or-id>/],

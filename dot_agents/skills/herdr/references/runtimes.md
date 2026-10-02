@@ -2,38 +2,32 @@
 
 ## Claude Code host
 
-Where the host sandbox exempts `herdr` by command name, as Claude Code does, give a control command the shell invocation to itself: keep every command in it an exempt one, split at shell separators such as `|`, `&&`, `;`, and a newline, and put nothing else in the call but those commands' own arguments and a file-descriptor duplication such as `2>&1`; a command substitution or heredoc sandboxes it even inside an argument. An inline assignment before the command name sandboxes the call, unless the name is one the CLI treats as inert, such as `TERM` or `LANG`. A sandboxed socket call then fails with `Operation not permitted` rather than a recognizable permission error, and a `2>/dev/null` hides that message while the call still fails.
+Give Herdr control commands their own Bash call, containing only exempt commands and their literal arguments (descriptor duplication such as `2>&1` is allowed). Other shell segments, heredocs, backticks or `$(` even inside arguments, and non-inert inline assignments sandbox the whole call; inert assignments such as `TERM`/`LANG` are exceptions. Use a task-owned file pointer for rich task text, or have the target pane source a file for rich shell commands. Do not suppress socket errors with `2>/dev/null`.
+
+A socket connection denied with `Operation not permitted` submitted nothing: remove the non-exempt shape before retrying. This is distinct from an uncertain result after submission. For foreground waits, set Bash's timeout above Herdr's finite timeout and within the tool limit; a background Bash wait re-invokes Claude when it exits.
 
 ## Codex
 
-Start Codex on the profile its `default_permissions` setting selects, and pass no `-s` / `--sandbox` value unless the user names a sandbox mode for this launch. The flag does not narrow that profile: it selects Codex's older sandbox settings in its place, and a managed `allowed_permission_profiles` requirement alone keeps the profile, so if the user asks for a read-only launch, say that under that requirement the flag cannot remove the profile's write access. Where the flag takes effect, `-s read-only` turns off the network the configured profile keeps enabled.
+Use the profile selected by `default_permissions`; pass no `-s`/`--sandbox` unless the user names a sandbox mode. That flag substitutes legacy sandbox settings rather than narrowing the profile. A managed `allowed_permission_profiles` requirement keeps the profile, so `-s read-only` cannot remove its write access; report that limitation when a read-only launch is requested. Where the flag takes effect, read-only disables the profile's network access.
 
 ### Queue a next-turn message
 
-For a requested follow-up to a busy Codex session on this machine, use `codex queue` after verifying that it reaches that agent's app server. Resolve the session UUID from `herdr agent get <agent-name>` (`agent_session.kind: id`, `agent_session.value`), and verify that this live agent is the intended recipient; an agent name, pane ID, or terminal title is not a Codex thread ID. Enqueue now for execution after the active turn; do not wait for that turn to finish before enqueueing.
-
-Herdr's `--machine` does not forward `codex queue`. If no Codex app-server route is verified, or the queue explicitly rejects the message before enqueueing, follow the original agent with finite waits and pane reads until its turn settles, then submit with `herdr agent prompt`. Qualify every remote wait, read, and prompt with `--machine <label-or-id>`. Use this path only after establishing that the queue did not accept the message; an uncertain result requires reconciliation instead. Finish that delivery in this task; a promise to send later has not queued anything.
+For a busy local Codex recipient, verify its app-server route and exact native UUID from `agent get` (`agent_session.kind: id`, `value`). Agent names, pane IDs and titles are not thread IDs. Enqueue now, without waiting for the active turn:
 
 ```bash
 codex queue --thread <verified-session-uuid> --message '<follow-up>'
 ```
 
-Keep the returned thread and queued-message IDs. Acceptance by the queue proves enqueueing, not consumption. Apply the [requested-outcome contract](agents.md#complete-the-requested-outcome): a delivery-only request ends at the bound receipt; when results are required, follow the same agent with finite waits and reads until that message's actual response or blocker appears. The current turn can settle before the queued turn starts, so one Herdr wait is not enough to collect a result. If the queue call's result is uncertain, inspect that session before sending again; a retry creates another message.
+Retain thread/message receipt IDs. Queue acceptance proves enqueueing, not consumption: apply the [outcome contract](agents.md#complete-the-requested-outcome). Required results need the queued message's response; the current turn settling does not prove that queued turn started.
 
-Codex distinguishes busy-turn steering from next-turn queueing: Enter steers the current turn and Tab queues the next. Long or multiline terminal pastes can remain in the composer after Enter even while the command reports success. If an earlier delivery is visibly still unsent in the composer, queue that existing text with Tab and verify the queued indication and eventual response; do not paste it again or also enqueue a duplicate. A cleared composer or `idle` status alone does not establish receipt.
+Herdr's `--machine` does not forward this queue. With no verified recipient app-server route, or an explicit rejection before enqueueing, follow the original agent until settled and use `agent prompt`; qualify remote wait/read/prompt calls with the same `--machine`. An uncertain queue/submission result requires reconciliation before this fallback or any retry. Finish the delivery now rather than promising it later.
+
+Enter steers a busy turn; Tab queues the next. A long/multiline terminal paste can remain unsent after Enter despite reported success. If that exact text is visibly still in the composer, queue it with Tab and verify the queued indication/eventual response; do not repaste or also enqueue it. A cleared composer or idle state alone is not a receipt.
 
 ## Pi
 
-Herdr takes a Pi pane's status from the lifecycle hook, not the screen (`screen_detection_skip_reason: full_lifecycle_hook_authority`), so the reported turn state can be stale.
+Pi lifecycle hooks own Herdr's status (`full_lifecycle_hook_authority`), so it may disagree with the screen. Send slash commands with `pane run` and verify `visible`; editor-only commands do not settle lifecycle waits. Abort a running turn with `agent send-keys <agent-name> esc`; default Ctrl+C clears the editor.
 
-Use each layer for what it owns:
+On a stall or hook/pane disagreement, read `visible` and reconcile the submitted task with its actual answer/receipt. An idle prompt can mean completed or never delivered. Collect completed output; resend only with proven non-delivery or a harmless repeat, otherwise report ambiguity. Use `pane send-text` followed by `send-keys enter` only for visibly proven non-delivery, submitting a one-line file pointer and confirming receipt.
 
-- Send slash commands with `pane run` and read `visible` to confirm the effect, since a command that only changes the editor or the session leaves lifecycle state untouched and an `agent prompt` wait would never settle on it.
-- Stop a running turn with `herdr agent send-keys <agent-name> esc`, which is Pi's documented abort in its default bindings; Ctrl+C clears the editor instead.
-
-When the hook's report and the pane disagree, decide from the pane:
-
-- A stall does not prove non-delivery, and `agent get` can report `working` after the pane has returned to its prompt. Read `visible` and reconcile what you sent against what the pane shows: an idle pane can mean the task finished as easily as it can mean the task never arrived. Collect the result if the turn completed, resend only once non-delivery is established or repeating the task is harmless, and otherwise report the ambiguity rather than replaying work.
-- Use `pane send-text` followed by `send-keys enter` only when the visible state confirms that Pi did not receive the task, and type a one-line pointer to a file holding the task rather than the task itself; confirm receipt afterward.
-- If interactive delivery stays unreliable for a long task, fall back to print mode, but only from a pane at a real shell prompt: `pane run` types into whatever holds the foreground, which in the agent's own pane is the Pi editor, so split a pane for it rather than reusing that one. Establish first that the interactive turn is no longer running, keep the provider, exact model, and full task from the original invocation, and check the exit status as well as the output.
-- A persistent disagreement between the hook's report and the pane is worth reporting with the versions and what you observed; do not repair the integration yourself, and do not name a cause you have not isolated.
+If interactive delivery stays unreliable, use print mode only after establishing the original turn is no longer running. Split a shell pane: `pane run` in the agent pane types into its editor. Preserve provider, exact model and full task; check output and exit status. Report persistent hook/pane disagreement with versions and observations; do not repair integrations or invent a cause.
