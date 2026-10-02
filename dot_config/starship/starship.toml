@@ -29,6 +29,10 @@ format = '\[[$symbol($context)]($style)\]'
 format = '\[[$symbol$branch]($style)\]'
 symbol = "󰘬·"
 
+[golang]
+format = '\[[$symbol($version)]($style)\]'
+symbol = " "
+
 [memory_usage]
 disabled = false
 format = '\[$symbol[$ram( | $swap)]($style)\]'

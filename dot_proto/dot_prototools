@@ -1,4 +1,5 @@
 bun = "latest"
+go = "latest"
 node = "lts"
 npm = "bundled"
 pnpm = "latest"
