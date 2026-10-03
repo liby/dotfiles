@@ -5,15 +5,15 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
-# Input Source Pro keeps its own settings in com.runjuu.Input-Source-Pro, where the shortcut and
-# rule values are archived blobs rather than plain defaults. The exported JSON is what this
-# repository tracks, and the app loads it through the import URL below.
+# Input Source Pro keeps its app and website rules in a Core Data store and many preferences as
+# archived values in com.runjuu.Input-Source-Pro. The exported JSON is what this repository
+# tracks, and the app loads it through the import URL below.
 app="Input Source Pro"
 settings="{{ .chezmoi.sourceDir }}/.chezmoitemplates/input-source-pro/settings.json"
 
-# `open` returns as soon as LaunchServices takes the URL, so nothing here reports whether the
-# import ran. Send it only once the app is up: on a machine where it has never run, that launch
-# goes through Gatekeeper first, and the wait below is what absorbs the delay.
+# LaunchServices only acknowledges URL dispatch; the app reports the import result.
+# Launch the app first and wait for its process so first-run Gatekeeper prompts do not
+# interrupt URL delivery.
 echo "Starting $app (answer its first-launch prompts)..."
 open -a "$app"
 
@@ -28,5 +28,5 @@ until [[ -n "$(lsappinfo find 'bundleid="com.runjuu.Input-Source-Pro"')" ]]; do
   sleep 1
 done
 
-echo "Importing $app settings (confirm the Replace Current Settings prompt)..."
+echo "Importing $app settings (check the app's result alert)..."
 open "inputsourcepro://import?path=$settings"
