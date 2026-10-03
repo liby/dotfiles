@@ -10,11 +10,11 @@ allowed-tools:
   - Bash(gh pr view:*)
 ---
 
-Produce the message the user needs this recipient to understand. Establish what may change and what the message must accomplish before choosing its wording. This skill governs the artifact even when it is displayed in chat; it does not govern the surrounding conversation.
+This skill governs outbound artifacts, even in chat, not the surrounding conversation.
 
 ## Establish the writing task
 
-Identify the recipient, the situation the message responds to, the result the user wants, and how the text will reach the recipient. Use the request and available exchange as evidence. Do not turn the user's narration into a list of equally important points or invent a motive to make it coherent.
+Identify the recipient, the situation the message responds to, the result the user wants, and how the text will reach the recipient. Use the request and available exchange as evidence.
 
 Select the permitted transformation from the request. When its extent is unspecified, preserve the supplied draft's substantive content and structure while resolving the wording request.
 
@@ -22,52 +22,41 @@ Select the permitted transformation from the request. When its extent is unspeci
 - Polishing permits changes to wording within the requested scope. Preserve headings, examples, detail, claim strength and qualifications unless the user authorizes changing them.
 - Translation or complete restatement permits reordering for the target language while retaining all substantive content. Separate language versions carry the same facts and conditions.
 
-These limits apply throughout: a neighbouring artifact's format does not authorize restructuring a wording-only edit, and a preference for brevity does not authorize summarizing a full restatement.
+Follow explicit instructions and destination requirements. Read the attached MR description/discussion, issue or preceding exchange; distinguish recipient knowledge, sender-only knowledge and permitted disclosure. Assign the recipient's internal procedure only with sender authority or the recipient's request.
 
-## Resolve the recipient's context
+For unsettled style choices, sample comparable human-authored artifacts from this recipient or destination. Bots, this session's output and structurally different changes establish no convention. Do not invent authorship; stop when the open choices are settled.
 
-Follow explicit user instructions and destination requirements first. Read the material the message attaches to: the description and discussion before an MR comment, the issue before its reply, or the preceding exchange before an email or chat response. Establish what the recipient already knows, what only the sender knows, and what can appropriately be disclosed. For public drafts, omit internal hostnames, local paths, internal URLs, personal contact details and raw debug output unless the recipient needs those exact details to act.
-
-Use neighbouring artifacts only for choices still open. For an MR/PR, inspect authorship alongside titles and choose bodies with a comparable kind of change. For an issue, read its template and comparable reports; for messages, use the actual exchange. A bot's title convention, this session's own output, and a recent but structurally different change do not establish the convention for this task. Unknown authorship limits what the sample proves; it does not justify inventing an author or discarding an explicit template.
-
-Stop sampling when the open choices are settled. Record a genuine conflict or inaccessible required source for the user; do not manufacture a house style when evidence is missing. With no applicable convention, organize the content according to the recipient's needs. A template the recipient requires remains binding.
-
-Resolve language before formatting. Existing-file language and explicit instructions prevail. Otherwise PR/MR titles default to English; GitHub bodies and comments to English, GitLab's to Chinese. Match the relationship and the exchange's register, including how the sender addresses the recipient.
+Existing-file language and explicit instructions prevail. Otherwise PR/MR titles and GitHub bodies/comments use English; GitLab bodies/comments use Chinese. Match the exchange's register and established form of address.
 
 ## Settle the facts before composing
 
-Separate established facts, the user's stated understanding, requested hypotheses, and unresolved information. Do not convert a documented mechanism into a runtime observation, a proposed action into a completed one, or an unknown into a fact.
+Separate established facts, the user's stated understanding, requested hypotheses, and unresolved information. When the source does not identify an action's performer, describe the event or result without assigning it to the sender. Treat a next step as a sender commitment only when the source establishes that commitment. Do not convert a documented mechanism into a runtime observation, a proposed action into a completed one, or an unknown into a fact.
 
-When an unresolved fact changes the message's purpose, a material claim or a sender commitment, perform the available evidence work within the task's authority before drafting. If the answer requires the user or unavailable access, ask the focused question that resolves it. A plausible sentence does not resolve a missing fact. Do not replace an unfinished authorized check with a disclaimer or an assignment to the recipient.
+When an unresolved fact changes the message's purpose, a material claim or a sender commitment, perform the available evidence work within the task's authority before drafting. If the answer requires the user or unavailable access, ask the focused question that resolves it. Do not replace an unfinished authorized check with a disclaimer or an assignment to the recipient.
 
-Optional detail may be omitted when the selected transformation permits it and the omission does not change the reader's decision. A genuine limitation belongs in the artifact when the recipient needs it to judge or act; it belongs in operational reporting when only the user needs to know it. Explicitly requested hypotheses remain qualified hypotheses. Never conceal a material uncertainty to make a draft appear complete.
+Optional detail may be omitted when the selected transformation permits it and the omission does not change the reader's decision. A genuine limitation belongs in the artifact when the recipient needs it to judge or act; it belongs in operational reporting when only the user needs to know it.
 
 Preserve retained identifiers, error text, numbers, conditions, exceptions, negations and causal or temporal relations exactly. Check the previous state before claiming something was added, removed or changed. Do not invent a test result, deployment step, recipient action, follow-up plan, signature or sender identity.
 
-## Compose around the message's purpose
+## Compose for the reader
 
-For a Chinese artifact, read [references/chinese.md](references/chinese.md) before composing or polishing unless that exact file is already present in the current context. These rules apply to the artifact, not its surrounding conversation. For English, use natural English syntax and the exchange's register.
+Before composing or polishing Chinese, read [references/chinese.md](references/chinese.md) unless that exact file is already in context.
 
-Lead with the point that lets this recipient understand why the message matters. Develop the necessary explanation in the order they need it, giving each point the weight its consequence deserves. Supply background they cannot otherwise see without repeating what the attached diff, ticket or exchange already establishes.
+Use ISO 24495-1:2023's reader outcomes within the permitted transformation:
 
-A request states the desired outcome and enough context for the recipient to consider it. It does not assign the recipient's internal procedure unless the sender has that authority or the recipient requested it. A status note, correction or acknowledgement need not end with a request. Stop when the communicative purpose is fulfilled; do not add a closing recap by habit.
+- Relevant: include what this recipient needs.
+- Findable: make the point and qualifications easy to locate.
+- Understandable: use established terms and explain unfamiliar identifiers and relationships.
+- Usable: make the conclusion or request actionable without inventing actions or commitments.
 
-Use paragraphs for connected reasoning and lists or headings for independent parts the reader must navigate. Preserve a required form or requested structure. Do not turn an ordinary message into labelled fields merely because several facts are available, or strip useful structure merely to make it shorter.
+For English, use transferable ASD-STE100 principles: clear words, consistent technical terms, short sentences, one topic per sentence and conditions before instructional actions. Use active voice when the source names the actor; preserve uncertainty and obligation. Keep natural syntax and the exchange's register. STE's controlled vocabulary and English syntax do not govern Chinese. This summary is self-contained and claims no conformity, certification or percentage; full conformity requires the applicable rules and dictionary.
 
-PR/MR descriptions explain final behavior and material rationale or trade-offs the diff does not make apparent. Omit routine test, lint, typecheck and build commands and pass results unless a required template calls for them. Include informative manual or risk-specific results and material gaps affecting review. Intermediate attempts, discarded options, unaffected services and internal review mechanics stay out unless they explain the final decision.
+PR/MR descriptions explain final behavior and reasons or trade-offs absent from the diff. Omit routine check commands and passes unless a template requires them; include informative validation and material gaps.
 
-For review comments, address one issue per comment. State the verified problem and its consequence or the genuinely unresolved question. Answer the author's concern first in a reply. Specify the required outcome; prescribe implementation only when requested, when earlier replies have not resolved the issue, or when the established repository approach is necessary to explain it. Wording does not reopen the finding's evidence or severity decision.
+Review replies answer the author's concern first. State the verified problem and consequence or unresolved question; prescribe implementation only when requested, earlier replies failed to resolve the issue, or the repository approach is needed to explain it.
 
-Use the recipient's established terms. Explain an unfamiliar identifier on first use when needed, rather than substituting a vague label for it. Keep connective words that make sentences natural; compression is useful only while the reader can still follow the relationship between the facts.
+## Deliver
 
-## Render and deliver
+Put useful URLs on descriptive words in sentences that state the supported fact or action without requiring a click; do not add a links block or a sentence merely to retain a link. Preserve literal URLs when required by the format or protected source text. For references to repository code in rendered Markdown, establish the actual code permalink before composing; if unavailable, name the file/function and what to inspect, and never invent a permalink. Slack uses pasteable plain text, paragraphs, simple lists and ordinary URLs.
 
-Keep a DM or thread reply in message form. Add an email subject, greeting or signature only when its purpose, requested format or exchange calls for it. Do not add formulaic courtesy, an announcement of what the message will say, an invented signature, emoji the user or exchange did not call for, or a recap that adds nothing.
-
-Where the destination renders Markdown, resolve the commit, the file path and the line, and build the permalink form that destination uses, before composing the sentence. Place the link on the words naming the fact, code or action it supports, in a sentence that carries the substance without a click. Do not create a links section, retain a bare location as a substitute for explanation, or print a URL alongside its own link. Preserve literal URLs when the destination requires them or they are protected source text. If no real code link can be built, name the file or function and explain what to inspect; do not invent a permalink.
-
-For Slack, return plain text the user can paste into the message composer, using paragraphs, simple lists and ordinary URLs.
-
-Before returning the artifact, read it from the recipient's position: can they identify the point, understand each necessary fact and qualification, and distinguish a request from a sender commitment? Confirm the requested transformation and protected spans survived. Remove only material the permitted scope allows removing.
-
-Return the requested artifact without a preamble or unrequested explanation. Honor exact output constraints. A material question that prevents a trustworthy draft must be resolved before this step; an operational note does not belong inside the artifact. If the user also requested reasoning, variants or a comparison, provide those separately in the requested format.
+Return only the artifact, honor exact output constraints and keep operational notes out; provide requested reasoning, variants or comparisons separately.

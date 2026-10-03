@@ -77,7 +77,19 @@ When asked to draft or update an MR title and description:
    git diff <base>...HEAD --stat
    ```
 
-4. Write the title and description through `draft`, which owns their wording and reads this repository's recent merged MRs to match them. Supply it the actual branch changes and any structure the user asked for.
+4. Read the complete branch diff and repository MR template when one exists. Compose an English title and Chinese description. Explicit language and structure requirements prevail. For wording-only edits, preserve the existing language, substantive content and structure unless the user authorizes changing them.
+
+   For a new description, lead with final behavior established by the complete changes. Preserve retained actors, factual scope, conditions, uncertainty, claim strength and commitments. Keep implemented behavior distinct from observed results and planned work.
+
+   Select supporting content from the inspected implementation and available records:
+
+   - Include material rationale or trade-offs when those sources establish them and they help the reviewer assess the change. An implementation inference whose cause is not established remains explicitly labelled as a hypothesis.
+   - Include informative manual or risk-specific results with what was checked, what was observed and the evidence's limits. Missing records limit what can be reported; they do not establish that checks were not performed or that risks are absent.
+
+   Omit optional content without supporting information. If a required template field has no supporting record, state what information was not supplied.
+
+   Use the required template; otherwise organize only the selected content into paragraphs or short lists. Omit routine test, lint, typecheck and build commands or pass results unless the template requires them.
+
 5. If the user explicitly asked to update the MR, choose separate heredoc delimiters containing only letters, digits, and underscores which do not occur as complete lines in the generated title and description. Verify both comparisons before composing the command; replace the sample delimiters below for every payload, then run:
 
    ```bash

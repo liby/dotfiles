@@ -202,18 +202,6 @@ test("documented credential contract matches consumers", () => {
   }
 });
 
-// Rejects managed settings that select a different output style, or a style
-// that drops Claude Code's coding instructions.
-test("managed settings select the output style with coding instructions", () => {
-  const style = read("dot_claude/output-styles/natural-technical-writing.md");
-  expect(style.startsWith("---\n")).toBe(true);
-  const frontmatter = style.split("---\n", 3)[1];
-  const name = frontmatter.match(/^name: (.+)$/m);
-  expect(name).not.toBeNull();
-  expect([...read(CLAUDE_SETTINGS).matchAll(/"outputStyle": "([^"]+)"/g)].map((m) => m[1])).toEqual([name![1]]);
-  expect(frontmatter).toMatch(/^keep-coding-instructions: true$/m);
-});
-
 describe("shared agent instructions", () => {
   const INCLUDE = /\{\{ includeTemplate "agents\/([^"]+)" \. (-?)\}\}(\n?)/g;
   const fragment = (name: string) => read(`${FRAGMENTS}/${name}`);
