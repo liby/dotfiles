@@ -66,6 +66,8 @@ cask "appcleaner"
 cask "chatgpt"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
+# Chinese input method with voice input and intelligent suggestions
+cask "doubaoime"
 # Inconsolata LGC Nerd Font
 cask "font-inconsolata-lgc-nerd-font"
 # Terminal emulator that uses platform-native UI and GPU acceleration

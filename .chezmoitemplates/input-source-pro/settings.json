@@ -25,7 +25,7 @@
       "doRestoreKeyboard" : true,
       "forceEnglishPunctuation" : false,
       "hideIndicator" : false,
-      "inputSourceId" : "com.apple.inputmethod.SCIM.ITABC",
+      "inputSourceId" : "com.bytedance.inputmethod.doubaoime.pinyin::com.bytedance.inputmethod.doubaoime.pinyin",
       "removed" : false,
       "url" : "file:///Applications/Bob.app/"
     },
@@ -60,7 +60,7 @@
       "doRestoreKeyboard" : false,
       "forceEnglishPunctuation" : false,
       "hideIndicator" : true,
-      "inputSourceId" : "com.apple.inputmethod.SCIM.ITABC",
+      "inputSourceId" : "com.bytedance.inputmethod.doubaoime.pinyin::com.bytedance.inputmethod.doubaoime.pinyin",
       "removed" : false,
       "url" : "file:///Applications/WeChat.app/"
     },
@@ -82,31 +82,26 @@
       "createdAt" : "2024-05-31T14:19:40Z",
       "disabled" : false,
       "hideIndicator" : false,
-      "inputSourceId" : "com.apple.inputmethod.SCIM.ITABC",
+      "inputSourceId" : "com.bytedance.inputmethod.doubaoime.pinyin::com.bytedance.inputmethod.doubaoime.pinyin",
       "keyboardRestoreStrategyRaw" : "UseDefaultKeyboardInstead",
       "sample" : "",
       "typeValue" : 0,
       "value" : "chatgpt.com"
     }
   ],
-  "exportedAt" : "2026-09-17T07:22:20Z",
+  "exportedAt" : "2026-10-03T15:36:10Z",
   "hotKeyGroups" : [
 
   ],
   "keyboardConfigs" : [
     {
       "bgColorHex" : "000000ff",
-      "id" : "com.apple.inputmethod.SCIM.ITABC",
-      "textColorHex" : "ffffffff"
-    },
-    {
-      "bgColorHex" : "000000ff",
-      "id" : "com.apple.inputmethod.SCIM.ITABC::com.apple.inputmethod.SCIM.ITABC",
-      "textColorHex" : "ffffffff"
-    },
-    {
-      "bgColorHex" : "000000ff",
       "id" : "com.apple.keylayout.ABC",
+      "textColorHex" : "ffffffff"
+    },
+    {
+      "bgColorHex" : "000000ff",
+      "id" : "com.bytedance.inputmethod.doubaoime.pinyin::com.bytedance.inputmethod.doubaoime.pinyin",
       "textColorHex" : "ffffffff"
     }
   ],
@@ -115,7 +110,7 @@
   },
   "preferences" : {
     "appearanceMode" : "Dark",
-    "browserAddressDefaultKeyboardId" : "com.apple.inputmethod.SCIM.ITABC::com.apple.inputmethod.SCIM.ITABC",
+    "browserAddressDefaultKeyboardId" : "com.bytedance.inputmethod.doubaoime.pinyin::com.bytedance.inputmethod.doubaoime.pinyin",
     "cJKVFixStrategy" : "previousInputSourceShortcut",
     "functionKeysToggleModifierCombo" : [
 
