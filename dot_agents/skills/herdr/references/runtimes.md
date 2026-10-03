@@ -12,7 +12,7 @@ Use the profile selected by `default_permissions`; pass no `-s`/`--sandbox` unle
 
 ### Queue a next-turn message
 
-For a busy local Codex recipient, verify its app-server route and exact native UUID from `agent get` (`agent_session.kind: id`, `value`). Agent names, pane IDs and titles are not thread IDs. Enqueue now, without waiting for the active turn:
+For a busy Codex recipient on this machine, take its exact native UUID from `agent get` (`agent_session.kind: id`, `value`). Agent names, pane IDs and titles are not thread IDs. `codex queue` stores the message in a queue database under `CODEX_HOME`, which the recipient's app server reads whether it is embedded or a shared daemon, so it reaches only sessions under that same `CODEX_HOME`. Enqueue now, without waiting for the active turn:
 
 ```bash
 codex queue --thread <verified-session-uuid> --message '<follow-up>'
@@ -20,7 +20,7 @@ codex queue --thread <verified-session-uuid> --message '<follow-up>'
 
 Retain thread/message receipt IDs. Queue acceptance proves enqueueing, not consumption: apply the [outcome contract](agents.md#complete-the-requested-outcome). Required results need the queued message's response; the current turn settling does not prove that queued turn started.
 
-Herdr's `--machine` does not forward this queue. With no verified recipient app-server route, or an explicit rejection before enqueueing, follow the original agent until settled and use `agent prompt`; qualify remote wait/read/prompt calls with the same `--machine`. An uncertain queue/submission result requires reconciliation before this fallback or any retry. Finish the delivery now rather than promising it later.
+Herdr's `--machine` does not forward this queue. For a recipient on another machine or under another `CODEX_HOME`, or after an explicit rejection before enqueueing, follow the original agent until settled and use `agent prompt`; qualify remote wait/read/prompt calls with the same `--machine`. An uncertain queue/submission result requires reconciliation before this fallback or any retry. Finish the delivery now rather than promising it later.
 
 Enter steers a busy turn; Tab queues the next. A long/multiline terminal paste can remain unsent after Enter despite reported success. If that exact text is visibly still in the composer, queue it with Tab and verify the queued indication/eventual response; do not repaste or also enqueue it. A cleared composer or idle state alone is not a receipt.
 

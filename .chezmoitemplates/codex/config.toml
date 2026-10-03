@@ -53,6 +53,8 @@ skill = "#ad7bf9"
 enabled = false
 
 [features]
+# A shared app-server daemon runs hooks and tool commands with the environment of the terminal that started it, which sends Herdr session reports and HERDR_* to the wrong pane. Remove once Codex gives them the attached client's environment: https://github.com/openai/codex/issues/48500
+daemon_auto_start = false
 memories = true
 # Keep direct networking while the permission profile controls filesystem access.
 network_proxy = false

@@ -37,13 +37,7 @@ A missing caller ID must not fall through to another client's active context. If
 herdr pane current --pane "$HERDR_PANE_ID"
 ```
 
-On `pane_not_found`, recover on the same endpoint in this order, inspecting unfamiliar command groups before use:
-
-1. Verify this task's existing container and agent handles and continue through them. Verified explicit targets do not require a resolved caller. Reconcile uncertain creation or submission before replacing anything; neither inventory absence nor a matching label proves what happened. Keep dependent writes stopped while that result is unknown; do not duplicate participants or replay prompts.
-2. Match the runtime's current native identity, such as `CODEX_THREAD_ID` or `CLAUDE_CODE_SESSION_ID`, against `herdr agent list`: require exactly one `agent_session` matching `agent`, `kind`, and `value`. Confirm it with `agent get <matched-pane-id>` and `pane get <matched-pane-id>`. No match or multiple matches leave the caller unresolved; labels, names, cwd, titles, history, and focus cannot bind it. Do not inspect unrelated agents' output to guess.
-3. If the caller remains unresolved, new panes or participants are needed, no verified task container exists, and this action does not depend on an unbound existing target, create a workspace with the authorized cwd, task label, and `--no-focus`. Explicit-cwd creation needs no caller pane. Retain its returned IDs and complete dispatch and collection under the [agent workflow](references/agents.md#complete-the-requested-outcome), preserving the requested runtimes, models, permissions, cwd, and validation contract.
-
-Report successful recovery with its execution location. Ask for a missing existing target only for the action that depends on it, and continue independent work. Direct CLI sessions do not replace requested Herdr testing. Report connection or protocol errors as such; the CLI enforces protocol compatibility. Never adopt another client's focus, change endpoints, overwrite `HERDR_*`, or restart the server to recover. Missing subprocess environment is a boundary to report, not authorization to change environment policy, install integrations, or kill a reused daemon.
+If that lookup fails, report its error and stop the actions that depend on the caller; focus, `--current`, labels, and other agents' identities cannot stand in for it. Work that needs no caller pane still proceeds, such as creating a requested workspace with an explicit cwd. Report connection or protocol errors as such; the CLI enforces protocol compatibility. Never change endpoints, overwrite `HERDR_*`, or restart the server to recover. Missing subprocess environment is a boundary to report, not authorization to change environment policy or install integrations.
 
 Use the installed binary for syntax; inspect the relevant group before unfamiliar options:
 
@@ -62,7 +56,7 @@ Control responses contain JSON IDs and state; `pane read` and `agent read` conta
 
 A returned `create` or `split` ID establishes task ownership across turns until user takeover. The caller's containers are not yours: do not close, replace, resize, rearrange, or relabel them without authorization. Inspecting or prompting an existing agent does not transfer ownership.
 
-Label on creation: workspace = work, tab = round, pane = participant. Update owned labels when their purpose changes; preserve user-set labels and taken-over containers. Keep the live agent name stable for prompting, waiting, and recovery; its occupant's activity already updates the terminal title. Read a label before changing it. Herdr has no atomic compare-and-set: authorization conditional on a caller workspace retaining its default label cannot bind a rename through a preceding read; obtain authorization for that target's new label without that precondition. A label change does not transfer ownership.
+Label on creation: workspace = work, tab = round, pane = participant. Update owned labels when their purpose changes; preserve user-set labels and taken-over containers. Keep the live agent name stable for prompting, waiting, and recovery; its occupant's activity already updates the terminal title. Read a label before changing it. A label change does not transfer ownership.
 
 ```bash
 herdr workspace rename <workspace-id> "<work>"
