@@ -6,7 +6,6 @@ check_for_update_on_startup = false
 cli_auth_credentials_store = "keyring"
 default_permissions = "development"
 mcp_oauth_credentials_store = "keyring"
-model = "gpt-6-astra"
 model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
 suppress_unstable_features_warning = true
@@ -148,6 +147,9 @@ enabled = true
 
 [plugins."unified-computer-use@openai-bundled"]
 enabled = true
+
+[plugins."code-review@openai-bundled"]
+enabled = false
 
 [plugins."documents@openai-primary-runtime"]
 enabled = true
