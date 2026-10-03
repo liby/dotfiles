@@ -5,7 +5,6 @@ paths:
   - "modify_dot_claude.json"
   - "dot_claude/modify_private_settings.json"
   - "dot_claude/CLAUDE.md.tmpl"
-  - "dot_claude/output-styles/**/*"
   - "dot_claude/hooks/**/*"
   - "dot_claude/scripts/executable_statusline.sh"
 ---
@@ -29,8 +28,6 @@ Each top-level key in `~/.claude/settings.json` has one of three roles:
 Seed a key only when routine use changes it so often that restoring it on every apply would undo that use. Only `model` and `effortLevel`, switched through `/model` and `/effort`, meet that bar; the seed still gives a new machine the intended starting value, which leaving them undeclared would not. Seed `model` as the `opus` alias rather than a model ID: a seed is written once, so an ID would freeze each machine on the generation current at its first apply, while the alias follows the Opus pin and its `[1m]` suffix. Being changeable inside Claude Code is not the criterion: many managed keys, such as `advisorModel`, change in a session and stay managed, so make the change durable in the fragment. Keep `CLAUDE_CODE_EFFORT_LEVEL` unset because it overrides both `/effort` and the persisted `effortLevel`, which defeats the seed.
 
 `~/.claude.json` has no seeds. `modify_dot_claude.json` overlays its declared keys and replaces each source-declared MCP server whole, so removed transport fields disappear; undeclared servers and all other state stay intact.
-
-Keep main-conversation presentation and terminology defaults in `dot_claude/output-styles/natural-technical-writing.md`, with `keep-coding-instructions: true` so the built-in engineering instructions remain active. Keep operating and artifact contracts, including verification of model and delegated reports, in `dot_claude/CLAUDE.md.tmpl`. Non-fork subagents use separate system prompts and do not inherit the output style.
 
 ## Session retention and unattended runs
 

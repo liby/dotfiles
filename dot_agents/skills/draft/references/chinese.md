@@ -1,21 +1,11 @@
 # Chinese wording
 
-Use these rules for Chinese outbound prose. They govern wording, not the task's authority, evidence standard, content selection or required format.
+These rules govern Chinese outbound wording, not authority, evidence, content selection or required format.
 
-## Keep the names and the meaning
+Use backticks for code names and render each term consistently. Use the reader's established terms, including familiar English technical terms and metaphors. Literal translation or another model's usage does not establish a phrase. When no familiar term fits, describe the actor, condition, action and result rather than coin a compressed label.
 
-Use backticks for code names inside Chinese prose and keep each term rendered consistently throughout the artifact.
+Write complete clauses that show what happened and how the facts relate. Prefer specific verbs to figurative ones that obscure the operation. Preserve connective and function words; brevity must not make the reader infer the subject, action or consequence, or make prose clipped or half-classical.
 
-Use the terms the reader and team already use, including familiar English technical terms and established technical metaphors. A phrase is not established merely because another model used it or because it can be translated word for word from English. When no familiar expression fits, describe the actor, condition, action and result instead of coining a compressed label.
+Judge phrases in their sentences, not isolated words. Keep familiar technical uses; replace translated or compressed collocations that make the reader reconstruct English. Do not improvise noun modifiers from 裸、硬、死 to intensify or shorten an explanation. Keep established technical terms and quotations; do not generalize a rejected expression into a ban on ordinary uses.
 
-## Write the relationship between the facts
-
-Use complete clauses to say what happened and why the next sentence follows. Short messages can be brief without making the reader infer the subject, action or consequence. Prefer a specific verb to a figurative verb that obscures the operation. Do not invent a noun compound to replace the explanation the reader needs.
-
-Check the phrase in its sentence, not the word in isolation. Retain a familiar technical use; replace a translation or compressed collocation that makes the reader reconstruct an English sentence. Preserve the connective and function words the exchange uses rather than making the prose clipped or half-classical.
-
-Do not use improvised noun modifiers built from 裸、硬、死 to intensify or shorten an explanation. This does not rename an established technical term or alter a quotation. Do not generalize a rejected expression into a ban on ordinary uses of the word.
-
-## Match written Chinese
-
-Use Chinese full-width punctuation in Chinese narration, including sentences containing English terms. Preserve punctuation inside quoted source text, code and identifiers; use English punctuation in an English passage. Separate clauses with ordinary punctuation or a new sentence rather than a dash. Do not add emoji unless requested or established by the exchange.
+Use Chinese full-width punctuation in Chinese narration, including mixed English terms. Keep punctuation inside quotations, code and identifiers; use English punctuation in English passages. Separate clauses with ordinary punctuation or a new sentence rather than a dash. Add emoji only when requested or established by the exchange.
