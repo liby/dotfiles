@@ -1,0 +1,16 @@
+local power_settings
+power_settings=$(pmset -g) || return
+if print -r -- "$power_settings" | /usr/bin/awk '$1 == "SleepDisabled" && $2 == 1 { found = 1 } END { exit !found }'; then
+  print -u2 'Sleep is already disabled, so ka will not change it. If nothing else needs it, run: sudo pmset -a disablesleep 0'
+  return 1
+fi
+
+# Unlike caffeinate, disablesleep keeps a closed MacBook without an external display awake.
+# The root shell owns the restore, so ending needs no second authentication.
+sudo /bin/sh -c '
+  trap "pmset -a disablesleep 0 || exit 1" EXIT
+  trap "exit 130" HUP INT TERM
+  pmset -a disablesleep 1 || exit
+  echo "Sleep disabled. Press Ctrl+C or Ctrl+D to restore it before closing the terminal."
+  while read -r _; do :; done
+'
