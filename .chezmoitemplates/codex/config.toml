@@ -6,6 +6,8 @@ check_for_update_on_startup = false
 cli_auth_credentials_store = "keyring"
 default_permissions = "development"
 mcp_oauth_credentials_store = "keyring"
+# Raised from the 272K default to compact less often, accepting that quality and subscription usage past 272K are undocumented; lower it if usage limits drain faster rather than approaching the 872K maximum. Codex compacts at 90% of this window, or sooner if `model_auto_compact_token_limit` is lower, so tune this key rather than that limit.
+model_context_window = 400000
 model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
 suppress_unstable_features_warning = true
@@ -160,9 +162,6 @@ enabled = true
 enabled = true
 
 [plugins."presentations@openai-primary-runtime"]
-enabled = false
-
-[plugins."sites@openai-bundled"]
 enabled = false
 
 [plugins."spreadsheets@openai-primary-runtime"]
