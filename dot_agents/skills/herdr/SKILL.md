@@ -17,11 +17,13 @@ name: herdr
 
 Control the current Herdr session with the installed CLI. Pane commands drive terminals; agent commands bind input and waits to a recognized agent.
 
-Load each branch before its first action:
+Load each branch before its first action, and again before acting on it whenever its text is no longer in your context, as after compaction:
 
 - Before inspecting, starting, or prompting an agent, read the [agent workflow](references/agents.md); for several participants, also read the [panel workflow](references/panels.md) before placing or dispatching the round.
 - When Claude Code is the host, read its [runtime section](references/runtimes.md#claude-code-host) before the first control call. Before launching or sending input to Codex or Pi, read its section of that file.
 - Before saved-machine discovery or remote control, read the [remote-machine contract](references/remote.md).
+
+Deliver input to a Codex agent you drive by its state, even when notes or summaries from earlier in the session prescribe typing into its pane: answer a pending question card (`? N question · shift+← to answer`) inside the card when the task authorizes that answer, send input for a `working` agent on this machine through `codex queue`, and prompt an idle one with `agent prompt`. Typing into its main composer and pressing Enter instead deletes a pending card and steers the running turn.
 
 ## Establish the boundary
 

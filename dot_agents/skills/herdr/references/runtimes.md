@@ -10,6 +10,10 @@ A socket connection denied with `Operation not permitted` submitted nothing: rem
 
 Use the profile selected by `default_permissions`; pass no `-s`/`--sandbox` unless the user names a sandbox mode. That flag substitutes legacy sandbox settings rather than narrowing the profile. A managed `allowed_permission_profiles` requirement keeps the profile, so `-s read-only` cannot remove its write access; report that limitation when a read-only launch is requested. Where the flag takes effect, read-only disables the profile's network access.
 
+### Answer a question card
+
+A Codex model's question appears as a collapsed card under `Queued follow-up inputs` (`? N question · shift+← to answer`) while its turn keeps running: Herdr reports `blocked`, `agent prompt` refuses with `agent_blocked`, and the card shows no options until opened. Open it with `agent send-keys <agent-name> shift+left`, then answer under the [dialog contract](agents.md#answer-a-dialog-inside-an-agent-you-started): choose with `up`/`down`, or type free text into `Other` with `pane send-text`, and submit with `enter`; the reply is bound to that question. Typed Enter in the main composer instead removes the card and arrives as an unbound message. The card disappears when the asking turn ends; deliver an answer that arrives later, such as the user's, as next-turn input.
+
 ### Queue a next-turn message
 
 For a busy Codex recipient on this machine, take its exact native UUID from `agent get` (`agent_session.kind: id`, `value`). Agent names, pane IDs and titles are not thread IDs. `codex queue` stores the message in a queue database under `CODEX_HOME`, which the recipient's app server reads whether it is embedded or a shared daemon, so it reaches only sessions under that same `CODEX_HOME`. Enqueue now, without waiting for the active turn:
@@ -22,7 +26,7 @@ Retain thread/message receipt IDs. Queue acceptance proves enqueueing, not consu
 
 Herdr's `--machine` does not forward this queue. For a recipient on another machine or under another `CODEX_HOME`, or after an explicit rejection before enqueueing, follow the original agent until settled and use `agent prompt`; qualify remote wait/read/prompt calls with the same `--machine`. An uncertain queue/submission result requires reconciliation before this fallback or any retry. Finish the delivery now rather than promising it later.
 
-Enter steers a busy turn; Tab queues the next. A long/multiline terminal paste can remain unsent after Enter despite reported success. If that exact text is visibly still in the composer, queue it with Tab and verify the queued indication/eventual response; do not repaste or also enqueue it. A cleared composer or idle state alone is not a receipt.
+A long/multiline terminal paste can remain unsent after Enter despite reported success. If that exact text is visibly still in the composer, queue it with Tab, not Enter, which would steer the running turn, and verify the queued indication/eventual response; do not repaste or also enqueue it. A cleared composer or idle state alone is not a receipt.
 
 ## Pi
 
