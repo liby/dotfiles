@@ -10,7 +10,7 @@ autoupdate_plist="$HOME/Library/LaunchAgents/$autoupdate_label.plist"
 autoupdate_helper_dir="$HOME/Library/Application Support/$autoupdate_label"
 autoupdate_helper="$autoupdate_helper_dir/brew-autoupdate"
 
-echo "Setting up brew autoupdate (10:00 daily and at load)..."
+echo "Setting up brew autoupdate (every 6 hours and at load)..."
 # A fresh macOS account may lack any of these; launchd creates a missing log file but not its
 # directory.
 mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Logs"
@@ -18,14 +18,13 @@ mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Lo
 # Login Items names a legacy job by the basename of the file launchd runs, so the commands live in
 # their own file, and the helper sets its own PATH because launchd gives it a minimal environment.
 # The steps are deliberately not chained, so a failure neither skips the rest nor goes unreported.
-# pi has no Homebrew channel and never updates itself, so the helper also runs `pi update --self`;
-# that step needs the proto environment on PATH to find Node and install into the proto prefix.
+# pi has no Homebrew channel and never updates itself, so the helper also runs `pi update`;
+# the managed install lives in ~/.pi/agent/install and its launcher needs Node on PATH.
 cat > "$autoupdate_helper" <<'HELPER'
 #!/bin/sh
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
 export PROTO_HOME="$HOME/.proto"
-export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
-export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$NPM_CONFIG_PREFIX/bin:$PATH"
+export PATH="$HOME/.local/bin:$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
 
 status=0
 date
@@ -49,13 +48,13 @@ if [ "$installed" != "$agent_version" ] || [ "$installed" != "$keyboxd_version" 
   /bin/launchctl kickstart "gui/$UID/org.gnupg.gpg-agent" || status=$?
   /bin/launchctl kickstart "gui/$UID/org.gnupg.keyboxd" || status=$?
 fi
-"$NPM_CONFIG_PREFIX/bin/pi" update --self || status=$?
+pi update || status=$?
 brew cleanup || status=$?
 exit "$status"
 HELPER
 chmod +x "$autoupdate_helper"
 
-# The background keys keep a daily upgrade off the foreground's I/O.
+# The background keys keep the periodic upgrade off the foreground's I/O.
 cat > "$autoupdate_plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -74,12 +73,32 @@ cat > "$autoupdate_plist" <<EOF
     <key>LowPriorityBackgroundIO</key>
     <true/>
     <key>StartCalendarInterval</key>
-    <dict>
-        <key>Hour</key>
-        <integer>10</integer>
-        <key>Minute</key>
-        <integer>0</integer>
-    </dict>
+    <array>
+        <dict>
+            <key>Hour</key>
+            <integer>2</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>8</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>14</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>20</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
     <key>RunAtLoad</key>
     <true/>
     <key>StandardOutPath</key>
