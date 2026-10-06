@@ -18,6 +18,7 @@ enabled = false
 
 [desktop]
 ambient-suggestions-enabled = false
+appshotSoundEnabled = false
 composerPlainTextMode = true
 enabled-reasoning-efforts = ["medium", "xhigh", "max", "ultra"]
 # Keep the selected UI behavior when the desktop default writes queue.
@@ -33,6 +34,8 @@ realtimeVoiceScreenContextEnabled = false
 reduced-motion-preference = "on"
 reviewDelivery = "detached"
 show-context-window-usage = true
+show-educational-tips = false
+sidebar-show-projects-in-recents = false
 usePointerCursors = true
 worktree-upstream-refresh-mode = "best-effort"
 
@@ -135,6 +138,9 @@ enabled = false
 enabled = false
 
 [apps.connector_openai_plugin_management]
+enabled = false
+
+[apps.connector_openai_safety_settings]
 enabled = false
 
 [plugins."codex-app-tools@openai-bundled"]
