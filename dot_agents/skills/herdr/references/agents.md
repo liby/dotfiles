@@ -31,7 +31,7 @@ Startup success means Herdr detected readiness; `agent_not_ready` leaves the nam
 
 ## Answer a dialog inside an agent you started
 
-A dialog in someone else's agent belongs to the user. In your helper, `agent prompt` refuses with `agent_blocked`. Read `visible`, identify the intended and selected options, and navigate without submitting until the whole option list is visible; increasing `--lines` cannot expand a viewport. Never confirm unseen options.
+A dialog in someone else's agent belongs to the user. In your helper, `agent prompt` refuses with `agent_blocked`. A question the agent's own model raises is such a dialog; a [Codex question card](runtimes.md#answer-a-question-card) shows no options until opened. Read `visible`, identify the intended and selected options, and navigate without submitting until the whole option list is visible; increasing `--lines` cannot expand a viewport. Never confirm unseen options.
 
 Answer only within the task's authorization, with no uncleared stop under Authority and no answer only the user holds. Without shared rules, require an undoable action visible only to the user, or specific user direction clearing the otherwise-stopped effect. Judge the action enabled, not the keypress; do not spend a helper's permission boundary. Resolve a model choice from the requested/configured ID; ask only for an undelegated material choice.
 
