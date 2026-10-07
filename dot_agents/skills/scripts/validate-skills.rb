@@ -88,7 +88,7 @@ CLI_SMOKE_COMMANDS = [
     /(?=.*browser mode \(picker=current;)(?=.*attach to an already-running local Chrome session)(?=.*\b1 files?\b)/m
   ],
   ["sessidx verbs", %w[sessidx --help], /(?=.*^\s+search\s)(?=.*^\s+grep\s)(?=.*^\s+show\s)(?=.*^\s+count\s)(?=.*^\s+sql\s)(?=.*^\s+doctor\s)/m],
-  ["sessidx search filters", %w[sessidx search --help], /(?=.*--harness <HARNESS>\s+\[possible values: claude, codex, pi\])(?=.*--role)(?=.*--since)(?=.*--until)(?=.*--cwd)(?=.*--session)(?=.*--cursor)/m],
+  ["sessidx search filters", %w[sessidx search --help], /(?=.*--harness <HARNESS>[^\n]*\[possible values: claude, codex, pi\])(?=.*--role)(?=.*--since)(?=.*--until)(?=.*--cwd)(?=.*--session)(?=.*--cursor)/m],
   ["sessidx show context", %w[sessidx show --help], /--around/],
   ["sessidx count options", %w[sessidx count --help], /(?=.*commands, failures, denials)(?=.*--by)(?=.*--program)/m],
 ].freeze

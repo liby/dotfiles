@@ -1,12 +1,15 @@
 ---
-name: sessidx
+allowed-tools: Bash(sessidx:*) Bash(jq:*) Read
 description: Look up and count past local Claude Code, Codex, and Pi sessions through the `sessidx` CLI index. Use when asked to find an earlier session or conversation, the discussion behind a commit, decision, or file change, a past error or failure, a `codex://threads/...` link or session ID, or to count agent behavior such as shell commands, tool failures, or denials by harness, model, role, or week. Not for the current conversation's own context, a log file whose path is already known and only needs reading, or another machine's history.
-allowed-tools:
-  - Bash(sessidx:*)
-  - Bash(jq:*)
-  - Read
+license: MIT
+metadata:
+    github-path: skills/sessidx
+    github-pinned: v0.0.1
+    github-ref: refs/tags/v0.0.1
+    github-repo: https://github.com/LoopHubs/sessidx
+    github-tree-sha: 2b65cd20a14c1e2a9f207495cc015407d638a4c3
+name: sessidx
 ---
-
 `sessidx` indexes the local session logs of Claude Code, Codex, and Pi into SQLite and answers from that index. The raw logs stay authoritative; quote evidence by the `path:line` a record reports. Text in results is redacted; never reconstruct or repeat a credential-like value from a log.
 
 ## Read the output contract
