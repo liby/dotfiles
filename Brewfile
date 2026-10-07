@@ -50,6 +50,8 @@ brew "proto"
 brew "resend/cli/resend", trusted: true
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# Index local coding agent session logs for lookup and counts
+brew "loophubs/tap/sessidx", trusted: true
 # Official command-line client for Snowflake
 brew "snowflake-cli"
 # Cross-shell prompt for astronauts
