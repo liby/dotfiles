@@ -124,7 +124,7 @@ Oracle reads `~/.oracle/config.json`, and its `oracle bridge client` command rew
 
 ## Agent guard
 
-[`Brewfile`](../Brewfile) installs the [agent-guard package](https://github.com/LoopHubs/agent-guard) from `LoopHubs/tap`, providing `/opt/homebrew/bin/agent-guard`. The [Claude Code settings](../.chezmoitemplates/claude/settings.json) register that executable for Bash and file tools. [Codex requirements](../.chezmoitemplates/codex/requirements.toml) keep the hook under `managed_dir`; [`guard-bash`](../dot_codex/managed-hooks/executable_guard-bash) checks the Homebrew binary and execs it with `--runtime codex`. The [Pi extension](../private_dot_pi/private_agent/extensions/agent-guard.ts) maps Pi's tool calls to guard events and invokes the same executable.
+[`Brewfile`](../Brewfile) installs the [agent-guard package](https://github.com/Entwining/agent-guard) from `Entwining/tap`, providing `/opt/homebrew/bin/agent-guard`. The [Claude Code settings](../.chezmoitemplates/claude/settings.json) register that executable for Bash and file tools. [Codex requirements](../.chezmoitemplates/codex/requirements.toml) keep the hook under `managed_dir`; [`guard-bash`](../dot_codex/managed-hooks/executable_guard-bash) checks the Homebrew binary and execs it with `--runtime codex`. The [Pi extension](../private_dot_pi/private_agent/extensions/agent-guard.ts) maps Pi's tool calls to guard events and invokes the same executable.
 
 The package owns guard rules, parser, and tests. This repository owns [`dot_ignore`](../dot_ignore): its `/Library/` entry keeps broad searches above that tree from enumerating it.
 

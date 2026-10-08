@@ -1,9 +1,9 @@
-tap "loophubs/tap"
+tap "entwining/tap"
 tap "resend/cli"
 tap "steipete/tap"
 
 # macOS pre-tool guard for coding agents
-brew "loophubs/tap/agent-guard", trusted: true
+brew "entwining/tap/agent-guard", trusted: true
 # Official Amazon AWS command-line interface
 brew "awscli"
 # Manage your dotfiles across multiple diverse machines, securely
@@ -51,7 +51,7 @@ brew "resend/cli/resend", trusted: true
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Index local coding agent session logs for lookup and counts
-brew "loophubs/tap/sessidx", trusted: true
+brew "entwining/tap/sessidx", trusted: true
 # Official command-line client for Snowflake
 brew "snowflake-cli"
 # Cross-shell prompt for astronauts
