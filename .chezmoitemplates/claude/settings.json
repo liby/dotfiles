@@ -3,9 +3,9 @@
   "advisorModel": "fable",
   "cleanupPeriodDays": 99999,
   "env": {
-    "ANTHROPIC_DEFAULT_FABLE_MODEL": "claude-fable-5-1[1m]",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-4-5",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5-5[1m]",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL": "claude-fable-5-1",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-5-5",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-5-5",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-5-5",
     "CLAUDE_AUTO_BACKGROUND_TASKS": "1",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1",
@@ -277,10 +277,8 @@
     ]
   },
   "autoCompactWindow": 400000,
-  "precomputeCompactionEnabled": true,
   "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
-  "autoDreamEnabled": true,
   "showThinkingSummaries": true,
   "showTurnDuration": false,
   "timeFormat": "24-hour",
