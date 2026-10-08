@@ -1,4 +1,4 @@
 #!/bin/zsh -f
 # The managed requirements require a command under managed_dir.
-[[ -x /opt/homebrew/bin/agent-guard ]] || { print -u2 -- 'The agent guard could not complete its check (agent-guard missing), so this call is blocked. Install LoopHubs/tap/agent-guard with Homebrew, then retry the call.'; exit 2 }
+[[ -x /opt/homebrew/bin/agent-guard ]] || { print -u2 -- 'The agent guard could not complete its check (agent-guard missing), so this call is blocked. Install Entwining/tap/agent-guard with Homebrew, then retry the call.'; exit 2 }
 exec /opt/homebrew/bin/agent-guard --runtime codex

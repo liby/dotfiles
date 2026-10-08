@@ -6,7 +6,7 @@ metadata:
     github-path: skills/sessidx
     github-pinned: v0.0.1
     github-ref: refs/tags/v0.0.1
-    github-repo: https://github.com/LoopHubs/sessidx
+    github-repo: https://github.com/Entwining/sessidx
     github-tree-sha: 2b65cd20a14c1e2a9f207495cc015407d638a4c3
 name: sessidx
 ---
