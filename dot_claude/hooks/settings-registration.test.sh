@@ -64,7 +64,7 @@ expect_registration PreToolUse "Edit|Write" "~/.claude/hooks/pre-edit-warn-chezm
 expect_registration PostToolUse "Bash" "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_registration PostToolUseFailure "Bash" "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_registration PreCompact "" "~/.claude/hooks/pre-compact-instructions.sh"
-expect_registration SessionStart "*" "$HERDR_HOOK"
+expect_registration SessionStart "^(startup|resume|clear|compact|fork)$" "$HERDR_HOOK"
 check "event/matcher/command tuples are unique" "$(jq '
   [to_entries[] | .key as $event | .value[] | (.matcher // "") as $matcher
    | .hooks[] | [$event, $matcher, .command]]
