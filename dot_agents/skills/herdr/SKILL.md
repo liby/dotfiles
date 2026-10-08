@@ -50,7 +50,7 @@ herdr tab
 herdr workspace
 ```
 
-Never run bare `herdr` for discovery: it launches or attaches the TUI. Do not probe a mutating nested command by omitting arguments. After an upgrade or option rejection, inspect `herdr --version`, the relevant group, and `herdr --skill`; retain this skill's authorization, ownership, and workflow rules. Report an incompatibility when the installed version cannot satisfy them. Before relying on a new server feature, check `herdr status`; never stop or replace the server or kill its main process without a specific request.
+Never run bare `herdr` for discovery: it launches or attaches the TUI. Bare `herdr server` is not a usage probe either: it runs a headless server. Do not probe a mutating nested command by omitting arguments. After an upgrade or option rejection, inspect `herdr --version`, the relevant group, and `herdr --skill`; retain this skill's authorization, ownership, and workflow rules. Report an incompatibility when the installed version cannot satisfy them. Before relying on a new server feature, check `herdr status`; never stop or replace the server or kill its main process without a specific request.
 
 Control responses contain JSON IDs and state; `pane read` and `agent read` contain terminal text. Use returned pane IDs and verified unique live agent names, not inherited IDs, predicted IDs, focus, or sidebar order. Never use `--current` while the caller is unresolved.
 
