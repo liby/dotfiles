@@ -1,5 +1,14 @@
 {
   "providers": {
+    "anthropic": {
+      "apiKey": "!envchain pi printenv ANTHROPIC_API_KEY",
+      "modelOverrides": {
+        "claude-fable-5-1": { "contextWindow": 400000 },
+        "claude-haiku-5-5": { "contextWindow": 400000 },
+        "claude-opus-5-5": { "contextWindow": 400000 },
+        "claude-sonnet-5-5": { "contextWindow": 400000 }
+      }
+    },
     "rc-gateway": {
       "baseUrl": "{{ .private.rcGatewayBaseUrl }}",
       "api": "openai-completions",
@@ -62,22 +71,6 @@
           "input": ["text", "image"],
           "contextWindow": 300000,
           "maxTokens": 128000
-        },
-        {
-          "id": "spacexai/grok-4.7",
-          "name": "Grok 4.7",
-          "reasoning": true,
-          "thinkingLevelMap": {
-            "off": null,
-            "minimal": null,
-            "low": "low",
-            "medium": "medium",
-            "high": "high",
-            "xhigh": "xhigh"
-          },
-          "input": ["text", "image"],
-          "contextWindow": 240000,
-          "maxTokens": 240000
         },
         {
           "id": "zai/glm-5.3",
