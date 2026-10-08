@@ -18,7 +18,7 @@ mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Lo
 # Login Items names a legacy job by the basename of the file launchd runs, so the commands live in
 # their own file, and the helper sets its own PATH because launchd gives it a minimal environment.
 # The steps are deliberately not chained, so a failure neither skips the rest nor goes unreported.
-# pi has no Homebrew channel and never updates itself, so the helper also runs `pi update`;
+# Pi has no Homebrew channel and never updates itself, so the helper also runs `pi update`;
 # the managed install lives in ~/.pi/agent/install and its launcher needs Node on PATH.
 cat > "$autoupdate_helper" <<'HELPER'
 #!/bin/sh

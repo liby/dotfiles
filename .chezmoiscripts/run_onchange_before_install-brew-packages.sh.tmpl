@@ -51,7 +51,9 @@ fi
 echo "Installing brew packages..."
 # A transient brew bundle failure would abort the whole apply.
 attempt=1
-until brew bundle --file="$brewfile"; do
+# Upgrades are left to the owners in CONCEPTS.md: a `mas upgrade` here would need sudo and
+# make the App Store ask to quit each running app it updates.
+until brew bundle --no-upgrade --file="$brewfile"; do
   (( attempt++ < 3 )) || exit 1
   echo "brew bundle failed; retrying (attempt $attempt/3)..."
   sleep 10
