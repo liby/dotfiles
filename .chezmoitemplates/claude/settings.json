@@ -122,6 +122,7 @@
       "allowWrite": [
         "{{ output "getconf" "DARWIN_USER_TEMP_DIR" | trim | trimSuffix "/" }}",
         "/private/tmp/.pnpm-store",
+        "/private/tmp/pnpm-store-operation-locks-{{ .chezmoi.uid }}",
         "~/.bun",
         "~/.cache",
         "~/.cargo",
