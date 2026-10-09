@@ -12,7 +12,7 @@
 
 | 内容 | 入口 |
 | --- | --- |
-| Coding Agent 工具与配置 | [`dot_agents`](../dot_agents/)、[`dot_claude`](../dot_claude/)、[`dot_codex`](../dot_codex/) |
+| Coding Agent 工具与配置 | [`dot_agents`](../dot_agents/)、[`dot_claude`](../dot_claude/)、[`dot_codex`](../dot_codex/)、[`private_dot_pi`](../private_dot_pi/)、[`.chezmoitemplates/agents`](../.chezmoitemplates/agents/) |
 | Git 配置 | [`dot_config/git`](../dot_config/git/)、[`.chezmoitemplates/git`](../.chezmoitemplates/git/) |
 | 设计思路 | [`CONCEPTS.md`](CONCEPTS.md) |
 | 软件包和初始化脚本 | [`Brewfile`](../Brewfile)、[`.chezmoiscripts`](../.chezmoiscripts/) |

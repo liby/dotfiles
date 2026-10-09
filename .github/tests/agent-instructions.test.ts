@@ -36,6 +36,7 @@ const ROUTE_EXPECTATIONS: Record<string, string[]> = {
     "(.github/CONCEPTS.md#package-and-tool-ownership)",
   ],
   "Git signing": [
+    "`dot_config/git/config`",
     "`dot_config/git/executable_git-ssh-gpg-agent`",
     "`.chezmoitemplates/git/**`",
     "`private_dot_ssh/private_config`",
@@ -78,6 +79,7 @@ const ROUTE_EXPECTATIONS: Record<string, string[]> = {
     "(.github/CONCEPTS.md#agent-guard)",
   ],
   "Managed skills": ["`dot_agents/skills/**`", "`~/.agents/skills/**`", "`write-skill`", "(.github/CONCEPTS.md#managed-skill-registry)"],
+  "Snowflake CLI": ["`dot_local/bin/executable_snow`", "`dot_agents/skills/snow/**`", "(.github/CONCEPTS.md#shared-agent-execution)"],
   Credentials: [
     "`.secrets/**`",
     "any source that invokes `envchain`",
