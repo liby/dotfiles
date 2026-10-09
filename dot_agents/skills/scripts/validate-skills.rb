@@ -62,6 +62,7 @@ CLI_SMOKE_COMMANDS = [
   ["gh skill install help", %w[gh skill install --help], /(?=.*--agent)(?=.*--allow-hidden-dirs)(?=.*--dir)(?=.*--from-local)(?=.*--scope)/m],
   ["gh skill update help", %w[gh skill update --help], /(?=.*gh skill update \[<skill>\.\.\.\])(?=.*--all)(?=.*--dir)(?=.*--dry-run)/m],
   ["gh pr merge head guard help", %w[gh pr merge --help], /--match-head-commit/],
+  ["glab mr list state filters", %w[glab mr list --help], /\A(?!.*--state)(?=.*-A --all)(?=.*-M --merged)(?=.*-c --closed)/m],
   ["glab mr update safe input help", %w[glab mr update --help], /(?=.*--description-file)(?=.*--yes)/m],
   ["glab mr approve head guard help", %w[glab mr approve --help], /--sha/],
   ["glab mr merge head guard help", %w[glab mr merge --help], /(?=.*--sha)(?=.*--auto-merge=false)/m],

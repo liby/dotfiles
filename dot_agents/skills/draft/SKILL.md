@@ -1,6 +1,6 @@
 ---
 name: draft
-description: "Draft or revise text addressed to another person: MR/PR titles and descriptions, review comments, issues, emails, support tickets, Slack messages, replies and questions. Use when turning notes, findings, a diff, or an existing draft into sendable text, or improving its wording in any language. Not for the assistant's own chat, code comments, commit messages, or agent instructions."
+description: "Write or revise text that other people will read: MR/PR titles and descriptions, review comments and replies, issues, emails, support tickets, chat messages, and questions. Use whenever such text is composed or rewritten, including as one step of a larger task such as opening or updating an MR or PR, answering a review thread, or filing an issue, alongside the tool that posts it. Not for the assistant's own chat, code comments, commit messages, or agent instructions."
 allowed-tools:
   - Read
   - Bash(git log:*)
