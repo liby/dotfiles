@@ -105,7 +105,14 @@ const CREDENTIAL_KEYS: Record<string, string[]> = {
 
 // Each consumer file and the tokens that wire it to its namespace.
 const CREDENTIAL_CONSUMERS: Record<string, Record<string, string[]>> = {
-  "claude-gateway": { "dot_zsh/functions/claude": ["gateway_namespace=claude-gateway", 'envchain "$gateway_namespace" claude "$@"'] },
+  "claude-gateway": {
+    // Subscription mode unsets every contract key by name.
+    "dot_local/share/claude-launcher/bin/executable_claude": [
+      "gateway_namespace=claude-gateway",
+      'envchain "$gateway_namespace" "$native" "$@"',
+      ...CREDENTIAL_KEYS["claude-gateway"],
+    ],
+  },
   context7: {
     "dot_agents/skills/context7/SKILL.md": ["envchain context7 sh -c 'CTX7_TELEMETRY_DISABLED=1 exec ctx7 --base-url", "CONTEXT7_API_KEY"],
   },
