@@ -1,7 +1,5 @@
 # Data Integrity
 
-Load when changed code reads or writes data at scale or changes its meaning: DB or API access from handlers, services, jobs, loops, or resolvers; ORM use; joins and aggregates; transactions; cursors; backfills; migrations; or derived fields.
-
 When DB or API operations grow with rows, events, users, tools, retries, or rendered records on a live backend path, prove the path is hot or unbounded and state the expected call count; prefer a join, eager load, `IN` or bulk lookup, source-side filter, or one enrichment query. `Promise.all` over individual queries is concurrency, not batching. Do not report N+1 for an in-memory loop or a documented fixed-small set. A performance finding must cite the reachable scaling path, the cardinality source, the operation, and the expected round-trip growth.
 
 When a count, summary tile, leaderboard, or grouped aggregate sits beside a filtered list, keep both on the same owner, filter, visibility, soft-delete, and timezone contract, and verify the SQL or ORM shape or a focused test pins both the representative rows and the summary values. A shared endpoint does not prove two CTEs or service calls use the same scope.

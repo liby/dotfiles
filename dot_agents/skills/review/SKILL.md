@@ -40,7 +40,7 @@ Do not apply fixes in the main reviewer context. A clean verdict is a valid outc
 
    Done when every changed path has either its applicable repository rules loaded or a recorded `no matching repository rule` disposition.
 7. Read touched files, adjacent code, direct call sites, and relevant tests. For exported or deleted symbols, schemas, events, and shared helpers, search writers, readers, generated output, and peer surfaces by both symbol and changed concept. When the change passes a runtime value, such as a locale, credential scope, or configuration setting, into one execution environment, list the other environments that run the same kind of work, such as sandboxes, workers, scheduled jobs, and subprocesses, and check for each whether its contract requires the value and whether it receives it; a surface that lacks the value shares no symbol with the change, so a symbol search cannot find it.
-8. Load every matching surface rule and apply every Universal Review Lens below.
+8. Load every matching surface rule, and the file of every Universal Review Lens whose trigger a changed hunk matches.
 9. Verify each candidate against the applicable code, source-owned contract, tests, or runtime evidence; run the cheapest existing validation that covers the changed path.
 10. Finish only after every changed path, matching repository rule, loaded shared rule, requirement question, and approach concern is accounted for, then report findings that pass the Finding Bar or a clean verdict.
 
@@ -56,14 +56,14 @@ Observed runtime and source-owned product, security, and data contracts outrank 
 
 ## Universal Review Lenses
 
-Apply every lens; load its file when the change exercises it.
+Check every changed hunk against each trigger below and load the lens file for each trigger that matches before judging those hunks. A lens with no matching hunk has nothing to apply.
 
-- [Contract](references/concerns/contract.md): requirements, schemas, names, generated shapes, and consumers.
-- [Boundaries](references/concerns/boundaries.md): ownership, authority, guards, persistence, clients, and credential/runtime scope.
-- [Failure states](references/concerns/failure-states.md): absence, rejection, retries, partial work, and final markers.
-- [Data integrity](references/concerns/data-integrity.md): round trips, grain, scope, transactions, and per-record outcomes.
-- [Security](references/concerns/security.md): value trust, authorization, environment isolation, and sandbox exposure.
-- [Tests](references/concerns/tests.md): reachable fixtures, observable invariants, and real runtime boundaries.
+- [Contract](references/concerns/contract.md): the change defines or changes something other code depends on: types, schemas, enums, discriminated unions, event names, storage keys, exported identifiers, numeric policy, units, or generated artifacts.
+- [Boundaries](references/concerns/boundaries.md): the change crosses or defines an ownership or authority boundary (shared wrapper, gateway, repository, auth layer, route handler, protocol client, runtime, deployment), adds a guard, fallback, or abstraction, or moves data toward a client.
+- [Failure states](references/concerns/failure-states.md): the change handles failure or terminal status: `catch`/`.catch`, ignored exit status, unchecked SDK result, `Promise.allSettled`, retry or timeout config, placeholder returns, `status`/`state`/`outcome` values, or `done`/`healthy`/`configured`/`cached`/`skip` markers.
+- [Data integrity](references/concerns/data-integrity.md): the change reads or writes data at scale or changes its meaning: DB or API access from handlers, services, jobs, loops, or resolvers; ORM use; joins and aggregates; transactions; cursors; backfills; migrations; or derived fields.
+- [Security](references/concerns/security.md): the change touches env vars, service identities, feature flags, deployment config, logging or analytics sinks, or network policy; request auth, route matchers, CORS, origin, cookies, sessions, or iframe and embed state; or sandboxed and model-controlled execution.
+- [Tests](references/concerns/tests.md): the change adds, deletes, or rewrites tests, fixtures, mocks, snapshots, harnesses, or test-only guards, or a review claim relies on tests as evidence.
 
 ## Variants
 

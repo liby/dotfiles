@@ -1,7 +1,5 @@
 # Tests
 
-Load when changed code adds, deletes, or rewrites tests, fixtures, mocks, snapshots, harnesses, or test-only guards, or when a review claim relies on tests as evidence.
-
 Read validation config before trusting a typecheck, lint, or test result. A test finding must protect a reachable behavior, boundary, or data contract rather than a coverage quota.
 
 When a fixture, mock, factory, snapshot, or fake response defines the shape under test, compare it with the source-owned schema, provider payload, framework path, browser event, DB row, queue payload, or CLI output. Prefer reachable shapes and values outside the happy fixture; an impossible mock-only shape should not justify a guard, fallback, or test. Flag fixture-specific hardcoding that satisfies the example without implementing the invariant.
