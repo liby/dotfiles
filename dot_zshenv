@@ -17,6 +17,8 @@ __BRYAN_TOOLCHAIN_PATH=(
   "$NPM_CONFIG_PREFIX/bin"
   "$PNPM_HOME/bin"
   "$HOME/go/bin"
+  # The provider-aware `claude` launcher must shadow the native install in ~/.local/bin.
+  "$HOME/.local/share/claude-launcher/bin"
   "$HOME/.local/bin"
   # `mbx setup` installs its Cargo shim in the platform data directory, which on macOS is
   # ~/Library/Application Support regardless of XDG, and has no setting to move it. The shim
@@ -26,6 +28,3 @@ __BRYAN_TOOLCHAIN_PATH=(
 )
 path=($__BRYAN_TOOLCHAIN_PATH $path)
 export PATH
-
-# Codex uses non-interactive zsh, so expose only its provider-aware Claude launcher here.
-autoload -Uz "$HOME/.zsh/functions/claude"
