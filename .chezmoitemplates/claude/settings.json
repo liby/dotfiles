@@ -55,7 +55,6 @@
   },
   "permissions": {
     "defaultMode": "auto",
-    "disableBypassPermissionsMode": "disable",
     "allow": [
       "Agent",
       "Bash(codex:*)",
