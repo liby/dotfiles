@@ -1,5 +1,5 @@
 ---
-description: Control Herdr, a terminal multiplexer for coding agents. Use only when the user explicitly mentions Herdr or asks to use Herdr to inspect or control panes, tabs, workspaces, commands, or another agent. Do not use merely because a task could benefit from a background terminal, delegation, or parallel work. Requires HERDR_ENV=1.
+description: Control Herdr, a terminal multiplexer for coding agents. Use when the user explicitly mentions Herdr or asks to use Herdr to inspect or control panes, tabs, workspaces, commands, or another agent. Also use it when a task needs a coding agent from another CLI or model vendor, such as for a cross-vendor review, consultation, or delegated work, or when the user wants to watch or take over another agent's session; Herdr runs that agent in a pane the user can see. Unless the user asks for Herdr, not for the agent's own subagents, background commands, or agent CLI runs that a script drives or that the user asks to run non-interactively. Requires a Herdr session (HERDR_ENV=1).
 allowed-tools:
   - Bash(herdr:*)
   - Bash(pi --list-models:*)
