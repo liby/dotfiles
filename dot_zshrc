@@ -36,6 +36,25 @@ SAVEHIST=100000
 setopt EXTENDED_HISTORY INC_APPEND_HISTORY
 
 # Environment variables
+# A terminal opened by an app launched from a Herdr pane inherits the pane's HERDR_*, so `herdr`
+# refuses to start as nested and agents act as that pane. ~/.local/bin/open prevents most such
+# launches; this cleans up the rest and names every app still holding a pane's environment, so
+# it can be relaunched. Terminal apps set their own TERM_PROGRAM, so in an interactive shell only
+# a pane has herdr. Framework bundles are skipped: orphaned Homebrew python3 jobs run as one.
+# The inherited SSH_AUTH_SOCK is Herdr's agent link, which leaves a Herdr server started here
+# without an agent once the link is gone, so use launchd's (`launchctl getenv` does not show it).
+if [[ -n $HERDR_ENV && $TERM_PROGRAM != herdr ]]; then
+  () {
+    local -a apps=(${(uf)"$(ps -A -E -ww -o ppid= -o command= | awk \
+      '$1 == 1 && index(" " $0 " ", " HERDR_ENV=1 ") && /^[^=]*\.app\/Contents\/MacOS\// { sub(/\.app\/Contents\/MacOS\/.*/, ""); if (/\.framework\//) next; sub(/.*\//, ""); print }')"})
+    print -u2 "zshrc: removed the HERDR_* variables this terminal inherited from a Herdr pane. Quit and reopen from Spotlight or the Dock: ${(j:, :)apps:-this terminal app}"
+    if [[ $SSH_AUTH_SOCK == $HERDR_SOCKET_PATH.agent ]]; then
+      local agent=$(launchctl print gui/$UID | awk '$1 == "SSH_AUTH_SOCK" && $2 == "=>" { print $3; exit }')
+      [[ -S $agent ]] && SSH_AUTH_SOCK=$agent
+    fi
+  }
+  unset -m 'HERDR_*'
+fi
 export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
 export HOMEBREW_NO_ENV_HINTS=1
 export ORACLE_ENGINE="browser"
