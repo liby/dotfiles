@@ -1,0 +1,10 @@
+#!/bin/sh
+# An app launched from a Herdr pane keeps the pane's environment and hands it to every terminal
+# and agent it starts, so launch it with a Dock launch's environment instead; variables set
+# before `open` are dropped with the rest, so pass them with --env. This runs only while
+# ~/.local/bin precedes /usr/bin, as dot_zshenv and zshrc arrange; `zsh -lc` and `bash -l` skip
+# zshrc and bypass it.
+if [ -n "${HERDR_ENV:-}" ]; then
+  exec /usr/bin/env -i /usr/bin/open "$@"
+fi
+exec /usr/bin/open "$@"
