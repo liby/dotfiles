@@ -22,10 +22,14 @@
     },
     {
       "customType": "regex",
-      "description": "Update standalone tools pinned in GitHub Actions workflows",
-      "managerFilePatterns": ["/^\\.github\\/workflows\\/.*\\.ya?ml$/"],
+      "description": "Update standalone tools pinned in GitHub Actions workflows and the dev-tools installer",
+      "managerFilePatterns": [
+        "/^\\.github\\/workflows\\/.*\\.ya?ml$/",
+        "/^\\.chezmoiscripts\\/run_onchange_after_reconcile-dev-tools\\.sh\\.tmpl$/"
+      ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+_VERSION:\\s*(?<currentValue>\\S+)"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+_VERSION:\\s*(?<currentValue>\\S+)",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+_version=(?<currentValue>\\S+)"
       ]
     }
   ],
@@ -45,6 +49,12 @@
     {
       "description": "uv only resolves PyPI artifacts older than the exclude-newer window in dot_config/uv/uv.toml, so a pin newer than that window cannot be installed at all. Keep this value at least as long as that window.",
       "matchDatasources": ["pypi"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Stable Cargo has no release-age filter, so this rule is the only window for mbx, which wraps local Cargo builds. Cargo versioning reads the bare pin as a caret range that already covers every compatible release, so it would never propose one.",
+      "matchDatasources": ["crate"],
+      "versioning": "semver",
       "minimumReleaseAge": "3 days"
     },
     {

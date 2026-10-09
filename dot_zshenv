@@ -15,6 +15,11 @@ __BRYAN_TOOLCHAIN_PATH=(
   "$PNPM_HOME/bin"
   "$HOME/go/bin"
   "$HOME/.local/bin"
+  # `mbx setup` installs its Cargo shim in the platform data directory, which on macOS is
+  # ~/Library/Application Support regardless of XDG, and has no setting to move it. The shim
+  # runs the real Cargo it finds later on PATH, so both live in this list and the shim comes first.
+  "$HOME/Library/Application Support/mbx/bin"
+  "$HOME/.cargo/bin"
 )
 path=($__BRYAN_TOOLCHAIN_PATH $path)
 export PATH
