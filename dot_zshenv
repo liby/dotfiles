@@ -4,6 +4,9 @@ export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
 # proto owns the Go toolchain; `auto` would let go download its own copy into $GOPATH/pkg/mod,
 # outside proto's inventory and invisible to `proto status`/`outdated`/`auto-clean`.
 export GOTOOLCHAIN=local
+# glab still reads ~/.config/glab-cli before its macOS default under ~/Library/Application Support,
+# but only so configurations made before that default keep working; select it explicitly.
+export GLAB_CONFIG_DIR="$HOME/.config/glab-cli"
 export TZ=Asia/Singapore
 
 typeset -aU path

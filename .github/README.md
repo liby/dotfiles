@@ -33,7 +33,7 @@ Wait for the installer window to finish, then confirm `xcode-select -p` and `git
 sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply liby
 ```
 
-This starts an interactive setup, not an unattended installation. Keep Terminal.app open to enter private template values, respond to `sudo` prompts, and use your YubiKey when needed.
+This starts an interactive setup, not an unattended installation. Keep Terminal.app open to enter private template values, respond to `sudo` prompts, use your YubiKey when needed, and finish the GitLab sign-in that opens in your browser.
 
 The command installs chezmoi, clones this repository into `~/.local/share/chezmoi`, runs the bootstrap scripts, and applies the managed files to `$HOME`. `-b` puts that first binary in a temporary directory instead of the `bin` directory the install script creates in the working directory, which in Terminal.app is `~/bin`: `Brewfile` installs the chezmoi every later command should use, and `.zshrc` puts `~/bin` ahead of Homebrew on `PATH`, where a leftover copy would shadow it and never update.
 
