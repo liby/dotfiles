@@ -14,19 +14,9 @@ Create one new git branch for the requested task.
 - Use an explicit user-provided branch name when it is valid and unambiguous.
 - If local instructions, the user, or the active agent runtime explicitly require one fixed prefix, use that prefix.
 - Otherwise reuse a stable prefix pattern from recent repository branches when one exists. Only fall back to `feature/`, `bugfix/`, or `hotfix/` from the requested change when the sample has no stable convention. Treat runtime default prefixes such as `codex/` as fallbacks, not requirements.
-- If a ticket number is provided, include it immediately after the prefix.
-- Use lowercase letters, numbers, and hyphens in the descriptive slug. Preserve uppercase ticket prefixes such as `PROJ-1234`.
-- Use `.` only inside version numbers.
-- Use 3 to 8 descriptive words after the prefix or ticket.
-- When the slug needs an action, use concrete verbs such as `add`, `validate`, `reject`, `expose`, or `migrate`.
+- If a ticket number is provided, include it immediately after the prefix, preserving its case, as in `bugfix/PROJ-3456-restore-login-redirect-state`.
 - Avoid adding a verb that only repeats the prefix meaning, such as `bugfix/fix-login-redirect`.
 - Avoid `tighten`, `streamline`, `enhance`, `refine`, and `polish`.
-
-Examples:
-
-- `feature/upgrade-react-to-version-18`
-- `bugfix/PROJ-3456-restore-login-redirect-state`
-- `hotfix/1.2.3-reject-empty-token`
 
 ## Process
 
@@ -35,32 +25,21 @@ Examples:
    - `git branch --show-current`
    - `git status --short`
    - `git diff HEAD --stat`
-   - `git for-each-ref --sort=-committerdate --count=30 --format='%(refname:short)' refs/heads refs/remotes`
+   - `git for-each-ref --sort=-committerdate --count=30 --format='%(refname:lstrip=2)' refs/heads refs/remotes`
 3. Read local branch-naming instructions when present: `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or `README.md`. Keep this lookup bounded to the repo root and direct instruction files.
-4. Generate the branch name from the request, prior conversation context, local instructions, the current diff summary, and the recent branch sample. Ignore remote HEAD pointers and the current/default branch when inferring a convention.
-5. Validate the name:
-   - no spaces
-   - no empty path segment
-   - no leading `-`
-   - no `..`, `~`, `^`, `:`, `?`, `*`, `[`, `\`, or trailing `.`
-6. Run `git check-ref-format --branch <branch-name>`. If it fails, choose a corrected name and validate again before touching git state.
-7. Check existence with `git rev-parse --verify --quiet refs/heads/<branch-name>`. If it exists, stop and report the existing branch.
-8. If a base ref is required:
+4. Generate the branch name from the request, prior conversation context, local instructions, the current diff summary, and the recent branch sample. Ignore `<remote>/HEAD` and the current/default branch when inferring a convention.
+5. Run `git check-ref-format --branch <branch-name>`. If it fails, choose a corrected name and validate again before touching git state.
+6. Check existence with `git for-each-ref --format='%(refname:short)' refs/heads/<branch-name> 'refs/remotes/*/<branch-name>'`. If it prints anything, stop and report it: a local match is an existing branch or a ref-path conflict, and a remote-tracking match is someone else's branch that a later push would be rejected against.
+7. If a base ref is required:
    - Treat a remote-tracking base as the current local snapshot. Do not fetch unless the user or repository instructions explicitly require a fresh remote base.
-   - When that refresh is authorized, resolve the configured remote and remote branch, then fetch with an explicit `<source>:<destination>` refspec that updates only the selected remote-tracking ref.
+   - When that refresh is authorized, resolve the configured remote and remote branch, then run `git fetch --no-prune --no-tags --refmap= <remote> refs/heads/<branch>:refs/remotes/<remote>/<branch>`. The empty `--refmap=` keeps configured fetch mappings from storing other refs, `--no-tags` stops tag following, and the full `refs/heads/<branch>` source matters under `fetch.prune`: with a bare `<branch>` source, Git deletes the destination ref and, when the remote tip moved, fails with `cannot lock ref`. `--no-prune` also prevents that deletion.
    - Resolve the base and `HEAD` to commits before switching.
    - If the commits differ and the index or working tree has staged, unstaged, or untracked changes, stop unless the user explicitly asked to carry those changes to the requested base.
    - A branch from current `HEAD`, or from a base resolving to the same commit, may retain the current changes.
-9. Create the branch without inheriting the upstream of a base ref:
-   - If no base ref is required, run `git switch -c <branch-name>`.
-   - If the user or repo instructions require a base ref such as `origin/develop`, run `git switch --no-track -c <branch-name> <base-ref>`. Do not use `git switch -c <branch-name> origin/develop`; Git can set the new branch to track `origin/develop`, so a later push may update the base branch.
-10. Verify `git branch --show-current` exactly equals `<branch-name>`.
-11. Verify upstream safety before any commit or push:
-   - Run `git rev-parse --abbrev-ref --symbolic-full-name @{u}`.
-   - If it reports no upstream, continue.
-   - If it reports the matching remote branch for the new branch name, continue.
-   - If it reports a base branch such as `origin/develop`, run `git branch --unset-upstream`, then verify again.
+8. Create the branch with `git switch --no-track -c <branch-name> [<base-ref>]`, passing `<base-ref>` only when the user or repository instructions require one.
+9. Verify `git branch --show-current` exactly equals `<branch-name>`.
+10. Run `git rev-parse --abbrev-ref --symbolic-full-name @{u}`; the expected result is a failure with `no upstream configured`. If it reports an upstream, run `git branch --unset-upstream` and check again.
 
 ## Output
 
-Return the new branch name and the validation result. If creation failed, return the failing command and stderr summary.
+Return the new branch name, the base ref and its short commit when a base was used, and the validation result. If creation failed, return the failing command and stderr summary.
