@@ -3,17 +3,17 @@ set -euo pipefail
 
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
-autoupdate_label="com.liby.brew-autoupdate"
-autoupdate_gui_domain="gui/$UID"
-autoupdate_service="$autoupdate_gui_domain/$autoupdate_label"
-autoupdate_plist="$HOME/Library/LaunchAgents/$autoupdate_label.plist"
-autoupdate_helper_dir="$HOME/Library/Application Support/$autoupdate_label"
-autoupdate_helper="$autoupdate_helper_dir/brew-autoupdate"
+upgrades_label="com.liby.unattended-upgrades"
+upgrades_gui_domain="gui/$UID"
+upgrades_service="$upgrades_gui_domain/$upgrades_label"
+upgrades_plist="$HOME/Library/LaunchAgents/$upgrades_label.plist"
+upgrades_helper_dir="$HOME/Library/Application Support/$upgrades_label"
+upgrades_helper="$upgrades_helper_dir/unattended-upgrades"
 
-echo "Setting up brew autoupdate (every 6 hours and at load)..."
+echo "Setting up unattended upgrades (every 6 hours and at load)..."
 # A fresh macOS account may lack any of these; launchd creates a missing log file but not its
 # directory.
-mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Logs"
+mkdir -p "$HOME/Library/LaunchAgents" "$upgrades_helper_dir" "$HOME/Library/Logs"
 
 # Login Items names a legacy job by the basename of the file launchd runs, so the commands live in
 # their own file, and the helper sets its own PATH because launchd gives it a minimal environment.
@@ -21,7 +21,7 @@ mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Lo
 # Pi has no Homebrew channel and never updates itself, so the helper also runs `pi update`;
 # the managed install lives in ~/.pi/agent/install and its launcher needs Node on PATH.
 # rustup likewise never updates the toolchains it installed, so the helper runs `rustup update`.
-cat > "$autoupdate_helper" <<'HELPER'
+cat > "$upgrades_helper" <<'HELPER'
 #!/bin/sh
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
 export PROTO_HOME="$HOME/.proto"
@@ -54,19 +54,19 @@ pi update || status=$?
 brew cleanup || status=$?
 exit "$status"
 HELPER
-chmod +x "$autoupdate_helper"
+chmod +x "$upgrades_helper"
 
 # The background keys keep the periodic upgrade off the foreground's I/O.
-cat > "$autoupdate_plist" <<EOF
+cat > "$upgrades_plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>$autoupdate_label</string>
+    <string>$upgrades_label</string>
     <key>ProgramArguments</key>
     <array>
-        <string>$autoupdate_helper</string>
+        <string>$upgrades_helper</string>
     </array>
     <key>ProcessType</key>
     <string>Background</string>
@@ -104,22 +104,22 @@ cat > "$autoupdate_plist" <<EOF
     <key>RunAtLoad</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>$HOME/Library/Logs/$autoupdate_label.log</string>
+    <string>$HOME/Library/Logs/$upgrades_label.log</string>
     <key>StandardErrorPath</key>
-    <string>$HOME/Library/Logs/$autoupdate_label.log</string>
+    <string>$HOME/Library/Logs/$upgrades_label.log</string>
 </dict>
 </plist>
 EOF
 
 # The job keeps running with the options it was loaded with, so replace it whenever this
 # script's content changes.
-if launchctl print "$autoupdate_service" >/dev/null 2>&1; then
-  launchctl bootout "$autoupdate_service"
+if launchctl print "$upgrades_service" >/dev/null 2>&1; then
+  launchctl bootout "$upgrades_service"
 fi
-launchctl bootstrap "$autoupdate_gui_domain" "$autoupdate_plist"
+launchctl bootstrap "$upgrades_gui_domain" "$upgrades_plist"
 
 # A gui domain in on-demand-only mode accepts the bootstrap without loading the job.
-launchctl print "$autoupdate_service" >/dev/null 2>&1 || {
-  print -u2 "Homebrew autoupdate was written to $autoupdate_plist but launchd did not load it"
+launchctl print "$upgrades_service" >/dev/null 2>&1 || {
+  print -u2 "Unattended upgrades were written to $upgrades_plist but launchd did not load it"
   exit 1
 }
