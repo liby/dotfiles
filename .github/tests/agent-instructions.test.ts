@@ -107,7 +107,6 @@ const CREDENTIAL_CONSUMERS: Record<string, Record<string, string[]>> = {
   },
   pi: { "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain pi printenv", "ANTHROPIC_API_KEY", "RC_GATEWAY_API_KEY"] },
   typesafe: {
-    "dot_agents/skills/typesafe-ai/SKILL.md": ["envchain typesafe <command>", "TYPESAFE_API_KEY"],
     "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain typesafe printenv", "TYPESAFE_API_KEY"],
   },
 };
