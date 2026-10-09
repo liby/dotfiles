@@ -1,0 +1,24 @@
+#!/bin/zsh
+# Re-runs when the ciphertext changes, so a new application ID reaches glab's config:
+# seed hash: {{ if stat (joinPath .chezmoi.sourceDir ".secrets/seed.asc") }}{{ include ".secrets/seed.asc" | sha256sum }}{{ else }}absent{{ end }}
+
+set -euo pipefail
+
+host={{ .private.gitlabHost | trimPrefix "https://" | trimSuffix "/" | quote }}
+
+# On a new Mac, seed-envchain fills this namespace earlier in the phase only because `seed-` sorts
+# before `setup-`. Read it before writing anything, so a rename that breaks that order fails here.
+client_id=$(/opt/homebrew/bin/envchain glab /bin/sh -c \
+  'printf %s "${GITLAB_CLIENT_ID:?not in the glab envchain namespace}"')
+
+# Without the instance's OAuth application ID, web sign-in to a self-hosted GitLab asks for it, and
+# token refresh in later plain glab calls reads it from this config, not from envchain.
+/opt/homebrew/bin/glab config set client_id "$client_id" --host "$host"
+
+# Sign-in opens a browser, so it runs here only for a host glab has never signed in to; glab
+# refreshes the token itself. If the sign-in is revoked, run the login line by hand with
+# host=$(glab config get host). The flags skip glab's prompts for the sign-in method and SSH
+# hostname, which it pre-fills from the current repository's remote.
+if [[ -z $(/opt/homebrew/bin/glab config get user --host "$host") ]]; then
+  /opt/homebrew/bin/glab auth login --web --hostname "$host" --api-host "$host" -p https -g ssh --ssh-hostname "$host"
+fi

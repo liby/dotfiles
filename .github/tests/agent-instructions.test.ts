@@ -42,7 +42,8 @@ const ROUTE_EXPECTATIONS: Record<string, string[]> = {
     "(.github/CONCEPTS.md#git-identity-and-signing)",
   ],
   "GitLab CLI": [
-    "`.chezmoiscripts/run_onchange_after_configure-glab.sh`",
+    "`.chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl`",
+    "`dot_config/private_glab-cli/**`",
     "glab's live configuration",
     "(.github/CONCEPTS.md#gitlab-cli-configuration)",
   ],
@@ -95,6 +96,7 @@ const CREDENTIAL_KEYS: Record<string, string[]> = {
     "CLAUDE_CODE_USE_VERTEX",
   ],
   context7: ["CONTEXT7_API_KEY"],
+  glab: ["GITLAB_CLIENT_ID"],
   pi: ["ANTHROPIC_API_KEY", "RC_GATEWAY_API_KEY"],
   typesafe: ["TYPESAFE_API_KEY"],
 };
@@ -105,6 +107,7 @@ const CREDENTIAL_CONSUMERS: Record<string, Record<string, string[]>> = {
   context7: {
     "dot_agents/skills/context7/SKILL.md": ["envchain context7 sh -c 'CTX7_TELEMETRY_DISABLED=1 exec ctx7 --base-url", "CONTEXT7_API_KEY"],
   },
+  glab: { ".chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl": ["envchain glab /bin/sh -c", "GITLAB_CLIENT_ID"] },
   pi: { "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain pi printenv", "ANTHROPIC_API_KEY", "RC_GATEWAY_API_KEY"] },
   typesafe: {
     "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain typesafe printenv", "TYPESAFE_API_KEY"],
