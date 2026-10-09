@@ -3,14 +3,7 @@
 # shellenv short-circuits and never adds /opt/homebrew/bin to PATH.
 eval "$(env -u HOMEBREW_BREW_FILE -u HOMEBREW_PATH /opt/homebrew/bin/brew shellenv)"
 
-# Homebrew zsh completion path
-__BRYAN_HOMEBREW_ZSH_COMPLETION="${HOMEBREW_PREFIX}/share/zsh/site-functions"
-
-# ZSH completions
-# https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh
-if (( ! ${fpath[(I)${__BRYAN_HOMEBREW_ZSH_COMPLETION}]} && $+commands[brew] )); then
-  fpath+=${__BRYAN_HOMEBREW_ZSH_COMPLETION}
-fi
+# brew shellenv already put Homebrew's site-functions on fpath.
 fpath+=$HOME/.zsh/functions
 ## Initialize the completion system
 ## This must be done after all fpath modifications
@@ -66,7 +59,6 @@ typeset -aU path
 () {
   local -a path_dirs=(
     "$HOMEBREW_PREFIX/opt/curl/bin"
-    "$HOMEBREW_PREFIX/opt/uv/bin"
     "$HOME/bin"
   )
   # Re-front: /etc/zprofile's path_helper demoted the zshenv toolchain dirs.

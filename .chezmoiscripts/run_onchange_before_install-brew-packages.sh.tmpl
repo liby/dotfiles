@@ -9,7 +9,7 @@ if [[ ! -x /opt/homebrew/bin/brew ]]; then
   echo "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-  # Homebrew installer doesn't always set up .zprofile
+  # The Homebrew installer prints this line as a next step but never edits .zprofile.
   zprofile="$HOME/.zprofile"
   if [[ ! -e "$zprofile" ]] || ! grep -q "brew shellenv" "$zprofile"; then
     echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$zprofile"
@@ -26,10 +26,6 @@ if [[ ! -f "$brewfile" ]]; then
   echo "No Brewfile found at $brewfile"
   exit 1
 fi
-
-# agent-guard depends on Bun from this tap; bundle cannot load an untrusted formula.
-brew tap oven-sh/bun
-brew trust --formula oven-sh/bun/bun
 
 # mas-cli requires en_US locale to search the App Store
 # https://github.com/mas-cli/mas/blob/ed676787f0a0a26e23a10548eb841bc15411fa52/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L23
