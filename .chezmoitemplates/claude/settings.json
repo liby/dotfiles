@@ -172,6 +172,7 @@
         "com.apple.trustd.agent"
       ],
       "allowUnixSockets": [
+        "/private/tmp/claude-{{ .chezmoi.uid }}",
         "~/.gnupg/S.gpg-agent",
         "~/.gnupg/S.gpg-agent.ssh",
         "~/.gnupg/S.keyboxd"

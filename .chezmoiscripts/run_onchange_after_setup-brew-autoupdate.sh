@@ -20,6 +20,7 @@ mkdir -p "$HOME/Library/LaunchAgents" "$autoupdate_helper_dir" "$HOME/Library/Lo
 # The steps are deliberately not chained, so a failure neither skips the rest nor goes unreported.
 # Pi has no Homebrew channel and never updates itself, so the helper also runs `pi update`;
 # the managed install lives in ~/.pi/agent/install and its launcher needs Node on PATH.
+# rustup likewise never updates the toolchains it installed, so the helper runs `rustup update`.
 cat > "$autoupdate_helper" <<'HELPER'
 #!/bin/sh
 export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
@@ -49,6 +50,7 @@ if [ "$installed" != "$agent_version" ] || [ "$installed" != "$keyboxd_version" 
   /bin/launchctl kickstart "gui/$UID/org.gnupg.keyboxd" || status=$?
 fi
 pi update || status=$?
+"$HOME/.cargo/bin/rustup" update || status=$?
 brew cleanup || status=$?
 exit "$status"
 HELPER

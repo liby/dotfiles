@@ -3,6 +3,7 @@ name: validate-dev-tools
 on:
   pull_request:
     paths: &paths
+      - ".chezmoiscripts/run_onchange_after_reconcile-dev-tools.sh.tmpl"
       - ".github/dev-tools/**"
       - ".github/workflows/validate-dev-tools.yml"
       - "dot_config/uv/uv.toml"
@@ -45,3 +46,7 @@ jobs:
             --python "$RUNNER_TEMP/dev-tools-venv" \
             --config-file dot_config/uv/uv.toml \
             --requirement .github/dev-tools/requirements.txt
+      - name: Install Cargo tools
+        run: |
+          mbx_version="$(sed -n 's/^mbx_version=//p' .chezmoiscripts/run_onchange_after_reconcile-dev-tools.sh.tmpl)"
+          cargo install --locked --version "$mbx_version" --root "$RUNNER_TEMP/cargo-tools" mbx

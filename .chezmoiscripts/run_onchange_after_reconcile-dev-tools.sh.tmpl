@@ -12,7 +12,7 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # Chezmoi scripts do not load the interactive shell configuration.
 export PROTO_HOME="$HOME/.proto"
 export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
-export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$HOME/.cargo/bin:$PATH"
 npm_prefix="$NPM_CONFIG_PREFIX"
 
 # Tool declarations live in `~/.proto/.prototools`. The default `upwards` config mode walks up
@@ -65,3 +65,11 @@ if [[ "$current_pyright" != "$pyright_version" ]]; then
     --exclude-newer '{{ index (include "dot_config/uv/uv.toml" | fromToml) "exclude-newer" }}' \
     "$pyright_requirement"
 fi
+
+# renovate: datasource=crate depName=mbx
+mbx_version=1.22.0
+# Stable Cargo has no release-age filter; --locked at least pins the release's own dependency
+# graph. Cargo skips a version that is already installed, so unlike the tools above this needs
+# no version check.
+cargo install --locked --version "$mbx_version" mbx
+mbx setup --yes
