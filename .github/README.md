@@ -12,7 +12,7 @@ Some settings depend on my accounts, GPG keys, and filesystem layout. Adjust the
 
 | Area | Start with |
 | --- | --- |
-| Agent tooling | [`dot_agents`](../dot_agents/), [`dot_claude`](../dot_claude/), [`dot_codex`](../dot_codex/) |
+| Agent tooling | [`dot_agents`](../dot_agents/), [`dot_claude`](../dot_claude/), [`dot_codex`](../dot_codex/), [`private_dot_pi`](../private_dot_pi/), [`.chezmoitemplates/agents`](../.chezmoitemplates/agents/) |
 | Git | [`dot_config/git`](../dot_config/git/), [`.chezmoitemplates/git`](../.chezmoitemplates/git/) |
 | Repository design | [`CONCEPTS.md`](CONCEPTS.md) |
 | Packages and bootstrap | [`Brewfile`](../Brewfile), [`.chezmoiscripts`](../.chezmoiscripts/) |

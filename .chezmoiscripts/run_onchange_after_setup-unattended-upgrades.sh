@@ -18,7 +18,7 @@ mkdir -p "$HOME/Library/LaunchAgents" "$upgrades_helper_dir" "$HOME/Library/Logs
 # Login Items names a legacy job by the basename of the file launchd runs, so the commands live in
 # their own file, and the helper sets its own PATH because launchd gives it a minimal environment.
 # The steps are deliberately not chained, so a failure neither skips the rest nor goes unreported.
-# Pi has no Homebrew channel and never updates itself, so the helper also runs `pi update`;
+# Pi updates only through `pi update`, so the helper runs it;
 # the managed install lives in ~/.pi/agent/install and its launcher needs Node on PATH.
 # rustup likewise never updates the toolchains it installed, so the helper runs `rustup update`.
 cat > "$upgrades_helper" <<'HELPER'
