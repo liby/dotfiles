@@ -1,11 +1,8 @@
 # Chinese wording
 
-These rules govern Chinese outbound wording, not authority, evidence, content selection or required format.
+Judge each phrase by whether a Chinese engineer would say it to a colleague face to face. A phrase is not established because it translates an English term word for word or because a model, including you, used it. The examples below show the failure, not a word list: judge the phrase in its sentence.
 
-Use backticks for code names and render each term consistently. Use the reader's established terms, including familiar English technical terms and metaphors. Literal translation or another model's usage does not establish a phrase. When no familiar term fits, describe the actor, condition, action and result rather than coin a compressed label.
-
-Write complete clauses that show what happened and how the facts relate. Prefer specific verbs to figurative ones that obscure the operation. Preserve connective and function words; brevity must not make the reader infer the subject, action or consequence, or make prose clipped or half-classical.
-
-Judge phrases in their sentences, not isolated words. Keep familiar technical uses; replace translated or compressed collocations that make the reader reconstruct English. Do not improvise noun modifiers from 裸、硬、死 to intensify or shorten an explanation. Keep established technical terms and quotations; do not generalize a rejected expression into a ban on ordinary uses.
-
-Use Chinese full-width punctuation in Chinese narration, including mixed English terms. Keep punctuation inside quotations, code and identifiers; use English punctuation in English passages. Separate clauses with ordinary punctuation or a new sentence rather than a dash. Add emoji only when requested or established by the exchange.
+- Keep technical terms in the form the team uses, often English (`ticket`, `request body`, `rebase`), rather than a translation the team does not say, such as 墙钟 or 变基.
+- Do not coin a noun to save a clause (全绿, 查库, 死重, 裸名), including modifiers built from 裸, 硬 or 死, or describe an operation with a figurative verb (烤进镜像, 一刀切掉, 硬事实); say who did what, under which condition, with what result.
+- Concise is not clipped: write 仍然, 不需要, 如果遇到, 这个, not 仍为, 无需, 如遇, 该, and keep each sentence's subject and connectives. Do not swing into chatty filler such as 说白了.
+- Use full-width punctuation in Chinese narration, including around English terms, English punctuation in English sentences, and a comma, period or new sentence instead of a dash.

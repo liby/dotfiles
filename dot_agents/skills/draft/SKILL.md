@@ -10,53 +10,36 @@ allowed-tools:
   - Bash(gh pr view:*)
 ---
 
-This skill governs outbound artifacts, even in chat, not the surrounding conversation.
+This skill governs the outbound artifact, even when it is shown in chat, not the conversation around it.
 
-## Establish the writing task
+## Know the task and the destination
 
-Identify the recipient, the situation the message responds to, the result the user wants, and how the text will reach the recipient. Use the request and available exchange as evidence.
+Drafting from notes permits selection and structure but keeps every question and decision the notes put to the reader. Polishing changes wording within the requested scope and keeps structure, detail and claim strength. When updating text the user has edited, keep their wording and deletions and change only what the update needs. Translation keeps all content. When polishing or translating, apply the rest of this skill to wording only.
 
-Select the permitted transformation from the request. When its extent is unspecified, preserve the supplied draft's substantive content and structure while resolving the wording request.
+Read the artifact the text attaches to (the MR description and discussion, the issue, the thread above) and, when you can reach it, recent human-written text of the same kind at that destination. Match its language and phrasing, title format, use of headings, length, the terms kept in English, and how people open, close and address each other. Bot output, model-signed text and this session's drafts set no convention. On GitLab and GitHub the body's language does not follow those samples: unless the user or a required template says otherwise, write GitLab bodies and comments in Chinese and GitHub's in English. With nothing to match and no required template, write prose rather than a standard skeleton such as `背景 / 改动 / 测试`, and titles in English. For Chinese, read [references/chinese.md](references/chinese.md) before composing or polishing unless it is already in context.
 
-- Drafting from notes, including adapting one artifact into another, permits selection and organization. It does not permit new facts, positions or commitments.
-- Polishing permits changes to wording within the requested scope. Preserve headings, examples, detail, claim strength and qualifications unless the user authorizes changing them.
-- Translation or complete restatement permits reordering for the target language while retaining all substantive content. Separate language versions carry the same facts and conditions.
+## Decide what the text says
 
-Follow explicit instructions and destination requirements. Read the attached MR description/discussion, issue or preceding exchange; distinguish recipient knowledge, sender-only knowledge and permitted disclosure. Assign the recipient's internal procedure only with sender authority or the recipient's request.
+When an unresolved fact changes the message, check it if you can, otherwise ask the user. Add no number, cause, position, test result, step, plan, commitment, performer or signature the material lacks: a plan stays a plan, and documented behavior is not an observed result. Keep identifiers, error text and numbers exact in every language, and paste material the notes give verbatim, such as a log or a stack dump, whole. Keep claim strength both ways: a guess, suggestion or estimate stays one, and a defect the material shows is reachable is stated as a defect, not a suggestion or a question.
 
-For unsettled style choices, sample comparable human-authored artifacts from this recipient or destination. Bots, this session's output and structurally different changes establish no convention. Do not invent authorship; stop when the open choices are settled.
+Lead with the decision, answer or action the reader needs. Every sentence must give the reader something to do or rely on; cut the rest, such as an opening that announces the message, narration of the author's process, discarded attempts, internal names and details the reader does not know or should not see, reasons they already know, and a closing recap.
 
-Existing-file language and explicit instructions prevail. Otherwise PR/MR titles and GitHub bodies/comments use English; GitLab bodies/comments use Chinese. Match the exchange's register and established form of address.
+Do not replace an unfinished check with a disclaimer, a statement of what was not verified or what the tests do not cover, or steps for the reader to run: run it, or ask the user when you cannot, and tell the user what stayed unchecked. A known defect the change leaves in place goes in briefly as a known issue. Leave out what only explains the author's situation, such as why the reply is late, how long the bug took to find or why a check was not run; mention it to the user after the draft when the request allows notes.
 
-## Settle the facts before composing
+Ask for an outcome and give the content and reason needed to decide it; describe the recipient's own procedure only when they asked or the user directs it. In a review comment, state the problem and what it breaks; suggest an implementation only when the author asked, earlier replies did not resolve it, or the repository's existing approach explains the problem. Before a reply, work out what the person wants and cares about, then answer each point with the decision before the reason. When they ask whether the change caused something, check the code before the change and say first whether it already behaved that way. When they are right, say what changed rather than defending the earlier choice.
 
-Separate established facts, the user's stated understanding, requested hypotheses, and unresolved information. When the source does not identify an action's performer, describe the event or result without assigning it to the sender. Treat a next step as a sender commitment only when the source establishes that commitment. Do not convert a documented mechanism into a runtime observation, a proposed action into a completed one, or an unknown into a fact.
+MR and PR descriptions describe the final change against the target branch for the reviewer: why it is needed, what changes for its callers or users, other changes the reviewer will find in the diff, deliberate trade-offs and who agreed to them, verification that tells the reviewer something, and what the reviewer must decide or the merge order. Omit routine checks that passed and sections such as 风险 or 审核重点 that the content does not fill. A change one sentence explains gets one sentence. Do not repeat in the body a ticket the title already carries, except a closing line such as `Closes #123`, which works from the description but not the title.
 
-When an unresolved fact changes the message's purpose, a material claim or a sender commitment, perform the available evidence work within the task's authority before drafting. If the answer requires the user or unavailable access, ask the focused question that resolves it. Do not replace an unfinished authorized check with a disclaimer or an assignment to the recipient.
+## Shape and wording
 
-Optional detail may be omitted when the selected transformation permits it and the omission does not change the reader's decision. A genuine limitation belongs in the artifact when the recipient needs it to judge or act; it belongs in operational reporting when only the user needs to know it.
+Use headings and lists only for parts a reader navigates separately, and sentences rather than labelled fields such as `**时间：**`. When the reader has a next step or a place to raise problems that the opening did not already give, close with it rather than stopping on the last fact.
 
-Preserve retained identifiers, error text, numbers, conditions, exceptions, negations and causal or temporal relations exactly. Check the previous state before claiming something was added, removed or changed. Do not invent a test result, deployment step, recipient action, follow-up plan, signature or sender identity.
+Keep the courtesy the relationship calls for, such as a greeting and thanks when asking a favor of someone you do not know well. Leave out emoji and stock phrases the exchange does not use, such as `Hope this helps` or `Happy to adjust`. In English, do not join clauses with em dashes.
 
-## Compose for the reader
+Where Markdown renders, put the link on the words that name the thing: `[the cache key](…)` in a sentence that says what it shows, not `the cache key (…)`, a trailing link list, `cache.ts:35` or `L35`. Pin code links to a commit SHA so line anchors keep pointing at the intended lines. Leave references the platform links by itself, such as `#123`, `!456`, `@name` and commit SHAs, as plain text. Without a real link, name the file or function and what to look for; never invent one.
 
-Before composing or polishing Chinese, read [references/chinese.md](references/chinese.md) unless that exact file is already in context.
+For Slack text the user will paste, write paragraphs, simple lists and bare URLs, and do not rely on markup rendering.
 
-Use ISO 24495-1:2023's reader outcomes within the permitted transformation:
+## Before returning
 
-- Relevant: include what this recipient needs.
-- Findable: make the point and qualifications easy to locate.
-- Understandable: use established terms and explain unfamiliar identifiers and relationships.
-- Usable: make the conclusion or request actionable without inventing actions or commitments.
-
-For English, use transferable ASD-STE100 principles: clear words, consistent technical terms, short sentences, one topic per sentence and conditions before instructional actions. Use active voice when the source names the actor; preserve uncertainty and obligation. Keep natural syntax and the exchange's register. STE's controlled vocabulary and English syntax do not govern Chinese. This summary is self-contained and claims no conformity, certification or percentage; full conformity requires the applicable rules and dictionary.
-
-PR/MR descriptions explain final behavior and reasons or trade-offs absent from the diff. Omit routine check commands and passes unless a template requires them; include informative validation and material gaps.
-
-Review replies answer the author's concern first. State the verified problem and consequence or unresolved question; prescribe implementation only when requested, earlier replies failed to resolve the issue, or the repository approach is needed to explain it.
-
-## Deliver
-
-Put useful URLs on descriptive words in sentences that state the supported fact or action without requiring a click; do not add a links block or a sentence merely to retain a link. Preserve literal URLs when required by the format or protected source text. For references to repository code in rendered Markdown, establish the actual code permalink before composing; if unavailable, name the file/function and what to inspect, and never invent a permalink. Slack uses pasteable plain text, paragraphs, simple lists and ordinary URLs.
-
-Return only the artifact, honor exact output constraints and keep operational notes out; provide requested reasoning, variants or comparisons separately.
+Read the draft as a colleague who did not write it: rewrite every term they would not say and every sentence they would have to unpack, and check identifiers against the material. Return only the artifact; notes for the user follow it, and only when the request allows them.
