@@ -1,0 +1,10 @@
+#!/bin/sh
+# Keep the Snowflake connector's tokens out of the macOS Keychain, so every snow connection signs
+# in through the browser instead. Keychain approvals bind to the code signature of Homebrew's
+# ad hoc-signed Python, which changes whenever Homebrew upgrades or rebuilds it, so the access
+# prompts came back after each change, separately for every concurrent snow process. On macOS the
+# connector caches browser-SSO tokens regardless of client_store_temporary_credential, so the
+# switch is the keyring backend.
+PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring
+export PYTHON_KEYRING_BACKEND
+exec /opt/homebrew/bin/snow "$@"
