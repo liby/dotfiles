@@ -10,7 +10,7 @@ herdr agent list
 
 Names are unique only while live and may belong to a replacement after exit. Reuse a settled instance only when the user asked to continue it or this task started it, and its role/context still match; a new participant needs a new pane and agent. Name it for role plus model or target when those distinguish siblings. Treat `unknown` as unresolved. For a busy Codex next-turn message, use its [native queue](runtimes.md#codex); otherwise wait for the current turn before prompting. `agent prompt --wait` on a working agent can settle on the old turn.
 
-Read-only helpers may share a checkout; serialize writers unless the user asks for isolated worktrees. State the action constraint in their task; it is not a sandbox setting.
+Read-only helpers may share a checkout; serialize writers unless the user asks for isolated worktrees. Run commands that authenticate as the user through a credential-store read or a browser sign-in in one process at a time, across yourself and every helper: each such process can raise its own approval or sign-in prompt, and parallel runs stack them on the user. State both constraints in the helpers' tasks; they are not sandbox settings.
 
 ### Resolve the runtime and model
 
