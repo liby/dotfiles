@@ -19,17 +19,17 @@ Before mining artifacts for a preference, establish who wrote them. Output the u
 ## Diagnose before changing text
 
 - Rule absent: add the general failure mode at the narrowest owner.
-- Rule loaded but skipped: sharpen its placement, condition, or done-state; do not restate it elsewhere.
-- Rule not loaded: fix routing, ownership, priority, or the reference pointer before rewriting its content.
+- Rule loaded but skipped: check for a higher-priority or conflicting instruction, then sharpen its placement, condition, or done-state; do not restate it elsewhere.
+- Rule not loaded: verify what the runtime actually loaded, then fix routing, ownership, priority, or the reference pointer before rewriting its content.
 - Feedback belongs to one repository or session: route it there; do not leak it into a reusable skill.
 - A recurring self-authorization derails a step: counter the abstract pattern at that step, not the transcript's wording.
 
-Do not copy the failing instance into the skill; retain it as a regression case. Separate a repeated behavior from an artifact-local correction, and preserve any approach the user already accepted while fixing another issue.
+Diagnose across the instruction graph, not just the named file: check whether one root cause explains the same symptom elsewhere and fix it once. Do not copy the failing instance into the skill; retain it as a regression case. Separate a repeated behavior from an artifact-local correction, and preserve any approach the user already accepted while fixing another issue.
 
 ## Compare the smallest candidate
 
 Freeze baseline bytes and evidence cases before editing. Change one owning behavior at a time, remove obsolete or duplicated text in the same diff, and avoid unrelated style rewrites. Use the observed failures for diagnosis and regression; use fresh held-out cases for acceptance. Hold out the models too: an instruction validated only on the models it was written against encodes their reading of it. Check that a held-out case does not itself ask for the behavior being scored against it. When you edit a case to supply the variable under test, diff it against the case it replaces and against the runner's flags: an arm that also lost an instruction, or that gained tool access, measures both changes at once.
 
-When Process requires the evaluation protocol, compare the frozen baseline and candidate on the same runtime-visible inputs. For other changes, run the owning validator and the smallest direct reproducer. Present the evidence-to-change mapping and any unresolved trade-off so a human can judge the diff without rereading raw transcripts.
+When the change meets the evaluation protocol's load condition, compare the frozen baseline and candidate on the same runtime-visible inputs. For other changes, run the owning validator and the smallest direct reproducer. Present the evidence-to-change mapping and any unresolved trade-off so a human can judge the diff without rereading raw transcripts.
 
 Keep the candidate only when it explains the evidence, belongs to the correct owner, and introduces no paired regression. Stop with no change when evidence is weak or conflicting, the candidate oscillates with an earlier fix, the next edit would undo an accepted constraint, failures are caused mostly by the candidate, or another pass adds no new trigger path or source evidence.
