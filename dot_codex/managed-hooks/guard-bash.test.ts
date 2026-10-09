@@ -13,16 +13,21 @@ test("managed requirements keep the sole mode and hook", async () => {
     hooks: { managed_dir: string } & Record<string, Array<{ matcher?: string; hooks: Array<{ command: string }> }>>;
   };
 
+  // The requirements admit exactly the tuple config.toml selects, so Desktop's
+  // saved agent mode cannot substitute another approval policy or reviewer.
+  const config = Bun.TOML.parse(
+    await Bun.file(new URL("../../.chezmoitemplates/codex/config.toml", import.meta.url)).text(),
+  ) as { approval_policy: string; approvals_reviewer: string; default_permissions: string };
   expect({
     default_permissions: requirements.default_permissions,
     allowed_approval_policies: requirements.allowed_approval_policies,
     allowed_approvals_reviewers: requirements.allowed_approvals_reviewers,
     allowed_permission_profiles: requirements.allowed_permission_profiles,
   }).toEqual({
-    default_permissions: "development",
-    allowed_approval_policies: ["on-request"],
-    allowed_approvals_reviewers: ["auto_review"],
-    allowed_permission_profiles: { development: true },
+    default_permissions: config.default_permissions,
+    allowed_approval_policies: [config.approval_policy],
+    allowed_approvals_reviewers: [config.approvals_reviewer],
+    allowed_permission_profiles: { [config.default_permissions]: true },
   });
 
   // Codex documents that managed hook commands use absolute script paths under

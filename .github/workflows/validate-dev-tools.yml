@@ -31,9 +31,12 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "lts/*"
+      # Apply the installer's release-age window, which also covers transitive dependencies.
       - name: Resolve npm tools
         working-directory: .github/dev-tools
-        run: npm install --dry-run --engine-strict --ignore-scripts --package-lock=false
+        run: |
+          min_release_age="$(sed -n 's/^npm config set min-release-age //p' ../../.chezmoiscripts/run_onchange_after_reconcile-dev-tools.sh.tmpl)"
+          npm install --dry-run --engine-strict --ignore-scripts --package-lock=false --min-release-age="${min_release_age:?not set by the installer}"
       - name: Set up uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       # pip ignores the release-age window in dot_config/uv/uv.toml and would accept versions

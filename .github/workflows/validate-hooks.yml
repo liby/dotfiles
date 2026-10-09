@@ -4,6 +4,7 @@ on:
   pull_request:
     paths: &paths
       - ".chezmoitemplates/claude/settings.json"
+      - ".chezmoitemplates/codex/config.toml"
       - ".chezmoitemplates/codex/requirements.toml"
       - ".github/workflows/validate-hooks.yml"
       - "dot_claude/hooks/**"
@@ -13,7 +14,6 @@ on:
       - "dot_zsh/functions/claude"
       - "dot_zsh/functions/claude.test.zsh"
       - "dot_zshenv"
-      - "private_dot_pi/private_agent/extensions/agent-guard.ts"
   push:
     branches: [main]
     paths: *paths
