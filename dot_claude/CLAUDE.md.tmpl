@@ -6,8 +6,6 @@ An auto-mode classifier block is not a written rule, and is never worked around 
 {{ includeTemplate "agents/evidence.md" . }}
 
 {{ includeTemplate "agents/tools.md" . }}
-Search with `fd` for files (`Glob` stays deny-listed) and with Bash `rg` for what the Grep tool cannot do, such as piping search output into further processing.
-
 Before editing an existing file with Edit or Write, use the Read tool to inspect the content needed for the edit.
 
 When an enabled language server covers the file, use the `LSP` tool before claiming its diagnostics are clean, unrelated, or limited to a specific item. Confirm a diagnostic against the file's actual specification before calling it irrelevant, and omit confirmed wrong-spec warnings and spelling noise on established technical names from the user-facing response.
