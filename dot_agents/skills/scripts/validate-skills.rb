@@ -99,16 +99,10 @@ CLI_SMOKE_COMMANDS = [
 ].freeze
 
 skill_files = Dir.glob(root.join("*/SKILL.md").to_s).sort
-encrypted_names = Dir.glob(root.join("*/encrypted_SKILL.md.asc").to_s).map { |path| File.basename(File.dirname(path)) }.to_set
-source_names = skill_files.map { |path| File.basename(File.dirname(path)) }.to_set | encrypted_names
-DEPLOYED_ROOT = File.expand_path("~/.agents/skills")
+source_names = skill_files.map { |path| File.basename(File.dirname(path)) }.to_set
 
 def rel(path, base)
-  relative = Pathname.new(path).relative_path_from(base).to_s
-  return relative unless relative.start_with?("..")
-  path.to_s.sub(/\A#{Regexp.escape(Dir.home)}(?=\/)/, "~")
-rescue ArgumentError
-  path.to_s
+  Pathname.new(path).relative_path_from(base).to_s
 end
 
 def parse_skill(path)
@@ -116,14 +110,6 @@ def parse_skill(path)
   match = text.match(/\A---\n(.*?)\n---\n/m)
   return [nil, text] unless match
   [YAML.safe_load(match[1], permitted_classes: [], aliases: false) || {}, text]
-end
-
-# For an encrypted-only source skill, the deployed plaintext is the only
-# validatable copy; absent (e.g. CI, no GPG) it is skipped silently. Other
-# deployed entries are unmanaged (see .github/CONCEPTS.md) and get no checks.
-encrypted_names.each do |dir_name|
-  deployed = File.join(DEPLOYED_ROOT, dir_name, "SKILL.md")
-  skill_files << deployed if File.exist?(deployed)
 end
 
 skill_files.each do |path|

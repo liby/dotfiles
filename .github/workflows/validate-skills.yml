@@ -26,5 +26,4 @@ jobs:
         with:
           persist-credentials: false
       - name: Validate managed skills
-        # Static mode has no ~/.agents tree or GPG, so encrypted-only deployed skills are skipped.
         run: ruby dot_agents/skills/scripts/validate-skills.rb

@@ -37,8 +37,8 @@ sep=" ${dim}∙${reset} " # U+2219 bullet operator: lower profile than │, dist
 # ── Epoch (single fork) ─────────────────────────────────
 read -r _now _month < <(date "+%s %m")
 
-# ── Terminal width (CC >= 2.1.153 passes COLUMNS/LINES as env to statusline) ──
-# Absent for older CC or non-tty -> fall back to 80. Scales the branch label and
+# ── Terminal width (CC passes COLUMNS/LINES as env to statusline) ──
+# Absent for non-tty -> fall back to 80. Scales the branch label and
 # rate-bar width down on narrow terminals.
 cols=${COLUMNS:-80}
 [[ "$cols" =~ ^[0-9]+$ ]] || cols=80
@@ -146,7 +146,6 @@ queue_extra_rate_row() {
 }
 
 # ── Extract JSON data (single jq call) ──────────────────
-# 5h/7d rate limits come from stdin (CC >= 2.1.80), no API needed
 {
   read -r size
   read -r input_tokens
@@ -181,25 +180,16 @@ queue_extra_rate_row() {
 (( size == 0 )) && size=200000
 
 settings_path="$HOME/.claude/settings.json"
-# Prefer stdin effort.level (CC >= 2.1.121, reflects runtime state including env
-# priority). Fall back to env / settings for older CC versions.
+# stdin effort.level reflects the live session and is absent when the model has
+# no effort parameter.
 effort="default"
 case "$stdin_effort" in
   low|medium|high|xhigh|max) effort="$stdin_effort" ;;
-  *)
-    _effort_env=$(printf '%s' "${CLAUDE_CODE_EFFORT_LEVEL:-}" | tr '[:upper:]' '[:lower:]')
-    case "$_effort_env" in
-      low|medium|high|xhigh|max) effort="$_effort_env" ;;
-    esac
-    ;;
 esac
 auto_compact=0
 auto_compact_enabled=1
 if [ -f "$settings_path" ]; then
   _settings=$(<"$settings_path")
-  if [ "$effort" = "default" ]; then
-    [[ "$_settings" =~ \"effortLevel\"[[:space:]]*:[[:space:]]*\"(low|medium|high|xhigh)\" ]] && effort="${BASH_REMATCH[1]}"
-  fi
   # This display reads settings.json only and intentionally ignores CC's existing
   # auto-compact env overrides; add their precedence and denominator math together.
   [[ "$_settings" =~ \"autoCompactWindow\"[[:space:]]*:[[:space:]]*([0-9]+) ]] && auto_compact="${BASH_REMATCH[1]}"
@@ -394,7 +384,7 @@ refresh_usage_cache() {
 $needs_refresh && refresh_usage_cache
 
 # ── Rate limit lines ────────────────────────────────────
-# stdin carries live rate_limits (CC >= 2.1.80) only after the session's first
+# stdin carries live rate_limits only after the session's first
 # message; the last API snapshot fills the startup gap, per window.
 fb_five_pct=""; fb_five_reset=""; fb_seven_pct=""; fb_seven_reset=""
 if { [ -z "$five_hour_pct_raw" ] || [ -z "$seven_day_pct_raw" ]; } && [ -n "$usage_data" ]; then
