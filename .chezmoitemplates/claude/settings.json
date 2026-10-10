@@ -137,6 +137,7 @@
         "~/.rustup",
         "~/.snowflake/logs",
         "~/Code/.pnpm",
+        "~/Code/worktrees",
         "~/Library/Caches"
       ],
       "denyRead": [
