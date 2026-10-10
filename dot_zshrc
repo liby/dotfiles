@@ -105,4 +105,25 @@ export GPG_TTY="$TTY"
 [[ -r ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
 (( $+commands[proto] )) && eval "$(proto activate zsh)"
 eval "$(starship init zsh)"
+# Starship's version modules run proto shims while drawing the prompt, and a shim that refreshes
+# an alias's remote version list or auto-installs a missing version outlasts command_timeout.
+# Keep those calls offline and without auto-install, then restore before each command whatever the
+# two variables held, so a hand-exported value such as PROTO_AUTO_INSTALL=false still applies.
+# Empty Enter and Ctrl-C rerun precmd without preexec, so save only once per prompt.
+# Commands that zle widgets or completions start at the prompt also run offline, and a version that
+# is not installed shows no version in the prompt until a command installs it.
+_proto_prompt_offline() {
+  (( ${+_proto_prompt_env} )) ||
+    typeset -ga _proto_prompt_env=("${+PROTO_OFFLINE}" "${PROTO_OFFLINE-}" "${+PROTO_AUTO_INSTALL}" "${PROTO_AUTO_INSTALL-}")
+  export PROTO_OFFLINE=1 PROTO_AUTO_INSTALL=false
+}
+_proto_prompt_online() {
+  (( ${+_proto_prompt_env} )) || return 0
+  if (( _proto_prompt_env[1] )); then export PROTO_OFFLINE=$_proto_prompt_env[2]; else unset PROTO_OFFLINE; fi
+  if (( _proto_prompt_env[3] )); then export PROTO_AUTO_INSTALL=$_proto_prompt_env[4]; else unset PROTO_AUTO_INSTALL; fi
+  unset _proto_prompt_env
+}
+# First in precmd, so proto's own precmd activation also runs offline.
+precmd_functions=(_proto_prompt_offline $precmd_functions)
+preexec_functions+=(_proto_prompt_online)
 eval "$(zoxide init zsh)"

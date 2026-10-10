@@ -1,5 +1,4 @@
 add_newline = true
-command_timeout = 3600
 
 [git_commit]
 format = "[\\[$hash$tag\\]]($style)"
