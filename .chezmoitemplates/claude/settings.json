@@ -126,6 +126,7 @@
         "~/.claude",
         "~/.codex",
         "~/.config",
+        "~/.gnupg/trustdb.gpg",
         "~/.local/bin",
         "~/.local/share/uv",
         "~/.npm",
