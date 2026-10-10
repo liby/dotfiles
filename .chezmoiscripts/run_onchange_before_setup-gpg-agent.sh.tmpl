@@ -28,9 +28,6 @@ done
 
 mkdir -p "$HOME/.gnupg"
 chmod 700 "$HOME/.gnupg"
-for f in "$HOME/.gnupg"/*(.N); do
-  chmod 600 "$f"
-done
 
 append_config_line() {
   local file=$1 line=$2
@@ -64,6 +61,10 @@ fi
 if ! grep -q "^no-autostart" "$common_conf"; then
   append_config_line "$common_conf" "no-autostart"
 fi
+# After the writes above, so the config files this script creates are covered.
+for f in "$HOME/.gnupg"/*(.N); do
+  chmod 600 "$f"
+done
 
 # Both daemons fork and the launched process exits (--no-detach only keeps the
 # console, it still forks in GnuPG 2.5): AbandonProcessGroup keeps the child,
