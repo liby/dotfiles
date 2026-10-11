@@ -1,4 +1,5 @@
 {
+  "electron-avatar-overlay-open": false,
   "electron-persisted-atom-state": {
     "electron:onboarding-projectless-completed": true,
     "electron:onboarding-welcome-pending": false,
