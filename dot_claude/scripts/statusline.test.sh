@@ -70,6 +70,8 @@ chmod +x "$stubs/curl" "$stubs/security" "$stubs/date" "$stubs/ps"
 now=$(date +%s)
 reset=$(( now + 3 * 3600 ))
 reset_iso=$(date -u -r "$reset" +%Y-%m-%dT%H:%M:%S)
+ended=$(( now - 90 ))
+ended_iso=$(date -u -r "$ended" +%Y-%m-%dT%H:%M:%S)
 week=$(( now + 4 * 86400 ))
 
 snapshot() { # five_utilization five_resets_at_iso [age in seconds, default 1h]
@@ -98,14 +100,6 @@ expect() { # description actual pattern
 }
 reset_state() { rm -rf "$cache" && mkdir -p "$cache"; }
 
-# Incident: a new session showed the 3h-old snapshot while a neighbour had live data
-reset_state; snapshot 0.0 "$reset_iso"
-tick "$(five 3.4 "$reset")"
-expect 'live tick renders its stdin' "$(rows)" '^5h .* 3% ⟳ +[0-9-]+ [0-9:]+ *$'
-( tick )
-expect 'new session starts from the neighbour' "$(rows)" '^5h .* 3% ⟳ .*≈'
-[ "$(shared_five)" = 3 ]
-
 # Idle replay: a process repeating what it already showed must not win or
 # rewrite, even under the new session id /clear gives it
 reset_state; snapshot 0.0 "$reset_iso"
@@ -117,12 +111,14 @@ tick "$(five 2.1 "$reset")" cleared
 expect 'idle replay keeps the later value' "$(rows)" '^5h .* 5% ⟳'
 [ "$(stat -f %m "$cache/rate-limits.json")" = "$before" ]
 
-# Claude Code drops an ended window from stdin; the windows left are still replays
-reset_state; snapshot 0.0 "$reset_iso"
-at=$(( now - 120 )) tick "{\"five_hour\":{\"used_percentage\":2,\"resets_at\":$(( now - 90 ))},\"seven_day\":{\"used_percentage\":40,\"resets_at\":$week}}"
+# Claude Code drops an ended window from stdin; the windows left are still
+# replays, and with no open window known the ended one reads empty
+reset_state; snapshot 0.0 "$ended_iso"
+at=$(( now - 120 )) tick "{\"five_hour\":{\"used_percentage\":2,\"resets_at\":$ended},\"seven_day\":{\"used_percentage\":40,\"resets_at\":$week}}"
 ( at=$(( now - 60 )) tick "$(seven 45)" )
 tick "$(seven 40)"
 expect 'a dropped window does not refresh the others' "$(rows)" '^7d .*45% ⟳'
+expect 'an ended window reads 0% with no reset time' "$(rows)" '^5h .* 0% ⟳ +-- '
 
 # The tick before a process's first message leaves a record, so its first
 # values count from when they arrive, not from the process start
@@ -164,6 +160,17 @@ touch -t "$(date -r $(( now - 60 )) +%Y%m%d%H%M.%S)" "$cache/usage.json"
 ( tick )
 expect 'a later snapshot without a window clears the old one' "$(rows)" '^5h .* 0% ⟳ +-- ≈'
 
+# Incident: a new session showed a 7h-old snapshot, refetch backing off after a
+# 401, with the same marker as a neighbour's fresh value
+reset_state
+printf '{"five_hour":{"utilization":0.0,"resets_at":null},"seven_day":null,"extra_usage":{"is_enabled":false}}' > "$cache/usage.json"
+touch -t "$(date -r $(( now - 7 * 3600 )) +%Y%m%d%H%M.%S)" "$cache/usage.json"
+printf '401' > "$cache/usage.retry"
+printf '{"seven_day":{"used_percentage":30,"resets_at":%s,"observed_at":%s}}\n' "$week" $(( now - 9000 )) > "$cache/rate-limits.json"
+( tick )
+expect 'a value past the 3h refetch interval is marked stale' "$(rows)" '^5h .* 0% ⟳ +-- +≋$'
+expect 'a younger one keeps the shared marker' "$(rows)" '^7d .*30% ⟳ .*≈$'
+
 # A snapshot fetched after the process's last change wins
 reset_state; snapshot 0.0 "$reset_iso"
 at=$(( now - 120 )) tick "$(five 3 "$reset")"
@@ -173,8 +180,8 @@ expect 'later snapshot beats an older live value' "$(rows)" '^5h .* 10% ⟳ +[0-
 [ "$(shared_five)" = 10 ]
 
 # An ended window loses to an open one however recently it was observed
-reset_state; snapshot 0.0 "$(date -u -r $(( now - 60 )) +%Y-%m-%dT%H:%M:%S)"
-printf '{"five_hour":{"used_percentage":97,"resets_at":%s,"observed_at":%s}}\n' $(( now - 60 )) "$now" > "$cache/rate-limits.json"
+reset_state; snapshot 0.0 "$ended_iso"
+printf '{"five_hour":{"used_percentage":97,"resets_at":%s,"observed_at":%s}}\n' "$ended" "$now" > "$cache/rate-limits.json"
 at=$(( now - 30 )) tick "$(five 1 "$reset")"
 expect 'rollover takes the new window' "$(rows)" '^5h .* 1% ⟳ +[0-9-]+ [0-9:]+ *$'
 [ "$(shared_five)" = 1 ]
