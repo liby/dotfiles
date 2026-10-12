@@ -388,7 +388,8 @@ merge_rate_limits() { # shared_json; sets the row fields, process_record, and me
     read -r process_record
     read -r merged_limits
   } < <(jq -rn --arg live "$live_limits" --arg seen "$process_seen" --argjson changed_at "$changed_at" \
-      --arg shared "$1" --arg api "$usage_data" --argjson api_at "$usage_mtime" --argjson now "$_now" '
+      --arg shared "$1" --arg api "$usage_data" --argjson api_at "$usage_mtime" --argjson now "$_now" \
+      --argjson stale_after "$cache_max_age_disabled" '
     def epoch: if . then sub("(\\.[0-9]+)?(Z|[+-][0-9:]+)?$"; "") | strptime("%Y-%m-%dT%H:%M:%S") | mktime else null end;
     def win($at): if .used_percentage then {used_percentage: (.used_percentage | round), resets_at, observed_at: $at, fresh: (.fresh // false)} else null end;
     def api_win($at): if .utilization then {used_percentage: (.utilization | round), resets_at: (.resets_at | epoch), observed_at: $at, fresh: false} else null end;
@@ -413,9 +414,15 @@ merge_rate_limits() { # shared_json; sets the row fields, process_record, and me
         ([($a[$w] | api_win($api_at)), ($l[$w] | win(.observed_at)), ($s[$w] | win(.observed_at // 0))]
           | map(select(.)) | max_by(rank) | del(.fresh)) as $pick
         | if $pick then .[$w] = $pick else . end)) as $merged
+    # observed_at dates the last change or fetch of a value. A tick refetches
+    # the snapshot by the time it is $stale_after old (its longest TTL), so an
+    # older value means the refetch failed or no session ticked, and a new
+    # window may have opened unseen, such as after a snapshot that showed none.
     | (("five_hour", "seven_day") as $w
         | ($merged[$w].used_percentage // ""), ($merged[$w].resets_at // ""),
-          (if $l[$w] then "live" else "shared" end)),
+          (if $l[$w] then "live"
+           elif $now - ($merged[$w].observed_at // 0) < $stale_after then "shared"
+           else "stale" end)),
       (if $seen != "" and $record == $p then "" else $record | tojson end),
       (if $merged == $s then "" else $merged | tojson end)
   ' 2>/dev/null)
@@ -443,8 +450,8 @@ if [ -n "$merged_limits" ] && acquire_lock; then
 fi
 
 # Queue every row first, then pad the time column to the widest rendered time
-# string: mixed rows stay aligned, an all-expired display keeps ≈ next to "--"
-# instead of floating at timestamp width, and the Ex row shares the column.
+# string: mixed rows stay aligned, an all-expired display keeps its marker next
+# to "--" instead of floating at timestamp width, and the Ex row shares the column.
 row_labels=(); row_pcts=(); row_times=(); row_suffixes=(); _time_w=0
 queue_row() { # label pct time suffix: single writer keeps the arrays aligned
   local t="${3:---}"
@@ -454,8 +461,12 @@ queue_row() { # label pct time suffix: single writer keeps the arrays aligned
 queue_rate_row() { # label pct reset_epoch source
   local label="$1" pct="$2" reset_epoch="$3" suffix=""
   [ -n "$pct" ] || return
-  # ≈: this session's own stdin has not carried the window yet
-  [ "$4" = live ] || suffix=" ${cache}≈${reset}"
+  # ≈: this session's own stdin has not carried the window yet; ≋: and the
+  # value is past the snapshot's longest refetch interval
+  case "$4" in
+    shared) suffix=" ${cache}≈${reset}" ;;
+    stale)  suffix=" ${cache}≋${reset}" ;;
+  esac
   # Zero only a confirmed-ended window: a reset in the past means the next
   # window starts empty, so current usage is 0%; an unknown resets_at keeps the
   # pct because that window may still be live.
