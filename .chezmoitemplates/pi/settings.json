@@ -13,6 +13,6 @@
     "rc-gateway/deepseek/deepseek-v4.1-flash": "max",
     "rc-gateway/openai/gpt-6-luna": "max",
     "rc-gateway/openai/gpt-6.1-sol": "high",
-    "rc-gateway/zai/glm-5.3": "max"
+    "rc-gateway/zai/glm-5.3": "high"
   }
 }
