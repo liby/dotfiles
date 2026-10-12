@@ -1,6 +1,7 @@
 ---
 name: set-goal
-description: Create and start an outcome-based, verifiable completion contract from an explicitly requested task. Use for `/set-goal`, requests to set or start a goal, or long-running goal mode. Not for goal-setting discussion, ordinary planning, continuing an active goal, or direct `/goal Read ...` handoffs.
+description: Create and start a verifiable completion goal for the requested task.
+disable-model-invocation: true
 argument-hint: "[brief task description]"
 allowed-tools:
   - Bash(rg:*)
@@ -18,7 +19,7 @@ allowed-tools:
 
 Create and start an external completion contract from the slash-command arguments or accompanying request. The contract preserves acceptance across turns and context changes; it is not a plan, todo list, progress log, or substitute for the task's source of truth.
 
-A direct `/set-goal` invocation always runs this workflow, including when the task is to audit or edit this skill. Merely quoting or discussing goals does not invoke it. Do not infer goal mode for an ordinary task: its overhead is justified when the user explicitly requests it, especially for work that spans turns, compaction, sessions, executors, independent evaluation, or recoverable verification.
+A direct `/set-goal` invocation always runs this workflow, including when the task is to audit or edit this skill. Merely quoting or discussing goals does not invoke it.
 
 By default, create and start the goal before executing the requested work. If the user explicitly requires research or requirements gathering to finish before the Goal is drafted, created, or started, use the deferred read-only grounding path in Process. This delays Goal creation, not skill invocation.
 

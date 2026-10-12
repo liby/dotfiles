@@ -119,6 +119,7 @@ const CREDENTIAL_CONSUMERS: Record<string, Record<string, string[]>> = {
   glab: { ".chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl": ["envchain glab /bin/sh -c", "GITLAB_CLIENT_ID"] },
   pi: { "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain pi printenv", "ANTHROPIC_API_KEY", "RC_GATEWAY_API_KEY"] },
   typesafe: {
+    "dot_agents/skills/jev/SKILL.md": ["envchain typesafe <command>", "TYPESAFE_API_KEY"],
     "private_dot_pi/private_agent/private_models.json.tmpl": ["!envchain typesafe printenv", "TYPESAFE_API_KEY"],
   },
 };
