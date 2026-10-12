@@ -2,7 +2,7 @@
 
 ## Claude Code host
 
-Give Herdr control commands their own Bash call, containing only exempt commands and their literal arguments (descriptor duplication such as `2>&1` is allowed). Other shell segments, heredocs, backticks or `$(` even inside arguments, and non-inert inline assignments sandbox the whole call; inert assignments such as `TERM`/`LANG` are exceptions. Use a task-owned file pointer for rich task text, or have the target pane source a file for rich shell commands. Do not suppress socket errors with `2>/dev/null`.
+Give Herdr control commands their own Bash call, containing only exempt commands and their literal arguments (descriptor duplication such as `2>&1` is allowed). Other shell segments, such as a `sleep N;` before a read, heredocs, backticks or `$(` (including `$((`) even inside arguments, and non-inert inline assignments sandbox the whole call; inert assignments such as `TERM`/`LANG` are exceptions, and `"$HERDR_PANE_ID"` or a quoted `$?` stays exempt. Wait with a separate `sleep` call or a Herdr wait command. Use a task-owned file pointer for rich task text, or have the target pane source a file for rich shell commands. Do not suppress socket errors with `2>/dev/null`.
 
 A socket connection denied with `Operation not permitted` submitted nothing: remove the non-exempt shape before retrying. This is distinct from an uncertain result after submission. For foreground waits, set Bash's timeout above Herdr's finite timeout and within the tool limit; a background Bash wait re-invokes Claude when it exits.
 

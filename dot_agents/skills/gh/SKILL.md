@@ -12,14 +12,14 @@ Use `gh` for GitHub reads and writes. The rules below cover what `gh` does that 
 
 ## Before a call
 
-Do not run `gh auth status` unless a `gh` command fails with an auth or host error. Report the failing account or host without printing tokens. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, because it rewrites Git's global credential-helper configuration.
+Do not run `gh auth status` unless a `gh` command fails with an auth or host error. Report the failing account or host. On a git auth failure, diagnose with `gh auth status` first; do not run `gh auth setup-git` to "ensure" auth, because it rewrites Git's global credential-helper configuration.
 
 Check an unfamiliar flag in that subcommand's help filtered to the flag, such as `gh pr merge --help | rg -- --match-head-commit`; whole help pages are large. `gh <command> --json` with no field list prints the fields that command accepts, so use it instead of guessing a field name.
 
 These calls fail in ways that recur:
 
 - `gh search issues` and `gh search prs` accept only `--state open|closed`; omit `--state` for both. Scope a search with `--repo owner/name` and pass each other qualifier as its own word. `gh` quotes a qualifier's value through the end of its argument and escapes quotes inside it: `'repo:cli/cli GH_HOST'` and `'repo:"cli/cli"'` become invalid queries, and `'GH_HOST in:title repo:cli/cli'` silently searches all of GitHub as `in:"title repo:cli/cli"`.
-- `gh issue view` and `gh pr view` reject `--comments` together with `--json`.
+- `gh issue view`, `gh pr view`, and `gh discussion view` reject `--comments` together with `--json`.
 - Quote every `gh api` path that contains `?`, `[`, or `*`; zsh otherwise aborts with `no matches found`.
 - `gh api` prints an error body to stdout and exits non-zero. Filter with `--jq` so the call's exit status carries the HTTP error; without `set -o pipefail`, a pipeline takes its last command's exit status, so a pipe into `jq -r .content` prints `null` and exits 0.
 - In `gh api graphql`, pass string variables with `-f`: `-F` converts a numeric value, such as a repository named `2048`, to an integer and the query fails.
@@ -29,8 +29,9 @@ These calls fail in ways that recur:
 Answer from the complete relevant set. Save context by selecting fields and filtering noise, not by sampling: raw `gh api` objects carry users, URLs, and metadata the question rarely needs, while TSV, JSON lines, and plain text of the same selected fields differ little in size. Use `@tsv` for short single-line fields and JSON lines or plain text for long bodies; if a body still goes through `@tsv`, strip its `\r` first, because `@tsv` escapes each one.
 
 - **Facts and lists:** one call with `--json <fields> --jq`.
-- **A file in a repository:** `gh api -H 'Accept: application/vnd.github.raw' 'repos/OWNER/REPO/contents/PATH?ref=REF'`. That response is the file itself, not JSON, so do not add `--jq`. The `.content` field is base64, larger, and needs a decoder in the pipe.
+- **A file in a repository:** `gh repo read-file PATH -R OWNER/REPO --ref REF` prints the file itself without cloning; `gh repo read-dir [PATH]` lists a directory. Omit `--ref` for the default branch.
 - **Conversation:** `gh issue view --json comments` and `gh pr view --json comments` return every comment. The default text view silently omits minimized comments, so request `author,authorAssociation,createdAt,isMinimized,minimizedReason,body`, skip only those minimized as spam or off-topic (compare `minimizedReason` case-insensitively; values include `SPAM`, `spam`, and `off-topic`), count what you skipped, and read every remaining body. Check the comment count before printing bodies: a thread of more than a few dozen comments usually exceeds what one tool result shows, so save the selected JSON once in the task's temporary directory and read it in order in chunks, then report how many comments were read and skipped.
+- **Discussion:** `gh discussion view N -R OWNER/REPO --json title,body,answered,comments --order oldest --limit 100` puts comments under `.comments.nodes`; pass `.comments.next` to `--after` until it is null. Each comment carries only its latest few replies, so when its `replies.totalCount` exceeds its `replies.nodes`, read that thread by passing the comment's `url` as the argument: its replies are under `.comments.nodes[0].replies.nodes`, and `.comments.nodes[0].replies.next` goes to `--after`. `gh discussion list --json` returns an object with `discussions`, `next`, and `totalCount`, not an array.
 - **Pull request review:** `gh pr view --comments` and `--json comments` omit inline review comments. Read review verdicts with `--json reviews,latestReviews` and inline threads with one GraphQL query, the only source of thread resolution; resolved threads carry earlier decisions, so keep the final `select` only when the question is about open feedback alone:
 
   ```bash
@@ -53,7 +54,7 @@ At the first inspection of an existing PR, record its `url` and `headRefOid` wit
 
 GitHub pending-review comments remain visible only to their author until the review is submitted. When that unpublished form satisfies the authorized outcome, create it with `gh api -X POST 'repos/OWNER/REPO/pulls/N/reviews' --input FILE`, omitting `event`, setting `commit_id` to the recorded `headRefOid`, and giving each `comments[]` entry `path`, `line`, `side`, and `body`; `gh pr review` always submits. Submitting the review is a separate publishing action. Do not treat a draft PR as an invisible saved draft.
 
-A PR title and body describe the complete change against the resolved base. Resolve that base from the user's request, the branch's `branch.<name>.gh-merge-base` setting, or the repository default branch, never an assumed `main` or `master`. Read an existing PR's full patch with `gh pr diff` and its metadata with `gh pr view --json baseRefName,headRefName,headRefOid,url`; for a new PR read `git log <base>..HEAD` and `git diff <base>...HEAD`. Follow the repository PR template when one exists. Run `gh pr create` or `gh pr edit` only when Authority authorizes that write for that target, otherwise keep the text in chat, and return the final title and body, plus the PR URL after a write.
+A PR title and body describe the complete change against the resolved base. Resolve that base from the user's request, the branch's `branch.<name>.gh-merge-base` setting, or the repository default branch, never an assumed `main` or `master`. Read an existing PR's full patch with `gh pr diff` and its metadata with `gh pr view --json baseRefName,headRefName,headRefOid,url`; for a new PR read `git log <base>..HEAD` and `git diff <base>...HEAD`. Follow the repository PR template when one exists. Without authorization for `gh pr create` or `gh pr edit` on that target, keep the text in chat; either way return the final title and body, plus the PR URL after a write.
 
 ## Agent Skills From GitHub
 
@@ -61,7 +62,7 @@ Before the first `gh skill` command for preview, install, or update, load and fo
 
 ## Write Operations
 
-GitHub writes include issue creation, comments, labels, closes, merges, releases, workflow dispatches, skill installs, and skill updates. Run them when Authority authorizes them; in a context without the shared rules, run a write only when the request plainly covers it and its effects are still undoable and no one else can see its result, or when the user's own direction or supplied text clears the effect it would otherwise stop for.
+GitHub writes include issue and PR creation, PR edits, comments, labels, closes, merges, releases, workflow dispatches, skill installs, and skill updates. Run them when Authority authorizes them; in a context without the shared rules, run a write only when the request plainly covers it and its effects are still undoable and no one else can see its result, or when the user's own direction or supplied text clears the effect it would otherwise stop for.
 
 For `gh pr merge`, a merge that relies on a review or earlier inspection needs that inspection's recorded URL and `headRefOid`; stop if either is missing. Immediately before the write, refresh the PR, stop if its URL or `headRefOid` differs from the record, and pass the compared OID with `--match-head-commit`. Refetch afterwards and verify the same head OID and the resulting merge state.
 

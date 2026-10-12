@@ -52,7 +52,7 @@ herdr workspace
 
 Never run bare `herdr` for discovery: it launches or attaches the TUI. Bare `herdr server` is not a usage probe either: it runs a headless server. Do not probe a mutating nested command by omitting arguments. After an upgrade or option rejection, inspect `herdr --version`, the relevant group, and `herdr --skill`; retain this skill's authorization, ownership, and workflow rules. Report an incompatibility when the installed version cannot satisfy them. Before relying on a new server feature, check `herdr status`; never stop or replace the server or kill its main process without a specific request.
 
-Control responses contain JSON IDs and state; `pane read` and `agent read` contain terminal text. Use returned pane IDs and verified unique live agent names, not inherited IDs, predicted IDs, focus, or sidebar order. Never use `--current` while the caller is unresolved.
+Control responses contain JSON IDs and state; `pane read` and `agent read` contain terminal text. Use returned pane IDs and verified unique live agent names, not inherited IDs, predicted IDs, focus, or sidebar order.
 
 ## Ownership and labels
 
@@ -91,12 +91,12 @@ A named session is a separate server with its own sockets and persisted state, n
 Pass a shell command as one literal argument so substitutions and `$?` evaluate in the target pane:
 
 ```bash
-herdr pane run <pane-id> '<command>'
-herdr pane wait-output <pane-id> --match "<fresh expected text>" --timeout <milliseconds>
+herdr pane run <pane-id> '<command>; echo "<fresh-marker>-rc=$?"'
+herdr pane wait-output <pane-id> --regex '<fresh-marker>-rc=[0-9]+' --timeout <milliseconds>
 herdr pane read <pane-id> --source recent-unwrapped --lines 120
 ```
 
-`wait-output` searches existing output immediately, including the submitted command's echo. Match a marker assembled at runtime or actual result text with exit status that the submitted text cannot contain; a unique literal in that text can match before execution.
+`wait-output` searches existing output immediately, including the submitted command's echo, so a pattern that the submitted text also contains can match before execution. The echo shows `$?`, not digits, so this regex matches only the executed result. `--match` takes literal text and cannot be combined with `--regex`.
 
 Use `visible` for dialogs, `recent-unwrapped` for transcripts/logs, and `recent` for rendered output. TUI margins can defeat start-of-line patterns; unwrapping joins rows and can defeat extraction boundaries. Increase `--lines` to recover complete output; supported idle agents can also expose application-owned alternate-screen history through a larger `recent` or `recent-unwrapped` read. On `agent_not_idle`, wait for the turn to settle and retry that read. Only if the larger idle read still cannot reach it, ask the agent to write Markdown under this task's own directory in runtime-provided temporary space and return the path. This is a recovery protocol, not the default; read the file on its host when the directory is not shared.
 
@@ -110,4 +110,4 @@ herdr tab close <tab-id>
 herdr workspace close <workspace-id>
 ```
 
-Close a tab/workspace only when its own purpose is complete and every contained pane is independently eligible for closure. Collected helper results do not finish a workspace being handed back. Leave containers with user additions or uncertain ownership, and report what remains and why. On `workspace_group_close_required`, leave it; do not add `--group` and close more than you created.
+Close a tab/workspace only when its own purpose is complete and every contained pane is independently eligible for closure. Collected helper results do not finish a workspace being handed back. Leave containers with user additions or uncertain ownership, and report what remains and why.
