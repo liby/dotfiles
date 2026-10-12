@@ -2,7 +2,7 @@
 
 ## Recover the bound run
 
-Keep the process or session ID and follow the same run through finite waits. After detachment, compaction, a timeout, stale status, or ambiguous submission, inspect `oracle status` and `oracle session <id>` before doing anything that could resend. An error status, an exited worker, or a submit-stage timeout does not establish that the prompt was never sent; a `promptSubmitted` flag alone does not establish its actual user turn. Use `oracle session <id> --live` to follow the bound page and `--harvest` to recover its current answer; use `--render` for a saved completed answer.
+After detachment, compaction, a timeout, stale status, or ambiguous submission, inspect `oracle status` and `oracle session <id>` before doing anything that could resend. An error status, an exited worker, or a submit-stage timeout does not establish that the prompt was never sent; a `promptSubmitted` flag alone does not establish its actual user turn. Use `oracle session <id> --live` to follow the bound page and `--harvest` to recover its current answer; use `--render` for a saved completed answer.
 
 When the saved session has no recoverable conversation URL and the user supplies the exact one, harvest that page explicitly with `oracle session <id> --harvest --browser-tab "<conversation-url>"`. The override selects an existing tab and bypasses the saved prompt fingerprint, so verify the actual user turn, attached inputs, corresponding answer, and requested Project; never substitute the current tab or a title match. Do not append a follow-up just to retrieve an existing answer.
 
@@ -13,7 +13,7 @@ When the saved session has no recoverable conversation URL and the user supplies
 
 `oracle status` and an id-less `oracle session` cover 24 hours and 100 entries by default, so an empty list does not prove the run is gone; widen the window and never run `--clear`, which deletes sessions. When session retention is configured (`--retain-hours`, `sessionRetentionHours`, or `ORACLE_RETAIN_HOURS`), every non-preview run prunes older sessions before it resolves a `--followup` target, so protect a parent you still need. A model-selection failure can be a transient ChatGPT throttle (`Too many requests`, `Got it`): wait and retry the same request rather than changing the model or opening another conversation. An API background run that times out locally leaves its `resp_...` id in the session log but not in the session metadata; `oracle --followup <id> --engine api` still resolves it from that log, and the provider's Responses retrieve does too. When the task requires a delivered file, verify the file and its saved path, because Oracle can return metadata and still mark the session completed.
 
-Use `--force` only after establishing that the worker, controller, and bound target are dead and the original conversation or answer cannot be recovered. While the requested consultation is pending, keep following it; do not substitute your own analysis for its result.
+Use `--force` only after establishing that the worker, controller, and bound target are dead and the original conversation or answer cannot be recovered.
 
 ## Reconcile provider fidelity
 
