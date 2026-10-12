@@ -1,6 +1,6 @@
 ---
 name: gh
-description: Operate GitHub through the `gh` CLI for GitHub issues, pull requests, repos, workflow data, comments, and GitHub-hosted Agent Skills. Use when the user gives a GitHub URL, `owner/repo#123`, asks about a GitHub issue/PR/workflow, or asks to preview/install/update a skill from GitHub. Not for GitLab URLs or local skill editing without a GitHub source.
+description: 'Run the GitHub CLI (`gh`) for any GitHub read or write: searching and reading issues, pull requests, discussions, comments, reviews, releases, repository files, and Actions runs and logs; `gh api` calls; creating, editing, commenting on, or merging issues and PRs; and previewing, installing, or updating GitHub-hosted Agent Skills. Load it before the first `gh` command of a task, also when GitHub is only a side lookup inside other work, such as checking upstream issues, community reports, release notes, or CI while researching or debugging something else, and when a request gives a GitHub URL or `owner/repo#123`. It records flag conflicts and silent failures that `gh` help does not show. Not for GitLab, local-only Git work, or editing local skills that have no GitHub source.'
 allowed-tools:
   - Bash(gh:*)
   - Bash(git:*)
