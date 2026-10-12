@@ -1,6 +1,6 @@
 ---
 name: glab
-description: Operate GitLab through the `glab` CLI for GitLab merge requests, issues, pipelines, discussions, repos, and MR descriptions. Use when the user gives a GitLab URL, asks about a GitLab MR/issue/pipeline, mentions `glab`, or asks to draft/update an MR description. Not for GitHub URLs or purely local git tasks that do not need GitLab issue, MR, pipeline, discussion, or repo data.
+description: 'Run the GitLab CLI (`glab`) for any GitLab read or write: merge requests with their diffs, discussions, and descriptions, issues, pipelines and job logs, users, repository files, and `glab api` calls; creating or updating MRs and issues, commenting, pending review comments, approving, and merging. Load it before the first `glab` command of a task, also when GitLab is one step inside other work, such as fetching an MR during a code review, checking a pipeline while debugging, or updating an MR after a push, and when a request gives a GitLab URL or mentions `glab`. It records host routing, flag, and silent-failure traps that `glab` help does not show. Not for GitHub or local-only Git work.'
 allowed-tools:
   - Bash
   - Read
