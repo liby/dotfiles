@@ -2,7 +2,7 @@
 
 ## Run a panel of models
 
-Use a pane when a participant needs a different agent binary or model vendor, the user needs to watch/take over its session, or asks for one. Equivalent in-process subagents save screen space for other participants when available. Resolve every runtime/model through the [agent workflow](agents.md).
+Use a pane when a participant needs a different agent binary or model vendor, the user needs to watch/take over its session, or asks for one. Equivalent in-process subagents save screen space for other participants when available. Resolve every runtime, model, and effort through the [agent workflow](agents.md).
 
 One round asks one question. Give every participant the same self-contained brief. Start fresh agents in new panes, verify they did not resume old conversations, and use distinct names across simultaneous rounds; a name collision does not authorize reuse.
 

@@ -12,11 +12,13 @@ Names are unique only while live and may belong to a replacement after exit. Reu
 
 Read-only helpers may share a checkout; serialize writers unless the user asks for isolated worktrees. Run commands that authenticate as the user through a credential-store read or a browser sign-in in one process at a time, across yourself and every helper: each such process can raise its own approval or sign-in prompt, and parallel runs stack them on the user. State both constraints in the helpers' tasks; they are not sandbox settings.
 
-### Resolve the runtime and model
+### Resolve the runtime, model, and effort
 
 `--kind` selects a program, not a model. Use the runtime the user names; otherwise prefer the model vendor's installed agent when it offers the model, then another installed runtime whose usable-model listing includes it. For Pi, inspect `pi --list-models <search>`. If no route works, report those checked and ask; one missing model-named CLI does not exhaust the routes.
 
 Use the exact user-given ID, the single ID that configuration or the usable listing pairs with the user's name, or a native alias. If the requested name remains unresolved or ambiguous after those checks, ask one question rather than guessing. Let the runtime obtain its normal credentials without synthesizing or remapping environment variables.
+
+Use the reasoning effort the user names; otherwise decide it per participant, moving from that model's default only for a reason its task gives: lower when the task is bounded and fully specified and you will check the result, higher when it must trace complex logic, weigh trade-offs, or find what others missed. Reserve the top levels for the hardest long work, because each step up lengthens turns and the waits that collect them. Pass the level at launch, Pi `--thinking <level>` or Codex `-c 'model_reasoning_effort="<level>"'`, since a launch without one takes a configured default instead of this decision.
 
 ### Launch
 
@@ -24,7 +26,7 @@ Use a returned pane at an interactive shell prompt. Put native arguments after `
 
 ```bash
 herdr agent start <agent-name> --kind <kind> --pane <returned-pane-id> -- <agent-args...>
-herdr agent start <agent-name> --kind pi --pane <returned-pane-id> -- --provider <listed-provider> --model <listed-model-id>
+herdr agent start <agent-name> --kind pi --pane <returned-pane-id> -- --provider <listed-provider> --model <listed-model-id> --thinking <level>
 ```
 
 Startup success means Herdr detected readiness; `agent_not_ready` leaves the name available. Either way, read `visible` before prompting: a dialog may still be present at `idle`/`interactive_ready`. Handle it under the dialog contract below.
