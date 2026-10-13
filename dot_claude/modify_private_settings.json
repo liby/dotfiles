@@ -8,8 +8,7 @@
       pass through. */ -}}
 {{- $managed := includeTemplate "claude/settings.json" . | fromJson -}}
 {{- $seeds := `{
-  "model": "opus",
-  "effortLevel": "high"
+  "model": "opus"
 }` | fromJson -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := dict -}}
