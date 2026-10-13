@@ -1,5 +1,7 @@
 Dotfiles managed by [chezmoi](https://www.chezmoi.io/) from `~/.local/share/chezmoi` to `$HOME`. Standard source prefixes and template mechanics live in the [chezmoi reference](https://www.chezmoi.io/reference/); this file records only repository-specific workflows and traps.
 
+This repository targets Apple Silicon macOS only. Use the `/opt/homebrew` prefix directly; do not add Intel `/usr/local` branches until a supported machine requires them.
+
 ## Workflow
 
 - After editing `.chezmoi.toml.tmpl`, run `chezmoi init` to regenerate `~/.config/chezmoi/chezmoi.toml`; never edit that generated file directly.
@@ -25,20 +27,18 @@ Dotfiles managed by [chezmoi](https://www.chezmoi.io/) from `~/.local/share/chez
 
 ## Maintenance map
 
-Keep prose only when omission can cause a realistic wrong edit or operation. Place it at the first decision it must change:
+Keep prose only when a realistic reader needs it to edit, operate, adopt, or understand this setup and cannot reliably get it elsewhere. Place it at the first decision it must change:
 
-| Surface | Owns |
-| --- | --- |
-| Agent entrypoint | Actions needed before choosing or reading a narrower owner |
-| Human setup and reuse | User-facing setup, operation, and adaptation guidance |
-| Cross-file contract | Design, lifecycle, and operator rationale that spans sources |
-| Path or capability instruction | Instructions needed only when that path or capability is active |
-| Exact edit rationale | A non-obvious reason or invalidation condition at that line or block |
-| Deterministic requirement | Enforcement that should not depend on Agent recall |
+| Surface | Where | Owns |
+| --- | --- | --- |
+| Agent entrypoint | This file | Actions needed before choosing or reading a narrower owner |
+| Human setup and reuse | [`.github/README.md`](.github/README.md) and its Chinese translation | User-facing setup, operation, and adaptation guidance |
+| Cross-file contract | [`.github/CONCEPTS.md`](.github/CONCEPTS.md) | Design, lifecycle, and operator rationale that spans sources |
+| Path or capability instruction | The narrowest path rule or skill | Instructions needed only when that path or capability is active |
+| Exact edit rationale | A comment at that line or block | A non-obvious reason or invalidation condition |
+| Deterministic requirement | A schema, test, or hook | Enforcement that should not depend on Agent recall |
 
 Keep one owner per action. Retain overlap only when each surface constrains a different decision, boundary, or audience, and link rather than restate supporting detail.
-
-This repository targets Apple Silicon macOS only. Use the `/opt/homebrew` prefix directly; do not add Intel `/usr/local` branches until a supported machine requires them.
 
 ## Before inspecting, changing, or running a matching surface
 
@@ -58,5 +58,5 @@ Read its narrowest owner, then read the owner for the behavior under test.
 | Herdr integrations | `.chezmoiscripts/run_onchange_after_install-herdr-integrations.sh.tmpl` | [Herdr integrations](.github/CONCEPTS.md#herdr-integrations) |
 | Agent guard | `dot_codex/managed-hooks/executable_guard-bash`, `private_dot_pi/private_agent/extensions/agent-guard.ts`, `dot_ignore`, the guard entries in `Brewfile`, `.chezmoitemplates/claude/settings.json`, and `.chezmoitemplates/codex/requirements.toml` | [Agent guard](.github/CONCEPTS.md#agent-guard) |
 | Managed skills | `dot_agents/skills/**`, `~/.agents/skills/**` | `write-skill` and [Managed skill registry](.github/CONCEPTS.md#managed-skill-registry) |
-| Snowflake CLI | `dot_local/bin/executable_snow`, `dot_agents/skills/snow/**` | [Shared agent execution](.github/CONCEPTS.md#shared-agent-execution) |
+| Snowflake CLI | `dot_local/bin/executable_snow`, `dot_agents/skills/snow/**` | [Snowflake CLI execution](.github/CONCEPTS.md#snowflake-cli-execution) |
 | Credentials | `.chezmoi.toml.tmpl`, `.secrets/**`, `.chezmoiscripts/run_onchange_after_seed-envchain.sh.tmpl`, any source that invokes `envchain` | [Identity and encrypted data](.github/CONCEPTS.md#identity-and-encrypted-data) and the [Credential-backed features](.github/CONCEPTS.md#credential-backed-features) consumer contract. [Encrypted Files](#encrypted-files) remains authoritative for plaintext and ciphertext handling |

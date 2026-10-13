@@ -65,7 +65,7 @@ When updating an existing Mac or merging upstream into a fork, review commits si
 
 ## Reuse
 
-Fork this repository and adapt it to your environment, or copy only the parts you need. Before applying the full setup, review and adjust `.chezmoi.toml.tmpl`, `Brewfile`, and `.chezmoiscripts/`.
+Fork this repository and adapt it to your environment, or copy only the parts you need. Before applying the full setup, review and adjust `.chezmoi.toml.tmpl`, `Brewfile`, and `.chezmoiscripts/`. The encrypted `*.asc` files decrypt only with my YubiKey, so replace them and the GPG recipients in `.chezmoi.toml.tmpl` with your own, or remove them along with the parts that use them; see [Identity and encrypted data](CONCEPTS.md#identity-and-encrypted-data).
 
 ## Contributing
 
