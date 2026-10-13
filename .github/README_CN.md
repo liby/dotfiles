@@ -65,7 +65,7 @@ chezmoi edit-encrypted <filename>  # 编辑加密文件（传递 source 路径�
 
 ## 取用
 
-可以 Fork 本仓库并根据自己的环境调整，也可以只取用需要的部分。若要应用整套配置，请先检查并调整 `.chezmoi.toml.tmpl`、`Brewfile` 和 `.chezmoiscripts/`。
+可以 Fork 本仓库并根据自己的环境调整，也可以只取用需要的部分。若要应用整套配置，请先检查并调整 `.chezmoi.toml.tmpl`、`Brewfile` 和 `.chezmoiscripts/`。加密的 `*.asc` 文件只能用我的 YubiKey 解密，请把它们和 `.chezmoi.toml.tmpl` 中的 GPG 接收者换成你自己的，或者连同用到它们的部分一起删除，详见[身份与加密数据](CONCEPTS.md#identity-and-encrypted-data)。
 
 ## 参与贡献
 

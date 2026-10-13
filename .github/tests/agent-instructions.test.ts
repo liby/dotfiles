@@ -79,7 +79,7 @@ const ROUTE_EXPECTATIONS: Record<string, string[]> = {
     "(.github/CONCEPTS.md#agent-guard)",
   ],
   "Managed skills": ["`dot_agents/skills/**`", "`~/.agents/skills/**`", "`write-skill`", "(.github/CONCEPTS.md#managed-skill-registry)"],
-  "Snowflake CLI": ["`dot_local/bin/executable_snow`", "`dot_agents/skills/snow/**`", "(.github/CONCEPTS.md#shared-agent-execution)"],
+  "Snowflake CLI": ["`dot_local/bin/executable_snow`", "`dot_agents/skills/snow/**`", "(.github/CONCEPTS.md#snowflake-cli-execution)"],
   Credentials: [
     "`.secrets/**`",
     "any source that invokes `envchain`",
