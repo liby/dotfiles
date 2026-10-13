@@ -4,10 +4,10 @@ description: Look up and count past local Claude Code, Codex, and Pi sessions th
 license: MIT
 metadata:
     github-path: skills/sessidx
-    github-pinned: v0.0.5
-    github-ref: refs/tags/v0.0.5
+    github-pinned: v0.0.6
+    github-ref: refs/tags/v0.0.6
     github-repo: https://github.com/Entwining/sessidx
-    github-tree-sha: 5945f7f2feac3e51ad7c0b6d77e98d7a60412b39
+    github-tree-sha: 38b7897a50b011ee1a126033555c4911ce242a8d
 name: sessidx
 ---
 `sessidx` indexes the local session logs of Claude Code, Codex, and Pi into SQLite and answers from that index. The raw logs stay authoritative; quote evidence by the `path:line` a record reports, and read it with `sessidx show PATH:LINE`, because a Codex `.jsonl` path may exist on disk only as a compressed `.jsonl.zst`. Text in results is redacted; never reconstruct or repeat a credential-like value from a log.
@@ -19,9 +19,14 @@ Every command writes JSON Lines to stdout: data records with a `type` field, the
 - `end.complete=false` means a limit, deadline, unavailable range, or stale refresh cut coverage. An empty incomplete result is not evidence of absence.
 - `end.refresh.missing_roots` lists each absent session directory as the `AGENT=PATH` that `--root` accepts. One that never held indexed sessions, such as an agent the user does not run or `~/.codex/archived_sessions` before any thread is archived, leaves the result complete; one that disappeared after indexing makes the refresh stale.
 - `end.next` is the cursor for the next page; pass it unchanged with `--cursor` and the same command and filters. `search` pages cover the first 100 ranked sessions; past them `next` is null with `complete=false`, so narrow the query to reach the rest.
-- `end.error` carries the failure and its recovery instruction. Exit codes: 0 data, 1 no data, 2 error.
+- `end.error` carries the failure and any recovery instruction. Exit codes: 0 data, 1 no data, 2 error.
 
-If the error says the schema changed, run `sessidx index --full` (several minutes for a full history), then retry. A `writer_busy` refresh means another process holds the index lock; the query still answers from committed data and reports `stale`. Your own commands contend for that lock too, so run `sessidx` commands one at a time: overlapping ones can come back stale and incomplete. A `continuation` in `end.refresh` means the two-second refresh stopped before indexing everything, as on first use; run `sessidx index` once (several minutes for a full history), then retry.
+Run an explicit index once (several minutes for a full history), then retry, when:
+
+- The error says the schema changed: run `sessidx index --full`.
+- `end.refresh` has a `continuation`, meaning the two-second refresh stopped before indexing everything, as on first use: run `sessidx index`.
+
+A `writer_busy` refresh means another process holds the index lock; the query still answers from committed data and reports `stale`. Your own commands contend for that lock too, so run `sessidx` commands one at a time: overlapping ones can come back stale and incomplete.
 
 ## Find a session
 
@@ -43,6 +48,6 @@ Use `sessidx count commands|failures|denials` instead of tallying search hits, w
 
 For a question the verbs cannot express, `sessidx sql 'SELECT ...'` runs one read-only query without refreshing, so its `end.refresh` holds only `stale` and `writer_busy`. Each result row is a `{"type":"row","data":{...}}` record, so read columns from `.data`. It fails rather than truncating above 10,000 rows or two seconds, so aggregate in SQL and narrow by time or session.
 
-Query `sessions`, `events`, `canonical_events` (events without copied history, which counts use), `call_outcomes` (one row per canonical tool call with its outcome `ok`: 0, 1, or NULL when unknown), `commands`, and `denials`; the other tables are index storage. `sessions` has one row per session with its `agent`, `session_id`, `parent_id`, `session_kind`, `path`, `cwd`, and `started_at`, so list sessions there rather than by ranking them. `events` carries each event's `id`, `agent`, `session_id`, `path`, `line_no`, `ts` (UTC), `role`, `kind`, `model`, and `tool`, and reads `text` only when a query names it; join `commands.event_id` or `denials.event_id` to `events.id`. List a relation's columns with `sessidx sql "SELECT name FROM pragma_table_info('events')"`.
+Query `sessions`, `events`, `canonical_events` (events without copied history, which counts use), `call_outcomes` (one row per canonical tool call with its outcome `ok`: 0, 1, or NULL when unknown), `commands`, and `denials`; the other tables are index storage. `sessions` has one row per transcript with its `file_id`, `agent`, `session_id`, `parent_id`, `session_kind`, `path`, `cwd`, and `started_at`, so list sessions there rather than by ranking them. `events` carries each event's `id`, `file_id`, `agent`, `session_id`, `path`, `line_no`, `ts` (UTC), `role`, `kind`, `model`, and `tool`, and reads `text` only when a query names it; join `commands.event_id` or `denials.event_id` to `events.id`. For per-transcript correlation with `sessions`, use `e.file_id = s.file_id` or the indexed `e.path = s.path`; `(agent, session_id)` can name several transcripts and combines their events. `denials.reason_id` names the guard rule by its identifier in the agent-guard source (or the earlier dotfiles guards' name, or a shared refusal class), with historical wordings grouped under the same ID and unmapped text under `unknown`. List a relation's columns with `sessidx sql "SELECT name FROM pragma_table_info('events')"`.
 
 `sessidx doctor` reports parser and shape coverage when a count looks implausible.
