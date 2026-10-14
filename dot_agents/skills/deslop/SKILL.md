@@ -3,8 +3,8 @@ name: deslop
 description: 'Use when a request asks to clean up, simplify, tidy, trim, shorten, or de-duplicate code, tests, code comments, or ordinary project documentation while keeping behavior, whether it names one file, one kind of artifact such as tests or docs, or the whole recent change, and whoever wrote it; also use before final validation of such changes. It reuses built-in, library, or repository mechanisms instead of hand-written copies; removes redundant tests, comments, and docs, needless guards, wrappers, abstractions, and debug leftovers; corrects or shortens inaccurate or wordy comments and docs; reduces accidental complexity and cost; and verifies type-driven refactors against runtime evidence. Its evidence rules decide what may be removed or rewritten, so read it before the first cleanup edit, even when the cleanup looks obvious. Not for correctness review, new behavior, or behavior-bearing agent instructions.'
 argument-hint: "[<target>]"
 allowed-tools:
-  - Bash
-  - Agent
+  - Bash(git:*)
+  - Bash(rg:*)
   - Read
   - Edit
   - Write

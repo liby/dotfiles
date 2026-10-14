@@ -3,9 +3,9 @@ name: review
 description: Review remote merge requests or pull requests, branches, commits, diffs, and uncommitted code changes for correctness and regression risk, reporting only evidence-backed findings. Use for pre-merge code review, review findings, and MR/PR URLs. Not for prose review, standalone skill-authoring audits, or general implementation work.
 argument-hint: "[--fix] [MR/PR URL or notes]"
 allowed-tools:
-  - Bash
+  - Bash(git:*)
+  - Bash(rg:*)
   - Read
-  - Agent
   - Edit
   - Write
   - WebFetch

@@ -2,8 +2,8 @@
 name: write-skill
 description: Create, edit, audit, or advise on agent skills and reusable agent instructions (SKILL.md and bundled files, AGENTS.md/CLAUDE.md, rules, output styles, and agent prompts), including examples and explanatory prose within them. Use for writing or rewriting them, fixing routing or wording, slimming, splitting or merging, and judging whether one needs changes, why it led an agent to act as it did, or where an instruction belongs. Its rules decide what such a change may add, keep, or remove and how to verify it, which a capable model does not already know, so read it before editing such a file or answering whether or how one should change, even when no edit is requested yet, the change looks small or fully specified, or it is one step of other work. Not for application code, code comments, ordinary project documentation, messages or documents for people, harness settings files, installing skills or explaining how runtimes store or load them, running an unchanged skill, or deletion without redesign or replacement.
 allowed-tools:
-  - Bash
-  - Agent
+  - Bash(git:*)
+  - Bash(rg:*)
   - Read
   - Edit
   - Write
@@ -60,7 +60,7 @@ Target the local Claude Code, Codex and Pi setup in one `SKILL.md`. Add `when_to
 - Use `user-invocable: false` only when Claude Code users should not invoke the skill: it hides the skill from the `/` menu and stops `/name` from running it, but does not block model invocation.
 - Use `context: fork` for explicit long-running tasks, independent review, or research. Do not put passive reference knowledge in a fork-only skill.
 - Only add `argument-hint`, `arguments`, `agent`, `paths`, `shell`, `model`, `effort`, or `hooks` when they change invocation or execution. Keep shared skill behavior independent of host-specific argument interpolation; use invocation arguments or the user's accompanying request instead of embedding a runtime placeholder in body text.
-- Treat `allowed-tools` as Claude Code prompt-free preapproval, not a deny-list, authorization rule, or cross-runtime capability contract. Match it to the normal contract when prompt-free execution is required: use exact entries only when the command set is exhaustive and stable, otherwise use `Bash(<program>:*)` or bare `Bash`, and validate that missing coverage cannot stop the workflow. Keep authorization requirements in the user request and skill body. Use `disallowed-tools` to remove tools from the model while the skill is active; reserve permission deny rules for blocking a tool globally.
+- Treat `allowed-tools` as Claude Code same-turn preapproval for the tools and concrete CLI prefixes a skill's workflow runs (skipping the `auto`-mode classifier and granting tool access in isolated runs), not a deny-list, authorization rule, or cross-runtime capability contract. Scope `Bash(...)` entries to concrete non-interpreter CLIs (`Bash(<program>:*)` or exact subcommands); do not list bare `Bash`, `PowerShell`, `Agent`, `Monitor`, or wildcarded interpreters, shells, or package-manager `run` commands, which `auto` mode strips. Keep authorization requirements in the user request and skill body. Use `disallowed-tools` to remove tools from the model while the skill is active; reserve permission deny rules for blocking a tool globally.
 
 ## Writing the body
 
