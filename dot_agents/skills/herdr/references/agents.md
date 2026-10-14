@@ -8,7 +8,7 @@ Inspect live agents before creating or prompting one:
 herdr agent list
 ```
 
-Names are unique only while live and may belong to a replacement after exit. Reuse a settled instance only when the user asked to continue it or this task started it, and its role/context still match; a new participant needs a new pane and agent. Name it for role plus model or target when those distinguish siblings. Treat `unknown` as unresolved. For a busy Codex next-turn message, use its [native queue](runtimes.md#codex); otherwise wait for the current turn before prompting. `agent prompt --wait` on a working agent can settle on the old turn.
+`agent list` includes hook-registered sessions started by the user and exposes `agent_session.value` for matching a native session ID. Names are unique only while live and may belong to a replacement after exit. Reuse a live instance only when the user asked to continue or message it or this task started it, and its role/context still match; a new participant needs a new pane and agent. Name it for role plus model or target when those distinguish siblings. Treat `unknown` as unresolved. `agent prompt --wait` on a `working` agent can settle on the old turn.
 
 Read-only helpers may share a checkout; serialize writers unless the user asks for isolated worktrees. Run commands that authenticate as the user through a credential-store read or a browser sign-in in one process at a time, across yourself and every helper: each such process can raise its own approval or sign-in prompt, and parallel runs stack them on the user. State both constraints in the helpers' tasks; they are not sandbox settings.
 
@@ -22,7 +22,7 @@ Use the reasoning effort the user names; otherwise decide it per participant, mo
 
 ### Launch
 
-Use a returned pane at an interactive shell prompt. Put native arguments after `--`. For Pi, take both provider and model from the same usable-list row and pass both explicitly: a default provider does not prevent model-only resolution to an unauthenticated built-in provider.
+Use a returned pane (or an idle shell pane the user designated) at an interactive shell prompt. Put native arguments after `--`. For Pi, take both provider and model from the same usable-list row and pass both explicitly: a default provider does not prevent model-only resolution to an unauthenticated built-in provider.
 
 ```bash
 herdr agent start <agent-name> --kind <kind> --pane <returned-pane-id> -- <agent-args...>
@@ -48,13 +48,14 @@ When user input is required, report the agent, pane, and exact dialog/options wh
 
 ## Complete the requested outcome
 
-Choose delivery-only or required results before submitting. Deliver to an idle agent through `agent prompt`, using one literal argument; single quotes keep backticks and `$(...)` out of the controller shell. If quoting or the [host runtime](runtimes.md) prevents inline text, place the full task in a task-owned file and send a path. Never paste another task into a busy editor; typed delivery is reserved for runtime-specific recovery.
+Choose delivery-only or required results before submitting. Pass inline prompt text as one single-quoted literal argument; if the text is multiline, contains single quotes, or contains backticks or `$(...)` (which [Claude Code's host sandbox](runtimes.md#claude-code-host) blocks even inside single quotes), write the full text to a task-owned file and send its path. Never paste another task into a busy editor. Prompt an `idle` or `done` agent with `agent prompt`. When a Claude Code, Codex, or Pi target is `working`, deliver without waiting for `idle` and omit `--wait`: use `agent prompt` for Claude Code (which queues the message) or the [Codex](runtimes.md#queue-or-steer-a-busy-agent) and [Pi](runtimes.md#pi) queue/steer paths; for any other runtime or fallback without a queue/steer path, wait for the active turn to settle before prompting.
 
 ```bash
 herdr agent prompt <agent-name> '<task>' --wait --timeout <milliseconds>
+herdr agent prompt <agent-name> '<task>'
 ```
 
-For parallel work, omit `--wait`, confirm delivery from the pane, and dispatch the batch before collecting. A synchronous prompt uses `--wait --timeout`; `--timeout` requires `--wait`, which settles on `idle`, `done`, or `blocked`, so do not narrow it to `--until done`.
+For parallel work or a `working` queue/steer delivery, omit `--wait`, confirm receipt from `visible` (or the queue command's output), and dispatch any remaining batch before collecting. A synchronous prompt to an `idle` or `done` agent uses `--wait --timeout`; `--timeout` requires `--wait`, which settles on `idle`, `done`, or `blocked`, so do not narrow it to `--until done`.
 
 ```bash
 herdr agent wait <agent-name> --timeout <milliseconds>
@@ -64,8 +65,8 @@ herdr agent read <agent-name> --source recent-unwrapped --lines 120
 
 After each wait, read this prompt's complete answer, including questions, blockers, and stated failures. Lifecycle state is neither a turn receipt nor a verdict. On timeout, `blocked`, `agent_prompt_stalled`, or unexpected output, inspect `get` and `visible` before another input. Reconcile ambiguous submission; never blindly resend or press Enter. Recover unreadable output through the root's [read/file fallback](../SKILL.md#run-and-read-a-pane-command).
 
-- Delivery-only finishes at the intended session's acceptance of the exact message, reported as delivered/queued, not processed. Finish any readiness wait and submission now; this does not cancel an earlier obligation to collect results.
-- Required results finish only after every required participant's actual response or blocker is collected and judged. After timeout, read and keep waiting finitely in this turn while the live task continues; neither timeout nor a host-cut wait establishes a stall. Reconcile state against the pane; Pi's [hook can remain working after completion](runtimes.md#pi).
+- Delivery-only finishes at the intended session's acceptance of the exact message, reported as delivered/queued, not processed. Finish any required readiness wait and submission now; this does not cancel an earlier obligation to collect results.
+- Required results finish only after every required participant's actual response or blocker to the new message is collected and judged. When a message was queued or steered into a `working` agent, loop with finite `agent wait` and `read --source recent-unwrapped` until the latest reply answers the new message; if a wait settled on the earlier turn or `visible` still shows the new message queued or running, wait again without resubmitting. After timeout, read and keep waiting finitely in this turn while the live task continues; neither timeout nor a host-cut wait establishes a stall. Reconcile state against the pane; Pi's [hook can remain working after completion](runtimes.md#pi).
 
 Herdr notifications reach the human, not this conversation. Ending the turn does not schedule collection: only a new user message resumes it, except when the host re-invokes after a background command, as Claude Code does for background Bash waits.
 

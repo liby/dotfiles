@@ -9,7 +9,6 @@ allowed-tools:
   - Bash(date:*)
   - Bash(mkdir:*)
   - Bash(mktemp:*)
-  - Agent
   - Read
   - Skill
   - Write

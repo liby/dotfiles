@@ -2,16 +2,14 @@
 description: Control Herdr, a terminal multiplexer for coding agents. Use when the user explicitly mentions Herdr or asks to use Herdr to inspect or control panes, tabs, workspaces, commands, or another agent. Also use it when a task needs a coding agent from another CLI or model vendor, such as for a cross-vendor review, consultation, or delegated work, or when the user wants to watch or take over another agent's session; Herdr runs that agent in a pane the user can see. Unless the user asks for Herdr, not for the agent's own subagents, background commands, or agent CLI runs that a script drives or that the user asks to run non-interactively. Requires a Herdr session (HERDR_ENV=1).
 allowed-tools:
   - Bash(herdr:*)
-  - Bash(pi --list-models:*)
-  - Bash(test:*)
   - Read
 license: Apache-2.0
 metadata:
     github-path: skills/herdr
-    github-pinned: v0.9.3
-    github-ref: refs/tags/v0.9.3
+    github-pinned: v0.9.5
+    github-ref: refs/tags/v0.9.5
     github-repo: https://github.com/herdrdev/herdr
-    github-tree-sha: 67042ed7910d4177a9000e0679e78b0346060927
+    github-tree-sha: 2be0d86d481d1bb29c62e11ef37b78d27d01b478
 name: herdr
 ---
 
@@ -19,11 +17,11 @@ Control the current Herdr session with the installed CLI. Pane commands drive te
 
 Load each branch before its first action, and again before acting on it whenever its text is no longer in your context, as after compaction:
 
-- Before inspecting, starting, or prompting an agent, read the [agent workflow](references/agents.md); for several participants, also read the [panel workflow](references/panels.md) before placing or dispatching the round.
+- Before inspecting, starting, or sending input to an agent, read the [agent workflow](references/agents.md); for several participants, also read the [panel workflow](references/panels.md) before placing or dispatching the round.
 - When Claude Code is the host, read its [runtime section](references/runtimes.md#claude-code-host) before the first control call. Before launching or sending input to Codex or Pi, read its section of that file.
 - Before saved-machine discovery or remote control, read the [remote-machine contract](references/remote.md).
 
-Deliver input to a Codex agent you drive by its state, even when notes or summaries from earlier in the session prescribe typing into its pane: answer a pending question card (`? N question · shift+← to answer`) inside the card when the task authorizes that answer, send input for a `working` agent on this machine through `codex queue`, and prompt an idle one with `agent prompt`. Typing into its main composer and pressing Enter instead deletes a pending card and steers the running turn.
+Deliver input to a target agent by its state and runtime, even when earlier notes or summaries prescribe waiting for `idle` or typing into its pane: for a `working` Claude Code, Codex, or Pi target, use its queue or steer path without `--wait`, and never type into a busy Codex main composer with `pane send-text`/`enter` (which deletes a pending question card and steers the turn—answer an authorized card inside it, enqueue next-turn input with `codex queue`, or steer an unblocked turn with `agent prompt`).
 
 ## Establish the boundary
 

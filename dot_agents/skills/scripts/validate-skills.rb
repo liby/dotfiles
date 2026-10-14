@@ -52,6 +52,29 @@ CLAUDE_CODE_FIELDS = Set[
   "metadata"
 ].freeze
 
+# Claude Code auto mode strips these allow rules before matching, so listing
+# them in allowed-tools grants nothing in auto mode.
+AUTO_MODE_STRIPPED_BASH_PREFIXES = [
+  "python", "python3", "python2", "node", "deno", "tsx", "ruby", "perl", "php", "lua",
+  "npx", "bunx", "npm run", "yarn run", "pnpm run", "bun run",
+  "bash", "sh", "ssh", "zsh", "fish", "eval", "exec", "env", "xargs", "sudo"
+].freeze
+
+def auto_mode_stripped_tool?(entry)
+  tool = entry.strip
+  return true if %w[Bash PowerShell Agent Monitor].include?(tool) || tool.match?(/\A(?:Agent|Monitor)\(.*\)\z/m)
+  match = tool.match(/\A(?:Bash|PowerShell)\((.*)\)\z/m)
+  return false unless match
+  rule = match[1].strip.downcase
+  return true if rule.empty? || rule.match?(/\A[\s*]+\z/)
+  AUTO_MODE_STRIPPED_BASH_PREFIXES.any? do |prefix|
+    next true if [prefix, "#{prefix}:*", "#{prefix} *", "#{prefix}*"].include?(rule)
+    next false unless rule.start_with?("#{prefix} -") && rule.end_with?("*")
+    rest = rule.delete_prefix("#{prefix} ").chop
+    !(prefix.match?(/\Apython[\d.]*\z/) && rest.match?(/\A-m\s+\w+\.[\w.]+(?:\s*:|\s+)\z/))
+  end
+end
+
 # Keep this list to CLI skills whose instructions depend on current CLI
 # behavior, and give every entry an output regex naming the depended-on flags
 # or route; an entry that only proves the command exits 0 asserts nothing.
@@ -146,7 +169,13 @@ skill_files.each do |path|
   end
   raw_tools = frontmatter["allowed-tools"]
   valid_allowed_tools = raw_tools.nil? || raw_tools.is_a?(String) || (raw_tools.is_a?(Array) && raw_tools.all? { |tool| tool.is_a?(String) })
-  errors << "#{label}: allowed-tools must be a string or an array of strings" unless valid_allowed_tools
+  if !valid_allowed_tools
+    errors << "#{label}: allowed-tools must be a string or an array of strings"
+  elsif raw_tools
+    (raw_tools.is_a?(String) ? raw_tools.scan(/(?:[^\s,(]+(?:\([^)]*\))?)+/) : raw_tools).each do |tool|
+      errors << "#{label}: allowed-tools entry #{tool.inspect} is stripped by Claude Code auto mode" if auto_mode_stripped_tool?(tool)
+    end
+  end
 
   text.scan(/\[[^\]]+\]\(([^)#][^)]+)\)/).flatten.each do |target|
     next if target.match?(/\A[a-z][a-z0-9+.-]*:/i) || target.start_with?("#")
