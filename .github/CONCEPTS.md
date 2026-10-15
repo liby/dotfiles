@@ -143,6 +143,8 @@ Oracle reads `~/.oracle/config.json`, and its `oracle bridge client` command rew
 
 [`Brewfile`](../Brewfile) installs the [agent-guard package](https://github.com/Entwining/agent-guard) from `Entwining/tap`, providing `/opt/homebrew/bin/agent-guard`. The [Claude Code settings](../.chezmoitemplates/claude/settings.json) register that executable for Bash and file tools. [Codex requirements](../.chezmoitemplates/codex/requirements.toml) keep the hook under `managed_dir`; [`guard-bash`](../dot_codex/managed-hooks/executable_guard-bash) checks the Homebrew binary and execs it with `--runtime codex`. The [Pi extension](../private_dot_pi/private_agent/extensions/agent-guard.ts) maps Pi's tool calls to guard events and invokes the same executable.
 
+The guard reports its own failures, including overrunning its internal deadline, as exit 2, which every runtime treats as a block. A guard that cannot start or a hook that outlives its timeout is up to the runtime: the Pi extension blocks any result other than a clean pass, and the Claude hooks set `onFailure: "block"` because Claude Code would otherwise run the call. Codex runs the call in those cases and has no such setting, so `guard-bash` blocks a missing binary itself and its hook timeout must stay above the guard's deadline.
+
 The package owns guard rules, parser, and tests. This repository owns [`dot_ignore`](../dot_ignore): its `/Library/` entry keeps broad searches above that tree from enumerating it.
 
 ## Shared agent instructions
