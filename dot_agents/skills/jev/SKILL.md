@@ -1,6 +1,5 @@
 ---
-description: Build Jev judges and other TypeSafe System One decisions into application code.
-disable-model-invocation: true
+description: Build Jev judges and other TypeSafe System One decisions into code, from application features to screening or evaluation scripts, and run them through the TypeSafe API. Use when the user asks for Jev or TypeSafe, or the task changes or debugs code that calls TypeSafe. Not for classifiers or judges built on other models unless the user wants Jev used or compared.
 license: MIT
 metadata:
     github-path: skills/typesafe-ai
