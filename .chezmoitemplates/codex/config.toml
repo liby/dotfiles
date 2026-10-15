@@ -114,6 +114,9 @@ ignore_default_excludes = false
 # (connector auth/webbrowser.py); re-check after CLI upgrades.
 SNOWFLAKE_AUTH_FORCE_SERVER = "true"
 
+[tui]
+status_line = ["model-with-reasoning", "current-dir", "git-branch", "thread-id"]
+
 [mcp_servers.openaiDeveloperDocs]
 enabled = true
 url = "https://developers.openai.com/mcp"
