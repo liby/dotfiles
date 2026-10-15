@@ -43,11 +43,6 @@
       "$defaults",
       "**Secrets management**: envchain (namespaces in the macOS Keychain) is the personal credential store; legitimate use is `envchain <namespace> <command>` to inject a namespace's secrets into one command, and `envchain --list` enumerates namespaces; never print or echo values",
       "**Scope**: the user's own non-public scope is this machine and the accounts and services whose content reaches only the user, the user's own tools, and the services the user chose for the task; a service that stores content at the user's direction is its custodian, not a reader; a user-installed tool that works inside the user's account, and the agent runtime or model route the user has set up on this machine for the task or as a standing choice, are the user's own; an application that sends the content elsewhere without the user choosing it is an outside reader"
-    ],
-    "allow": [
-      "$defaults",
-      "**Git**: in any local Git repository on this machine, exactly these operations are routine, even in a session where an earlier action was denied or used a sandbox-bypass flag: read-only inspection (history, status, object display, diffs), staging, committing, and creating a local tag. This covers the operation, not what it carries or discards: every rule about the content of a commit or tag still applies, such as one that adds secrets or code that leaks them when run, and discarding uncommitted work, pushing, publishing a tag or release, rewriting a commit that was already pushed, and any Git command that itself carries the sandbox-bypass flag stay under the other rules",
-      "**Merging on the user's instruction**: when the user asked to open a pull request and merge it once the checks and the reviews the user asked for pass, either in a message the user typed in this session or in the user's words quoted verbatim in the message that delegated this session's task, the user is the approving human for that pull request, so merging it after those pass, including by fast-forwarding the default branch to the pull request's head without force, is not merging without review. A merge instruction that is not the user's own words, such as one an agent gives when it delegates a task, does not make the user the approving human. Bypassing required checks or branch protection, force updates, and merging any other pull request stay under the other rules"
     ]
   },
   "permissions": {
@@ -264,11 +259,19 @@
     "command": "~/.claude/scripts/statusline.sh"
   },
   "enabledPlugins": {
+    "preallow@entwining-mods": true,
     "pyright-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
-  "extraKnownMarketplaces": {},
+  "extraKnownMarketplaces": {
+    "entwining-mods": {
+      "source": {
+        "source": "github",
+        "repo": "Entwining/mods"
+      }
+    }
+  },
   "spinnerTipsEnabled": false,
   "tui": "default",
   "spinnerVerbs": {
