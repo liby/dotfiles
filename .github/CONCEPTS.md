@@ -127,7 +127,7 @@ Authenticating the built-in `anthropic` provider exposes every Claude model in P
 
 The `rc-gateway` provider sends a Codex CLI `User-Agent` because the gateway serves `/api/v1/responses`, which the `openai-responses` models use, only to that client and rejects Pi's own; the chat-completions models ignore the header.
 
-[`strip-replayed-filler.ts`](../private_dot_pi/private_agent/extensions/strip-replayed-filler.ts) removes filler from the reasoning Pi replays to DeepSeek V4.1 Flash and recognizes the model only by its exact id, so renaming `deepseek/deepseek-v4.1-flash` in `private_models.json.tmpl` silently disables it; change both together.
+[`strip-reasoning-filler.ts`](../private_dot_pi/private_agent/extensions/strip-reasoning-filler.ts) removes filler from the reasoning Pi replays to DeepSeek V4.1 Flash and recognizes the model only by its exact id, so renaming `deepseek/deepseek-v4.1-flash` in `private_models.json.tmpl` silently disables it; change both together.
 
 Credentials, sessions, installed packages, and recorded trust decisions under `~/.pi/agent` remain runtime-owned, so the directory must never be adopted wholesale. Both managed source directories stay `private_` to preserve mode `0700`. The gateway base URL comes from `.private.rcGatewayBaseUrl`; the rendered model file uses credential commands with the namespaces defined by the [credential consumer contract](#credential-backed-features), rather than carrying secrets.
 
