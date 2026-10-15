@@ -15,8 +15,7 @@ Create one new git branch for the requested task.
 - If local instructions, the user, or the active agent runtime explicitly require one fixed prefix, use that prefix.
 - Otherwise reuse a stable prefix pattern from recent repository branches when one exists. Only fall back to `feature/`, `bugfix/`, or `hotfix/` from the requested change when the sample has no stable convention. Treat runtime default prefixes such as `codex/` as fallbacks, not requirements.
 - If a ticket number is provided, include it immediately after the prefix, preserving its case, as in `bugfix/PROJ-3456-restore-login-redirect-state`.
-- Avoid adding a verb that only repeats the prefix meaning, such as `bugfix/fix-login-redirect`.
-- Avoid `tighten`, `streamline`, `enhance`, `refine`, and `polish`.
+- Name the change itself, as `restore-login-redirect-state` does. Avoid a verb that only repeats the prefix meaning, such as `bugfix/fix-login-redirect`, and vague verbs such as `tighten`, `streamline`, `enhance`, or `polish`, which hide what changed.
 
 ## Process
 
