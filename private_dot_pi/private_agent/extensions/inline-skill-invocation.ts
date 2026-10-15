@@ -19,7 +19,7 @@ const MENTION = new RegExp(String.raw`${BOUNDARY}\/([a-z0-9][a-z0-9-]*)(?![A-Za-
 const TRAILING_FRAGMENT = new RegExp(String.raw`${BOUNDARY}\/([a-z0-9-]+)$`, "u");
 const ENDED_MENTION = new RegExp(String.raw`${BOUNDARY}\/[a-z0-9-]+[^a-z0-9-]$`, "u");
 const TOKEN_SUFFIX = /^[a-z0-9-]*/;
-const FENCE = /^\s*(?:```|~~~)/;
+const FENCE = /^\s*(`{3,}|~{3,})(.*)$/s;
 
 // getLines, getCursor, and tryTriggerAutocomplete sit on the Editor rather than the
 // EditorComponent interface the factory returns.
@@ -51,11 +51,13 @@ function inlineFragment(before: string) {
 // A mention inside a fenced code block is code, not an invocation.
 function firstInlineSkill(text: string, names: ReadonlySet<string>) {
   let offset = 0;
-  let fenced = false;
+  let fence: string | undefined;
   for (const line of text.split("\n")) {
-    if (FENCE.test(line)) {
-      fenced = !fenced;
-    } else if (!fenced) {
+    const marker = FENCE.exec(line);
+    if (marker) {
+      if (!fence) fence = marker[1];
+      else if (marker[1].startsWith(fence) && marker[2].trim() === "") fence = undefined;
+    } else if (!fence) {
       for (const match of line.matchAll(MENTION)) {
         const slash = offset + (match.index ?? 0) + match[0].indexOf("/");
         if (text.slice(0, slash).trim() === "") continue;
