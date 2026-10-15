@@ -113,7 +113,7 @@ Sign-in stores the tokens in that `config.yml` in plaintext instead of glab's de
 
 ### Pi configuration
 
-`~/.pi/agent/models.json` is fully managed, while `~/.pi/agent/settings.json` is partially managed. The [settings modifier](../private_dot_pi/private_agent/modify_private_settings.json) replaces each top-level key declared in the [settings fragment](../.chezmoitemplates/pi/settings.json), including the entire `modelThinkingLevels` map, and preserves undeclared keys. Applies intentionally overwrite UI-saved startup and per-model defaults so devices share the source configuration.
+`~/.pi/agent/models.json` and `~/.pi/agent/keybindings.json` are fully managed, while `~/.pi/agent/settings.json` is partially managed. The [settings modifier](../private_dot_pi/private_agent/modify_private_settings.json) replaces each top-level key declared in the [settings fragment](../.chezmoitemplates/pi/settings.json), including the entire `modelThinkingLevels` map, and preserves undeclared keys. Applies intentionally overwrite UI-saved startup and per-model defaults so devices share the source configuration.
 
 Temporary `/model` and `/thinking` selections remain available. After applying settings, use `/reload`, then select the model again with `/model` to activate the thinking defaults; resuming a session can restore its recorded model and thinking level. `defaultProjectTrust = "always"` intentionally lets every directory load project-local settings, resources, packages, and extensions without a trust prompt.
 
