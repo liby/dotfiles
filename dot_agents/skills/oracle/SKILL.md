@@ -1,6 +1,5 @@
 ---
-description: Consult ChatGPT Pro, Deep Research, a ChatGPT Project, or API mode through Oracle, or continue an Oracle session.
-disable-model-invocation: true
+description: 'Use Oracle only when the user explicitly requests Oracle, ChatGPT Pro, ChatGPT Deep Research, a ChatGPT Project consultation, continuation of an Oracle session, or Oracle API mode. Not for requests limited to other consultants, ordinary review or research, or inspection of existing ChatGPT content.'
 allowed-tools:
     - Bash(oracle:*)
     - Read
