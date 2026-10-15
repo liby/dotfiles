@@ -180,7 +180,8 @@
           {
             "type": "command",
             "command": "/opt/homebrew/bin/agent-guard --runtime claude",
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       },
@@ -190,7 +191,8 @@
           {
             "type": "command",
             "command": "/opt/homebrew/bin/agent-guard --runtime claude",
-            "timeout": 10
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       },
@@ -265,6 +267,7 @@
   },
   "extraKnownMarketplaces": {
     "entwining-mods": {
+      "autoUpdate": true,
       "source": {
         "source": "github",
         "repo": "Entwining/mods"
