@@ -6,8 +6,6 @@ check_for_update_on_startup = false
 cli_auth_credentials_store = "keyring"
 default_permissions = "development"
 mcp_oauth_credentials_store = "keyring"
-# Raised from the 272K default to compact less often, accepting that quality and subscription usage past 272K are undocumented; lower it if usage limits drain faster rather than approaching the 872K maximum. Codex compacts at 90% of this window, or sooner if `model_auto_compact_token_limit` is lower, so tune this key rather than that limit.
-model_context_window = 400000
 model_reasoning_summary = "concise"
 project_doc_fallback_filenames = [".claude/CLAUDE.md", "CLAUDE.md"]
 suppress_unstable_features_warning = true
@@ -58,6 +56,8 @@ skill = "#ad7bf9"
 enabled = false
 
 [features]
+# Summarizes in the background before the context limit and swaps the summary in at the next turn boundary, so compaction no longer blocks a turn but happens earlier and can bill discarded attempts.
+async_compaction = true
 # A shared app-server daemon runs hooks and tool commands with the environment of the terminal that started it, which sends Herdr session reports and HERDR_* to the wrong pane. Remove once Codex gives them the attached client's environment: https://github.com/openai/codex/issues/48500
 daemon_auto_start = false
 memories = true
@@ -115,6 +115,7 @@ ignore_default_excludes = false
 SNOWFLAKE_AUTH_FORCE_SERVER = "true"
 
 [tui]
+copy_on_select = "never"
 status_line = ["model-with-reasoning", "current-dir", "git-branch", "thread-id"]
 
 [mcp_servers.openaiDeveloperDocs]

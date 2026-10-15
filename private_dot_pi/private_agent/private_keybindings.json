@@ -1,0 +1,4 @@
+{
+  "$schema": "https://pi.dev/schemas/keybindings.schema.json",
+  "app.message.copy": ["ctrl+x", "super+c"]
+}
