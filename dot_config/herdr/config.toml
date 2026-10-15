@@ -22,6 +22,9 @@ copy_on_select = false
 pane_scrollbars = false
 window_title = "{terminal_title}"
 
+[ui.sidebar.agents]
+rows = [["state_icon", "workspace", "agent", "pane"], ["terminal_title_stripped"]]
+
 [ui.sound]
 enabled = false
 
@@ -29,4 +32,4 @@ enabled = false
 delivery = "terminal"
 
 [worktrees]
-directory = "~/.config/herdr/worktrees"
+directory = "~/Code/worktrees"
