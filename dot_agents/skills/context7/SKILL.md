@@ -14,6 +14,6 @@ Run only those two subcommands; never run `ctx7 login`, `logout`, `setup`, `remo
 
 Resolve first unless the request already carries a full `/org/project` ID. Pick the result whose name and description match the request, preferring higher source reputation, snippet count, and benchmark score; use a `/org/project/version` ID when the request names a version, and retry with the library's punctuated name when the first results look wrong. If nothing credible matches, say so rather than querying the wrong library.
 
-Query one concept per `docs` call; combined queries return shallow results for each. Allow at most three `ctx7` commands per question, counting a redirect retry. A redirected library prints `New ID:`; rerun `docs` once with that ID. A no-results or empty-docs warning exits 0 and means Context7 has nothing — say so and fall back to web search if needed, never passing off training data as the lookup. On a quota or auth error, ask the user to run `envchain --set context7 CONTEXT7_API_KEY`.
+Query one concept per `docs` call; combined queries return shallow results for each. A redirected library prints `New ID:`; rerun `docs` once with that ID. A no-results or empty-docs warning exits 0 and means Context7 has nothing — say so and fall back to web search if needed, never passing off training data as the lookup. On a quota or auth error, ask the user to run `envchain --set context7 CONTEXT7_API_KEY`.
 
 Do not put secrets, credentials, personal data, or proprietary code in a query argument; it is sent to Context7.
