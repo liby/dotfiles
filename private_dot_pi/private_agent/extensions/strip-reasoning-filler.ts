@@ -77,7 +77,7 @@ const hasText = (detail: unknown): detail is { text: string } => isRecord(detail
 const reasoningDetails = (message: unknown): unknown[] =>
   isRecord(message) && Array.isArray(message.reasoning_details) ? message.reasoning_details : [];
 
-export default function stripReplayedFiller(pi: ExtensionAPI) {
+export default function stripReasoningFiller(pi: ExtensionAPI) {
   // The request Pi has built already applies its replay rules: only the same model's
   // reasoning, without errored or aborted turns, one signed thinking block per message.
   pi.on("before_provider_request", (event, ctx) => {
