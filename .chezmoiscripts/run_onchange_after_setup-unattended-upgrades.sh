@@ -53,6 +53,19 @@ pi update || status=$?
 pi update --extensions || status=$?
 "$HOME/.cargo/bin/rustup" update || status=$?
 brew cleanup || status=$?
+# Each clear makes later installs re-download what it removed, so the block runs about once a week.
+# The stamp records the attempt rather than success: retrying after one failed step would clear
+# the other caches again.
+cache_stamp="$HOME/Library/Application Support/com.liby.unattended-upgrades/last-cache-clean"
+if [ ! -f "$cache_stamp" ] || [ -n "$(/usr/bin/find "$cache_stamp" -mtime +6)" ]; then
+  "$PROTO_HOME/shims/pnpm" cache prune || status=$?
+  # launchd does not load dot_zshenv, whose PNPM_HOME locates the Code volume's store; without it
+  # pnpm prunes the default ~/Library/pnpm/store instead.
+  PNPM_HOME="$HOME/Code/.pnpm" "$PROTO_HOME/shims/pnpm" store prune || status=$?
+  "$PROTO_HOME/shims/npm" cache clean --force || status=$?
+  /opt/homebrew/bin/uv cache prune || status=$?
+  /usr/bin/touch "$cache_stamp" || status=$?
+fi
 exit "$status"
 HELPER
 chmod +x "$upgrades_helper"
