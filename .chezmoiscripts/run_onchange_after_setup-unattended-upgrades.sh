@@ -50,6 +50,7 @@ if [ "$installed" != "$agent_version" ] || [ "$installed" != "$keyboxd_version" 
   /bin/launchctl kickstart "gui/$UID/org.gnupg.keyboxd" || status=$?
 fi
 pi update || status=$?
+pi update --extensions || status=$?
 "$HOME/.cargo/bin/rustup" update || status=$?
 brew cleanup || status=$?
 exit "$status"

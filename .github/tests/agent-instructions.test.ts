@@ -63,7 +63,7 @@ const ROUTE_EXPECTATIONS: Record<string, string[]> = {
     "`private_dot_pi/private_agent/private_AGENTS.md.tmpl`",
     "(.github/CONCEPTS.md#shared-agent-instructions)",
   ],
-  Pi: ["`.chezmoitemplates/pi/**`", "`private_dot_pi/**`", "`~/.pi/agent/**`", "(.github/CONCEPTS.md#pi-configuration)"],
+  Pi: ["`.chezmoitemplates/pi/**`", "`private_dot_pi/**`", "`.chezmoiscripts/run_onchange_after_install-pi-extensions.sh`", "`~/.pi/agent/**`", "(.github/CONCEPTS.md#pi-configuration)"],
   Oracle: ["`private_dot_oracle/**`", "`~/.oracle/config.json`", "(.github/CONCEPTS.md#oracle-configuration)"],
   "Herdr integrations": [
     "`.chezmoiscripts/run_onchange_after_install-herdr-integrations.sh.tmpl`",
@@ -71,7 +71,6 @@ const ROUTE_EXPECTATIONS: Record<string, string[]> = {
   ],
   "Agent guard": [
     "`dot_codex/managed-hooks/executable_guard-bash`",
-    "`private_dot_pi/private_agent/extensions/agent-guard.ts`",
     "`dot_ignore`",
     "`Brewfile`",
     "`.chezmoitemplates/claude/settings.json`",
