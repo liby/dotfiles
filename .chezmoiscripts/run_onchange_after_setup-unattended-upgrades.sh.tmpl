@@ -1,0 +1,24 @@
+#!/bin/zsh
+set -euo pipefail
+
+[[ "$OSTYPE" == darwin* ]] || exit 0
+
+# helper hash: {{ include "private_Library/private_Application Support/com.liby.unattended-upgrades/executable_unattended-upgrades" | sha256sum }}
+# plist hash: {{ includeTemplate "private_Library/private_LaunchAgents/com.liby.unattended-upgrades.plist.tmpl" . | sha256sum }}
+
+upgrades_service="gui/$UID/com.liby.unattended-upgrades"
+upgrades_plist="$HOME/Library/LaunchAgents/com.liby.unattended-upgrades.plist"
+
+# launchd creates the log file, but a fresh account may lack its parent directory.
+mkdir -p "$HOME/Library/Logs"
+
+if launchctl print "$upgrades_service" >/dev/null 2>&1; then
+  launchctl bootout "$upgrades_service"
+fi
+launchctl bootstrap "gui/$UID" "$upgrades_plist"
+
+# An on-demand-only gui domain can accept bootstrap without loading the job.
+launchctl print "$upgrades_service" >/dev/null 2>&1 || {
+  print -u2 "Unattended upgrades were written to $upgrades_plist but launchd did not load it"
+  exit 1
+}

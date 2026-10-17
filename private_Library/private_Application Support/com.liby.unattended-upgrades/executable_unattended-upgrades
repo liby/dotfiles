@@ -1,0 +1,45 @@
+#!/bin/sh
+export PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
+export PROTO_HOME="$HOME/.proto"
+export PATH="$HOME/.local/bin:$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
+
+status=0
+date
+brew update || status=$?
+brew upgrade --no-ask || status=$?
+# Approval of the CLI does not cover its helper executables or carry over on upgrade.
+if [ -d /opt/homebrew/Caskroom/codex ]; then
+  xattr -dr com.apple.quarantine /opt/homebrew/Caskroom/codex
+fi || status=$?
+# gpg-agent and keyboxd keep the pre-upgrade binary and libraries mapped, and
+# no-autostart stops clients from starting replacements, so restart them here;
+# the chezmoi GPG script only reruns on a later apply. Check both daemons, or a
+# keyboxd left down by a partial restart is skipped on the next run; skip only
+# when both already match, so an unrelated upgrade does not clear the PIN cache.
+installed=$(/opt/homebrew/bin/gpg --version 2>/dev/null | /usr/bin/awk 'NR == 1 { print $NF }')
+agent_version=$(/opt/homebrew/bin/gpg-connect-agent --no-autostart 'getinfo version' /bye 2>/dev/null | /usr/bin/awk '$1 == "D" { print $2; exit }')
+keyboxd_version=$(/opt/homebrew/bin/gpg-connect-agent --keyboxd --no-autostart 'getinfo version' /bye 2>/dev/null | /usr/bin/awk '$1 == "D" { print $2; exit }')
+if [ "$installed" != "$agent_version" ] || [ "$installed" != "$keyboxd_version" ]; then
+  /opt/homebrew/bin/gpgconf --kill gpg-agent || status=$?
+  /opt/homebrew/bin/gpgconf --kill keyboxd || status=$?
+  /bin/launchctl kickstart "gui/$UID/org.gnupg.gpg-agent" || status=$?
+  /bin/launchctl kickstart "gui/$UID/org.gnupg.keyboxd" || status=$?
+fi
+pi update || status=$?
+pi update --extensions || status=$?
+"$HOME/.cargo/bin/rustup" update || status=$?
+brew cleanup || status=$?
+# Each clear makes later installs re-download what it removed, so the block runs about once a week.
+# The stamp records the attempt rather than success: retrying after one failed step would clear
+# the other caches again.
+cache_stamp="$HOME/Library/Application Support/com.liby.unattended-upgrades/last-cache-clean"
+if [ ! -f "$cache_stamp" ] || [ -n "$(/usr/bin/find "$cache_stamp" -mtime +6)" ]; then
+  "$PROTO_HOME/shims/pnpm" cache prune || status=$?
+  # launchd does not load dot_zshenv, whose PNPM_HOME locates the Code volume's store; without it
+  # pnpm prunes the default ~/Library/pnpm/store instead.
+  PNPM_HOME="$HOME/Code/.pnpm" "$PROTO_HOME/shims/pnpm" store prune || status=$?
+  "$PROTO_HOME/shims/npm" cache clean --force || status=$?
+  /opt/homebrew/bin/uv cache prune || status=$?
+  /usr/bin/touch "$cache_stamp" || status=$?
+fi
+exit "$status"

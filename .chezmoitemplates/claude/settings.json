@@ -126,6 +126,7 @@
         "~/.proto",
         "~/.rustup",
         "~/.snowflake/logs",
+        "~/Code/.mbx",
         "~/Code/.pnpm",
         "~/Code/worktrees",
         "~/Library/Caches"
@@ -157,7 +158,9 @@
         "*.githubusercontent.com",
         "cli.inngest.com",
         "nodejs.org",
-        "registry.npmjs.org"
+        "registry.npmjs.org",
+        "pypi.org",
+        "files.pythonhosted.org"
       ],
       "allowLocalBinding": true,
       "allowMachLookup": [
