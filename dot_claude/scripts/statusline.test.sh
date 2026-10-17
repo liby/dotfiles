@@ -5,51 +5,12 @@ SOURCE="$(cd "$(dirname "$0")" && pwd)/executable_statusline.sh"
 fixture=$(mktemp -d)
 trap 'rm -rf "$fixture"' EXIT
 
-# Exercise the real refresh function without loading the credential reader or
-# statusline startup. Only the token provider and HTTP client are fixtures.
-awk '/^(acquire_lock|refresh_usage_cache)\(\) \{/ { active = 1 } active { print } active && /^}/ { active = 0 }' \
-  "$SOURCE" > "$fixture/refresh.sh"
-source "$fixture/refresh.sh"
-
-cache_dir="$fixture/cache"
-mkdir "$cache_dir"
-lock_dir="$cache_dir/lock"
-usage_file="$cache_dir/usage.json"
-retry_file="$cache_dir/retry"
-error_file="$cache_dir/error.json"
-processes_dir="$cache_dir/processes"
-claude_version=fixture
-
-get_oauth_token() { printf 'SYNTHETIC_AUDIT_SENTINEL'; }
-read_usage_state() { needs_refresh=true; }
-curl() {
-  local output=''
-  printf '%s\n' "$@" > "$fixture/argv"
-  while (( $# )); do
-    case "$1" in
-      -o) output=$2; shift ;;
-    esac
-    shift
-  done
-  cat > "$fixture/headers"
-  printf '{"five_hour":{"utilization":12}}' > "$output"
-  printf '200'
-}
-
-refresh_usage_cache
-if grep -q 'SYNTHETIC_AUDIT_SENTINEL' "$fixture/argv"; then exit 1; fi
-grep -qx '@-' "$fixture/argv"
-[ "$(cat "$fixture/headers")" = 'Authorization: Bearer SYNTHETIC_AUDIT_SENTINEL' ]
-jq -e '.five_hour.utilization == 12' "$usage_file" >/dev/null
-[ ! -e "$lock_dir" ]
-printf 'statusline credential transport: passed\n'
-
-# Rate-limit sharing runs the whole script. A fresh usage.json keeps the fetch
-# off, and the stubs make any attempt fail and leave a mark instead of
-# reaching the real Keychain or endpoint. /usr/bin comes next so the merge runs
-# on macOS's own jq 1.7, the oldest one the script meets when Claude Code
-# starts without Homebrew on PATH. The date stub moves a tick's clock to $at,
-# and the ps stub starts its Claude Code process $age seconds (default 5) earlier.
+# Every section runs the whole script. The stubs make any fetch fail and leave
+# a mark instead of reaching the real Keychain or endpoint. /usr/bin comes next
+# so the merge runs on macOS's own jq 1.7, the oldest one the script meets when
+# Claude Code starts without Homebrew on PATH. The date stub moves a tick's
+# clock to $at, and the ps stub starts its Claude Code process $age seconds
+# (default 5) earlier.
 home="$fixture/home"
 cache="$home/.cache/claude-statusline"
 stubs="$fixture/stubs"
@@ -67,6 +28,33 @@ exec /bin/date -j -r $(( ${TEST_NOW:-$(/bin/date +%s)} - ${TEST_PROCESS_AGE:-5} 
 EOF
 chmod +x "$stubs/curl" "$stubs/security" "$stubs/date" "$stubs/ps"
 
+# The OAuth token reaches curl on stdin, never in its arguments. The env token
+# keeps the Keychain unread, the empty cache makes the tick fetch, and a curl
+# ahead of the failing stub records the request and answers it.
+fetch="$fixture/fetch"
+mkdir "$fetch"
+cat > "$fetch/curl" <<EOF
+#!/bin/sh
+printf '%s\n' "\$@" > "$fixture/argv"
+cat > "$fixture/headers"
+while [ \$# -gt 0 ]; do
+  [ "\$1" = -o ] && printf '{"five_hour":{"utilization":12}}' > "\$2"
+  shift
+done
+printf 200
+EOF
+chmod +x "$fetch/curl"
+printf '{"cwd":"%s","session_id":"s","version":"test"}' "$fixture" |
+  env HOME="$home" XDG_CACHE_HOME="$home/.cache" CLAUDE_CODE_OAUTH_TOKEN=SYNTHETIC_AUDIT_SENTINEL \
+    PATH="$fetch:$stubs:/usr/bin:$PATH" /bin/bash "$SOURCE" > /dev/null
+if grep -q 'SYNTHETIC_AUDIT_SENTINEL' "$fixture/argv"; then exit 1; fi
+grep -qx '@-' "$fixture/argv"
+[ "$(cat "$fixture/headers")" = 'Authorization: Bearer SYNTHETIC_AUDIT_SENTINEL' ]
+jq -e '.five_hour.utilization == 12' "$cache/usage.json" >/dev/null
+[ ! -e "$cache/refresh.lock" ]
+printf 'statusline credential transport: passed\n'
+
+# Rate-limit sharing: a fresh usage.json keeps the fetch off
 now=$(date +%s)
 reset=$(( now + 3 * 3600 ))
 reset_iso=$(date -u -r "$reset" +%Y-%m-%dT%H:%M:%S)

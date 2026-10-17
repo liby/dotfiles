@@ -121,7 +121,6 @@
         "~/.local/bin",
         "~/.local/share/uv",
         "~/.npm",
-        "~/.oracle",
         "~/.pi",
         "~/.pnpm-store",
         "~/.proto",

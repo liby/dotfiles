@@ -30,6 +30,8 @@ brew "gh"
 brew "git"
 # Git extension for versioning large files
 brew "git-lfs"
+# Audit git repos for secrets
+brew "gitleaks"
 # GitLab command-line tool
 brew "glab"
 # GNU Privacy Guard (OpenPGP)
@@ -38,6 +40,8 @@ brew "gnupg"
 brew "herdr"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
+# Fast, async, resource-friendly link checker
+brew "lychee"
 # Mac App Store command-line interface
 brew "mas"
 # Bundle prompts + files for second-model review
