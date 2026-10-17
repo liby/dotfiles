@@ -180,7 +180,7 @@
           {
             "type": "command",
             "command": "/opt/homebrew/bin/agent-guard --runtime claude",
-            "timeout": 10,
+            "timeout": 5,
             "onFailure": "block"
           }
         ]
@@ -191,7 +191,7 @@
           {
             "type": "command",
             "command": "/opt/homebrew/bin/agent-guard --runtime claude",
-            "timeout": 10,
+            "timeout": 5,
             "onFailure": "block"
           }
         ]
