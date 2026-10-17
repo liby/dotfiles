@@ -25,7 +25,7 @@
       "description": "Update standalone tools pinned in GitHub Actions workflows and the dev-tools installer",
       "managerFilePatterns": [
         "/^\\.github\\/workflows\\/.*\\.ya?ml$/",
-        "/^\\.chezmoiscripts\\/run_onchange_after_reconcile-dev-tools\\.sh\\.tmpl$/"
+        "/^\\.github\\/dev-tools\\/install-mbx\\.sh$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\S+_VERSION:\\s*(?<currentValue>\\S+)",
@@ -52,9 +52,8 @@
       "minimumReleaseAge": "3 days"
     },
     {
-      "description": "Stable Cargo has no release-age filter, so this rule is the only window for mbx, which wraps local Cargo builds. Cargo versioning reads the bare pin as a caret range that already covers every compatible release, so it would never propose one.",
-      "matchDatasources": ["crate"],
-      "versioning": "semver",
+      "description": "Keep mbx release binaries behind the same window as the other background tools.",
+      "matchPackageNames": ["jdx/mr-boxington"],
       "minimumReleaseAge": "3 days"
     },
     {

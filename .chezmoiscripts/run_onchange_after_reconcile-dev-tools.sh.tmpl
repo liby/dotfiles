@@ -4,6 +4,7 @@ set -euo pipefail
 [[ "$OSTYPE" == darwin* ]] || exit 0
 
 # prototools hash: {{ include "dot_proto/dot_prototools" | sha256sum }}
+# mbx installer hash: {{ include ".github/dev-tools/install-mbx.sh" | sha256sum }}
 {{- $manifest := include ".github/dev-tools/package.json" | fromJson -}}
 {{- $tools := index $manifest "devDependencies" }}
 
@@ -12,7 +13,7 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # Chezmoi scripts do not load the interactive shell configuration.
 export PROTO_HOME="$HOME/.proto"
 export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
-export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$HOME/.cargo/bin:$PATH"
+export PATH="$HOME/.local/bin:$PROTO_HOME/shims:$PROTO_HOME/bin:$HOME/.cargo/bin:$PATH"
 npm_prefix="$NPM_CONFIG_PREFIX"
 
 # Tool declarations live in `~/.proto/.prototools`. The default `upwards` config mode walks up
@@ -66,10 +67,8 @@ if [[ "$current_pyright" != "$pyright_version" ]]; then
     "$pyright_requirement"
 fi
 
-# renovate: datasource=crate depName=mbx
-mbx_version=1.23.0
-# Stable Cargo has no release-age filter; --locked at least pins the release's own dependency
-# graph. Cargo skips a version that is already installed, so unlike the tools above this needs
-# no version check.
-cargo install --locked --version "$mbx_version" mbx
+sh "{{ .chezmoi.sourceDir }}/.github/dev-tools/install-mbx.sh" "$HOME/.local/bin"
+# The store shares the Code volume with the checkouts, so mbx adopts an existing `target/` by
+# rename and restores outputs as APFS clones. `settings set` keeps the file's other keys.
+mbx settings set cache_dir "$HOME/Code/.mbx"
 mbx setup --yes

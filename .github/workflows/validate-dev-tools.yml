@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   resolve:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     timeout-minutes: 10
     steps:
       - name: Check out repository
@@ -49,7 +49,7 @@ jobs:
             --python "$RUNNER_TEMP/dev-tools-venv" \
             --config-file dot_config/uv/uv.toml \
             --requirement .github/dev-tools/requirements.txt
-      - name: Install Cargo tools
+      - name: Install mbx release
         run: |
-          mbx_version="$(sed -n 's/^mbx_version=//p' .chezmoiscripts/run_onchange_after_reconcile-dev-tools.sh.tmpl)"
-          cargo install --locked --version "$mbx_version" --root "$RUNNER_TEMP/cargo-tools" mbx
+          sh .github/dev-tools/install-mbx.sh "$RUNNER_TEMP/mbx-bin"
+          "$RUNNER_TEMP/mbx-bin/mbx" --version

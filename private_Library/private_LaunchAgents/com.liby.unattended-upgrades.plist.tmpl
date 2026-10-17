@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.liby.unattended-upgrades</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{ .chezmoi.homeDir }}/Library/Application Support/com.liby.unattended-upgrades/unattended-upgrades</string>
+    </array>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+    <key>LowPriorityBackgroundIO</key>
+    <true/>
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Hour</key>
+            <integer>2</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>8</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>14</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Hour</key>
+            <integer>20</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/com.liby.unattended-upgrades.log</string>
+    <key>StandardErrorPath</key>
+    <string>{{ .chezmoi.homeDir }}/Library/Logs/com.liby.unattended-upgrades.log</string>
+</dict>
+</plist>

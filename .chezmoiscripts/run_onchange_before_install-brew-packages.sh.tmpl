@@ -27,7 +27,8 @@ if [[ ! -f "$brewfile" ]]; then
   exit 1
 fi
 
-# mas-cli requires en_US locale to search the App Store
+# mas derives its catalog region from macOS, which can differ from the signed-in US App Store.
+# Keep that catalog on the US store only while installing the Brewfile's apps.
 # https://github.com/mas-cli/mas/blob/ed676787f0a0a26e23a10548eb841bc15411fa52/Sources/mas/Controllers/ITunesSearchAppStoreSearcher.swift#L18-L23
 current_locale=$(defaults read NSGlobalDomain AppleLocale 2>/dev/null || true)
 restore_locale() {
