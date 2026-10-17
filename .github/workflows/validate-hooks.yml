@@ -8,8 +8,7 @@ on:
       - ".chezmoitemplates/codex/requirements.toml"
       - ".github/workflows/validate-hooks.yml"
       - "dot_claude/hooks/**"
-      - "dot_claude/scripts/executable_statusline.sh"
-      - "dot_claude/scripts/statusline.test.sh"
+      - "dot_claude/scripts/**"
       - "dot_codex/managed-hooks/**"
       - "dot_local/share/claude-launcher/**"
       - "dot_zshenv"
@@ -35,6 +34,10 @@ jobs:
           persist-credentials: false
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      # The Brewfile installs the scanner the hook runs, so the test takes it
+      # from the same channel rather than a pinned copy machines never run.
+      - name: Install the secret scanner
+        run: brew install gitleaks
       - name: Test Claude launcher
         run: zsh dot_local/share/claude-launcher/bin/claude.test.zsh
       - name: Test agent hooks

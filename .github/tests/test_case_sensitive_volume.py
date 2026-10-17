@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from contextlib import ExitStack
 from pathlib import Path
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 SCRIPT = (
     Path(__file__).parents[2]
@@ -138,7 +138,7 @@ class ProvisionTest(unittest.TestCase):
 
     def test_fresh_create_installs_fstab_before_plain_mount(self):
         with ExitStack() as stack:
-            find = stack.enter_context(patch.object(
+            stack.enter_context(patch.object(
                 case_volume, "find_volume",
                 side_effect=[("disk3", None), ("disk3", "disk3s7")]))
             stack.enter_context(patch.object(
@@ -150,15 +150,17 @@ class ProvisionTest(unittest.TestCase):
             stack.enter_context(patch.object(case_volume, "verify_case_sensitive"))
             stack.enter_context(patch.object(case_volume, "print", create=True))
             run = stack.enter_context(patch.object(case_volume.subprocess, "run"))
+            steps = Mock()
+            steps.attach_mock(install, "install_fstab")
+            steps.attach_mock(run, "run")
             case_volume.main()
 
-        self.assertEqual(find.call_count, 2)
-        install.assert_called_once_with("UUID=11111111-1111-1111-1111-111111111111")
-        self.assertEqual(run.call_args_list, [
-            call([case_volume.SUDO, case_volume.DISKUTIL, "apfs", "addVolume",
-                  "disk3", "Case-sensitive APFS", "Code", "-nomount"], check=True),
-            call([case_volume.SUDO, case_volume.DISKUTIL, "mount", "disk3s7"],
-                 check=True),
+        self.assertEqual(steps.mock_calls, [
+            call.run([case_volume.SUDO, case_volume.DISKUTIL, "apfs", "addVolume",
+                      "disk3", "Case-sensitive APFS", "Code", "-nomount"], check=True),
+            call.install_fstab("UUID=11111111-1111-1111-1111-111111111111"),
+            call.run([case_volume.SUDO, case_volume.DISKUTIL, "mount", "disk3s7"],
+                     check=True),
         ])
 
     def test_correct_existing_state_is_not_mutated(self):

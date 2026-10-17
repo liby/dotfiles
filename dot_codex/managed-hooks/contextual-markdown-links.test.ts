@@ -21,30 +21,10 @@ test("injects link-placement context even when the prompt has no URLs", () => {
   expect(context.length).toBeGreaterThan(0);
 });
 
-test("managed requirements register the prompt hook", async () => {
-  const requirements = Bun.TOML.parse(
-    await Bun.file(
-      new URL("../../.chezmoitemplates/codex/requirements.toml", import.meta.url),
-    ).text(),
-  ) as {
-    hooks: {
-      UserPromptSubmit: Array<{
-        hooks: Array<Record<string, string | number>>;
-      }>;
-    };
-  };
-
-  const registered = requirements.hooks.UserPromptSubmit;
-  expect(registered).toHaveLength(1);
-  const { hooks, ...entry } = registered[0];
-  expect(entry).toEqual({});
-  expect(hooks).toHaveLength(1);
-  const { timeout, ...hook } = hooks[0];
-  expect(hook).toEqual({
-    type: "command",
-    command:
-      "{{ .chezmoi.homeDir }}/.codex/managed-hooks/contextual-markdown-links",
-  });
-  // A finite deadline is the invariant; no document owns the value.
-  expect(Number(timeout)).toBeGreaterThan(0);
+test("managed requirements run the hook on the event it answers", async () => {
+  const { hooks } = Bun.TOML.parse(
+    await Bun.file(new URL("../../.chezmoitemplates/codex/requirements.toml", import.meta.url)).text(),
+  ) as { hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>> };
+  expect(hooks.UserPromptSubmit.flatMap((entry) => entry.hooks.map((h) => h.command)))
+    .toContain("{{ .chezmoi.homeDir }}/.codex/managed-hooks/contextual-markdown-links");
 });

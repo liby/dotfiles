@@ -2,11 +2,10 @@
 # Registration test for the Claude hooks subtree in
 # .chezmoitemplates/claude/settings.json.
 # The script tests in this directory prove hook behavior; this test proves the
-# managed settings still register each hook with the intended matcher and
-# deployed command. The modify template replaces the whole top-level
-# "hooks" key with the template value, so the template subtree is the deployed
-# end state. Template directives only appear outside the hooks subtree, so the
-# test blanks {{...}} spans and parses the rest as JSON.
+# managed settings still run each hook on the events and tools it handles. The modify
+# template replaces the whole top-level "hooks" key with the template value, so
+# the template subtree is the deployed end state. The test blanks {{...}} spans
+# and parses the rest as JSON.
 # Run: bash settings-registration.test.sh
 # CLAUDE_SETTINGS_TEMPLATE overrides the template path for fixture tests.
 
@@ -39,65 +38,62 @@ if [ -z "$HOOKS_JSON" ] || [ "$HOOKS_JSON" = "null" ]; then
   exit 1
 fi
 
-expect_registration() {
-  local event="$1" matcher="$2" command="$3" ok
-  ok=$(jq --arg e "$event" --arg m "$matcher" --arg c "$command" '
-    [.[$e][]? | select((.matcher // "") == $m) | .hooks[]?
-     | select(.command == $c and .type == "command")]
-    | length == 1' <<<"$HOOKS_JSON")
-  check "$event matcher=${matcher:-<none>} registers $command as type=command" "$ok"
+# expect_runs <event> <tool|""> <command>: an entry under <event> whose matcher
+# selects <tool> runs <command>. Claude Code reads a matcher as a tool-name
+# pattern and an empty or "*" matcher as every tool, so this checks coverage
+# rather than how the matcher is spelled.
+expect_runs() {
+  local event="$1" tool="$2" command="$3" ok
+  ok=$(jq --arg e "$event" --arg t "$tool" --arg c "$command" '
+    [.[$e][]? | (.matcher // "") as $m
+     | select($t == "" or $m == "" or $m == "*" or ($t | test("^(" + $m + ")$")))
+     | .hooks[]? | select(.command == $c and .type == "command")]
+    | length >= 1' <<<"$HOOKS_JSON")
+  check "$event${tool:+ $tool} runs $command" "$ok"
 }
 
 section() {
   printf '\n== %s ==\n' "$1"
 }
 
-# Mirror the installer's exact command, home-dir span blanked as above, so
-# `herdr integration install claude` finds this entry instead of adding a second.
-HERDR_HOOK="bash 'BLANKED/.claude/hooks/herdr-agent-state.sh' session"
 AGENT_GUARD="/opt/homebrew/bin/agent-guard --runtime claude"
+# herdr's installer recognizes only its own command; see the SessionStart note
+# in .claude/rules/claude-code-settings.md.
+HERDR_HOOK="bash 'BLANKED/.claude/hooks/herdr-agent-state.sh' session"
 
-section "registered end state"
-expect_registration PreToolUse "Bash" "$AGENT_GUARD"
-expect_registration PreToolUse "Read|Edit|Write|Grep" "$AGENT_GUARD"
-expect_registration PreToolUse "Edit|Write" "~/.claude/hooks/pre-edit-warn-chezmoi.sh"
-expect_registration PostToolUse "Bash" "~/.claude/hooks/post-bash-scan-secrets.sh"
-expect_registration PostToolUseFailure "Bash" "~/.claude/hooks/post-bash-scan-secrets.sh"
-expect_registration PreCompact "" "~/.claude/hooks/pre-compact-instructions.sh"
-expect_registration SessionStart "^(startup|resume|clear|compact|fork)$" "$HERDR_HOOK"
+section "required coverage"
+# The guard covers Bash and the file tools; see CONCEPTS.md#agent-guard.
+for tool in Bash Read Edit Write Grep; do expect_runs PreToolUse "$tool" "$AGENT_GUARD"; done
+for tool in Edit Write; do expect_runs PreToolUse "$tool" "~/.claude/hooks/pre-edit-warn-chezmoi.sh"; done
+# A failed command's output reaches the model too, so the scan runs on both events.
+expect_runs PostToolUse Bash "~/.claude/hooks/post-bash-scan-secrets.sh"
+expect_runs PostToolUseFailure Bash "~/.claude/hooks/post-bash-scan-secrets.sh"
+expect_runs PreCompact "" "~/.claude/hooks/pre-compact-instructions.sh"
+expect_runs SessionStart "" "$HERDR_HOOK"
 check "event/matcher/command tuples are unique" "$(jq '
   [to_entries[] | .key as $event | .value[] | (.matcher // "") as $matcher
    | .hooks[] | [$event, $matcher, .command]]
   | length == (unique | length)' <<<"$HOOKS_JSON")"
 
-check "Bash has one guard" "$(jq '
-  [.PreToolUse[] | select(.matcher == "Bash") | .hooks[]] | length == 1' <<<"$HOOKS_JSON")"
 check "each agent guard has a finite deadline and blocks when its hook fails" "$(jq --arg c "$AGENT_GUARD" '
   [.PreToolUse[].hooks[] | select(.command == $c)]
   | all(.timeout | type == "number" and . > 0) and all(.onFailure == "block")' <<<"$HOOKS_JSON")"
 
 section "registered command -> source script"
+# Homebrew owns the guard and herdr's installer owns its hook; every other
+# command deploys from this directory.
 while IFS= read -r cmd; do
-  # herdr owns the hook script it registers, so no executable_ source deploys it.
-  [ "$cmd" = "$HERDR_HOOK" ] && continue
-  if [ "$cmd" = "$AGENT_GUARD" ]; then
-    # Homebrew owns this executable outside the chezmoi source tree.
-    continue
-  fi
-  base="${cmd##*/}"
+  [ "$cmd" = "$AGENT_GUARD" ] || [ "$cmd" = "$HERDR_HOOK" ] && continue
+  base="${cmd#"~/.claude/hooks/"}"
   # Only an executable_ source deploys as an executable hook; a plain source
   # deploys 0644 and a *.test.* name is chezmoi-ignored, so both would register
   # a command that cannot run.
   src="$HERE/executable_$base"
-  check "executable source exists for $cmd" "$([ -r "$src" ] && echo true || echo false)"
-  case "$cmd" in
-    "~/.claude/hooks/"*) : ;;
-    *) check "command path $cmd is under ~/.claude/hooks/" false ;;
-  esac
+  check "executable source exists for $cmd" "$([ "$base" != "$cmd" ] && [ -r "$src" ] && echo true || echo false)"
 done < <(jq -r '.[][]?.hooks[]?.command' <<<"$HOOKS_JSON")
 
 section "source script -> registration"
-for src in "$HERE"/executable_pre-* "$HERE"/executable_post-*; do
+for src in "$HERE"/executable_*; do
   [ -e "$src" ] || continue
   base="$(basename "$src")"
   base="${base#executable_}"

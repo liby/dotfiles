@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Test harness for post-bash-scan-secrets.sh.
-# Pipes fake successful and failed Bash payloads into the hook and checks whether it
-# emits a leak warning. Each case states the categories it expects to fire
-# (comma-joined, in scanner order) or "none" for a clean output.
+# Pipes successful and failed Bash payloads into the hook and checks which ones
+# draw a warning. gitleaks owns the default detection rules, so these cases
+# cover the hook's own contract: which payload fields reach the scanner, the
+# rules its config adds, the event it answers, that a warning names rules
+# without echoing the value, and that a failed scan is not reported as clean.
+# Secrets are generated per run, because the scanner treats low-entropy
+# fixtures as fake and a committed realistic token would trip secret scanning.
 # Run: bash post-bash-scan-secrets.test.sh
 
 set -u
@@ -16,88 +20,79 @@ fi
 PASS=0
 FAIL=0
 
-section() {
-  printf '\n== %s ==\n' "$1"
+# GitHub Actions starts steps with SIGPIPE ignored, so tr reading /dev/urandom
+# directly would never stop after head exits; a bounded read lets it finish.
+random() {
+  head -c 1024 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c "$1"
 }
 
-run_case() {
-  local expected="$1" payload="$2" event="${3:-PostToolUse}" result warn actual
-  result=$(jq -nc --arg text "$payload" --arg event "$event" '
-    {hook_event_name: $event, tool_name: "Bash"} +
-    if $event == "PostToolUseFailure" then {error: $text, is_interrupt: false}
-    else {tool_response: {stdout: $text, stderr: ""}} end' | bash "$HOOK")
-  warn=$(printf '%s' "$result" | jq -r '.hookSpecificOutput.additionalContext // ""')
-  if [ -z "$warn" ]; then
-    actual="none"
-  else
-    actual=$(echo "$warn" | sed -nE 's/.*potential secrets \(([^)]*)\).*/\1/p')
-  fi
-  if [ "$actual" = "$expected" ] && { [ -z "$warn" ] ||
-    [ "$(printf '%s' "$result" | jq -r '.hookSpecificOutput.hookEventName')" = "$event" ]; }; then
-    printf '  ok   %-40s  %s\n' "$actual" "$payload"
+report() { # <label> <ok>
+  if $2; then
+    printf '  ok   %s\n' "$1"
     PASS=$((PASS + 1))
   else
-    printf '  FAIL want=%-30s got=%-30s  %s\n' "$expected" "$actual" "$payload"
+    printf '  FAIL %s\n' "$1"
     FAIL=$((FAIL + 1))
   fi
 }
 
-section "Template/placeholder source code (must NOT warn)"
-# Source code containing $-interpolation, template literals, or angle-bracket
-# placeholders must not look like a leaked secret.
-run_case none 'Authorization: `Bearer ${apiToken}`'
-run_case none "'Authorization': \`Bearer \${apiToken}\`,"
-run_case none 'TOKEN=${REAL_TOKEN}'
-run_case none 'API_KEY={{ env.API_KEY }}'
-run_case none 'mysql://user:${PASSWORD}@host'
-run_case none 'Authorization: <YOUR_TOKEN_HERE>'
-run_case none 'export TOKEN="$MY_TOKEN"'
+payload() { # <event> <stdout-or-error> [stderr]
+  jq -nc --arg event "$1" --arg text "$2" --arg stderr "${3:-}" '
+    {hook_event_name: $event, tool_name: "Bash"} +
+    if $event == "PostToolUseFailure" then {error: $text, is_interrupt: false}
+    else {tool_response: {stdout: $text, stderr: $stderr}} end'
+}
 
-section "Bearer tokens"
-run_case 'Bearer token, auth header' 'Authorization: Bearer abcdef1234567890XYZQRS'
-run_case 'Bearer token, auth header' 'Authorization: "Bearer abcdef1234567890XYZQRS"'
-run_case 'Bearer token'              'curl -H "Bearer abcdef1234567890XYZQRS" https://x'
+# run_case <label> <warn|none> <event> <stdout-or-error> [stderr]
+run_case() {
+  local label="$1" expected="$2" event="$3" result warn ok=false
+  result=$(payload "$event" "$4" "${5:-}" | bash "$HOOK")
+  warn=$(printf '%s' "$result" | jq -r '.hookSpecificOutput.additionalContext // ""')
+  if [ "$expected" = none ]; then
+    [ "$result" = "{}" ] && ok=true
+  elif [ -n "$warn" ] && [ "$(printf '%s' "$result" | jq -r '.hookSpecificOutput.hookEventName')" = "$event" ] &&
+    [[ "$warn" != *"$SECRET"* ]]; then
+    ok=true
+  fi
+  report "$label" $ok
+}
 
-section "Vendor API key prefixes"
-run_case 'API key' 'key=sk-aaaaaaaaaaaaaaaaaaaa'
-run_case 'API key, env secret' 'token=ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-run_case 'API key' 'slack=xoxb-aaaaaaaaaaaaaaaaaaaaaaaa'
-run_case 'API key' 'anthropic=sk-ant-aaaaaaaaaaaaaaaaaaaa'
-run_case 'API key' 'stripe=sk_live_aaaaaaaaaaaaaaaaaaaa'
-run_case 'API key' 'aws=AKIAIOSFODNN7EXAMPLE'
+SECRET="ghp_$(random 36)"
+run_case "stdout leak warns" warn PostToolUse "token: $SECRET"
+run_case "stderr leak warns" warn PostToolUse "done" "token: $SECRET"
+run_case "failed command leak warns" warn PostToolUseFailure $'Exit code 1\n'"token: $SECRET"
+SECRET=$(random 40)
+run_case "curl -v Authorization header warns" warn PostToolUse "> Authorization: Bearer $SECRET"
+SECRET=$(random 40)
+run_case "dumped request header warns, escaped JSON included" warn PostToolUse "{\"request\": \"{\\\"Authorization\\\": \\\"Bearer $SECRET\\\"}\"}"
+SECRET=$(printf 'app:%s' "$(random 8)" | base64)
+run_case "short Basic credential warns" warn PostToolUse "> Authorization: Basic $SECRET"
+SECRET=$(printf '%s:%s' "$(random 20)" "$(random 22)" | base64)
+run_case "ApiKey credential warns" warn PostToolUse "> Authorization: ApiKey $SECRET"
+SECRET="$(random 10):$(random 10)"
+run_case "URL password warns, colons included" warn PostToolUse "DATABASE_URL=postgres://app:$SECRET@db.internal:5432/app"
+run_case "clean output stays silent" none PostToolUse 'GET /api/users 200 OK'
+run_case "header placeholders stay silent" none PostToolUse $'> Authorization: Bearer undefined\ncurl -H "Authorization: Bearer $GITHUB_PERSONAL_ACCESS_TOKEN"'
+run_case "URL placeholders stay silent" none PostToolUse $'postgres://app:<password>@db.internal/app\npostgres://app:${DB_PASSWORD_1}@db.internal/app'
+run_case "URL example passwords stay silent" none PostToolUse $'https://user:password@db.internal/\nhttps://admin:changeme@db.internal/'
+run_case "clean failure stays silent" none PostToolUseFailure 'Exit code 1: file not found'
 
-section "Env secret assignments"
-run_case 'API key, env secret' 'TOKEN=ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-run_case 'env secret'          'PASSWORD=correcthorsebatterystaple'
-run_case 'env secret'          'PRIVATE_KEY="aaaaaaaaaaaaaaaaaaaaaaaa"'
-run_case 'env secret'          'ANTHROPIC_AUTH_TOKEN=synthetic_fixture_123456789'
-run_case 'env secret'          'CONTEXT7_API_KEY=synthetic_fixture_123456789'
-run_case 'env secret'          'RC_GATEWAY_API_KEY=synthetic_fixture_123456789'
-run_case none                  'SERVICE_TOKEN=${REAL_TOKEN}'
-run_case none                  'SERVICE_TOKEN={{ env.TOKEN }}'
-run_case none                  'CHECKSUM=synthetic_fixture_123456789'
-
-section "Failed command output"
-run_case 'Bearer token, auth header' $'Exit code 1\nAuthorization: Bearer synthetic_fixture_123456789' PostToolUseFailure
-run_case 'env secret' 'SERVICE_TOKEN=synthetic_fixture_123456789' PostToolUseFailure
-run_case none 'Exit code 1: file not found' PostToolUseFailure
-
-section "URL credentials"
-run_case 'URL credential' 'mysql://user:correcthorsebatterystaple@host'
-run_case 'URL credential' 'postgres://admin:supersecretpwd123@db.example.com'
-
-section "Auth headers (non-Bearer)"
-run_case 'auth header' 'X-Api-Key: aaaaaaaaaaaaaaaaaaaa'
-run_case 'auth header' 'X-Auth-Token: aaaaaaaaaaaaaaaaaaaa'
-run_case 'auth header' 'Authorization: Basic dXNlcjpwYXNzd29yZA=='
-run_case 'auth header' 'Authorization: Token aaaaaaaaaaaaaaaaaaaa'
-
-section "Clean output (must NOT warn)"
-run_case none 'Hello, world!'
-run_case none 'commit abc123 by alice'
-run_case none 'GET /api/users 200 OK'
-run_case none 'Authorization required'
-run_case none 'TOKEN= # unset for now'
+# A scan that cannot run must not pass the output as clean: without the config
+# beside the hook, or without jq on PATH, the hook has to exit with an error
+# instead of printing {}.
+unscanned() { # <label> <hook> [env args...]
+  local label="$1" hook="$2" result status ok=false
+  shift 2
+  result=$(payload PostToolUse 'GET /api/users 200 OK' | env "$@" /bin/bash "$hook" 2>/dev/null)
+  status=$?
+  [ "$status" -ne 0 ] && [ -z "$result" ] && ok=true
+  report "$label" $ok
+}
+lone=$(mktemp -d)
+cp "$HOOK" "$lone/post-bash-scan-secrets.sh"
+unscanned "scan without its config is not reported as clean" "$lone/post-bash-scan-secrets.sh"
+rm -rf "$lone"
+unscanned "scan without jq is not reported as clean" "$HOOK" PATH=/bin
 
 printf '\n=== %d passed, %d failed ===\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
