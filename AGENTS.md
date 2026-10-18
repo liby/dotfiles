@@ -5,7 +5,7 @@ This repository targets Apple Silicon macOS only. Use the `/opt/homebrew` prefix
 ## Workflow
 
 - After editing `.chezmoi.toml.tmpl`, run `chezmoi init` to regenerate `~/.config/chezmoi/chezmoi.toml`; never edit that generated file directly.
-- On a fresh `chezmoi init`, `R` status for every `run_once` script is expected.
+- On a fresh `chezmoi init`, `R` status for every `run_once` script is expected; `check-skill-versions.sh` shows `R` on every run.
 - Claude Code loads this file natively only while the repository has no `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md`, so do not add one; put Claude-only project rules in `.claude/rules/`, which loads beside this file.
 - Before committing, run `chezmoi status --exclude=encrypted <dest-path>` and `chezmoi diff --recursive --exclude=encrypted <dest-path>` for each changed non-secret managed target in scope (unlike `status`, `diff` does not recurse by default and prints nothing for a directory target); never run bare `chezmoi status` or `chezmoi diff`, which can generate decrypted target content. Reserve repository-wide status checks for requested drift audits, and report inaccessible targets as gaps in those audits without widening permissions. Read `-` as destination-only and `+` as rendered-target-only. Re-add destination-only drift only when it belongs to the requested change; report unrelated drift without modifying it. When both destination and target changed, show the scoped diff.
 - Use `chezmoi merge <dest-path>` only for an explicitly selected non-encrypted, non-`modify_` target; a templated target requires manual review to preserve template directives.

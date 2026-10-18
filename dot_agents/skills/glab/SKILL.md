@@ -9,7 +9,7 @@ allowed-tools:
 metadata:
     gitlab-path: internal/commands/skills/bundled/assets/glab
     gitlab-project: https://gitlab.com/gitlab-org/cli
-    gitlab-ref: refs/tags/v1.122.0
+    gitlab-ref: refs/tags/v1.123.0
     gitlab-tree-sha: 8a278019df57649e100e308bf248f906f8ed9b7f
 ---
 
