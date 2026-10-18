@@ -8,6 +8,16 @@
 
 部分配置依赖我的账户、GPG 密钥和文件系统布局。如果使用环境不同，需要相应调整。
 
+## 范围
+
+这个仓库负责让我的多台 Mac 保持同步、初始化新 Mac，并配置我使用的 Coding Agent：它们共用的指令、skill、沙箱和防护。以下内容刻意不做：
+
+- 无人值守安装，见[初始化新 Mac](#初始化新-mac)。
+- 修复漂移：初始化脚本只在渲染后的内容变化时重新运行，所以手动删掉的工具、换成另一把密钥的 YubiKey，都会保持原样，直到那个脚本再次运行；重跑单个脚本的方法见 [Bootstrap](CONCEPTS.md#bootstrap)。
+- 清理早先应用过的机器上已退役的配置，见[更新已有配置的机器](#更新已有配置的机器)。
+- 把所有工具钉在同一个快照：Coding Agent、Homebrew 软件包和会自动更新的应用都走各自的更新渠道，只有后台开发工具固定版本，见 [Package and tool ownership](CONCEPTS.md#package-and-tool-ownership)。
+- 应用的运行时状态和登录会话，它们归写入它们的应用管理，见 [Configuration ownership](CONCEPTS.md#configuration-ownership)。
+
 ## 项目概览
 
 | 内容 | 入口 |
@@ -33,7 +43,7 @@ xcode-select --install
 sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply liby
 ```
 
-这不是无人值守安装。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 `sudo` 提示、在需要时使用 YubiKey，并在浏览器中完成 GitLab 登录。
+这不是无人值守安装。请先登录 App Store：`Brewfile` 通过 `mas` 安装 App Store 应用，而 `mas` 需要已登录的账户。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 `sudo` 提示、在需要时使用 YubiKey，并在浏览器中完成 GitLab 登录。完成后运行 `gh auth login`：后台升级任务只有在登录 GitHub 后才能更新 gh 扩展。
 
 这条命令会安装 chezmoi，将本仓库克隆到 `~/.local/share/chezmoi`，运行初始化脚本，并将受 chezmoi 管理的文件同步到 `$HOME`。`-b` 把这个临时用的二进制放进临时目录，而不是安装脚本默认在当前目录下创建的 `bin`，在 Terminal.app 里就是 `~/bin`：之后所有命令都应该用 `Brewfile` 安装的那个 chezmoi，而 `.zshrc` 把 `~/bin` 排在 Homebrew 之前，留在那里的副本会挡住它，并且不会再更新。
 
