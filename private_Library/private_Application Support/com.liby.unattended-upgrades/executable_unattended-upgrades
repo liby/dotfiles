@@ -27,6 +27,7 @@ if [ "$installed" != "$agent_version" ] || [ "$installed" != "$keyboxd_version" 
 fi
 pi update || status=$?
 pi update --extensions || status=$?
+gh extension upgrade --all || status=$?
 "$HOME/.cargo/bin/rustup" update || status=$?
 brew cleanup || status=$?
 # Each clear makes later installs re-download what it removed, so the block runs about once a week.

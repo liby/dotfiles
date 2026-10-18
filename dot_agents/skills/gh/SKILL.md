@@ -56,6 +56,10 @@ GitHub pending-review comments remain visible only to their author until the rev
 
 A PR title and body describe the complete change against the resolved base. Resolve that base from the user's request, the branch's `branch.<name>.gh-merge-base` setting, or the repository default branch, never an assumed `main` or `master`. Read an existing PR's full patch with `gh pr diff` and its metadata with `gh pr view --json baseRefName,headRefName,headRefOid,url`; for a new PR read `git log <base>..HEAD` and `git diff <base>...HEAD`. Follow the repository PR template when one exists. Without authorization for `gh pr create` or `gh pr edit` on that target, keep the text in chat; either way return the final title and body, plus the PR URL after a write.
 
+## Stacked Pull Requests
+
+Before building on another unmerged PR's branch, splitting one change into dependent PRs, grouping, rebasing, retargeting, syncing, or merging a chain of dependent PRs, merging a PR that belongs to a stack or that `gh pr merge` refuses as stacked, or the first `gh stack` command, load and follow the [stacked pull requests workflow](references/stacked-prs.md).
+
 ## Agent Skills From GitHub
 
 Before the first `gh skill` command for preview, install, or update, load and follow the [GitHub-hosted Agent Skills workflow](references/agent-skills.md).
