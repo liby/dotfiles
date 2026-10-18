@@ -1,0 +1,17 @@
+#!/bin/zsh
+set -euo pipefail
+
+typeset -A tags
+for skill_file in "{{ .chezmoi.sourceDir }}"/dot_agents/skills/*/SKILL.md; do
+  tag="$(sed -En 's#^[[:space:]]+(github|gitlab)-ref: refs/tags/v?##p' "$skill_file")"
+  [[ -n "$tag" ]] && tags[${skill_file:h:t}]="$tag"
+done
+
+# Piped straight into the loop, a failing brew would not stop the script under set -e.
+versions="$(/opt/homebrew/bin/brew list --formula --versions)"
+while read -r name installed; do
+  (( ${+tags[$name]} )) || continue
+  version="${${installed##* }%_*}"
+  [[ "$version" == "${tags[$name]}" ]] ||
+    print -u2 "skill $name records upstream ${tags[$name]}, but Homebrew installed $version; see Managed skill registry in .github/CONCEPTS.md"
+done <<< "$versions"

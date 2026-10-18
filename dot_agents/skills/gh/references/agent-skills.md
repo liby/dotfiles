@@ -24,6 +24,6 @@ When the candidate's frontmatter adds or widens tool approval (such as `allowed-
 
 Use `--from-local` only when the user asks to install from a local directory. Use `--allow-hidden-dirs` only when the source repo stores skills under hidden directories.
 
-With `--all`, `gh skill update` skips a skill that lacks GitHub source metadata and prints only a notice, which does not mean the skill is current. Reinstall such a skill from a known source instead of guessing provenance.
+With `--all`, `gh skill update` skips a skill that lacks GitHub source metadata or whose metadata carries `github-pinned`, prints only a notice for it, and can still report all skills up to date; none of that means the skill is current. Reinstall a skill without source metadata from a known source instead of guessing provenance, and check a pinned one with `--unpin --dry-run`, which writes nothing.
 
 Local skill removal is a filesystem workflow, not a `gh skill` operation in the verified help. Do not remove local skill directories from this skill unless a current `gh skill remove --help` command exists and documents the removal mode.
