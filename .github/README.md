@@ -8,6 +8,16 @@ This setup supports Apple Silicon Macs only; Intel Macs are not supported.
 
 Some settings depend on my accounts, GPG keys, and filesystem layout. Adjust them for a different environment.
 
+## Scope
+
+This repository keeps my Macs in sync, sets up a new Mac, and configures the coding agents I work with: their shared instructions, skills, sandboxes, and guards. It deliberately leaves out:
+
+- Unattended setup; see [Set up a new Mac](#set-up-a-new-mac).
+- Drift repair: a bootstrap script runs again only when its rendered content changes, so a tool removed by hand or a YubiKey holding a different key stays that way until that script runs again; [Bootstrap](CONCEPTS.md#bootstrap) shows how to rerun one.
+- Cleanup of retired configuration on machines that applied it earlier; see [Updating existing machines](#updating-existing-machines).
+- One pinned snapshot of every tool: coding agents, Homebrew packages, and self-updating apps follow their own update channels, and only the background development tools are pinned; see [Package and tool ownership](CONCEPTS.md#package-and-tool-ownership).
+- Application runtime state and sign-in sessions, which stay with the applications that write them; see [Configuration ownership](CONCEPTS.md#configuration-ownership).
+
 ## Project overview
 
 | Area | Start with |
@@ -33,7 +43,7 @@ Wait for the installer window to finish, then confirm `xcode-select -p` and `git
 sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply liby
 ```
 
-This starts an interactive setup, not an unattended installation. Keep Terminal.app open to enter private template values, respond to `sudo` prompts, use your YubiKey when needed, and finish the GitLab sign-in that opens in your browser.
+This starts an interactive setup, not an unattended installation. Sign in to the App Store first, because `Brewfile` installs App Store apps through `mas`, which needs a signed-in account. Keep Terminal.app open to enter private template values, respond to `sudo` prompts, use your YubiKey when needed, and finish the GitLab sign-in that opens in your browser. Afterwards, run `gh auth login`: the background upgrade job updates gh extensions only with a GitHub sign-in.
 
 The command installs chezmoi, clones this repository into `~/.local/share/chezmoi`, runs the bootstrap scripts, and applies the managed files to `$HOME`. `-b` puts that first binary in a temporary directory instead of the `bin` directory the install script creates in the working directory, which in Terminal.app is `~/bin`: `Brewfile` installs the chezmoi every later command should use, and `.zshrc` puts `~/bin` ahead of Homebrew on `PATH`, where a leftover copy would shadow it and never update.
 
