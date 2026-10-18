@@ -157,6 +157,7 @@
         "*.github.com",
         "*.githubusercontent.com",
         "cli.inngest.com",
+        "models.dev",
         "nodejs.org",
         "registry.npmjs.org",
         "pypi.org",
