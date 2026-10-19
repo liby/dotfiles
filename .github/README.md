@@ -26,7 +26,7 @@ This repository keeps my Macs in sync, sets up a new Mac, and configures the cod
 | Git | [`dot_config/git`](../dot_config/git/), [`.chezmoitemplates/git`](../.chezmoitemplates/git/) |
 | Repository design | [`CONCEPTS.md`](CONCEPTS.md) |
 | Packages and bootstrap | [`Brewfile`](../Brewfile), [`.chezmoiscripts`](../.chezmoiscripts/) |
-| Shell and applications | [`dot_zshrc`](../dot_zshrc), [`dot_zsh`](../dot_zsh/), [`dot_config`](../dot_config/) |
+| Shell and applications | [`dot_zshenv`](../dot_zshenv), [`dot_zprofile`](../dot_zprofile), [`dot_zshrc`](../dot_zshrc), [`dot_zsh`](../dot_zsh/), [`dot_config`](../dot_config/) |
 | chezmoi configuration and templates | [`.chezmoi.toml.tmpl`](../.chezmoi.toml.tmpl), [`.chezmoitemplates`](../.chezmoitemplates/) |
 
 ## Set up a new Mac
@@ -45,7 +45,7 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply l
 
 This starts an interactive setup, not an unattended installation. Sign in to the App Store first, because `Brewfile` installs App Store apps through `mas`, which needs a signed-in account. Keep Terminal.app open to enter private template values, respond to `sudo` prompts, use your YubiKey when needed, and finish the GitLab sign-in that opens in your browser. Afterwards, run `gh auth login`: Git fetches private GitHub repositories over HTTPS with that sign-in, and the background upgrade job updates gh extensions only with it.
 
-The command installs chezmoi, clones this repository into `~/.local/share/chezmoi`, runs the bootstrap scripts, and applies the managed files to `$HOME`. `-b` puts that first binary in a temporary directory instead of the `bin` directory the install script creates in the working directory, which in Terminal.app is `~/bin`: `Brewfile` installs the chezmoi every later command should use, and `.zshrc` puts `~/bin` ahead of Homebrew on `PATH`, where a leftover copy would shadow it and never update.
+The command installs chezmoi, clones this repository into `~/.local/share/chezmoi`, runs the bootstrap scripts, and applies the managed files to `$HOME`. `-b` puts that first binary in a temporary directory instead of the `bin` directory the install script creates in the working directory, which in Terminal.app is `~/bin`: `Brewfile` installs the chezmoi every later command should use, so a copy left there would only linger and never update.
 
 A bootstrap script that fails stops the apply. Run the same one-liner again to continue; it reinstalls chezmoi into a new temporary directory and picks up where the failed run left off.
 

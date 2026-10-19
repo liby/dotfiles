@@ -1,16 +1,21 @@
 export PNPM_HOME="$HOME/Code/.pnpm"
 export PROTO_HOME="$HOME/.proto"
 export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
+export PROTO_AUTO_INSTALL_HIDE_OUTPUT=1
 # proto owns the Go toolchain; `auto` would let go download its own copy into $GOPATH/pkg/mod,
 # outside proto's inventory and invisible to `proto status`/`outdated`/`auto-clean`.
 export GOTOOLCHAIN=local
 # glab still reads ~/.config/glab-cli before its macOS default under ~/Library/Application Support,
 # but only so configurations made before that default keep working; select it explicitly.
 export GLAB_CONFIG_DIR="$HOME/.config/glab-cli"
+export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
+export HOMEBREW_NO_ENV_HINTS=1
+export ORACLE_ENGINE="browser"
+export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 export TZ=Asia/Singapore
 
-typeset -aU path
-# zprofile and zshrc re-front this list after /etc/zprofile's path_helper and brew shellenv demote it.
+typeset -U path fpath
+# zprofile re-fronts this list after /etc/zprofile's path_helper and brew shellenv demote it.
 __BRYAN_TOOLCHAIN_PATH=(
   "$PROTO_HOME/shims"
   "$PROTO_HOME/bin"
@@ -27,4 +32,3 @@ __BRYAN_TOOLCHAIN_PATH=(
   "$HOME/.cargo/bin"
 )
 path=($__BRYAN_TOOLCHAIN_PATH $path)
-export PATH

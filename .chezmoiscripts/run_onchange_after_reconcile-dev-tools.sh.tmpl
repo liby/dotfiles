@@ -1,19 +1,13 @@
 #!/bin/zsh
 set -euo pipefail
 
-[[ "$OSTYPE" == darwin* ]] || exit 0
-
 # prototools hash: {{ include "dot_proto/dot_prototools" | sha256sum }}
 # mbx installer hash: {{ include ".github/dev-tools/install-mbx.sh" | sha256sum }}
 {{- $manifest := include ".github/dev-tools/package.json" | fromJson -}}
 {{- $tools := index $manifest "devDependencies" }}
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
-
-# Chezmoi scripts do not load the interactive shell configuration.
-export PROTO_HOME="$HOME/.proto"
-export NPM_CONFIG_PREFIX="$PROTO_HOME/tools/node/globals"
-export PATH="$HOME/.local/bin:$PROTO_HOME/shims:$PROTO_HOME/bin:$HOME/.cargo/bin:$PATH"
+path=($__BRYAN_TOOLCHAIN_PATH $path)
 npm_prefix="$NPM_CONFIG_PREFIX"
 
 # Tool declarations live in `~/.proto/.prototools`. The default `upwards` config mode walks up

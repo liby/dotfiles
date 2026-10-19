@@ -1,5 +1,15 @@
-# A login shell reads this after /etc/zprofile's path_helper, and a non-interactive one such as
-# `zsh -lc` never reaches zshrc, so repeat zshrc's Homebrew setup (keep the env -u for the reason
-# given there) and put the zshenv toolchain dirs back ahead of what path_helper and Homebrew add.
+# Every interactive shell here is a login shell or its child, and non-interactive login shells, such
+# as the one Codex and Claude Code fall back to without a shell snapshot, skip zshrc, so setup they
+# also need lives here.
+
+# A shell started from a brew process inherits HOMEBREW_BREW_FILE and HOMEBREW_PATH with a PATH
+# brew stripped to the system dirs. If that HOMEBREW_PATH starts with Homebrew's bin and sbin,
+# shellenv takes them as already on PATH and prints nothing.
 eval "$(env -u HOMEBREW_BREW_FILE -u HOMEBREW_PATH /opt/homebrew/bin/brew shellenv)"
-path=($__BRYAN_TOOLCHAIN_PATH $path)
+
+# OrbStack.app creates ~/.orbstack on first launch, after the cask has already installed `orb`.
+[[ -r ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
+
+# path_helper, shellenv, and init.zsh assign PATH as a string, which `typeset -U` does not dedupe;
+# this array assignment does. Homebrew's curl is keg-only.
+path=($__BRYAN_TOOLCHAIN_PATH $HOMEBREW_PREFIX/opt/curl/bin $path)

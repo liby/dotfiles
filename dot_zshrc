@@ -1,14 +1,8 @@
-# Must run before anything that references $HOMEBREW_PREFIX.
-# Keep the env -u: if both vars are inherited, brew reuses the stale HOMEBREW_PATH, so
-# shellenv short-circuits and never adds /opt/homebrew/bin to PATH.
-eval "$(env -u HOMEBREW_BREW_FILE -u HOMEBREW_PATH /opt/homebrew/bin/brew shellenv)"
-
-# brew shellenv already put Homebrew's site-functions on fpath.
 fpath+=$HOME/.zsh/functions
-## Initialize the completion system
-## This must be done after all fpath modifications
 autoload -Uz compinit
-# Run the full compinit check once a day
+# `compinit -C` loads the dump without scanning fpath, so completions a new package adds appear at
+# the next daily full check. That check rewrites the dump only when the fpath file count or the zsh
+# version changed, hence the touch.
 () {
   setopt local_options extendedglob
   if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
@@ -18,7 +12,6 @@ autoload -Uz compinit
   fi
 }
 
-# Shell options
 setopt INTERACTIVE_COMMENTS NO_BEEP
 
 # History: INC_APPEND_HISTORY (not _TIME) writes entries pre-exec, so a
@@ -28,7 +21,6 @@ HISTSIZE=100000
 SAVEHIST=100000
 setopt EXTENDED_HISTORY INC_APPEND_HISTORY
 
-# Environment variables
 # A terminal opened by an app launched from a Herdr pane inherits the pane's HERDR_*, so `herdr`
 # refuses to start as nested and agents act as that pane. ~/.local/bin/open prevents most such
 # launches; this cleans up the rest and names every app still holding a pane's environment, so
@@ -48,24 +40,7 @@ if [[ -n $HERDR_ENV && $TERM_PROGRAM != herdr ]]; then
   }
   unset -m 'HERDR_*'
 fi
-export HOMEBREW_BUNDLE_DUMP_NO_VSCODE=1
-export HOMEBREW_NO_ENV_HINTS=1
-export ORACLE_ENGINE="browser"
-export PROTO_AUTO_INSTALL_HIDE_OUTPUT=1
-export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 
-# PATH configuration
-typeset -aU path
-() {
-  local -a path_dirs=(
-    "$HOMEBREW_PREFIX/opt/curl/bin"
-    "$HOME/bin"
-  )
-  # Re-front: brew shellenv above put Homebrew ahead of the zshenv toolchain dirs.
-  path=($__BRYAN_TOOLCHAIN_PATH $path_dirs $path[@])
-}
-
-# Alias Set
 alias c='open -a "Visual Studio Code"'
 alias cc='claude'
 alias ccm='claude --switch-provider'
@@ -82,13 +57,11 @@ alias ls='eza --group-directories-first --hyperlink=auto'
 alias lt='ll --tree --level=2 --git-ignore --ignore-glob=.git'
 alias python='python3'
 
-# Functions (autoloaded from ~/.zsh/functions/)
 autoload -Uz $HOME/.zsh/functions/*(N:t)
 
 # Skip per-precmd widget rebinding for faster prompt
 ZSH_AUTOSUGGEST_MANUAL_REBIND=""
 
-# Source plugins and configurations
 source $HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh
 # fsh's default comment style (black,bold) is unreadable on a dark background
@@ -98,12 +71,8 @@ FAST_HIGHLIGHT_STYLES[comment]='fg=248'
 # https://github.com/zsh-users/zsh-autosuggestions/issues/351
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
-# Initialize tools and configurations
 export GPG_TTY="$TTY"
-# Guard on the file, not `orb`: the brew-cask CLI exists before ~/.orbstack/,
-# which OrbStack.app only creates on first run.
-[[ -r ~/.orbstack/shell/init.zsh ]] && source ~/.orbstack/shell/init.zsh
-(( $+commands[proto] )) && eval "$(proto activate zsh)"
+eval "$(proto activate zsh)"
 eval "$(starship init zsh)"
 # Starship's version modules run proto shims while drawing the prompt, and a shim that refreshes
 # an alias's remote version list or auto-installs a missing version outlasts command_timeout.

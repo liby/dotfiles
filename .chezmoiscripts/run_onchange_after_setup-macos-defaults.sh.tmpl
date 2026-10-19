@@ -1,8 +1,6 @@
 #!/bin/zsh
 set -euo pipefail
 
-[[ "$OSTYPE" == darwin* ]] || exit 0
-
 # List sort order is Universal exactly when no collation override is stored.
 defaults delete NSGlobalDomain AppleCollationOrder 2>/dev/null || true
 # -dict-add keeps the medium, long, and full slots; -dict would replace the whole dictionary.

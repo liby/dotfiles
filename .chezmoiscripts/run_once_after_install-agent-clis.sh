@@ -1,10 +1,6 @@
 #!/bin/zsh
 set -euo pipefail
 
-# Chezmoi scripts do not load the interactive shell configuration.
-export PROTO_HOME="$HOME/.proto"
-export PATH="$HOME/.local/bin:$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"
-
 if [[ ! -x "$HOME/.local/bin/claude" ]]; then
   echo "Installing Claude Code..."
   curl -fsSL https://claude.ai/install.sh | bash
