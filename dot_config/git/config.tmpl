@@ -1,3 +1,4 @@
+{{- $gitlabHost := .private.gitlabHost | trimPrefix "https://" | trimSuffix "/" -}}
 [alias]
   st = status
 
@@ -49,11 +50,15 @@
 
 [credential "https://gist.github.com"]
   helper = 
-  helper = !gh auth git-credential
+  helper = !/opt/homebrew/bin/gh auth git-credential
 
 [credential "https://github.com"]
   helper = 
-  helper = !gh auth git-credential
+  helper = !/opt/homebrew/bin/gh auth git-credential
+
+[credential "https://{{ $gitlabHost }}"]
+  helper =
+  helper = !/opt/homebrew/bin/glab auth git-credential
 
 [diff]
   algorithm = histogram
@@ -65,10 +70,10 @@
   writeCommitGraph = true
 
 [filter "lfs"]
-  clean = git-lfs clean -- %f
-  process = git-lfs filter-process
+  clean = /opt/homebrew/bin/git-lfs clean -- %f
+  process = /opt/homebrew/bin/git-lfs filter-process
   required = true
-  smudge = git-lfs smudge -- %f
+  smudge = /opt/homebrew/bin/git-lfs smudge -- %f
 
 [help]
   autocorrect = prompt
@@ -95,6 +100,17 @@
 [status]
   showStash = true
 
+# Claude Code's macOS sandbox cannot tunnel SSH (anthropics/claude-code#70684), so fetch over HTTPS with the forge CLIs' tokens;
+# the identity pushInsteadOf keeps pushes on the YubiKey's SSH key. Remove once a sandboxed
+# `git ls-remote ssh://git@github.com/<owner>/<repo>.git` succeeds; these rules rewrite the `git@` form, so it cannot test this.
+{{ range list "github.com" $gitlabHost -}}
+[url "https://{{ . }}/"]
+  insteadOf = git@{{ . }}:
+
+[url "git@{{ . }}:"]
+  pushInsteadOf = git@{{ . }}:
+
+{{ end -}}
 [include]
   path = github.config
 
