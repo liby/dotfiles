@@ -43,7 +43,7 @@ xcode-select --install
 sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply liby
 ```
 
-这不是无人值守安装。请先登录 App Store：`Brewfile` 通过 `mas` 安装 App Store 应用，而 `mas` 需要已登录的账户。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 `sudo` 提示、在需要时使用 YubiKey，并在浏览器中完成 GitLab 登录。完成后运行 `gh auth login`：后台升级任务只有在登录 GitHub 后才能更新 gh 扩展。
+这不是无人值守安装。请先登录 App Store：`Brewfile` 通过 `mas` 安装 App Store 应用，而 `mas` 需要已登录的账户。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 `sudo` 提示、在需要时使用 YubiKey，并在浏览器中完成 GitLab 登录。完成后运行 `gh auth login`：Git 通过 HTTPS 拉取 GitHub 私有仓库时使用这个登录，后台升级任务也只有在登录 GitHub 后才能更新 gh 扩展。
 
 这条命令会安装 chezmoi，将本仓库克隆到 `~/.local/share/chezmoi`，运行初始化脚本，并将受 chezmoi 管理的文件同步到 `$HOME`。`-b` 把这个临时用的二进制放进临时目录，而不是安装脚本默认在当前目录下创建的 `bin`，在 Terminal.app 里就是 `~/bin`：之后所有命令都应该用 `Brewfile` 安装的那个 chezmoi，而 `.zshrc` 把 `~/bin` 排在 Homebrew 之前，留在那里的副本会挡住它，并且不会再更新。
 
