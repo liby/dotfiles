@@ -10,7 +10,7 @@ export GLAB_CONFIG_DIR="$HOME/.config/glab-cli"
 export TZ=Asia/Singapore
 
 typeset -aU path
-# zshrc re-fronts this list after /etc/zprofile's path_helper demotes it.
+# zprofile and zshrc re-front this list after /etc/zprofile's path_helper and brew shellenv demote it.
 __BRYAN_TOOLCHAIN_PATH=(
   "$PROTO_HOME/shims"
   "$PROTO_HOME/bin"

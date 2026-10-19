@@ -1,0 +1,5 @@
+# A login shell reads this after /etc/zprofile's path_helper, and a non-interactive one such as
+# `zsh -lc` never reaches zshrc, so repeat zshrc's Homebrew setup (keep the env -u for the reason
+# given there) and put the zshenv toolchain dirs back ahead of what path_helper and Homebrew add.
+eval "$(env -u HOMEBREW_BREW_FILE -u HOMEBREW_PATH /opt/homebrew/bin/brew shellenv)"
+path=($__BRYAN_TOOLCHAIN_PATH $path)

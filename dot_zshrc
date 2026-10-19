@@ -61,7 +61,7 @@ typeset -aU path
     "$HOMEBREW_PREFIX/opt/curl/bin"
     "$HOME/bin"
   )
-  # Re-front: /etc/zprofile's path_helper demoted the zshenv toolchain dirs.
+  # Re-front: brew shellenv above put Homebrew ahead of the zshenv toolchain dirs.
   path=($__BRYAN_TOOLCHAIN_PATH $path_dirs $path[@])
 }
 
