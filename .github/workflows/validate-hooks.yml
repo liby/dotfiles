@@ -11,6 +11,7 @@ on:
       - "dot_claude/scripts/**"
       - "dot_codex/managed-hooks/**"
       - "dot_local/share/claude-launcher/**"
+      - "dot_zprofile"
       - "dot_zshenv"
   push:
     branches: [main]

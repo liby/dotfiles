@@ -13,6 +13,7 @@ launcher=$test_home/.local/share/claude-launcher/bin/claude
 native=$test_home/.local/bin/claude
 mkdir -p "${launcher:h}" "${native:h}" "${mode_file:h}" "$test_bin"
 cp "$repo_root/dot_zshenv" "$test_home/.zshenv"
+cp "$repo_root/dot_zprofile" "$test_home/.zprofile"
 cp "$repo_root/dot_local/share/claude-launcher/bin/executable_claude" "$launcher"
 # The gateway contract's variables, which together select the gateway in Claude Code.
 gateway_vars=(ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID CLAUDE_CODE_SKIP_VERTEX_AUTH CLAUDE_CODE_USE_VERTEX)
@@ -80,6 +81,9 @@ for shell in /bin/zsh /bin/bash; do
   resolution=$(/usr/bin/env -i "${isolated_env[@]}" /bin/zsh -c '"$1" -c "command -v claude"' synthetic "$shell")
   assert_equal "$resolution" "$launcher" "$shell did not resolve claude to the launcher ahead of the native install"
 done
+# Codex runs commands in a login shell, which reads zprofile but not zshrc.
+resolution=$(/usr/bin/env -i "${isolated_env[@]}" /bin/zsh -lc 'print -r -- $path[1] ${HOMEBREW_PREFIX-}')
+assert_equal "$resolution" "$test_home/.proto/shims /opt/homebrew" "zsh -l did not load Homebrew's environment with the zshenv toolchain ahead of it"
 
 typeset -a claude_args=(
   --resume
