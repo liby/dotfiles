@@ -26,7 +26,7 @@
 | Git 配置 | [`dot_config/git`](../dot_config/git/)、[`.chezmoitemplates/git`](../.chezmoitemplates/git/) |
 | 设计思路 | [`CONCEPTS.md`](CONCEPTS.md) |
 | 软件包和初始化脚本 | [`Brewfile`](../Brewfile)、[`.chezmoiscripts`](../.chezmoiscripts/) |
-| Shell 和应用配置 | [`dot_zshrc`](../dot_zshrc)、[`dot_zsh`](../dot_zsh/)、[`dot_config`](../dot_config/) |
+| Shell 和应用配置 | [`dot_zshenv`](../dot_zshenv)、[`dot_zprofile`](../dot_zprofile)、[`dot_zshrc`](../dot_zshrc)、[`dot_zsh`](../dot_zsh/)、[`dot_config`](../dot_config/) |
 | chezmoi 配置和模板 | [`.chezmoi.toml.tmpl`](../.chezmoi.toml.tmpl)、[`.chezmoitemplates`](../.chezmoitemplates/) |
 
 ## 初始化新 Mac
@@ -45,7 +45,7 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply l
 
 这不是无人值守安装。请先登录 App Store：`Brewfile` 通过 `mas` 安装 App Store 应用，而 `mas` 需要已登录的账户。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 `sudo` 提示、在需要时使用 YubiKey，并在浏览器中完成 GitLab 登录。完成后运行 `gh auth login`：Git 通过 HTTPS 拉取 GitHub 私有仓库时使用这个登录，后台升级任务也只有在登录 GitHub 后才能更新 gh 扩展。
 
-这条命令会安装 chezmoi，将本仓库克隆到 `~/.local/share/chezmoi`，运行初始化脚本，并将受 chezmoi 管理的文件同步到 `$HOME`。`-b` 把这个临时用的二进制放进临时目录，而不是安装脚本默认在当前目录下创建的 `bin`，在 Terminal.app 里就是 `~/bin`：之后所有命令都应该用 `Brewfile` 安装的那个 chezmoi，而 `.zshrc` 把 `~/bin` 排在 Homebrew 之前，留在那里的副本会挡住它，并且不会再更新。
+这条命令会安装 chezmoi，将本仓库克隆到 `~/.local/share/chezmoi`，运行初始化脚本，并将受 chezmoi 管理的文件同步到 `$HOME`。`-b` 把这个临时用的二进制放进临时目录，而不是安装脚本默认在当前目录下创建的 `bin`，在 Terminal.app 里就是 `~/bin`：之后所有命令都应该用 `Brewfile` 安装的那个 chezmoi，留在那里的副本只会一直闲置，也不会再更新。
 
 初始化脚本失败会中断整个 apply。重新运行上面那条一键命令即可继续，它会把 chezmoi 装进一个新的临时目录，从失败的地方接着往下走。
 

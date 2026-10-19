@@ -3,8 +3,6 @@ set -euo pipefail
 
 # Settings hash: {{ include ".chezmoitemplates/input-source-pro/settings.json" | sha256sum }}
 
-[[ "$OSTYPE" == darwin* ]] || exit 0
-
 # Input Source Pro keeps its app and website rules in a Core Data store and many preferences as
 # archived values in com.runjuu.Input-Source-Pro. The exported JSON is what this repository
 # tracks, and the app loads it through the import URL below.

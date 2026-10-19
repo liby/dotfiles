@@ -1,8 +1,6 @@
 #!/bin/zsh
 set -euo pipefail
 
-[[ "$OSTYPE" == darwin* ]] || exit 0
-
 # Apps are named by bundle id, which is also their defaults domain; LaunchServices resolves the
 # installed path, so nothing here assumes /Applications. AppleScript's `path to application id`
 # would launch a stopped app, so the lookup goes through NSWorkspace.

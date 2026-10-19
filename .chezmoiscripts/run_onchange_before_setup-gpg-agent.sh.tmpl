@@ -1,8 +1,6 @@
 #!/bin/zsh
 set -euo pipefail
 
-[[ "$OSTYPE" == darwin* ]] || exit 0
-
 # Rerunning on a keg change restarts the daemons with the upgraded binaries, so the rendered kegs
 # are an input, not documentation. They are gpg-agent and keyboxd's linked Homebrew kegs: a
 # library-only upgrade replaces the files under the running daemons without changing the GnuPG
