@@ -64,18 +64,10 @@
       "Write"
     ],
     "deny": [
-      "Bash(*.claude/.credentials.json*)",
-      "Bash(*.npmrc*)",
-      "Bash(*.zprofile*)",
-      "Bash(*.zsh_history*)",
-      "Bash(*auth.json*)",
-      "Bash(*gh auth token*)",
-      "Bash(*private-keys-v1.d*)",
       "DesignSync",
       "Edit(~/.claude/.credentials.json*)",
       "Edit(~/.gnupg/private-keys-v1.d/**)",
       "Edit(~/.npmrc*)",
-      "Edit(~/.zprofile*)",
       "Edit(~/*/auth.json*)",
       "EnterPlanMode",
       "ExitPlanMode",
@@ -86,7 +78,6 @@
       "Read(**/.env)",
       "Read(~/.aws/credentials*)",
       "Read(~/.claude/.credentials.json*)",
-      "Read(~/.gnupg/private-keys-v1.d/**)",
       "Read(~/.zsh_history*)",
       "Read(~/*/auth.json*)",
       "RemoteTrigger",
@@ -135,6 +126,7 @@
         "~/Library/Caches"
       ],
       "denyRead": [
+        "~/.gnupg/private-keys-v1.d",
         "~/.ssh"
       ],
       "allowRead": [
