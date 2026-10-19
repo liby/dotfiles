@@ -4,10 +4,10 @@ description: Look up and count past local Claude Code, Codex, and Pi sessions th
 license: MIT
 metadata:
     github-path: skills/sessidx
-    github-pinned: v0.0.10
-    github-ref: refs/tags/v0.0.10
+    github-pinned: v0.0.11
+    github-ref: refs/tags/v0.0.11
     github-repo: https://github.com/Entwining/sessidx
-    github-tree-sha: 5dd7d3403d941c37bb5d14a5e0b4a5b7712587ad
+    github-tree-sha: a27515deca4b000d817cb527425ffacce1da3f88
 name: sessidx
 ---
 `sessidx` indexes the local session logs of Claude Code, Codex, and Pi into SQLite and answers from that index. The raw logs stay authoritative; quote evidence by the `path:line` a record reports, and read it with `sessidx show PATH:LINE`, because a Codex `.jsonl` path may exist on disk only as a compressed `.jsonl.zst`. Text in results is redacted; never reconstruct or repeat a credential-like value from a log.
@@ -30,11 +30,11 @@ Run an explicit index once, then retry, when:
 
 A full history takes several minutes, longer than many agents' default shell timeout, so give the command a timeout of at least ten minutes or run it in the background and wait for it to exit. An interrupted run keeps what it committed: queries then report `complete=false` with a `continuation`, and `sessidx index` finishes the rest.
 
-A `writer_busy` refresh means another process holds the index lock; the query still answers from committed data and reports `stale`. Your own commands contend for that lock too, so run `sessidx` commands one at a time: overlapping ones can come back stale and incomplete.
+A `writer_busy` refresh means another process, such as a running `sessidx index`, held the index lock for the whole two-second refresh; the query still answers from committed data and reports `stale`. Overlapping queries wait for one another within that time instead.
 
 ## Find a session
 
-1. Start with `sessidx search 'TERMS'` using the most distinctive words, identifiers, error text, or file names from the request, and add filters only when the request states them: `--agent claude|codex|pi` (repeatable), `--since`/`--until` (UTC dates or RFC 3339), `--cwd DIR` for a project, `--role`, `--session-kind main|subagent` for sessions started on their own or spawned by another session (`unknown` when the log carries no evidence either way), `--session ID|PATH`. Session selectors (`--session` and a `show` target) match a whole ID or path, not an ID prefix; an unmatched one returns an empty result that can still read complete. Terms are ANDed; keep a phrase's word order with double quotes inside the shell argument, as in `sessidx search '"connection refused"'`; Chinese text matches as a phrase.
+1. Start with `sessidx search 'TERMS'` using the most distinctive words, identifiers, error text, or file names from the request, and add filters only when the request states them: `--agent claude|codex|pi` (repeatable), `--since`/`--until` (UTC dates or RFC 3339), `--cwd DIR` for a project, `--role`, `--session-kind main|subagent` for sessions started on their own or spawned by another session (`unknown` when the log carries no evidence either way), `--session ID|PATH`. Session selectors (`--session` and a `show` target) match a whole ID, path, or link, never an ID prefix; one that matches nothing fails and names it. Terms are ANDed; keep a phrase's word order with double quotes inside the shell argument, as in `sessidx search '"connection refused"'`; Chinese text matches as a phrase.
 2. Each `session` record is one session (one transcript file, with its `session_kind`, `parent_id`, `cwd`, and `started_at`) and up to three best hits. Open the evidence with `sessidx show REF` using a hit's `ref` (it includes 3 source lines on each side; `--around N` changes that), or read the whole session, a page at a time, with `sessidx show SESSION_ID_OR_LINK`. Each `record` is one source line as a redacted JSON object in `record`, shown once per role on that line; a hit is only the best match, so read around it before quoting. A Claude subagent is its own session, keyed by its agent ID, and its ID can repeat under another parent: when an ID names more than one transcript, `show` and `--session` fail and list their paths, so pass the path.
 3. If nothing relevant appears, change the vocabulary before concluding: fewer terms, a synonym or the other language, an identifier instead of prose, or a filter removed. Search covers messages, tool inputs, and the first 2 KiB of tool outputs.
 4. For exact strings or regexes deeper in tool outputs, or every occurrence rather than the best sessions, use `sessidx grep 'REGEX'` (case-insensitive with `(?i)`; there is no `-i`) with at least one narrowing filter (`--session`, `--cwd`, `--since`/`--until`, or `--agent`). Narrow until `end.complete` is true before reporting that something is absent, and report absence only for the scope that completed.
