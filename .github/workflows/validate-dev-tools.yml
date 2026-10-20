@@ -5,6 +5,7 @@ on:
     paths: &paths
       - ".chezmoiscripts/run_onchange_after_reconcile-dev-tools.sh.tmpl"
       - ".github/dev-tools/**"
+      - ".github/workflows/actions.lock"
       - ".github/workflows/validate-dev-tools.yml"
       - "dot_config/uv/uv.toml"
   push:
@@ -24,11 +25,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        uses: actions/setup-node@v7.1.0
         with:
           node-version: "lts/*"
       # Apply the installer's release-age window, which also covers transitive dependencies.
@@ -38,7 +39,7 @@ jobs:
           min_release_age="$(sed -n 's/^npm config set min-release-age //p' ../../.chezmoiscripts/run_onchange_after_reconcile-dev-tools.sh.tmpl)"
           npm install --dry-run --engine-strict --ignore-scripts --package-lock=false --min-release-age="${min_release_age:?not set by the installer}"
       - name: Set up uv
-        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        uses: astral-sh/setup-uv@v10.3.0
       # pip ignores the release-age window in dot_config/uv/uv.toml and would accept versions
       # the installer refuses.
       - name: Resolve Python tools

@@ -1,0 +1,49 @@
+name: validate-repository
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check local links and anchors
+        uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          args: --offline --include-fragments --hidden --no-progress .
+          jobSummary: false
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2.2.0
+      - name: Test repository contracts
+        run: bun test ./.github/tests/
+      - name: Test bootstrap logic
+        run: python3 -m unittest discover --start-directory .github/tests
+
+  skills:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2.2.0
+      - name: Test managed skills
+        run: |
+          bun test ./dot_agents/skills/
+          bash dot_agents/skills/review/scripts/_lib.test.sh

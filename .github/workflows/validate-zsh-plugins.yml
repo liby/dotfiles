@@ -4,7 +4,9 @@ on:
   pull_request:
     paths: &paths
       - ".chezmoiexternal.toml"
+      - ".github/workflows/actions.lock"
       - ".github/workflows/validate-zsh-plugins.yml"
+      - "dot_zshrc"
   push:
     branches: [main]
     paths: *paths
@@ -25,7 +27,7 @@ jobs:
       CHEZMOI_VERSION: v2.73.2
     steps:
       - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - name: Install smoke-test dependencies
@@ -71,7 +73,7 @@ jobs:
               exit 1
             fi
           done
-      - name: Load Zsh plugins
+      - name: Load the plugins dot_zshrc sources
         shell: zsh {0}
         env:
           HOME: ${{ runner.temp }}/home
@@ -80,5 +82,11 @@ jobs:
           set -euo pipefail
           autoload -Uz compinit
           compinit -u -d "$HOME/.zcompdump"
-          source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh"
-          source "$HOME/.zsh/plugins/fsh/fast-syntax-highlighting.plugin.zsh"
+          plugins=(${(f)"$(grep -v '^[[:space:]]*#' dot_zshrc | grep -o '\.zsh/plugins/[^"[:space:]]*')"})
+          # A plugin dot_zshrc loads in a form this extraction misses would otherwise go untested.
+          for dir in $HOME/.zsh/plugins/*(/); do
+            ((${plugins[(I)${dir#$HOME/}/*]})) || { print -u2 "dot_zshrc sources nothing from ${dir#$HOME/}"; exit 1 }
+          done
+          for plugin in $plugins; do
+            source "$HOME/$plugin"
+          done
