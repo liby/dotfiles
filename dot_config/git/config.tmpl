@@ -100,15 +100,12 @@
 [status]
   showStash = true
 
-# Claude Code's macOS sandbox cannot tunnel SSH (anthropics/claude-code#70684), so fetch over HTTPS with the forge CLIs' tokens;
-# the identity pushInsteadOf keeps pushes on the YubiKey's SSH key. Remove once a sandboxed
-# `git ls-remote ssh://git@github.com/<owner>/<repo>.git` succeeds; these rules rewrite the `git@` form, so it cannot test this.
+# Claude Code's macOS sandbox cannot tunnel SSH (anthropics/claude-code#70684), so Git reaches both forges over HTTPS
+# with the forge CLIs' tokens. Remove once a sandboxed `git ls-remote ssh://git@github.com/<owner>/<repo>.git` succeeds;
+# a `git@github.com:` URL cannot test this because these rules send it over HTTPS.
 {{ range list "github.com" $gitlabHost -}}
 [url "https://{{ . }}/"]
   insteadOf = git@{{ . }}:
-
-[url "git@{{ . }}:"]
-  pushInsteadOf = git@{{ . }}:
 
 {{ end -}}
 [include]
