@@ -230,7 +230,7 @@ class ProvisionTest(unittest.TestCase):
             stack.enter_context(patch.object(
                 case_volume, "volume_info", return_value=self.info("/Volumes/Code")))
             run = stack.enter_context(patch.object(case_volume.subprocess, "run"))
-            with self.assertRaisesRegex(SystemExit, "unmount it manually"):
+            with self.assertRaisesRegex(SystemExit, "is mounted at /Volumes/Code"):
                 case_volume.main()
         run.assert_not_called()
 

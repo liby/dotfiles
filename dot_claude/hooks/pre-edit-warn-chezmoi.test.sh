@@ -57,29 +57,34 @@ run_case() {
   REPLY=$output
 }
 
+fail_reason() {
+  printf 'FAIL reason %s\n' "$1"
+  FAIL=$((FAIL + 1))
+}
+
 run_case "managed absolute target" deny "$FIXTURE/home/managed.txt"
 jq -e --arg source "$FIXTURE/source/dot_managed.txt" \
-  '.hookSpecificOutput.permissionDecisionReason | contains($source)' <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
+  '.hookSpecificOutput.permissionDecisionReason | contains($source)' <<<"$REPLY" >/dev/null || fail_reason "managed absolute target"
 
 run_case "partially managed target" ask "$FIXTURE/home/partial.json"
 jq -e '.hookSpecificOutput
   | (.permissionDecisionReason | contains("partially managed"))
     and (.additionalContext == .permissionDecisionReason)' \
-  <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
+  <<<"$REPLY" >/dev/null || fail_reason "partially managed target"
 run_case "source path" allow "$FIXTURE/source/dot_managed.txt"
 run_case "unmanaged path" allow "$FIXTURE/home/unmanaged.txt"
 run_case "encrypted target" deny "$FIXTURE/home/encrypted.txt"
 jq -e '.hookSpecificOutput.permissionDecisionReason
   | contains("encrypted chezmoi source") and (contains("encrypted_dot_encrypted") | not)' \
-  <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
+  <<<"$REPLY" >/dev/null || fail_reason "encrypted target"
 run_case "encrypted create target" deny "$FIXTURE/home/encrypted-create.txt"
 jq -e '.hookSpecificOutput.permissionDecisionReason
   | contains("encrypted chezmoi source") and (contains("create_encrypted_dot_encrypted-create") | not)' \
-  <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
+  <<<"$REPLY" >/dev/null || fail_reason "encrypted create target"
 run_case "encrypted partial target" deny "$FIXTURE/home/encrypted-partial.txt"
 jq -e '.hookSpecificOutput.permissionDecisionReason
   | contains("encrypted chezmoi source") and (contains("modify_encrypted_dot_encrypted-partial") | not)' \
-  <<<"$REPLY" >/dev/null || FAIL=$((FAIL + 1))
+  <<<"$REPLY" >/dev/null || fail_reason "encrypted partial target"
 
 output=$(jq -nc --arg p "$FIXTURE/home/managed.txt" \
   '{tool_input: {file_path: $p}}' \
