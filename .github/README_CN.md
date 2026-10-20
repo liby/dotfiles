@@ -61,6 +61,7 @@ chezmoi init --apply liby
 chezmoi status                     # 查看配置状态
 chezmoi diff <target>              # 查看单个配置文件的差异
 chezmoi apply                      # 将配置应用到 $HOME
+chezmoi apply -v                   # 同时显示文件差异和脚本每一步的完整输出
 chezmoi edit <target>              # 编辑受管理文件（传递 target 路径）
 chezmoi edit-encrypted <filename>  # 编辑加密文件（传递 source 路径）
 ```

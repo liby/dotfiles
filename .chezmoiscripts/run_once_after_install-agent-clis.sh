@@ -1,6 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 if [[ ! -x "$HOME/.local/bin/claude" ]]; then
   echo "Installing Claude Code..."
   curl -fsSL https://claude.ai/install.sh | bash
@@ -13,7 +15,7 @@ fi
 # recording Pi as installed.
 if [[ ! -x "$HOME/.local/bin/pi" ]]; then
   echo "Installing Pi..."
-  /opt/homebrew/bin/proto install node --config-mode global
+  step /opt/homebrew/bin/proto install node --config-mode global
   curl -fsSL https://pi.dev/install.sh | sh
   [[ -x "$HOME/.local/bin/pi" ]] || {
     print -u2 "Pi is not installed, so chezmoi apply stopped here; run it again to install Pi."

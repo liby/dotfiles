@@ -61,6 +61,7 @@ chezmoi init --apply liby
 chezmoi status                     # Show configuration status
 chezmoi diff <target>              # Inspect changes to one configuration file
 chezmoi apply                      # Apply configuration to $HOME
+chezmoi apply -v                   # Also show file diffs and each script step's full output
 chezmoi edit <target>              # Edit a managed file (pass its target path)
 chezmoi edit-encrypted <filename>  # Edit an encrypted file (pass its source path)
 ```

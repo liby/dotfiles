@@ -33,7 +33,7 @@ jobs:
       - name: Test bootstrap logic
         run: python3 -m unittest discover --start-directory .github/tests
 
-  skills:
+  macos:
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
@@ -47,3 +47,5 @@ jobs:
         run: |
           bun test ./dot_agents/skills/
           bash dot_agents/skills/review/scripts/_lib.test.sh
+      - name: Test script output library
+        run: zsh .chezmoiscripts/.lib/step.test.zsh

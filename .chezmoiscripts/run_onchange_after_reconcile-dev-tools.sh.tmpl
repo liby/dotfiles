@@ -6,6 +6,8 @@ set -euo pipefail
 {{- $manifest := include ".github/dev-tools/package.json" | fromJson -}}
 {{- $tools := index $manifest "devDependencies" }}
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 eval "$(/opt/homebrew/bin/brew shellenv)"
 path=($__BRYAN_TOOLCHAIN_PATH $path)
 npm_prefix="$NPM_CONFIG_PREFIX"
@@ -14,7 +16,7 @@ npm_prefix="$NPM_CONFIG_PREFIX"
 # from the working directory without merging that file, leaving a bare `proto install` nothing
 # to install. proto skips each declared version it already has. The fixed path keeps a lookup
 # from falling back to a self-managed proto in `$PROTO_HOME/bin`; Brewfile owns the executable.
-/opt/homebrew/bin/proto install --config-mode global
+step /opt/homebrew/bin/proto install --config-mode global
 
 # Keep this at most as long as the npm rule in .github/renovate.json, or the pins below
 # become unreachable.
@@ -40,7 +42,7 @@ for spec in "${npm_tools[@]}"; do
 done
 
 if (( ${#npm_pending[@]} )); then
-  npm install --global \
+  step npm install --global \
     --prefix "$npm_prefix" \
     --ignore-scripts \
     -- "${npm_pending[@]}"
@@ -49,7 +51,7 @@ fi
 # uv skips a requirement already installed and replaces a different version. Renovate gates the
 # pin but not Pyright's transitive dependencies. Take the window from source so the command
 # carries it without depending on uv discovering `~/.config/uv/uv.toml`.
-uv tool install \
+step uv tool install \
   --exclude-newer '{{ index (include "dot_config/uv/uv.toml" | fromToml) "exclude-newer" }}' \
   '{{ include ".github/dev-tools/requirements.txt" | trim }}'
 
@@ -57,4 +59,4 @@ sh "{{ .chezmoi.sourceDir }}/.github/dev-tools/install-mbx.sh" "$HOME/.local/bin
 # The store shares the Code volume with the checkouts, so mbx adopts an existing `target/` by
 # rename and restores outputs as APFS clones. `settings set` keeps the file's other keys.
 mbx settings set cache_dir "$HOME/Code/.mbx"
-mbx setup --yes
+step mbx setup --yes

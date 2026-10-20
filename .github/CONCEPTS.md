@@ -10,6 +10,8 @@ Scripts in [`.chezmoiscripts`](../.chezmoiscripts/) use `before` and `after` att
 
 Script identity includes rendered comments and other non-executable bytes. A comment-only edit to a `run_once` or `run_onchange` source can therefore schedule the script again, and a `Brewfile` comment changes the explicit hash embedded in its installer. A `run_onchange` script is keyed by its target name as well, so renaming one reschedules it with its body unchanged. Treat those comments as operational input and edit them only when the resulting rerun is in scope.
 
+Most tools a script runs print progress or no-op notices that only matter when they fail. Run such an external command through `step` from [`.chezmoiscripts/.lib/step.zsh`](../.chezmoiscripts/.lib/step.zsh), which the script sources from `$CHEZMOI_SOURCE_DIR`: it replaces the command's output with a status line naming the command and replays the output only when the command fails, and `chezmoi apply -v` streams the output instead. A command that prints nothing when it has nothing to do needs no wrapper. A wrapped command reads `/dev/null` and by default shows nothing while it runs, so commands that need the user, such as vendor installers, `brew bundle`, sudo, browser sign-in, GUI launches, and YubiKey operations, stay unwrapped. Editing the library changes no script's content, so it reruns nothing and takes effect when each script next runs. Adopting it does change a script's content, so a script whose rerun needs the user adopts it only along with another change to that script.
+
 These dependencies shape the sequence:
 
 - Homebrew and [`Brewfile`](../Brewfile) packages provide tools used by later scripts.
