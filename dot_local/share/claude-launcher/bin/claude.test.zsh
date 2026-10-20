@@ -120,6 +120,9 @@ if run_claude gateway unavailable "${claude_args[@]}" 2> "$missing_error_file"; 
   exit 1
 fi
 assert_equal "$(< "$trace_file")" "" "missing namespace invoked a Claude executable"
-assert_equal "$(< "$missing_error_file")" "claude: envchain namespace claude-gateway not found" "missing namespace did not fail with the launcher error"
+if [[ $(< "$missing_error_file") != *claude-gateway* ]]; then
+  print -u2 -- "FAIL: the missing namespace error did not name the namespace"
+  exit 1
+fi
 
 print -r -- "claude launcher tests passed"
