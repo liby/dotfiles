@@ -1,10 +1,12 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Overlay only Oracle's browser model strategy, keeping the tab's selection
-      for a hand-run oracle, while preserving App-written bridge state and other
-      live values. Keep the destination plain JSON; fromJson rejects the JSON5
-      comments Oracle accepts. Do not add browser.thinkingTime: a config-sourced
-      "current" does not suppress it. */ -}}
-{{- $managed := dict "modelStrategy" "current" -}}
+{{- /* Overlay only the browser keys below and preserve every other value,
+      including App-written bridge state. modelStrategy "current" keeps the
+      tab's selection for a hand-run oracle; noFocus keeps Chrome from becoming
+      the frontmost app and taking keystrokes typed in another app. Keep the
+      destination plain JSON; fromJson rejects the JSON5 comments Oracle
+      accepts. Do not add browser.thinkingTime: a config-sourced "current" does
+      not suppress it. */ -}}
+{{- $managed := dict "modelStrategy" "current" "noFocus" true -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := dict -}}
 {{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
