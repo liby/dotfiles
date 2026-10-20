@@ -1,6 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 if ! command -v rustc &>/dev/null; then
   echo "Installing Rust..."
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -9,4 +11,4 @@ fi
 
 # Claude Code's rust-analyzer-lsp plugin requires the separate rustup component.
 # Install it independently of rustc; rustup component add is idempotent.
-rustup component add rust-analyzer
+step rustup component add rust-analyzer

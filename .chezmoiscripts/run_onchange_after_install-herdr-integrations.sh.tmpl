@@ -6,6 +6,8 @@ set -euo pipefail
 # output call aborts the entire render, not just this script.
 # Herdr version: {{ if stat "/opt/homebrew/bin/herdr" }}{{ output "/opt/homebrew/bin/herdr" "--version" | trim }}{{ end }}
 
-/opt/homebrew/bin/herdr integration install pi
-/opt/homebrew/bin/herdr integration install claude
-/opt/homebrew/bin/herdr integration install codex
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
+step /opt/homebrew/bin/herdr integration install pi
+step /opt/homebrew/bin/herdr integration install claude
+step /opt/homebrew/bin/herdr integration install codex
