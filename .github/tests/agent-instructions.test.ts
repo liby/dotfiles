@@ -12,6 +12,12 @@ const CODEX_ROOT = "dot_codex/AGENTS.md.tmpl";
 const PI_ROOT = "private_dot_pi/private_agent/private_AGENTS.md.tmpl";
 const AGENT_ROOTS = ["dot_claude/CLAUDE.md.tmpl", CODEX_ROOT, PI_ROOT];
 const SHARED_ONLY_ROOTS = [CODEX_ROOT, PI_ROOT];
+const WORKFLOWS = ".github/workflows";
+
+const exists = (path: string) =>
+  path.includes("*")
+    ? new Bun.Glob(path).scanSync({ cwd: ROOT, dot: true }).next().done === false
+    : existsSync(join(ROOT, path));
 
 // Rejects a pre-action route whose trigger names a repository path that a
 // rename or deletion left behind, so edits to the moved file are no longer
@@ -24,10 +30,20 @@ test("pre-action route triggers name existing paths", () => {
   );
   expect(triggers.length).toBeGreaterThan(0);
   for (const trigger of triggers) {
-    const exists = trigger.includes("*")
-      ? new Bun.Glob(trigger).scanSync({ cwd: ROOT, dot: true }).next().done === false
-      : existsSync(join(ROOT, trigger));
-    expect({ trigger, exists }).toEqual({ trigger, exists: true });
+    expect({ trigger, exists: exists(trigger) }).toEqual({ trigger, exists: true });
+  }
+});
+
+// Rejects a workflow path filter that a rename or deletion left behind, so
+// changes to the moved file no longer run the checks that cover it.
+test("workflow path filters name existing paths", () => {
+  const filters = [...new Bun.Glob("*.yml").scanSync(join(ROOT, WORKFLOWS))].flatMap((file) => {
+    const { on } = Bun.YAML.parse(read(`${WORKFLOWS}/${file}`)) as { on: Record<string, { paths?: string[] } | null> };
+    return Object.values(on).flatMap((event) => (event?.paths ?? []).map((path) => ({ file, path })));
+  });
+  expect(filters.length).toBeGreaterThan(0);
+  for (const { file, path } of filters) {
+    expect({ file, path, exists: exists(path) }).toEqual({ file, path, exists: true });
   }
 });
 
