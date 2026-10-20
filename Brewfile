@@ -4,20 +4,18 @@ tap "steipete/tap"
 
 # macOS pre-tool guard for coding agents
 brew "entwining/tap/agent-guard", trusted: true
-# Official Amazon AWS command-line interface
-brew "awscli"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
-# Cross-platform make
-brew "cmake"
+# GNU File, Shell, and Text utilities
+brew "coreutils"
 # Context7 documentation lookup for coding agents
 brew "ctx7"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
-# Diff that understands syntax
-brew "difftastic"
 # Environment variables meet macOS Keychain and gnome-keyring
 brew "envchain"
+# Perl lib for reading and writing EXIF metadata
+brew "exiftool"
 # Modern, maintained replacement for ls
 brew "eza"
 # Simple, fast and user-friendly alternative to find
@@ -64,8 +62,6 @@ brew "starship"
 brew "uv"
 # Shell extension to navigate your filesystem faster
 brew "zoxide"
-# Memory training application
-cask "anki"
 # Application uninstaller
 cask "appcleaner"
 # OpenAI's official ChatGPT desktop app
@@ -94,6 +90,5 @@ cask "surge"
 cask "visual-studio-code"
 mas "Bob", id: 1630034110
 mas "Slack", id: 803453959
-mas "The Unarchiver", id: 425424353
 mas "WeChat", id: 836500024
 mas "Xnip", id: 1221250572
