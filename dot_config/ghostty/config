@@ -1,7 +1,6 @@
 auto-update = check
 auto-update-channel = tip
 
-cursor-style = block
 cursor-style-blink = false
 
 # Inconsolata LGC 3.201 (Nerd Fonts 3.5.0) shrank its line height by 25%.

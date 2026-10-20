@@ -1,5 +1,3 @@
-add_newline = true
-
 [git_commit]
 format = "[\\[$hash$tag\\]]($style)"
 
