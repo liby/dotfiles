@@ -46,20 +46,12 @@ if (( ${#npm_pending[@]} )); then
     -- "${npm_pending[@]}"
 fi
 
-pyright_requirement="{{ include ".github/dev-tools/requirements.txt" | trim }}"
-pyright_version="${pyright_requirement#pyright==}"
-current_pyright="$(
-  uv tool list |
-    awk '$1 == "pyright" && $2 ~ /^v/ { sub(/^v/, "", $2); print $2; exit }'
-)"
-
-if [[ "$current_pyright" != "$pyright_version" ]]; then
-  # Renovate gates the pin but not Pyright's transitive dependencies. Take the window from
-  # source so the command carries it without depending on uv discovering `~/.config/uv/uv.toml`.
-  uv tool install --force \
-    --exclude-newer '{{ index (include "dot_config/uv/uv.toml" | fromToml) "exclude-newer" }}' \
-    "$pyright_requirement"
-fi
+# uv skips a requirement already installed and replaces a different version. Renovate gates the
+# pin but not Pyright's transitive dependencies. Take the window from source so the command
+# carries it without depending on uv discovering `~/.config/uv/uv.toml`.
+uv tool install \
+  --exclude-newer '{{ index (include "dot_config/uv/uv.toml" | fromToml) "exclude-newer" }}' \
+  '{{ include ".github/dev-tools/requirements.txt" | trim }}'
 
 sh "{{ .chezmoi.sourceDir }}/.github/dev-tools/install-mbx.sh" "$HOME/.local/bin"
 # The store shares the Code volume with the checkouts, so mbx adopts an existing `target/` by
