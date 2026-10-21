@@ -9,7 +9,7 @@ allowed-tools:
 metadata:
     gitlab-path: internal/commands/skills/bundled/assets/glab
     gitlab-project: https://gitlab.com/gitlab-org/cli
-    gitlab-ref: refs/tags/v1.123.0
+    gitlab-ref: refs/tags/v1.124.0
     gitlab-tree-sha: 8a278019df57649e100e308bf248f906f8ed9b7f
 ---
 
@@ -29,7 +29,7 @@ These calls fail in ways that recur:
 - Quote every `glab api` path that contains `?`, `[`, or `*`; zsh otherwise aborts with `no matches found`.
 - `glab mr list` has no `--state`; it lists open MRs by default and takes `--all`, `--merged`, or `--closed`.
 - `glab api` paths take the placeholders its help lists, such as `:fullpath` for the current project. Put any other value that contains `/`, such as a ref or file path, in the path as `:<name>` with `--placeholder <name>=<value>`, which encodes it as one segment; a hand-written literal needs `%2F`.
-- `glab api -F` reads a value that starts with `@` as a file and parses one that starts with `[` or `{` as JSON, so send literal text, such as a body that starts with `@user`, with `-f`. Without `-X`, any field makes the request a `POST`; `-X GET` sends fields as query parameters. In a JSON body, bracketed field names such as `position[new_line]` are rejected; pass the object as JSON (`-F 'position={...}'`). A raw body sent with `--input` carries no `Content-Type`, and GitLab answered 415 without `-H 'Content-Type: application/json'`.
+- `glab api -F` reads a value that starts with `@` as a file and parses one that starts with `[` or `{` as JSON, so send literal text, such as a body that starts with `@user`, with `-f`. Without `-X`, any field makes the request a `POST`; `-X GET` sends fields as query parameters. In a JSON body, bracketed field names such as `position[new_line]` are rejected; pass the object as JSON (`-F 'position={...}'`).
 - `glab ci view` is an interactive TUI, and `glab ci trace` without a job argument opens a picker and on a running job streams until the job ends.
 - `glab ci retry` takes a job ID or name, not a pipeline ID; retry a whole pipeline with `glab api -X POST projects/:id/pipelines/<id>/retry`.
 - In `glab mr note resolve`, `reopen`, `update`, `delete`, `draft update`, and `draft delete`, the MR comes first and the discussion or note ID last, although their usage lines show the reverse.

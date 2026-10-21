@@ -9,10 +9,10 @@ allowed-tools:
     - mcp__chrome-devtools__*
 metadata:
     github-path: skills/oracle
-    github-pinned: v0.21.6
-    github-ref: refs/tags/v0.21.6
+    github-pinned: v0.22.0
+    github-ref: refs/tags/v0.22.0
     github-repo: https://github.com/steipete/oracle
-    github-tree-sha: c6ede997dad62e888ac9aeb7c83d4eba8abc596f
+    github-tree-sha: 258a7f4030bcc98df47a7146974b81240754865c
 name: oracle
 ---
 
