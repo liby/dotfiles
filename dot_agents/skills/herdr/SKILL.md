@@ -54,9 +54,9 @@ Control responses contain JSON IDs and state; `pane read` and `agent read` conta
 
 ## Ownership and labels
 
-A returned `create` or `split` ID establishes task ownership across turns until user takeover. The caller's containers are not yours: do not close, replace, resize, rearrange, or relabel them without authorization. Inspecting or prompting an existing agent does not transfer ownership.
+A returned `create` or `split` ID establishes task ownership across turns until user takeover. The caller's containers are not yours: do not close, replace, resize, or rearrange them without authorization. Inspecting or prompting an existing agent does not transfer ownership.
 
-Label on creation: workspace = work, tab = round, pane = participant. Update owned labels when their purpose changes; preserve user-set labels and taken-over containers. Keep the live agent name stable for prompting, waiting, and recovery; its occupant's activity already updates the terminal title. Read a label before changing it. A label change does not transfer ownership.
+Label on creation: workspace = work, tab = round, pane = participant. The user finds work by these labels, so whenever a label of a container you work in or created no longer matches its current work, rename it, whether it is a default, another agent's name, or the caller's tab or workspace; name the shared work when other live work shares the container, and leave containers the user has taken over. A helper leaves the labels its coordinator set. Keep the live agent name stable for prompting, waiting, and recovery; its occupant's activity already updates the terminal title. Read a label before changing it. A label change does not transfer ownership.
 
 ```bash
 herdr workspace rename <workspace-id> "<work>"
