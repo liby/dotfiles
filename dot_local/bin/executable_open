@@ -1,9 +1,10 @@
 #!/bin/sh
-# An app launched from a Herdr pane keeps the pane's environment and hands it to every terminal
-# and agent it starts, so launch it with a Dock launch's environment instead; variables set
-# before `open` are dropped with the rest, so pass them with --env. This runs only while
-# ~/.local/bin precedes /usr/bin, as zshenv and zprofile arrange.
-if [ -n "${HERDR_ENV:-}" ]; then
+# An app launched from a Rex pane keeps the pane's REX_* and hands them to every terminal and
+# agent it starts, whose Rex hook then reports that pane as their own; launch it with a Dock
+# launch's environment instead. Variables set before `open` are dropped with the rest, so pass
+# them with --env. This runs only while ~/.local/bin precedes /usr/bin, as zshenv and zprofile
+# arrange. Remove it once Rex checks that a caller runs inside the pane its REX_BLOCK names.
+if [ -n "${REX_BLOCK:-}" ]; then
   exec /usr/bin/env -i /usr/bin/open "$@"
 fi
 exec /usr/bin/open "$@"

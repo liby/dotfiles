@@ -55,6 +55,8 @@ If chezmoi is already installed, run:
 chezmoi init --apply liby
 ```
 
+Install Rex Beta, the terminal in which agents open panes you can watch, by hand. Open it, turn on **Settings > Server > Remote Control**, and run `setup-rex` to import its theme; `chezmoi apply` writes its other preferences, which the app shows once reopened.
+
 ## Common operations
 
 ```sh

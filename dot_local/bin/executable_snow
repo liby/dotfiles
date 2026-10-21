@@ -19,7 +19,7 @@ token_cache.IS_MACOS = False
 token_cache.IS_LINUX = True
 
 # Python's default macOS opener brings the browser to the front. Resolve `open` through PATH so the
-# Herdr-aware wrapper in ~/.local/bin applies.
+# wrapper in ~/.local/bin applies.
 os.environ.setdefault("BROWSER", "open -g %s")
 (snow,) = entry_points(group="console_scripts", name="snow")
 sys.exit(snow.load()())

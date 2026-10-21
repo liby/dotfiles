@@ -1,0 +1,11 @@
+#!/bin/zsh
+set -euo pipefail
+
+# init.lua hash: {{ include "dot_config/rex/init.lua" | sha256sum }}
+# confirm_close.lua hash: {{ include "dot_config/rex/actions/confirm_close.lua" | sha256sum }}
+
+# The server reads init.lua when it starts and does not watch it, so only a running one needs
+# to reread it.
+if (( $+commands[rex] )) && rex --autostart=false server status >/dev/null 2>&1; then
+  rex --autostart=false config reload
+fi

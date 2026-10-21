@@ -1,0 +1,25 @@
+#!/bin/zsh
+set -euo pipefail
+
+if (( ! $+commands[rex] )); then
+  print -u2 "Install and open Rex Beta before running setup-rex."
+  exit 1
+fi
+
+client=$(rex client ls --json | jq -er '
+  .clients | map(select(.info.kind == "app" and .principal.transport == "unix")) |
+  if length == 1 then .[0].client_id
+  else error("Open exactly one local Rex app before running setup-rex") end
+')
+
+theme_dir=$(mktemp -d "${TMPDIR:-/tmp}/rex-theme.XXXXXX")
+trap 'rm -rf "$theme_dir"' EXIT
+theme="$theme_dir/Snazzy Soft"
+curl --fail --location --silent --show-error --connect-timeout 10 --max-time 60 \
+  'https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/4762ad5bd6d3906e28babdc2bda8a967d63a63be/ghostty/Snazzy%20Soft' \
+  --output "$theme"
+printf '5311deab8a51b08c55121c035a0a3a1967c7d7fa7e38622662c401a7f49dcd8f  %s\n' "$theme" | shasum -a 256 -c -
+
+# Rex imports through the app, which must allow Remote Control in its Server settings.
+rex -C "$client" do client.theme.import "path=$theme" --json
+
