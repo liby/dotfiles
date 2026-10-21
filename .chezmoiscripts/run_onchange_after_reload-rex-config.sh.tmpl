@@ -7,5 +7,8 @@ set -euo pipefail
 # The server reads init.lua when it starts and does not watch it, so only a running one needs
 # to reread it.
 if (( $+commands[rex] )) && rex --autostart=false server status >/dev/null 2>&1; then
-  rex --autostart=false config reload
+  # The plain output leads with the server's load count, which means nothing here, and `step` would
+  # hide the warnings that Rex reports with exit status 0, so print only the diagnostics.
+  rex --autostart=false config reload --json |
+    jq -r '.diagnostics[]? | [.severity, .source // empty, .message] | join(": ")'
 fi

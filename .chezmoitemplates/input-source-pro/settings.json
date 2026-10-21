@@ -71,7 +71,7 @@
       "doNotRestoreKeyboard" : false,
       "doRestoreKeyboard" : true,
       "forceEnglishPunctuation" : false,
-      "hideIndicator" : false,
+      "hideIndicator" : true,
       "inputSourceId" : "com.apple.keylayout.ABC",
       "removed" : false,
       "url" : "file:///Applications/Rex%20Beta.app/"

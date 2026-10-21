@@ -55,7 +55,7 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply l
 chezmoi init --apply liby
 ```
 
-Rex Beta 需要手动安装，Coding Agent 会在其中开出你能看到的 pane。打开它，开启 **Settings > Server > Remote Control**，再运行 `setup-rex` 导入主题；其他偏好由 `chezmoi apply` 写入，重新打开应用后生效。
+Rex Beta 需要手动安装，Coding Agent 会在其中开出你能看到的 pane。打开它，再运行 `setup-rex` 导入主题；其他偏好由 `chezmoi apply` 写入，重新打开应用后生效。
 
 ## 常用操作
 
