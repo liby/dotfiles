@@ -15,3 +15,16 @@ while read -r name installed; do
   [[ "$version" == "${tags[$name]}" ]] ||
     print -u2 "skill $name records upstream ${tags[$name]}, but Homebrew installed $version; see Managed skill registry in .github/CONCEPTS.md"
 done <<< "$versions"
+
+# Rex updates itself outside Homebrew, so its skill records a guide hash instead of a tag.
+if (( $+commands[rex] )); then
+  rex_skill="{{ .chezmoi.sourceDir }}/dot_agents/skills/rex/SKILL.md"
+  recorded="$(sed -En 's/^[[:space:]]+rex-guide-sha256: //p' "$rex_skill")"
+  guide="$(rex --autostart=false skill show | shasum -a 256)"
+  [[ "${guide%% *}" == "$recorded" ]] ||
+    print -u2 "skill rex was compared with the guide of Rex $(sed -En 's/^[[:space:]]+rex-version: //p' "$rex_skill"), but the installed Rex prints a different one; see Rex integration in .github/CONCEPTS.md"
+  rex --autostart=false skill status --json | jq -r '
+    .harnesses[] | select(.detected) | .id as $agent | .items[]
+    | select(.kind == "hook" and .state != "current" and .state != "unsupported")
+    | "Rex reports the \($agent) hook in \(.path) as \(.state); see Rex integration in .github/CONCEPTS.md"' >&2
+fi

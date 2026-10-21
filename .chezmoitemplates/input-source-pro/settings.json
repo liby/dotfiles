@@ -65,16 +65,16 @@
       "url" : "file:///Applications/WeChat.app/"
     },
     {
-      "bundleId" : "com.mitchellh.ghostty",
-      "bundleName" : "Ghostty",
-      "createdAt" : "2025-07-01T02:06:21Z",
+      "bundleId" : "com.superlogical.rex",
+      "bundleName" : "Rex Beta",
+      "createdAt" : "2026-10-21T10:30:00Z",
       "doNotRestoreKeyboard" : false,
       "doRestoreKeyboard" : true,
       "forceEnglishPunctuation" : false,
       "hideIndicator" : false,
       "inputSourceId" : "com.apple.keylayout.ABC",
       "removed" : false,
-      "url" : "file:///Applications/Ghostty.app/"
+      "url" : "file:///Applications/Rex%20Beta.app/"
     }
   ],
   "browserRules" : [

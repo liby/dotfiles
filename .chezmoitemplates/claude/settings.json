@@ -49,7 +49,6 @@
     "defaultMode": "auto",
     "allow": [
       "Bash(codex:*)",
-      "Bash(herdr:*)",
       "Bash(oracle:*)",
       "Bash(pi:*)",
       "Bash(snow:*)",
@@ -93,7 +92,6 @@
       "codex:*",
       "docker:*",
       "git:*",
-      "herdr:*",
       "oracle:*",
       "pgrep:*",
       "ps:*",
@@ -177,7 +175,8 @@
         "/private/tmp/claude-{{ .chezmoi.uid }}",
         "~/.gnupg/S.gpg-agent",
         "~/.gnupg/S.gpg-agent.ssh",
-        "~/.gnupg/S.keyboxd"
+        "~/.gnupg/S.keyboxd",
+        "~/Library/Application Support/rex/server.sock"
       ]
     }
   },
@@ -253,12 +252,11 @@
     ],
     "SessionStart": [
       {
-        "matcher": "^(startup|resume|clear|compact|fork)$",
         "hooks": [
           {
             "type": "command",
-            "command": "bash '{{ .chezmoi.homeDir }}/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10
+            "command": "/bin/sh -c 'rex __internal session-start --agent claude 2>/dev/null || true'",
+            "timeout": 5
           }
         ]
       }

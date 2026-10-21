@@ -34,8 +34,6 @@ brew "gitleaks"
 brew "glab"
 # GNU Privacy Guard (OpenPGP)
 brew "gnupg"
-# Agent multiplexer that lives in your terminal
-brew "herdr"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Fast, async, resource-friendly link checker
@@ -72,8 +70,6 @@ cask "codex"
 cask "doubaoime"
 # Inconsolata LGC Nerd Font
 cask "font-inconsolata-lgc-nerd-font"
-# Terminal emulator that uses platform-native UI and GPU acceleration
-cask "ghostty"
 # Web browser
 cask "google-chrome"
 # Tool for multi-language users

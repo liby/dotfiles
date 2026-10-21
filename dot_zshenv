@@ -30,3 +30,6 @@ __BRYAN_TOOLCHAIN_PATH=(
   "$HOME/.cargo/bin"
 )
 path=($__BRYAN_TOOLCHAIN_PATH $path)
+# Rex adds its CLI to PATH only in its own terminals. Appended, the running server's copy reaches
+# other terminals, desktop agent apps, and chezmoi scripts without overriding a terminal's own.
+path+=("$HOME/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS")
