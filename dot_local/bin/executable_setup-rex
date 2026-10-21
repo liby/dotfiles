@@ -14,12 +14,13 @@ client=$(rex client ls --json | jq -er '
 
 theme_dir=$(mktemp -d "${TMPDIR:-/tmp}/rex-theme.XXXXXX")
 trap 'rm -rf "$theme_dir"' EXIT
+# zsh skips the EXIT trap when a signal kills it, so turn Ctrl+C and SIGTERM into exits.
+trap 'exit 130' INT
+trap 'exit 143' TERM
 theme="$theme_dir/Snazzy Soft"
 curl --fail --location --silent --show-error --connect-timeout 10 --max-time 60 \
   'https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/4762ad5bd6d3906e28babdc2bda8a967d63a63be/ghostty/Snazzy%20Soft' \
   --output "$theme"
 printf '5311deab8a51b08c55121c035a0a3a1967c7d7fa7e38622662c401a7f49dcd8f  %s\n' "$theme" | shasum -a 256 -c -
-
-# Rex imports through the app, which must allow Remote Control in its Server settings.
-rex -C "$client" do client.theme.import "path=$theme" --json
+rex -C "$client" do client.theme.import "path=$theme"
 

@@ -10,7 +10,9 @@ local shells = { bash = true, fish = true, sh = true, zsh = true }
 -- behind Rex and never gets focus; Rex is reactivated because focus does not
 -- reliably return to it when osascript exits. NSRunningApplication reports the
 -- bundle icon, so the icon chosen under Rex's App Icon setting is loaded by the
--- preference and asset names Rex Beta uses for it.
+-- preference and asset names Rex Beta uses for it. An unanswered alert gives up
+-- after 20 seconds, so a forgotten one cannot close the pane long after its
+-- program was asked about.
 local alert = [[
 ObjC.import("AppKit")
 function run(argv) {
@@ -33,6 +35,10 @@ function run(argv) {
 }
 ]]
 
+-- Commands the server starts get only the system PATH, so name the installed
+-- server's CLI.
+local cli = os.getenv("HOME") .. "/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"
+
 rex.action{
   name = "confirm_close",
   title = "Close, Confirming a Running Program",
@@ -47,20 +53,23 @@ rex.action{
     -- itself, so only a login shell, whose argv0 starts with "-", counts as idle.
     -- A failed lookup asks, because a wrong guess ends a running program.
     local idle = info and (info.last_exit or (foreground and shells[foreground.name] and (foreground.argv0 or ""):sub(1, 1) == "-"))
-    if not idle then
-      local program = "A program"
-      if foreground then
-        program = (foreground.script or foreground.argv0 or foreground.name):match("[^/]+$")
-      end
-      -- An action has 30 seconds to finish; the alert gives up at 20 and hands
-      -- focus back, and the timeout only covers an alert that never returns.
-      local reply = rex.exec({ "osascript", "-l", "JavaScript", "-e", alert, program }, { timeout = 25 })
-      if not (reply and reply.ok and reply.stdout:match("^Close")) then
-        return
-      end
+    if idle then
+      rex.call("block.close", { session_id = ctx.session_id, block_id = ctx.block_id })
+      return
     end
-    -- Client actions act on whatever the app has focused, which the alert can
-    -- change, so close the pane the key was pressed in by its ID.
-    rex.call("block.close", { session_id = ctx.session_id, block_id = ctx.block_id })
+    local program = "A program"
+    if foreground then
+      program = (foreground.script or foreground.argv0 or foreground.name):match("[^/]+$")
+    end
+    -- The server runs a client's keys, actions, and focus changes one at a time
+    -- (`rex api describe client.action`), so waiting here would hold the clicks
+    -- the app sends during the alert until the pane is gone, and they would then
+    -- fail. The alert therefore runs detached, and since the action cannot act
+    -- once it has returned, the command itself closes the pane on Close, by the
+    -- ID of the one the key was pressed in, because the alert can move focus.
+    rex.exec.start({
+      "sh", "-c", '[ "$(osascript -l JavaScript -e "$1" "$2")" = Close ] && exec "$3" --autostart=false block close -s "$4" "$5"',
+      "sh", alert, program, cli, ctx.session_id, ctx.block_id,
+    }, { detach = true })
   end,
 }

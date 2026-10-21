@@ -122,6 +122,10 @@ status_line = ["model-with-reasoning", "current-dir", "git-branch", "thread-id"]
 enabled = true
 url = "https://developers.openai.com/mcp"
 
+[mcp_servers.superlogical]
+enabled = true
+url = "https://www.superlogical.com/rex/community-mcp"
+
 [mcp_servers.node_repl]
 # Keep Desktop's runtime-generated launch fields explicit to avoid apply/startup drift.
 command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
