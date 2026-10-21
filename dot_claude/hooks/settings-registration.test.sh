@@ -32,7 +32,7 @@ check() {
   fi
 }
 
-HOOKS_JSON=$(perl -ne 'next if /^\s*\{\{.*\}\}\s*$/; s/\{\{.*?\}\}/BLANKED/g; print' "$TEMPLATE" | jq '.hooks' 2>/dev/null)
+HOOKS_JSON=$(perl -ne 'next if /^\s*\{\{.*\}\}\s*$/; s/\{\{.*?\}\}/null/g; print' "$TEMPLATE" | jq '.hooks' 2>/dev/null)
 if [ -z "$HOOKS_JSON" ] || [ "$HOOKS_JSON" = "null" ]; then
   echo "FAIL: template did not parse to JSON with a hooks key" >&2
   exit 1

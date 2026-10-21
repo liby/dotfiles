@@ -61,8 +61,7 @@ async_compaction = true
 # A shared app-server daemon runs hooks and tool commands with the environment of the terminal that started it, so the Rex session hook reports, and REX_* names, the wrong pane. Remove once Codex gives them the attached client's environment: https://github.com/openai/codex/issues/48500
 daemon_auto_start = false
 memories = true
-# Keep direct networking while the permission profile controls filesystem access.
-network_proxy = false
+network_proxy = true
 prevent_idle_sleep = true
 
 [notice]
@@ -90,15 +89,21 @@ hide_rate_limit_model_nudge = true
 
 [permissions.development.network]
 enabled = true
+# Local development servers and browser SSO callbacks need listening sockets.
+allow_local_binding = true
 
-# Codex enforces socket rules only while the network proxy is on; keep the
-# signing and SSH sockets listed so enabling the proxy later does not cut off
-# the YubiKey. Socket rules reject `~` (the proxy fails to start), so every
-# home path in this profile is rendered absolute for one consistent form.
+[permissions.development.network.domains]
+{{ range includeTemplate "allowed-domains.json" . | fromJson -}}
+{{ . | quote }} = "allow"
+{{ end -}}
+
+# Socket rules require absolute paths; `~` prevents the proxy from starting.
 [permissions.development.network.unix_sockets]
 "{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent" = "allow"
 "{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh" = "allow"
 "{{ .chezmoi.homeDir }}/.gnupg/S.keyboxd" = "allow"
+"{{ .chezmoi.homeDir }}/.orbstack/run/docker.sock" = "allow"
+"{{ .chezmoi.homeDir }}/Library/Application Support/rex/server.sock" = "allow"
 
 [shell_environment_policy]
 # `core` omits REX_*, which the rex skill needs to find this agent's own pane,

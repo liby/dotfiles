@@ -2,7 +2,9 @@ import { expect, test } from "bun:test";
 import { readdirSync } from "node:fs";
 
 type Hook = { type: string; command: string; timeout: number };
-const parse = async <T>(path: string) => Bun.TOML.parse(await Bun.file(new URL(path, import.meta.url)).text()) as T;
+const parse = async <T>(path: string) => Bun.TOML.parse(
+  (await Bun.file(new URL(path, import.meta.url)).text()).replace(/^\{\{.*$/gm, ""),
+) as T;
 
 test("managed requirements keep the sole mode and run every managed hook", async () => {
   const requirements = await parse<{

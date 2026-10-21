@@ -137,37 +137,7 @@
       ]
     },
     "network": {
-      "allowedDomains": [
-        "{{ .private.gitlabHost | trimPrefix "https://" | trimSuffix "/" }}",
-        "{{ .private.npmHost | trimPrefix "https://" | trimSuffix "/" }}",
-        "{{ (urlParse .private.rcGatewayBaseUrl).hostname }}",
-        "api.anthropic.com",
-        "formulae.brew.sh",
-        "chatgpt.com",
-        "downloads.claude.ai",
-        "*.claude.com",
-        "context7.com",
-        "*.context7.com",
-        "index.crates.io",
-        "static.crates.io",
-        "ghcr.io",
-        "github.com",
-        "*.github.com",
-        "*.githubusercontent.com",
-        "gitlab.com",
-        "proxy.golang.org",
-        "sum.golang.org",
-        "dl.google.com",
-        "cli.inngest.com",
-        "models.dev",
-        "nodejs.org",
-        "registry.npmjs.org",
-        "pypi.org",
-        "files.pythonhosted.org",
-        "static.rust-lang.org",
-        "api.typesafe.ai",
-        "*.blob.core.windows.net"
-      ],
+      "allowedDomains": {{ includeTemplate "allowed-domains.json" . }},
       "allowLocalBinding": true,
       "allowMachLookup": [
         "com.apple.trustd.agent"
@@ -177,6 +147,7 @@
         "~/.gnupg/S.gpg-agent",
         "~/.gnupg/S.gpg-agent.ssh",
         "~/.gnupg/S.keyboxd",
+        "~/.orbstack/run/docker.sock",
         "~/Library/Application Support/rex/server.sock"
       ]
     }
