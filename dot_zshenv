@@ -9,6 +9,7 @@ export GOTOOLCHAIN=local
 # but only so configurations made before that default keep working; select it explicitly.
 export GLAB_CONFIG_DIR="$HOME/.config/glab-cli"
 export ORACLE_ENGINE="browser"
+export RESEND_TELEMETRY_DISABLED=1
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 export TZ=Asia/Singapore
 
