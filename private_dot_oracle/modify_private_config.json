@@ -1,12 +1,13 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Overlay only the browser keys below and preserve every other value,
-      including App-written bridge state. modelStrategy "current" keeps the
-      tab's selection for a hand-run oracle; noFocus keeps Chrome from becoming
-      the frontmost app and taking keystrokes typed in another app. Keep the
-      destination plain JSON; fromJson rejects the JSON5 comments Oracle
-      accepts. Do not add browser.thinkingTime: a config-sourced "current" does
-      not suppress it. */ -}}
-{{- $managed := dict "modelStrategy" "current" "noFocus" true -}}
+{{- /* Overlay only the browser and notify keys below and preserve every other
+      value, including machine-local keys. modelStrategy "current" keeps
+      the tab's selection for a hand-run oracle; noFocus keeps Chrome from
+      becoming the frontmost app and taking keystrokes typed in another app.
+      Notifications stay off because the agent that started a run already
+      waits for its result. Keep the destination plain JSON; fromJson rejects
+      the JSON5 comments Oracle accepts. Do not add browser.thinkingTime: a
+      config-sourced "current" does not suppress it. */ -}}
+{{- $managed := dict "approvalWaitMs" 1800000 "attachRunning" true "modelStrategy" "current" "noFocus" true -}}
 {{- $stdin := .chezmoi.stdin -}}
 {{- $current := dict -}}
 {{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
@@ -14,6 +15,8 @@
 {{- $browser := index $out "browser" | default dict -}}
 {{- $browser = mergeOverwrite $browser $managed -}}
 {{- $out = set $out "browser" $browser -}}
+{{- $notify := index $out "notify" | default dict -}}
+{{- $out = set $out "notify" (set $notify "enabled" false) -}}
 {{- if deepEqual $current $out -}}
   {{- $stdin -}}
 {{- else -}}

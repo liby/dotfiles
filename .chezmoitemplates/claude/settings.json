@@ -93,7 +93,6 @@
       "codex:*",
       "docker:*",
       "git:*",
-      "oracle:*",
       "pgrep:*",
       "ps:*",
       "snow:*"

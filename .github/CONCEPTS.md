@@ -156,7 +156,7 @@ Credentials, sessions, installed packages, and recorded trust decisions under `~
 
 ### Oracle configuration
 
-Oracle reads `~/.oracle/config.json`, and its `oracle bridge client` command rewrites that whole file as plain JSON with `browser.remoteHost`, `browser.remoteToken`, and `browser.remoteViaSshReverseTunnel`. The [config modifier](../private_dot_oracle/modify_private_config.json) therefore sets only its own `browser` keys and preserves the rest; a full-file replacement would delete Oracle-owned bridge state on the next apply. A config key applies only to runs that omit its flag: the [oracle skill](../dot_agents/skills/oracle/SKILL.md) passes `--browser-model-strategy`, so `modelStrategy` governs only hand-run `oracle`, while `noFocus` keeps skill runs as well from bringing Chrome to the front. The deployed file can hold a plaintext token written by Oracle's bridge, so treat it as credential-bearing regardless of its visible contents, and inspect the overlay source instead of reading, diffing, or re-adding the destination.
+The [config modifier](../private_dot_oracle/modify_private_config.json) sets its own `browser` and `notify` keys in `~/.oracle/config.json` and leaves the rest to each machine. `browser.chatgptUrl` stays machine-local because this repository is public, and whether a Project URL exposes the Project depends on that Project's sharing setting. A config key applies only to runs that omit its flag: the [oracle skill](../dot_agents/skills/oracle/SKILL.md) passes `--browser-attach-running`, `--browser-approval-wait`, and `--browser-model-strategy`, so those keys govern only hand-run `oracle`, while `noFocus` keeps skill runs as well from bringing Chrome to the front.
 
 ## Rex integration
 
