@@ -16,7 +16,7 @@ release="https://github.com/jdx/mr-boxington/releases/download/$mbx_version"
 curl -fsSL "$release/$archive" -o "$install_tmp/$archive"
 curl -fsSL "$release/SHA256SUMS" -o "$install_tmp/SHA256SUMS"
 cd "$install_tmp"
-grep "  $archive\$" SHA256SUMS | shasum -a 256 --check --strict -
+grep "  $archive\$" SHA256SUMS | shasum -a 256 --check --strict --quiet -
 tar -xzf "$archive"
 mkdir -p "$destination"
 install -m 755 mbx "$destination/mbx"
