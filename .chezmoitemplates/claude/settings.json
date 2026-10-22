@@ -114,6 +114,7 @@
         "~/.local/bin",
         "~/.local/share/uv",
         "~/.npm",
+        "~/.oracle/sessions",
         "~/.pi",
         "~/.pnpm-store",
         "~/.proto",
@@ -137,19 +138,12 @@
       ]
     },
     "network": {
-      "allowedDomains": {{ includeTemplate "allowed-domains.json" . }},
+      "allowedDomains": {{ includeTemplate "sandbox/allowed-domains.json" . }},
       "allowLocalBinding": true,
       "allowMachLookup": [
         "com.apple.trustd.agent"
       ],
-      "allowUnixSockets": [
-        "/private/tmp/claude-{{ .chezmoi.uid }}",
-        "~/.gnupg/S.gpg-agent",
-        "~/.gnupg/S.gpg-agent.ssh",
-        "~/.gnupg/S.keyboxd",
-        "~/.orbstack/run/docker.sock",
-        "~/Library/Application Support/rex/server.sock"
-      ]
+      "allowUnixSockets": {{ prepend (includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson) (printf "/private/tmp/claude-%v" .chezmoi.uid) | toPrettyJson | indent 6 | trim }}
     }
   },
   "hooks": {

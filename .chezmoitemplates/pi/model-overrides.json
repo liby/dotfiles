@@ -1,0 +1,8 @@
+{
+  "anthropic": {
+    "claude-fable-5-1": { "contextWindow": 400000 },
+    "claude-haiku-5-5": { "contextWindow": 400000 },
+    "claude-opus-5-5": { "contextWindow": 400000 },
+    "claude-sonnet-5-5": { "contextWindow": 400000 }
+  }
+}

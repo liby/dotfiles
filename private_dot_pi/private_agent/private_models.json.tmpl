@@ -2,12 +2,7 @@
   "providers": {
     "anthropic": {
       "apiKey": "!envchain pi printenv ANTHROPIC_API_KEY",
-      "modelOverrides": {
-        "claude-fable-5-1": { "contextWindow": 400000 },
-        "claude-haiku-5-5": { "contextWindow": 400000 },
-        "claude-opus-5-5": { "contextWindow": 400000 },
-        "claude-sonnet-5-5": { "contextWindow": 400000 }
-      }
+      "modelOverrides": {{ (includeTemplate "pi/model-overrides.json" . | fromJson).anthropic | toPrettyJson | indent 6 | trim }}
     },
     "rc-gateway": {
       "baseUrl": "{{ .private.rcGatewayBaseUrl }}",

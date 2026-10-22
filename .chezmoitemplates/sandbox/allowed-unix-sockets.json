@@ -1,0 +1,8 @@
+[
+  "~/.cache/ra-cli/browser.sock",
+  "~/.gnupg/S.gpg-agent",
+  "~/.gnupg/S.gpg-agent.ssh",
+  "~/.gnupg/S.keyboxd",
+  "~/.orbstack/run/docker.sock",
+  "~/Library/Application Support/rex/server.sock"
+]

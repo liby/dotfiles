@@ -5,11 +5,8 @@
   "defaultThinkingLevel": "high",
   "defaultTools": ["+codemode"],
   "enabledModels": [
-    "rc-gateway/**",
-    "anthropic/claude-fable-5-1",
-    "anthropic/claude-haiku-5-5",
-    "anthropic/claude-opus-5-5",
-    "anthropic/claude-sonnet-5-5"
+    "rc-gateway/**"{{ range $id, $_ := (includeTemplate "pi/model-overrides.json" . | fromJson).anthropic }},
+    {{ printf "anthropic/%s" $id | quote }}{{ end }}
   ],
   "compaction": {
     "reserveTokens": 50000

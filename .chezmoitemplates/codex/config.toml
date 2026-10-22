@@ -93,18 +93,15 @@ enabled = true
 allow_local_binding = true
 
 [permissions.development.network.domains]
-{{ range includeTemplate "allowed-domains.json" . | fromJson -}}
+{{ range includeTemplate "sandbox/allowed-domains.json" . | fromJson -}}
 {{ . | quote }} = "allow"
 {{ end -}}
 
 # Socket rules require absolute paths; `~` prevents the proxy from starting.
 [permissions.development.network.unix_sockets]
-"{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent" = "allow"
-"{{ .chezmoi.homeDir }}/.gnupg/S.gpg-agent.ssh" = "allow"
-"{{ .chezmoi.homeDir }}/.gnupg/S.keyboxd" = "allow"
-"{{ .chezmoi.homeDir }}/.orbstack/run/docker.sock" = "allow"
-"{{ .chezmoi.homeDir }}/Library/Application Support/rex/server.sock" = "allow"
-
+{{ range includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson -}}
+{{ joinPath $.chezmoi.homeDir (trimPrefix "~/" .) | quote }} = "allow"
+{{ end }}
 [shell_environment_policy]
 # `core` omits REX_*, which the rex skill needs to find this agent's own pane,
 # so it silently breaks Codex-driven Rex control. Inherit the full environment
