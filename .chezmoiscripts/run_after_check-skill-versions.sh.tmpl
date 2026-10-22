@@ -1,6 +1,9 @@
 #!/bin/zsh
 set -euo pipefail
 
+yellow= bold= cyan= reset=
+[[ -t 2 ]] && yellow=$'\e[33m' bold=$'\e[1m' cyan=$'\e[36m' reset=$'\e[0m'
+
 typeset -A tags
 for skill_file in "{{ .chezmoi.sourceDir }}"/dot_agents/skills/*/SKILL.md; do
   tag="$(sed -En 's#^[[:space:]]+(github|gitlab)-ref: refs/tags/v?##p' "$skill_file")"
@@ -13,27 +16,44 @@ while read -r name installed; do
   (( ${+tags[$name]} )) || continue
   version="${${installed##* }%_*}"
   [[ "$version" == "${tags[$name]}" ]] ||
-    print -u2 "skill $name records upstream ${tags[$name]}, but Homebrew installed $version; see Managed skill registry in .github/CONCEPTS.md"
+    print -u2 -r -- "$yellow!$reset skill $name records upstream ${tags[$name]}, but Homebrew installed $version; see Managed skill registry in .github/CONCEPTS.md"
 done <<< "$versions"
 
 # Rex updates itself outside Homebrew, so the orc skill records a guide hash instead of a tag. Rex
 # cannot print an earlier version's guide, so the guide is kept under its hash for the review to diff.
 if (( $+commands[rex] )); then
   orc_skill="{{ .chezmoi.sourceDir }}/dot_agents/skills/orc/SKILL.md"
-  recorded="$(sed -En 's/^[[:space:]]+rex-guide-sha256: //p' "$orc_skill")"
-  guides="${XDG_CACHE_HOME:-$HOME/.cache}/rex-guide"
-  mkdir -p "$guides"
-  guide="$(rex --autostart=false skill show | tee "$guides/current.md" | shasum -a 256)"
-  guide="${guide%% *}"
-  mv "$guides/current.md" "$guides/$guide.md"
-  find "$guides" -type f ! -name "$guide.md" ! -name "$recorded.md" -delete
-  if [[ "$guide" != "$recorded" ]]; then
-    review="see Rex integration in .github/CONCEPTS.md"
-    [[ -f "$guides/$recorded.md" ]] && review="diff $guides/$recorded.md $guides/$guide.md and $review"
-    print -u2 "skill orc was compared with the guide of Rex $(sed -En 's/^[[:space:]]+rex-version: //p' "$orc_skill"), but the installed Rex prints a different one; $review"
+  recorded_version="$(sed -En 's/^[[:space:]]+rex-version: //p' "$orc_skill")"
+  version="$(rex --autostart=false version --json | jq -er .rex_version)"
+  # The rex on PATH is the running server's copy, which keeps its build after a Rex update until the
+  # server restarts, so an older one's guide and hook states predate what this repository was set up
+  # against. Versions are 0.0.<build time>-g<commit>.
+  if (( ${${version#0.0.}%%-*} < ${${recorded_version#0.0.}%%-*} )); then
+    print -u2 -rl -- \
+      "$yellow!$reset Rex Server runs $version, older than the $recorded_version that the orc skill was compared with." \
+      "  Agents read this server's older Rex guide until a newer server runs." \
+      "  If Rex shows that a newer server is available, click ${bold}Restart Server…$reset in Rex Settings > Server, which closes every session; otherwise update Rex first."
+  else
+    recorded="$(sed -En 's/^[[:space:]]+rex-guide-sha256: //p' "$orc_skill")"
+    guides="${XDG_CACHE_HOME:-$HOME/.cache}/rex-guide"
+    mkdir -p "$guides"
+    guide="$(rex --autostart=false skill show | tee "$guides/current.md" | shasum -a 256)"
+    guide="${guide%% *}"
+    mv "$guides/current.md" "$guides/$guide.md"
+    find "$guides" -type f ! -name "$guide.md" ! -name "$recorded.md" -delete
+    if [[ "$guide" != "$recorded" ]]; then
+      review=("  Review orc by following Rex integration in .github/CONCEPTS.md.")
+      [[ -f "$guides/$recorded.md" ]] && review=(
+        "  Review orc by following Rex integration in .github/CONCEPTS.md, starting with:"
+        "  ${cyan}diff ${(q-)guides}/$recorded.md ${(q-)guides}/$guide.md$reset"
+      )
+      print -u2 -rl -- \
+        "$yellow!$reset Rex $version prints a different guide from Rex $recorded_version, which the orc skill was compared with." \
+        $review
+    fi
+    rex --autostart=false skill status --json | jq -r --arg mark "$yellow!$reset" '
+      .harnesses[] | select(.detected) | .id as $agent | .items[]
+      | select(.kind == "hook" and .state != "current" and .state != "unsupported")
+      | "\($mark) Rex reports the \($agent) hook in \(.path) as \(.state); see Rex integration in .github/CONCEPTS.md"' >&2
   fi
-  rex --autostart=false skill status --json | jq -r '
-    .harnesses[] | select(.detected) | .id as $agent | .items[]
-    | select(.kind == "hook" and .state != "current" and .state != "unsupported")
-    | "Rex reports the \($agent) hook in \(.path) as \(.state); see Rex integration in .github/CONCEPTS.md"' >&2
 fi
