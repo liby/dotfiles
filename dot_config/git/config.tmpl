@@ -1,4 +1,3 @@
-{{- $gitlabHost := .private.gitlabHost | trimPrefix "https://" | trimSuffix "/" -}}
 [alias]
   st = status
 
@@ -52,7 +51,7 @@
   helper = 
   helper = !/opt/homebrew/bin/gh auth git-credential
 
-[credential "https://{{ $gitlabHost }}"]
+[credential "https://{{ .private.gitlabHost }}"]
   helper =
   helper = !/opt/homebrew/bin/glab auth git-credential
 
@@ -99,7 +98,7 @@
 # Claude Code's macOS sandbox cannot tunnel SSH (anthropics/claude-code#70684), so Git reaches both forges over HTTPS
 # with the forge CLIs' tokens. Remove once a sandboxed `git ls-remote ssh://git@github.com/<owner>/<repo>.git` succeeds;
 # a `git@github.com:` URL cannot test this because these rules send it over HTTPS.
-{{ range list "github.com" $gitlabHost -}}
+{{ range list "github.com" .private.gitlabHost -}}
 [url "https://{{ . }}/"]
   insteadOf = git@{{ . }}:
 

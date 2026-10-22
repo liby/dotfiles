@@ -1,0 +1,8 @@
+{{- /* Without a default host, glab sends calls made outside a GitLab checkout, `-R group/project`
+      shorthands included, to gitlab.com. glab treats any skill named glab as its bundled one, so
+      with skill update notices on it reports the managed skill as outdated after every upgrade
+      and suggests `glab skills update glab`, which replaces it. */ -}}
+check_update: "false"
+host: {{ .private.gitlabHost | quote }}
+notify_skill_updates: "false"
+telemetry: "false"

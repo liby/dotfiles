@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-host={{ .private.gitlabHost | trimPrefix "https://" | trimSuffix "/" | quote }}
+host={{ .private.gitlabHost | quote }}
 
 # On a new Mac, seed-envchain fills this namespace earlier in the phase only because `seed-` sorts
 # before `setup-`. Read it before writing anything, so a rename that breaks that order fails here.

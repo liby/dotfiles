@@ -1,13 +1,5 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Without a default host, glab sends calls made outside a GitLab checkout, `-R group/project`
-      shorthands included, to gitlab.com. glab treats any skill named glab as its bundled one, so
-      with skill update notices on it reports the managed skill as outdated after every upgrade
-      and suggests `glab skills update glab`, which replaces it. */ -}}
-{{- $managed := dict
-      "check_update" "false"
-      "host" (.private.gitlabHost | trimPrefix "https://" | trimSuffix "/")
-      "notify_skill_updates" "false"
-      "telemetry" "false" -}}
+{{- $managed := includeTemplate "glab/config.yml" . | fromYaml -}}
 {{- /* Replace lines instead of round-tripping glab's YAML: toYaml writes every empty field as
       `null`, which glab reads as the literal string. */ -}}
 {{- $out := .chezmoi.stdin -}}

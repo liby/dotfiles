@@ -80,6 +80,8 @@ chezmoi edit-encrypted <filename>  # 编辑加密文件（传递 source 路径�
 
 更新已有的 Mac 或向 fork 合并上游变更时，请检查这台机器上次应用版本之后的提交，确认哪些路径和字段需要清理。删除前先核对当前内容，保留仍然需要的本地修改。应用新版本[不会清理所有已退役的配置](CONCEPTS.md#configuration-ownership)，即使 `chezmoi status` 没有输出。
 
+如果 `.chezmoi.toml.tmpl` 有变动，先运行 `chezmoi init` 再应用：在那之前 chezmoi 只会给出警告，仍然用旧模板生成的数据渲染。
+
 ## 取用
 
 可以 fork 本仓库并根据自己的环境调整，也可以只取用需要的部分。若要应用整套配置，请先检查并调整 `.chezmoi.toml.tmpl`、`Brewfile` 和 `.chezmoiscripts/`。加密的 `*.asc` 文件只能用我的 YubiKey 解密，请把它们和 `.chezmoi.toml.tmpl` 中的 GPG 接收者换成你自己的，或者连同用到它们的部分一起删除，详见[身份与加密数据](CONCEPTS.md#identity-and-encrypted-data)。

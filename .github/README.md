@@ -80,6 +80,8 @@ See chezmoi's [daily operations guide](https://www.chezmoi.io/user-guide/daily-o
 
 When updating an existing Mac or merging upstream into a fork, review commits since the version last applied on that machine for retired paths and fields. Check their current contents before removing them, keeping any local changes you still need. Applying the new source [does not clean up all retired configuration](CONCEPTS.md#configuration-ownership), even when `chezmoi status` is empty.
 
+If `.chezmoi.toml.tmpl` changed, run `chezmoi init` before applying: until then chezmoi only warns and renders with the data the previous template generated.
+
 ## Reuse
 
 Fork this repository and adapt it to your environment, or copy only the parts you need. Before applying the full setup, review and adjust `.chezmoi.toml.tmpl`, `Brewfile`, and `.chezmoiscripts/`. The encrypted `*.asc` files decrypt only with my YubiKey, so replace them and the GPG recipients in `.chezmoi.toml.tmpl` with your own, or remove them along with the parts that use them; see [Identity and encrypted data](CONCEPTS.md#identity-and-encrypted-data).

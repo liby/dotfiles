@@ -1,12 +1,10 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- $settings := includeTemplate "pi/settings.json" . | fromJson -}}
-{{- $stdin := .chezmoi.stdin -}}
-{{- $current := dict -}}
-{{- if $stdin -}}{{- $current = fromJson $stdin -}}{{- end -}}
+{{- $managed := includeTemplate "pi/settings.json" . | fromJson -}}
+{{- $current := .chezmoi.stdin | default "{}" | fromJson -}}
 {{- $out := deepCopy $current -}}
-{{- range $k, $v := $settings -}}{{- $out = set $out $k $v -}}{{- end -}}
+{{- range $k, $v := $managed -}}{{- $out = set $out $k $v -}}{{- end -}}
 {{- if deepEqual $current $out -}}
-  {{- $stdin -}}
+  {{- .chezmoi.stdin -}}
 {{- else -}}
-  {{ toPrettyJson $out }}
+  {{- $out | toPrettyJson -}}
 {{- end -}}

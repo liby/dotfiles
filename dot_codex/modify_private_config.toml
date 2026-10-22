@@ -1,19 +1,12 @@
 {{- /* chezmoi:modify-template */ -}}
-{{- /* Deep-overlay codex/config.toml while replacing fully managed subtrees
-      and preserving other live values. Clean one-time destination drift
-      directly; persistent deletion requires evidence of a recurring writer.
-      Emit unchanged input when equal to avoid formatting-only drift. */ -}}
 {{- $managed := includeTemplate "codex/config.toml" . | fromToml -}}
-{{- $stdin := .chezmoi.stdin -}}
-{{- $current := $stdin | fromToml -}}
+{{- $current := .chezmoi.stdin | fromToml -}}
 {{- $out := mergeOverwrite (deepCopy $current) $managed -}}
-{{- $out = setValueAtPath (list "plugins") (index $managed "plugins") $out -}}
-{{- $out = setValueAtPath (list "permissions" "development") (index (index $managed "permissions") "development") $out -}}
-{{- /* Replace source-declared servers to remove stale transport fields.
-      Preserve only Desktop-generated node_repl environment fields. */ -}}
-{{- range $name, $server := index $managed "mcp_servers" -}}
+{{- $out = setValueAtPath "plugins" $managed.plugins $out -}}
+{{- $out = setValueAtPath "permissions.development" $managed.permissions.development $out -}}
+{{- range $name, $server := $managed.mcp_servers -}}
   {{- if eq $name "node_repl" -}}
-    {{- $live := get (get $current "mcp_servers" | default dict) $name | default dict -}}
+    {{- $live := dig "mcp_servers" $name (dict) $current -}}
     {{- range $key := list "env" "env_vars" -}}
       {{- if hasKey $live $key -}}
         {{- $server = set $server $key (get $live $key) -}}
@@ -29,7 +22,7 @@
   {{- $out = deleteValueAtPath "sandbox_workspace_write" $out -}}
 {{- end -}}
 {{- if deepEqual $current $out -}}
-  {{- $stdin -}}
+  {{- .chezmoi.stdin -}}
 {{- else -}}
   {{- $out | toToml -}}
 {{- end -}}

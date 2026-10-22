@@ -1,0 +1,14 @@
+{{- /* Leave browser.thinkingTime unset: a hand-run `oracle` would apply it and change the tab's
+      effort despite modelStrategy `current`. Oracle ignores the key only when `current` comes
+      from the `--browser-model-strategy` flag, as in oracle skill runs. */ -}}
+{
+  "browser": {
+    "approvalWaitMs": 1800000,
+    "attachRunning": true,
+    "modelStrategy": "current",
+    "noFocus": true
+  },
+  "notify": {
+    "enabled": false
+  }
+}

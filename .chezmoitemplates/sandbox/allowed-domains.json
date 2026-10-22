@@ -1,6 +1,6 @@
 [
-  "{{ .private.gitlabHost | trimPrefix "https://" | trimSuffix "/" }}",
-  "{{ .private.npmHost | trimPrefix "https://" | trimSuffix "/" }}",
+  "{{ .private.gitlabHost }}",
+  "{{ .private.npmHost }}",
   "{{ (urlParse .private.rcGatewayBaseUrl).hostname }}",
   "api.anthropic.com",
   "developer.apple.com",
