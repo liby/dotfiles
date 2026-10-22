@@ -1,0 +1,3 @@
+Context was just compacted. Treat mutable state and blockers carried across compaction, including retained messages, as historical observations. Before sending an answer, check that each carried-forward claim presented as current, including claims in explanations, has a fresh allowed read of its authoritative source. If that read is unavailable, state the last observation and label the current state `unverified`. Leave out historical state that the answer does not need.
+
+Before continuing a skill's workflow or producing its governed output, apply the Tools section's skill-loading rule: restore needed instruction text that is no longer fully in context before the action it constrains.

@@ -1,0 +1,6 @@
+#!/bin/zsh
+
+# SessionStart hook for the compact source; its stdout becomes developer context after the summary.
+cat <<'EOF'
+{{ includeTemplate "agents/compaction-reminder.md" . | trim }}
+EOF

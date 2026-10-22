@@ -1,0 +1,6 @@
+#!/bin/sh
+# SessionStart hook for the compact source; its stdout follows the summary in context.
+
+cat <<'EOF'
+{{ includeTemplate "agents/compaction-reminder.md" . | trim }}
+EOF

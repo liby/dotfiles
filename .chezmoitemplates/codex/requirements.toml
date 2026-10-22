@@ -25,3 +25,11 @@ timeout = 5
 type = "command"
 command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/contextual-markdown-links"
 timeout = 5
+
+[[hooks.SessionStart]]
+matcher = "compact"
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "{{ .chezmoi.homeDir }}/.codex/managed-hooks/compaction-reminder"
+timeout = 5
