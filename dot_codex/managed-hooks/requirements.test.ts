@@ -42,10 +42,12 @@ test("managed requirements keep the sole mode and run every managed hook", async
     expect({ command, type, underManagedDir: command.startsWith(`${managedDir}/`), timeout: timeout > 0 })
       .toEqual({ command, type: "command", underManagedDir: true, timeout: true });
   }
-  const sources = readdirSync(import.meta.dir).flatMap((name) => name.match(/^executable_(.+)$/)?.[1] ?? []);
+  const sources = readdirSync(import.meta.dir).flatMap((name) => name.match(/^executable_(.+?)(?:\.tmpl)?$/)?.[1] ?? []);
   expect([...new Set(hooks.map(({ command }) => command.slice(managedDir.length + 1)))].sort()).toEqual(sources.sort());
 
   // The guard is the one Bash check; see CONCEPTS.md#agent-guard.
   expect(events.PreToolUse.filter((entry) => entry.matcher === "^Bash$").flatMap((entry) => entry.hooks.map((h) => h.command)))
     .toEqual([`${managedDir}/guard-bash`]);
+  expect(events.SessionStart.filter((entry) => entry.matcher === "compact").flatMap((entry) => entry.hooks.map((h) => h.command)))
+    .toEqual([`${managedDir}/compaction-reminder`]);
 });

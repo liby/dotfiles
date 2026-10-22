@@ -85,8 +85,9 @@ describe("shared agent instructions", () => {
   // Rejects a fragment that a root skips, repeats, or reorders, and a root or
   // fragment that adds a second section, so each rendered section stays one
   // removable fragment.
-  test("roots assemble every fragment once in the same order", () => {
-    expect([...new Bun.Glob("*.md").scanSync(join(ROOT, FRAGMENTS))].sort()).toEqual([...order].sort());
+  test("roots assemble every section fragment once in the same order", () => {
+    // The compaction reminder belongs to lifecycle adapters, not startup context.
+    expect([...new Bun.Glob("*.md").scanSync(join(ROOT, FRAGMENTS))].filter((name) => name !== "compaction-reminder.md").sort()).toEqual([...order].sort());
     expect(order.map((name) => ({ name, sections: headings(fragment(name)).length }))).toEqual(order.map((name) => ({ name, sections: 1 })));
     expect(new Set(order.flatMap((name) => headings(fragment(name)))).size).toBe(order.length);
     for (const root of AGENT_ROOTS) {

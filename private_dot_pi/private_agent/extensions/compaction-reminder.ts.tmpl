@@ -1,0 +1,23 @@
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
+const reminder = {{ includeTemplate "agents/compaction-reminder.md" . | trim | toJson }};
+
+// Request-local insertion also covers resumed sessions without persisting duplicate reminders.
+export default function (pi: ExtensionAPI) {
+  pi.on("context", (event) => {
+    const i = event.messages.findLastIndex((m) => m.role === "compactionSummary");
+    if (i < 0) return;
+    // Pi keeps older messages after the summary; place the reminder after that history
+    // and before the first message created at or after compaction.
+    const after = event.messages.findIndex((m, j) => j > i && m.timestamp >= event.messages[i].timestamp);
+    const messages = [...event.messages];
+    messages.splice(after < 0 ? messages.length : after, 0, {
+      role: "custom",
+      customType: "compaction-reminder",
+      content: reminder,
+      display: false,
+      timestamp: messages[i].timestamp,
+    });
+    return { messages };
+  });
+}

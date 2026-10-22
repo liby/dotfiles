@@ -223,6 +223,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-compact-reminder.sh",
+            "timeout": 5
+          }
+        ]
       }
     ]
   },
