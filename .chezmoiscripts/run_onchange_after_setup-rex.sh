@@ -34,6 +34,6 @@ defaults write $domain Workspace.terminalUsesDisplayP3 -bool true
 defaults write $domain Workspace.usesStandardInactiveWindowPaneStyles -bool false
 defaults write $domain rex.client.remoteControl -bool true
 
-if pgrep -qf '/Rex Beta.app/Contents/MacOS/Rex'; then
-  print "Reopen the Rex app to apply its preferences; leave Rex Server running."
+if [[ -n $(lsappinfo find bundleid=$domain) ]]; then
+  print "Reopen the Rex app to apply its settings; leave Rex Server running."
 fi

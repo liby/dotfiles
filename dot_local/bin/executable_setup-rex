@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if (( ! $+commands[rex] )); then
-  print -u2 "Install and open Rex Beta before running setup-rex."
+  print -u2 "Install and open Rex before running setup-rex."
   exit 1
 fi
 
@@ -23,4 +23,6 @@ curl --fail --location --silent --show-error --connect-timeout 10 --max-time 60 
   --output "$theme"
 printf '5311deab8a51b08c55121c035a0a3a1967c7d7fa7e38622662c401a7f49dcd8f  %s\n' "$theme" | shasum -a 256 -c -
 rex -C "$client" do client.theme.import "path=$theme"
+
+rex skill setup
 

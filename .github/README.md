@@ -55,7 +55,7 @@ If chezmoi is already installed, run:
 chezmoi init --apply liby
 ```
 
-Install Rex Beta, the terminal in which agents open panes you can watch, by hand. Open it and run `setup-rex` to import its theme; `chezmoi apply` writes its other preferences, which the app shows once reopened.
+Install Rex, the terminal in which agents open panes you can watch, by hand. Open it and run `setup-rex`, which imports its theme and installs Rex's skill for the coding agents. `chezmoi apply` also writes Rex's other settings, which take effect after you reopen the app.
 
 ## Common operations
 

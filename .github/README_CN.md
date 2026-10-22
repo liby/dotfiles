@@ -10,19 +10,19 @@
 
 ## 范围
 
-这个仓库负责让我的多台 Mac 保持同步、初始化新 Mac，并配置我使用的 Coding Agent：它们共用的指令、skill、沙箱和防护。以下内容刻意不做：
+这个仓库负责让我的多台 Mac 保持同步、初始化新 Mac，并配置我使用的 coding agent：它们共用的指令、skill、沙箱和防护。以下内容刻意不做：
 
 - 无人值守安装，见[初始化新 Mac](#初始化新-mac)。
 - 修复漂移：初始化脚本只在渲染后的内容变化时重新运行，所以手动删掉的工具、换成另一把密钥的 YubiKey，都会保持原样，直到那个脚本再次运行；重跑单个脚本的方法见 [Bootstrap](CONCEPTS.md#bootstrap)。
 - 清理早先应用过的机器上已退役的配置，见[更新已有配置的机器](#更新已有配置的机器)。
-- 把所有工具钉在同一个快照：Coding Agent、Homebrew 软件包和会自动更新的应用都走各自的更新渠道，只有后台开发工具固定版本，见 [Package and tool ownership](CONCEPTS.md#package-and-tool-ownership)。
+- 把所有工具锁定在同一个快照：coding agent、Homebrew 软件包和会自动更新的应用都走各自的更新渠道，只有后台开发工具固定版本，见 [Package and tool ownership](CONCEPTS.md#package-and-tool-ownership)。
 - 应用的运行时状态和登录会话，它们归写入它们的应用管理，见 [Configuration ownership](CONCEPTS.md#configuration-ownership)。
 
 ## 项目概览
 
 | 内容 | 入口 |
 | --- | --- |
-| Coding Agent 工具与配置 | [`dot_agents`](../dot_agents/)、[`dot_claude`](../dot_claude/)、[`dot_codex`](../dot_codex/)、[`private_dot_pi`](../private_dot_pi/)、[`.chezmoitemplates/agents`](../.chezmoitemplates/agents/) |
+| coding agent 工具与配置 | [`dot_agents`](../dot_agents/)、[`dot_claude`](../dot_claude/)、[`dot_codex`](../dot_codex/)、[`private_dot_pi`](../private_dot_pi/)、[`.chezmoitemplates/agents`](../.chezmoitemplates/agents/) |
 | Git 配置 | [`dot_config/git`](../dot_config/git/)、[`.chezmoitemplates/git`](../.chezmoitemplates/git/) |
 | 设计思路 | [`CONCEPTS.md`](CONCEPTS.md) |
 | 软件包和初始化脚本 | [`Brewfile`](../Brewfile)、[`.chezmoiscripts`](../.chezmoiscripts/) |
@@ -31,7 +31,7 @@
 
 ## 初始化新 Mac
 
-全新安装的 macOS 上，`git` 只是一个占位程序，调用它只会弹出命令行开发者工具的安装对话框并返回错误，`chezmoi init` 因此无法克隆本仓库。在新 Mac 上打开 Terminal.app，先安装命令行工具：
+全新安装的 macOS 上，`git` 只是一个占位程序，调用它只会弹出命令行开发者工具的安装对话框并返回错误，`chezmoi init` 因此无法克隆本仓库。在新 Mac 上打开 Terminal.app，先安装命令行开发者工具：
 
 ```sh
 xcode-select --install
@@ -55,7 +55,7 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply l
 chezmoi init --apply liby
 ```
 
-Rex Beta 需要手动安装，Coding Agent 会在其中开出你能看到的 pane。打开它，再运行 `setup-rex` 导入主题；其他偏好由 `chezmoi apply` 写入，重新打开应用后生效。
+Rex 需要手动安装，coding agent 会在这个终端里打开你能看到的 pane。打开它，运行 `setup-rex`，导入主题并为 coding agent 安装 Rex 的 skill。Rex 的其余设置也由 `chezmoi apply` 写入，重新打开应用后生效。
 
 ## 常用操作
 
@@ -68,7 +68,7 @@ chezmoi edit <target>              # 编辑受管理文件（传递 target 路�
 chezmoi edit-encrypted <filename>  # 编辑加密文件（传递 source 路径）
 ```
 
-编辑加密文件时需要使用 YubiKey，不应该交由 Agent 处理。
+编辑加密文件时需要使用 YubiKey，不应该交由 agent 处理。
 
 其他命令参见 [chezmoi 日常操作指南](https://www.chezmoi.io/user-guide/daily-operations/)。
 
@@ -78,8 +78,8 @@ chezmoi edit-encrypted <filename>  # 编辑加密文件（传递 source 路径�
 
 ## 取用
 
-可以 Fork 本仓库并根据自己的环境调整，也可以只取用需要的部分。若要应用整套配置，请先检查并调整 `.chezmoi.toml.tmpl`、`Brewfile` 和 `.chezmoiscripts/`。加密的 `*.asc` 文件只能用我的 YubiKey 解密，请把它们和 `.chezmoi.toml.tmpl` 中的 GPG 接收者换成你自己的，或者连同用到它们的部分一起删除，详见[身份与加密数据](CONCEPTS.md#identity-and-encrypted-data)。
+可以 fork 本仓库并根据自己的环境调整，也可以只取用需要的部分。若要应用整套配置，请先检查并调整 `.chezmoi.toml.tmpl`、`Brewfile` 和 `.chezmoiscripts/`。加密的 `*.asc` 文件只能用我的 YubiKey 解密，请把它们和 `.chezmoi.toml.tmpl` 中的 GPG 接收者换成你自己的，或者连同用到它们的部分一起删除，详见[身份与加密数据](CONCEPTS.md#identity-and-encrypted-data)。
 
 ## 参与贡献
 
-修改本仓库前，请先阅读 [`AGENTS.md`](../AGENTS.md)，其中记录了仓库的工作流程、安全边界和验证要求。发现问题时，可以创建 [Issue](https://github.com/liby/dotfiles/issues/new)；如需提交修改，可以创建 [Pull Request](https://github.com/liby/dotfiles/pulls)。
+修改本仓库前，请先阅读 [`AGENTS.md`](../AGENTS.md)，其中记录了仓库的工作流程、安全边界和验证要求。发现问题时，可以创建 [issue](https://github.com/liby/dotfiles/issues/new)；如需提交修改，可以创建 [pull request](https://github.com/liby/dotfiles/pulls)。

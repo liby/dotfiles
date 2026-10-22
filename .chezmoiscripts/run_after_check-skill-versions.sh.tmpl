@@ -16,13 +16,22 @@ while read -r name installed; do
     print -u2 "skill $name records upstream ${tags[$name]}, but Homebrew installed $version; see Managed skill registry in .github/CONCEPTS.md"
 done <<< "$versions"
 
-# Rex updates itself outside Homebrew, so its skill records a guide hash instead of a tag.
+# Rex updates itself outside Homebrew, so the orc skill records a guide hash instead of a tag. Rex
+# cannot print an earlier version's guide, so the guide is kept under its hash for the review to diff.
 if (( $+commands[rex] )); then
-  rex_skill="{{ .chezmoi.sourceDir }}/dot_agents/skills/rex/SKILL.md"
-  recorded="$(sed -En 's/^[[:space:]]+rex-guide-sha256: //p' "$rex_skill")"
-  guide="$(rex --autostart=false skill show | shasum -a 256)"
-  [[ "${guide%% *}" == "$recorded" ]] ||
-    print -u2 "skill rex was compared with the guide of Rex $(sed -En 's/^[[:space:]]+rex-version: //p' "$rex_skill"), but the installed Rex prints a different one; see Rex integration in .github/CONCEPTS.md"
+  orc_skill="{{ .chezmoi.sourceDir }}/dot_agents/skills/orc/SKILL.md"
+  recorded="$(sed -En 's/^[[:space:]]+rex-guide-sha256: //p' "$orc_skill")"
+  guides="${XDG_CACHE_HOME:-$HOME/.cache}/rex-guide"
+  mkdir -p "$guides"
+  guide="$(rex --autostart=false skill show | tee "$guides/current.md" | shasum -a 256)"
+  guide="${guide%% *}"
+  mv "$guides/current.md" "$guides/$guide.md"
+  find "$guides" -type f ! -name "$guide.md" ! -name "$recorded.md" -delete
+  if [[ "$guide" != "$recorded" ]]; then
+    review="see Rex integration in .github/CONCEPTS.md"
+    [[ -f "$guides/$recorded.md" ]] && review="diff $guides/$recorded.md $guides/$guide.md and $review"
+    print -u2 "skill orc was compared with the guide of Rex $(sed -En 's/^[[:space:]]+rex-version: //p' "$orc_skill"), but the installed Rex prints a different one; $review"
+  fi
   rex --autostart=false skill status --json | jq -r '
     .harnesses[] | select(.detected) | .id as $agent | .items[]
     | select(.kind == "hook" and .state != "current" and .state != "unsupported")
