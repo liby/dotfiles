@@ -37,7 +37,11 @@ A fresh macOS install ships `git` as a stub that only opens the Command Line Too
 xcode-select --install
 ```
 
-Wait for the installer window to finish, then confirm `xcode-select -p` and `git --version` both print something. Now run:
+Wait for the installer window to finish, then confirm `xcode-select -p` and `git --version` both print something.
+
+Before running the setup command, grant Terminal.app Full Disk Access in System Settings > Privacy & Security > Full Disk Access for [automatic notification preferences](CONCEPTS.md#configuration-ownership). The terminal running later applies needs the same permission; without it, apply stops at the notification step and names the app to turn on. Apps that register for notifications later are configured on the next apply.
+
+Run:
 
 ```sh
 sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply liby

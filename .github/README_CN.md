@@ -37,7 +37,11 @@
 xcode-select --install
 ```
 
-等安装窗口结束，确认 `xcode-select -p` 和 `git --version` 都有输出，再运行：
+等安装窗口结束，确认 `xcode-select -p` 和 `git --version` 都有输出。
+
+运行下面的安装命令前，先在系统设置 > 隐私与安全性 > 完全磁盘访问权限中授权 Terminal.app，以便[自动同步通知偏好](CONCEPTS.md#configuration-ownership)。后续 apply 也需要运行它的终端获得同样授权；缺少授权时，apply 会在通知步骤停下，并指出要开启哪个应用。之后才注册通知的应用会在下次 apply 时配置。
+
+然后运行：
 
 ```sh
 sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply liby
