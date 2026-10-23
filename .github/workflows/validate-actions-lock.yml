@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 10
     env:
       # renovate: datasource=github-releases depName=github/gh-actions-lock
-      GH_ACTIONS_LOCK_VERSION: v0.2.0
+      GH_ACTIONS_LOCK_VERSION: v0.3.0
     steps:
       - name: Check out repository
         uses: actions/checkout@v7.0.1
