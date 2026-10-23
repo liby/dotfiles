@@ -9,7 +9,14 @@ export GOTOOLCHAIN=local
 # but only so configurations made before that default keep working; select it explicitly.
 export GLAB_CONFIG_DIR="$HOME/.config/glab-cli"
 export ORACLE_ENGINE="browser"
+# These turn off requests that tools send beside their real work; under Codex, a request outside
+# the agent sandbox allowlist fails the whole command. Snowflake's connector probes cloud metadata
+# endpoints at every login. Storybook's host is allowlisted for its version and What's New
+# requests, so only this switch keeps its telemetry off.
+export DBT_SEND_ANONYMOUS_USAGE_STATS=false
 export RESEND_TELEMETRY_DISABLED=1
+export SNOWFLAKE_DISABLE_PLATFORM_DETECTION=true
+export STORYBOOK_DISABLE_TELEMETRY=1
 export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 export TZ=Asia/Singapore
 

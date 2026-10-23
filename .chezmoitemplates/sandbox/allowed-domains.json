@@ -33,7 +33,9 @@
   "rubygems.org",
   "index.rubygems.org",
   "static.rust-lang.org",
+  "o1.ingest.sentry.io",
   "*.snowflakecomputing.com",
+  "storybook.js.org",
   "api.typesafe.ai",
   "*.blob.core.windows.net"
 ]
