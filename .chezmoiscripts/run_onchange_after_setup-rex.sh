@@ -13,6 +13,7 @@ defaults write $domain Workspace.interfaceStyle -string useTheme
 defaults write $domain Workspace.paneDensity -string compact
 defaults write $domain Workspace.playsProgramActivitySounds -bool false
 defaults write $domain Workspace.showsPaneHeaders -bool true
+defaults write $domain Workspace.showsProcessesInActivity -bool true
 defaults write $domain Workspace.showsProgramActivityDockBadge -bool false
 defaults write $domain Workspace.sidebarPosition -string left
 defaults write $domain Workspace.tabIconColorMode -string activePanes
