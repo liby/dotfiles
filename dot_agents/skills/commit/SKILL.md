@@ -53,6 +53,8 @@ The body carries supporting changes and the material reasons, constraints, trade
 
 `chore: keep package binaries and store on one volume`, with a body naming the cross-volume store recreation that motivated it, states the outcome and its reason; `chore: update package manager path` with a body restating the move loses the reason.
 
+When people outside the user's employer can read any remote of the repository, the message must not name the employer or tie a host, internal product, project, or person to it unless the user says it may; describe such things generically, but name an identifier the diff itself contains. A mention already in the repository's history is not permission.
+
 - Use backticks for code references and keep each pair on one line; a literal longer than the wrap width may exceed it.
 - Name another commit by short hash only when the result depends on it and a remote-tracking branch already contains it; amend, fixup, and rebase change unpushed hashes, so name those by subject. Omit "this commit".
 - A fixup keeps Git's generated `fixup!` subject, or `fixup! <target-hash>` when two commits share the target's title. An unsquashed fixup does not complete a requested consolidation.

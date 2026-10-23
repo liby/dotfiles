@@ -2,6 +2,8 @@ Dotfiles managed by [chezmoi](https://www.chezmoi.io/) from `~/.local/share/chez
 
 This repository targets Apple Silicon macOS only. Use the `/opt/homebrew` prefix directly; do not add Intel `/usr/local` branches until a supported machine requires them.
 
+This repository is public. Unless the user says otherwise, its tracked paths, file contents, and commit messages must not name the user's employer or tie a host, internal product, project, or person to it, and a mention already in its history is not permission. Employer-specific values come from chezmoi data prompted for in `.chezmoi.toml.tmpl` or from encrypted files; keep the prompts, defaults, and examples for them generic.
+
 ## Workflow
 
 - After editing `.chezmoi.toml.tmpl`, run `chezmoi init` to regenerate `~/.config/chezmoi/chezmoi.toml`; never edit that generated file directly.
