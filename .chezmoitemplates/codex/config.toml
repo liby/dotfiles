@@ -1,6 +1,6 @@
 approval_policy = "on-request"
 approvals_reviewer = "auto_review"
-# `check_for_update_on_startup` only prompts and waits for a keypress; it never updates. That prompt is useless and can block an agent launching Codex, so it stays disabled and the unattended-upgrades job upgrades the Codex cask.
+# Updates belong to unattended-upgrades; disable the startup prompt so unattended launches cannot wait for input.
 check_for_update_on_startup = false
 cli_auth_credentials_store = "keyring"
 default_permissions = "development"
@@ -55,7 +55,7 @@ skill = "#ad7bf9"
 enabled = false
 
 [features]
-# Summarizes in the background before the context limit and swaps the summary in at the next turn boundary: compaction never blocks a turn, at the cost of starting earlier and billing discarded attempts.
+# Start compaction early to reduce foreground waiting; foreground compaction can still wait, and completed usage is charged even if the result is discarded.
 async_compaction = true
 # Remove once Codex runs hooks and tool commands with the attached client's environment: https://github.com/openai/codex/issues/48500
 daemon_auto_start = false
@@ -101,11 +101,9 @@ allow_local_binding = true
 {{ joinPath $.chezmoi.homeDir (trimPrefix "~/" .) | quote }} = "allow"
 {{ end }}
 [shell_environment_policy]
-# `core` omits REX_*, which the rex skill needs to find this agent's own pane,
-# so it silently breaks Codex-driven Rex control. Inherit the full environment
-# instead and keep the KEY/SECRET/TOKEN name filter on: this is safe only while
-# the ambient shell carries no secret values (credentials belong in envchain).
+# `core` drops REX_*, which Rex needs to identify this agent's pane.
 inherit = "all"
+# Retain case-insensitive *KEY*, *SECRET*, and *TOKEN* filters on inherited names; other names can still carry secrets, so credentials belong in envchain.
 ignore_default_excludes = false
 
 [shell_environment_policy.set]
@@ -158,6 +156,10 @@ enabled = false
 enabled = false
 
 [apps.connector_openai_safety_settings]
+enabled = false
+
+# Activate only explicitly enabled plugins that are installed and enabled by their source.
+[plugins._default]
 enabled = false
 
 [plugins."codex-app-tools@openai-bundled"]

@@ -8,6 +8,7 @@
     "has-seen-fast-mode-home-banner": true,
     "has-seen-realtime-voice-nux-v1": true,
     "home-composer-mode-v1": "work",
-    "last-explicit-review-diff-filter": "branch"
+    "last-explicit-review-diff-filter": "branch",
+    "safety-buffering-banner-dismissed-v1": true
   }
 }
