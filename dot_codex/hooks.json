@@ -9,6 +9,15 @@
             "type": "command"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "command": "rexume report codex",
+            "timeout": 5,
+            "type": "command"
+          }
+        ]
       }
     ]
   }

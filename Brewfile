@@ -48,6 +48,8 @@ brew "pinentry-mac"
 brew "proto"
 # CLI for the Resend email API
 brew "resend/cli/resend", trusted: true
+# Restore Rex sessions and their coding agent conversations after the server stops
+brew "entwining/tap/rexume", trusted: true
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Index local coding agent session logs for lookup and counts

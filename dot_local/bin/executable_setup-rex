@@ -26,3 +26,7 @@ rex -C "$client" do client.theme.import "path=$theme"
 
 rex skill setup
 
+# Restored terminals answer color queries before the app shows them, so rexume needs the theme's colors.
+color() { awk -v key="$1" '$1 == key && $2 == "=" { print $3 }' "$theme"; }
+rexume install --theme-foreground "$(color foreground)" --theme-background "$(color background)"
+

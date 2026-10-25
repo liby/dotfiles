@@ -59,7 +59,7 @@ sh -c "$(curl -fsLS https://get.chezmoi.io)" -- -b "$(mktemp -d)" init --apply l
 chezmoi init --apply liby
 ```
 
-Rex 需要手动安装，coding agent 会在这个终端里打开你能看到的 pane。打开它，运行 `setup-rex`，导入主题并为 coding agent 安装 Rex 的 skill。Rex 的其余设置也由 `chezmoi apply` 写入，重新打开应用后生效。
+Rex 需要手动安装，coding agent 会在这个终端里打开你能看到的 pane。打开它，运行 `setup-rex`，导入主题，为 coding agent 安装 Rex 的 skill，并安装在 Rex server 停止后恢复 session 的 rexume。Rex 的其余设置也由 `chezmoi apply` 写入，重新打开应用后生效。
 
 ## 常用操作
 

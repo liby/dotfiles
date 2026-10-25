@@ -111,6 +111,7 @@
         "~/.gnupg/trustdb.gpg",
         "~/.local/bin",
         "~/.local/share/uv",
+        "~/.local/state/rexume",
         "~/.npm",
         "~/.oracle/sessions",
         "~/.pi",
@@ -230,6 +231,15 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/post-compact-reminder.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rexume report claude",
             "timeout": 5
           }
         ]

@@ -59,6 +59,8 @@ section() {
 AGENT_GUARD="/opt/homebrew/bin/agent-guard --runtime claude"
 # `rex skill setup` recognizes only its own command; see CONCEPTS.md#rex-integration.
 REX_HOOK="/bin/sh -c 'rex __internal session-start --agent claude 2>/dev/null || true'"
+# `rexume install` recognizes its hook by this command; see CONCEPTS.md#rex-integration.
+REXUME_HOOK="rexume report claude"
 
 section "required coverage"
 # The guard covers Bash and the file tools; see CONCEPTS.md#agent-guard.
@@ -69,6 +71,7 @@ expect_runs PostToolUse Bash "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_runs PostToolUseFailure Bash "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_runs PreCompact "" "~/.claude/hooks/pre-compact-instructions.sh"
 expect_runs SessionStart "" "$REX_HOOK"
+expect_runs SessionStart "" "$REXUME_HOOK"
 expect_runs SessionStart compact "~/.claude/hooks/post-compact-reminder.sh"
 check "event/matcher/command tuples are unique" "$(jq '
   [to_entries[] | .key as $event | .value[] | (.matcher // "") as $matcher
@@ -80,10 +83,10 @@ check "each agent guard has a finite deadline and blocks when its hook fails" "$
   | all(.timeout | type == "number" and . > 0) and all(.onFailure == "block")' <<<"$HOOKS_JSON")"
 
 section "registered command -> source script"
-# Homebrew owns the guard and Rex owns its hook; every other
+# Homebrew installs the guard and rexume, and Rex owns its hook; every other
 # command deploys from this directory.
 while IFS= read -r cmd; do
-  [ "$cmd" = "$AGENT_GUARD" ] || [ "$cmd" = "$REX_HOOK" ] && continue
+  [ "$cmd" = "$AGENT_GUARD" ] || [ "$cmd" = "$REX_HOOK" ] || [ "$cmd" = "$REXUME_HOOK" ] && continue
   base="${cmd#"~/.claude/hooks/"}"
   # Only an executable_ source deploys as an executable hook; a plain source
   # deploys 0644 and a *.test.* name is chezmoi-ignored, so both would register
