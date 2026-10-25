@@ -30,6 +30,8 @@
   "pypi.org",
   "files.pythonhosted.org",
   "api.resend.com",
+  "rubygems.org",
+  "index.rubygems.org",
   "static.rust-lang.org",
   "*.snowflakecomputing.com",
   "api.typesafe.ai",
