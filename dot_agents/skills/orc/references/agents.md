@@ -33,7 +33,7 @@ When user input is required, report the agent, pane, and exact dialog and option
 
 ## Deliver a prompt
 
-Choose delivery-only or required results before submitting. Type a short single-line prompt; write multiline text, or text with quotes, backticks, or `$(...)`, to a task-owned file and send its path. Never paste another task into a busy editor. When the target is working, deliver without waiting for it to go idle: Claude Code queues a message typed while it works, and Codex and Pi have their own [queue and steer paths](runtimes.md); for any other runtime, wait for the active turn to settle before prompting. For parallel work, confirm each receipt on the screen or in the queue command's output, then dispatch the rest of the batch before collecting.
+Choose delivery-only or required results before submitting. Enter the prompt itself as a paste, as [Send input to a running program](../SKILL.md#send-input-to-a-running-program) shows. Never paste another task into a busy editor. When the target is working, deliver without waiting for it to go idle: Claude Code queues a message entered while it works, and Codex and Pi have their own [queue and steer paths](runtimes.md); for any other runtime, wait for the active turn to settle before prompting. For parallel work, confirm each receipt on the screen or in the queue command's output, then dispatch the rest of the batch before collecting.
 
 ## Complete the requested outcome
 

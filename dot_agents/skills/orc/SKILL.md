@@ -12,7 +12,7 @@ Rex runs terminals on a server; the Rex app and the `rex` CLI are clients of tha
 
 Before the first `rex` command, have Rex's guide for the installed version in context: `rex skill show` prints it, the same text Rex's own `rex` skill loads. Read the whole output, in one call or in consecutive parts to its last line, never cut by `head` or another filter, and read it again whenever its text is no longer in context, as after compaction. Only the session rename that Rex's startup context asks for may come first. Take commands and syntax from the guide; where this skill differs from it, follow this skill.
 
-Programs in Rex terminals run with the user's full permissions, outside the calling agent's sandbox and approval checks. Never use Rex to run a command that the host's sandbox or approval would refuse, or to avoid asking, unless the user asked for that command in Rex; otherwise take the host's own escalation path.
+Programs in Rex terminals run with the user's full permissions, outside the calling agent's sandbox and approval checks, and a sandboxed `rex` call can start them without any review. Take a command that needs escalation through the host's own escalation path. When the host cannot run it even after approval, as Codex keeps approved escalations inside its sandbox while its permission profile denies a read, request escalation for the `rex` call that runs it: the call itself needs none, but the request puts the command before the host's reviewer. Without that approval, run such a command in Rex only when the user asked for it there; a refusal holds in Rex too.
 
 Load each reference before its first action:
 
@@ -49,7 +49,16 @@ The task commands find you through your own pane's `REX_BLOCK`, so outside a Rex
 
 ## Send input to a running program
 
-A successful `rex send` only queues bytes: Rex accepts input even while the program reports that it is blocked on a question. Read the target's screen first, send, then verify the screen or receipt before sending more. Text in an agent's input box that you did not type is the user's draft, which your text would join: leave it, and deliver through a path that bypasses the input box, such as `rexume task send` to a task's worker or Codex's queue, or once the box is empty. When delivery is uncertain, reconcile the screen, program, and result before any resend.
+Enter text as a paste event and press keys separately with `rex send-key`. `rex send` types its text as keystrokes, which leaves the program to guess where the text ends: Codex takes a quickly typed prompt for a paste and turns the Enter that follows into a newline, and every newline in typed text acts as Enter. A program that turns on bracketed paste, as Claude Code, Codex, Pi, and zsh do, receives a paste event as one delimited paste, newlines included, so the next key acts on the whole text; a program whose `rex block call ... modes` shows `bracketed_paste` unset receives it as typed text, each newline as Enter. Write the text to a task-owned file and let `jq` build the event, so no shell quoting touches the text; for a short line without shell syntax, `--arg t '<text>'` replaces `--rawfile`:
+
+```sh
+jq -n --arg s "$session" --arg b "$block" --rawfile t "$text_file" \
+  '{session_id: $s, block_id: $b, event: {type: "paste", payload: {text: ($t | rtrimstr("\n"))}}}' |
+  rex api call -s "$session" block.event -
+rex send-key -s "$session" -b "$block" enter
+```
+
+Rex accepts input even while the program reports that it is blocked on a question, and accepting it does not show that the program took it in. Read the target's screen first, send, then verify the screen or receipt before sending more. Text in an agent's input box that you did not enter is the user's draft, which your text would join: leave it, and deliver through a path that bypasses the input box, such as `rexume task send` to a task's worker or Codex's queue, or once the box is empty. When delivery is uncertain, reconcile the screen, program, and result before any resend.
 
 ## Drive the Rex app
 
