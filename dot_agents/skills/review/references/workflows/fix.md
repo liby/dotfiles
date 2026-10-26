@@ -20,6 +20,8 @@ BASELINE=$(bash "$REVIEW_SKILL_DIR/scripts/review-fix-baseline.sh" "$FIX_SCOPE_F
 
 Do not use `git stash create` or snapshot the whole working tree. Add an untracked file only when a frontier item cites it and the path classifier accepts it.
 
+If a frontier path needed external classification as ordinary, pass the review's NUL-delimited ordinary-path file as the helper's second argument and include the supporting non-value evidence in the fix brief. The baseline helper applies the same classification as the review before Git reads any scope body; protected inputs and confirmed ciphertext remain outside the fix scope.
+
 ## Triage And Edit
 
 Classify each item once:

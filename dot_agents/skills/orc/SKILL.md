@@ -57,7 +57,7 @@ Client actions need the app running with **Settings > Server > Remote Control** 
 
 ## Release what you opened
 
-Once results are collected and no further work needs the other terminals, close in one operation the largest resource this task created and still owns exclusively. Reuse the creation IDs and current evidence already gathered; inspect only unresolved ownership, occupant, or completion details, including detached blocks when closing a session (`rex block ls -s <session> --json`). Keep terminals handed to the user, requested services, and anything the user took over.
+Once results are collected and no further work needs the other terminals, close in one operation the largest resource this task created and still owns exclusively. Reuse the creation IDs and current evidence already gathered; inspect only unresolved ownership, occupant, or completion details, including detached blocks when closing a session (`rex block ls -s <session> --json`). Collecting helper results does not complete a session or tab being handed back to the user: close a container only when its own purpose is complete. Keep terminals handed to the user, requested services, anything the user took over, and containers with user additions or uncertain ownership; report what remains and why.
 
 - A whole disposable session: `rex kill <session>`.
 - A whole disposable tab in a session to keep: `rex window close -s <session> <window>`.

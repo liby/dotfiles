@@ -17,13 +17,14 @@ Do not apply fixes in the main reviewer context. A clean verdict is a valid outc
 ## Flow
 
 1. Resolve scope: MR/PR, branch diff, working tree, or explicit notes.
-2. Classify changed paths before reading any diff body. Source `scripts/_lib.sh` from the skill directory and run `validate_git_diff_paths <base> <head>` for a branch, `validate_working_tree_paths` for the working tree, or pass an MR/PR host file list as a NUL-delimited file to `validate_path_file_nul` in the same Bash invocation.
-   - Keep path transport NUL-delimited. Never copy a path from an earlier response into a later Bash command, because a plain-looking filename can collide with an unrelated Bash permission rule.
-   - Refuse raw secret surfaces without printing them. Stop on ambiguous sensitive paths until the host, project instructions, or user classifies them.
+2. Classify changed paths from the governing instructions and non-value evidence before reading any diff body. Source `scripts/_lib.sh` from the skill directory and run `validate_git_diff_paths <base> <head>` for a branch, `validate_working_tree_paths` for the working tree, or pass an MR/PR host file list as a NUL-delimited file to `validate_path_file_nul` in the same Bash invocation. The script screens names; a name match or an absence of matches does not establish a file's purpose.
+   - Keep classifier input NUL-delimited and pass it directly from the changed-file producer rather than retyping paths from its output. Subsequent body reads must include only paths classified ordinary; naming a path in the classifier output does not authorize reading it.
+   - Keep the bodies of credential stores, private keys, declared environment inputs, and confirmed ciphertext out of every diff. Account for their paths and status. Resolve an unclear purpose from host or project declarations or one focused question to the user, without inspecting the body; review the ordinary paths meanwhile.
+   - When that evidence establishes a flagged path as ordinary, record its exact repo-relative spelling in a NUL-delimited ordinary-path file. Pass that file as the last argument to the classifier entry point on rerun. It records a supported classification, not an override of protected inputs, confirmed ciphertext, or host permission rules.
    - Treat encrypted-name matches only as ciphertext candidates. Once project instructions or an encryption marker confirms one, account for path and status, keep its body out of every diff, and continue reviewing ordinary paths.
    - Public certificates, public keys, `authorized_keys`, `known_hosts`, and SSH client configuration are not secret by type. Source code is not secret merely because its path contains `credential`, `secret`, or `token`; review it as security-sensitive code and avoid quoting secret values.
 
-   Done when every changed path is classified as ordinary, opaque ciphertext, ambiguous, or raw secret before any body is read.
+   Done when every changed path is ordinary, opaque ciphertext, protected, or named in a pending classification question before any body is read.
 3. List changed files before judging behavior:
    - branch: parse `git diff -z --name-status <base>...<head>`; for `R*` and `C*`, inspect both source and destination paths before any full diff
    - working tree: parse `git diff -z --name-status HEAD` and `git ls-files -z --others --exclude-standard`; inspect both source and destination for `R*` and `C*`

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create a scoped baseline object for the review fix workflow.
-# Input is a NUL-delimited file of repo-relative paths the fixer may touch.
+# Input is a NUL-delimited scope, optionally followed by a classified-ordinary path list.
 # Stdout prints the baseline commit id. Stderr prints refusal, ambiguity, or usage errors.
 
 set -euo pipefail
@@ -8,8 +8,8 @@ set -euo pipefail
 # shellcheck source=_lib.sh
 source "$(dirname "$0")/_lib.sh"
 
-if [ "$#" -ne 1 ]; then
-  echo "${0##*/}: usage: ${0##*/} <nul-delimited-fix-scope-file>" >&2
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+  echo "${0##*/}: usage: ${0##*/} <nul-delimited-fix-scope-file> [classified-ordinary-file]" >&2
   exit 2
 fi
 
@@ -25,8 +25,8 @@ if [ ! -s "$FIX_SCOPE_FILE" ]; then
   exit 2
 fi
 
-# set -e propagates the validator's real exit status: 4 raw secret, 5 ambiguous.
-validate_path_file_nul "$FIX_SCOPE_FILE"
+# Classification must succeed before Git reads any scope body into the baseline.
+validate_path_file_nul "$FIX_SCOPE_FILE" "${2:-}"
 
 TMP_INDEX=$(mktemp)
 cleanup() { rm -f "$TMP_INDEX"; }
