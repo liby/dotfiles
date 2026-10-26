@@ -38,9 +38,9 @@ These calls fail in ways that recur:
 
 Answer from the complete relevant set. Save context by selecting fields and filtering noise, not by sampling: raw API objects carry users, links, and metadata the question rarely needs, while TSV, JSON lines, and plain text of the same selected fields differ by a few percent. Use `@tsv` for short single-line fields and JSON lines or plain text for long bodies.
 
-- **Facts and lists:** one call with `-F json --jq`, or `glab api` piped into `jq`.
-- **A file in a repository:** `glab api 'projects/:fullpath/repository/files/:path/raw?ref=<ref>' --placeholder path=<file-path>` returns the file text.
-- **Discussion:** `glab mr view --comments` hides system activity unless `--system-logs` is passed. Read a whole MR conversation through the `discussions` API with `--paginate`: it keeps each thread with its notes' `resolvable`, `resolved`, and diff `position`, while the `notes` endpoint flattens threads. Read every human note, count skipped system notes, and when the conversation is too large for one read, save it once and read it in order in chunks, reporting how many notes were read. For open review feedback only:
+- Facts and lists: one call with `-F json --jq`, or `glab api` piped into `jq`.
+- A file in a repository: `glab api 'projects/:fullpath/repository/files/:path/raw?ref=<ref>' --placeholder path=<file-path>` returns the file text.
+- Discussion: `glab mr view --comments` hides system activity unless `--system-logs` is passed. Read a whole MR conversation through the `discussions` API with `--paginate`: it keeps each thread with its notes' `resolvable`, `resolved`, and diff `position`, while the `notes` endpoint flattens threads. Read every human note, count skipped system notes, and when the conversation is too large for one read, save it once and read it in order in chunks, reporting how many notes were read. For open review feedback only:
 
   ```bash
   set -o pipefail; glab api projects/:fullpath/merge_requests/<iid>/discussions --paginate --output ndjson | jq -c '
@@ -49,9 +49,9 @@ Answer from the complete relevant set. Save context by selecting fields and filt
        notes: [.notes[] | {author: .author.username, body}]}'
   ```
 
-- **Diff:** list changed paths first with `set -o pipefail; glab api 'projects/:id/merge_requests/<iid>/diffs' --paginate --output ndjson | jq -c '{new_path, generated_file, collapsed, too_large}'`, then read `glab mr diff --raw` without lockfiles, generated, and vendored files. Both endpoints return limited results for an MR past GitLab's diff limits; read a path marked `collapsed` or `too_large` from local Git at the MR's `diff_refs`.
-- **CI:** `glab ci get --merge-request <iid> --status failed --with-job-details -F json` names the failed jobs of the MR's head pipeline, looked up in the target project. When `head_pipeline.project_id` from `glab mr view <iid> -F json` names another project, as for a fork MR whose pipeline ran in the fork, `ci get` gets 404: query that project's pipeline, jobs, and traces. It lists runner jobs only: when the pipeline failed and no listed job without `allow_failure` did, read `projects/:id/pipelines/<id>/bridges` and repeat on each failed `downstream_pipeline.id`. Read a finished job's log with `glab api projects/:fullpath/jobs/<job-id>/trace`, with the numeric project ID in place of `:fullpath` for a pipeline in another project, and search it for the error rather than reading it whole.
-- **Repeated questions over the same data:** fetch once into the task's temporary directory and query that file instead of calling the API again.
+- Diff: list changed paths first with `set -o pipefail; glab api 'projects/:id/merge_requests/<iid>/diffs' --paginate --output ndjson | jq -c '{new_path, generated_file, collapsed, too_large}'`, then read `glab mr diff --raw` without lockfiles, generated, and vendored files. Both endpoints return limited results for an MR past GitLab's diff limits; read a path marked `collapsed` or `too_large` from local Git at the MR's `diff_refs`.
+- CI: `glab ci get --merge-request <iid> --status failed --with-job-details -F json` names the failed jobs of the MR's head pipeline, looked up in the target project. When `head_pipeline.project_id` from `glab mr view <iid> -F json` names another project, as for a fork MR whose pipeline ran in the fork, `ci get` gets 404: query that project's pipeline, jobs, and traces. It lists runner jobs only: when the pipeline failed and no listed job without `allow_failure` did, read `projects/:id/pipelines/<id>/bridges` and repeat on each failed `downstream_pipeline.id`. Read a finished job's log with `glab api projects/:fullpath/jobs/<job-id>/trace`, with the numeric project ID in place of `:fullpath` for a pipeline in another project, and search it for the error rather than reading it whole.
+- Repeated questions over the same data: fetch once into the task's temporary directory and query that file instead of calling the API again.
 
 ## Merge Requests
 

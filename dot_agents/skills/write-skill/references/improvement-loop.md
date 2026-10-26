@@ -32,4 +32,4 @@ Freeze baseline bytes and evidence cases before editing. Change one owning behav
 
 When the change meets the evaluation protocol's load condition, compare the frozen baseline and candidate on the same runtime-visible inputs. For other changes, run the owning validator and the smallest direct reproducer. Present the evidence-to-change mapping and any unresolved trade-off so a human can judge the diff without rereading raw transcripts.
 
-Keep the candidate only when it explains the evidence, belongs to the correct owner, and introduces no paired regression. Stop with no change when evidence is weak or conflicting, the candidate oscillates with an earlier fix, the next edit would undo an accepted constraint, failures are caused mostly by the candidate, or another pass adds no new trigger path or source evidence.
+Keep the candidate only when it explains the evidence, belongs to the correct owner, and introduces no paired regression. Stop with no change when evidence is weak or conflicting, the candidate oscillates with an earlier fix, the next edit would undo an accepted constraint, or another pass adds no new trigger path or source evidence.

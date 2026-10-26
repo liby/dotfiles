@@ -62,7 +62,7 @@ Rex accepts input even while the program reports that it is blocked on a questio
 
 ## Drive the Rex app
 
-Client actions need the app running with **Settings > Server > Remote Control** on, which opens the app's whole interface to the server's clients, so leave the switch as the user set it. Besides the actions the guide gates, open a session on the web or call API methods of the same reach (`server.stop`, `server.tailscale.*`, `hosts.put`, `hosts.remove`, `server.apple.grant_file_access`) only at the user's request.
+Client actions need the app running with Settings > Server > Remote Control on, which opens the app's whole interface to the server's clients, so leave the switch as the user set it. Besides the actions the guide gates, open a session on the web or call API methods of the same reach (`server.stop`, `server.tailscale.*`, `hosts.put`, `hosts.remove`, `server.apple.grant_file_access`) only at the user's request.
 
 ## Release what you opened
 

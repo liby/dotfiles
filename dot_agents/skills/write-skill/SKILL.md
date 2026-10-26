@@ -19,7 +19,6 @@ Write skills and reusable instructions that change agent behavior. A line earns 
 2. Resolve the owning source from current environment or repository instructions and edit it, not a deployed copy. When no owner is declared, change only an explicitly named path and do not adopt it into another registry as a side effect. Prefer targeted edits over rewriting the whole file, and re-read right before any full-file rewrite, because a rewrite silently drops any edit made since your last read, including the user's own manual trim.
 3. When the request rests on evidence that an existing instruction produced wrong behavior (a user's correction of agent behavior, a failed run, review findings, eval results, or transcripts), load and follow the [evidence-driven improvement loop](references/improvement-loop.md) before judging or proposing a change; a request that only supplies a new fact or a wanted edit is not such evidence. When a candidate change touches model-invocable routing, conditional reference loading, claimed output quality, or material behavior of a global `AGENTS.md`/`CLAUDE.md` that loads in every session (a project-level instruction file is not global), load the [evaluation protocol](references/evaluation.md) before judging or accepting the candidate; it compares the frozen baseline with that candidate, so write a requested edit as the candidate instead of holding it until the evaluation runs.
 4. Before adding a rule, search the runtime-visible global instructions and relevant sibling skills for the same trigger. When an owner already covers the trigger, action, or boundary, strengthen or correct its sentence in place instead of appending a new one elsewhere; add a rule only for a failure mode no owner covers.
-5. For a non-trivial new skill, inspect 2-4 comparable local or public skills through their actual `SKILL.md` files or current runtime docs, not README claims.
 
 ## Placement
 
@@ -48,7 +47,7 @@ The `description` is the routing surface for model-invocable skills. Write it be
 - Add `Not for...` only when a realistic nearby task would otherwise select the wrong skill. Name the competing task or alternate route.
 - For paired or tiered surfaces, name the boundary in the description: lightweight search/read connector vs advanced API connector, read-only browse vs write/manage, local CLI vs remote host, public source vs private workspace.
 - Do not exclude a broader user request that can legitimately include this skill as a step, such as using a commit step inside a requested push. Put write, push, delete, or credential safety limits in the body workflow instead.
-- Keep it to at most 1024 characters. If that feels hard, split the skill or narrow scope.
+- Keep it to at most 1024 characters.
 
 ## Frontmatter
 
@@ -64,7 +63,7 @@ Target the local Claude Code, Codex and Pi setup in one `SKILL.md`. Add `when_to
 
 ## Writing the body
 
-Organize the instruction around the decisions the agent must make: prerequisites before their dependent actions, the completion condition beside the step it closes, and each section establishing what the next may assume. Review order, transitions and sentence construction across the whole instruction, not sentence by sentence. State the trigger, action, and boundary in established domain terms when those terms preserve the intended trigger and boundary. Use a condition-to-action list when branches differ; keep a dense single-condition sentence when every clause affects behavior. Do not turn a feedback example into a new universal prohibition or add a list of synonyms to make a rule appear comprehensive.
+Organize the instruction around the decisions the agent must make: prerequisites before their dependent actions, the completion condition beside the step it closes, and each section establishing what the next may assume. Review order, transitions and sentence construction across the whole instruction, not sentence by sentence. State the trigger, action, and boundary in established domain terms when those terms preserve the intended trigger and boundary. Use a condition-to-action list when branches differ; keep a dense single-condition sentence when every clause affects behavior. Leave out bold, italics, capitals, and intensifiers unless a test shows the instruction needs them, because a rule's priority belongs in its trigger and consequence. Do not turn a feedback example into a new universal prohibition or add a list of synonyms to make a rule appear comprehensive.
 
 Keep exact identifiers needed for execution, but derive changing counts, paths, and amounts from their owning source rather than copying a current census into prose. Mask private project, personal, host, client, customer, and credential identifiers in reusable skills; keep them only in skills explicitly scoped to that environment. This applies to every line you add, including an identifier copied from existing text or from the real case you are generalizing.
 
@@ -73,8 +72,6 @@ An example must demonstrate an output shape, trigger boundary, failure mode, or 
 A conditional output slot needs a legitimate empty form when nothing belongs there; do not force the agent to invent content to fill a template. A missing prerequisite that must stop the workflow, such as authorization for a destructive target, still stops it.
 
 For evaluator, verifier, rubric, PASS/FAIL, or completion-gate rules, state the trigger, evidence, acceptance or manual-observation condition, failure action or stop, and owner: project skill, target repo, user confirmation, or CLI/runtime.
-
-Preserve the operating meaning of instruction prose first; neither conversational style nor outbound-message conventions override a necessary trigger, exception, or stopping condition.
 
 ## Independence and portability
 
