@@ -74,7 +74,7 @@ git commit --amend -F <absolute-message-file>
 git commit --fixup=<recorded-target>
 ```
 
-Never bypass hooks or signing, whether by `--no-verify`, `--no-gpg-sign`, or overriding `core.hooksPath`, `commit.gpgSign`, or `gpg.*`. When a hook or signing fails, inspect `HEAD`, the index, and the working tree before any retry: a failed signature creates no commit, but hooks that ran may have changed the index or working tree; recover the signer or report the failure, and never retry unsigned.
+Never bypass hooks, whether by `--no-verify` or overriding `core.hooksPath`. Bypass signing, by `--no-gpg-sign` or overriding `commit.gpgSign` or `gpg.*`, only for a signing failure that the user's or environment's instructions direct to an unsigned commit. When a hook or signing fails, inspect `HEAD`, the index, and the working tree before any retry: a failed signature creates no commit, but hooks that ran may have changed the index or working tree; recover the signer, retry unsigned where that direction applies, or report the failure.
 
 After success, verify the new commit's parent, tree, and message in the recorded checkout and branch or detached HEAD, and what that checkout's index and working tree still hold. Do not rewrite an unexpected commit automatically; reconcile it within existing authority or report it.
 

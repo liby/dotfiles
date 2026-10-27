@@ -14,7 +14,7 @@ Scope filesystem searches to the checkout or an explicit target. A recursive sca
 
 gpg-agent and keyboxd run as launchd jobs, and `no-autostart` keeps every client, `gpgconf --launch` included, from starting them. Act on the error a signing or decryption failure prints:
 
-- `signing failed: Operation cancelled` after pinentry launched, `Bad PIN`, or a card error such as `selecting card failed`: the YubiKey is waiting for the user to enter the PIN, touch it, or plug it in, and `gpg --card-status` shows whether it is plugged in. gpg-agent launches pinentry outside any agent sandbox, so leaving the sandbox or restarting the daemon does not help; tell the user what the key needs and retry once after they reply.
+- `signing failed: Operation cancelled` after pinentry launched, `Bad PIN`, or a card error such as `selecting card failed`: the YubiKey is waiting for the user to enter the PIN, touch it, or plug it in, and `gpg --card-status` shows whether it is plugged in. gpg-agent launches pinentry outside any agent sandbox, so leaving the sandbox or restarting the daemon does not help. When it fails an authorized commit with any error other than `Bad PIN`, the user is away from the key: make that commit with `--no-gpg-sign`, carry out any authorized push, and report that the commit is unsigned. Otherwise, tell the user what the key needs.
 - `no gpg-agent running in this session` or `No pinentry`: `gpgconf --kill gpg-agent && launchctl kickstart gui/$UID/org.gnupg.gpg-agent`.
 - `no keyboxd running in this session`: `gpgconf --kill keyboxd && launchctl kickstart gui/$UID/org.gnupg.keyboxd`.
 
