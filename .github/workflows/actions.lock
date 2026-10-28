@@ -8,7 +8,7 @@ workflows:
     '.github/workflows/validate-dev-tools.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v7.1.0'
-        - 'astral-sh/setup-uv@v10.3.2'
+        - 'astral-sh/setup-uv@v10.3.3'
     '.github/workflows/validate-hooks.yml':
         - 'actions/checkout@v7.0.1'
         - 'oven-sh/setup-bun@v2.2.0'
@@ -29,9 +29,9 @@ dependencies:
         commit: 'sha1-949feb2413d6458794dcd2491c4babbbce0c15c1'
         owner_id: 44036562
         repo_id: 189476904
-    'astral-sh/setup-uv@v10.3.2':
-        ref: 'v10.3.2'
-        commit: 'sha1-07a047e608db84b3d8c06cd9a7c7dcc9c355c18e'
+    'astral-sh/setup-uv@v10.3.3':
+        ref: 'v10.3.3'
+        commit: 'sha1-68559e99cc807c1eb7e9238fd43a15bba460eec2'
         owner_id: 115962839
         repo_id: 846733598
     'lycheeverse/lychee-action@v2.9.0':
