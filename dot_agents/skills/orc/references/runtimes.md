@@ -8,7 +8,7 @@ For a foreground `rex wait --for`, set Bash's timeout above that duration and wi
 
 ## Claude Code participant
 
-`claude -n '<participant>' '<task>'` starts an interactive session on the primary screen with the participant in its terminal title; `claude -p '<task>'` runs non-interactively and prints nothing until it finishes. Set effort with `--effort <level>`. A subscription within its plan usage keeps the conversation's cache for an hour by default, and usage credits, an API key, or a gateway route keep it for five minutes; `env CLAUDE_CODE_PROMPT_CACHE_TTL=1h` before `claude` in the launch command sets the hour on any route that supports it.
+`claude -n '<participant>' '<task>'` starts an interactive session with the participant in its terminal title; `claude -p '<task>'` runs non-interactively and prints nothing until it finishes. Set effort with `--effort <level>`. A subscription within its plan usage keeps the conversation's cache for an hour by default, and usage credits, an API key, or a gateway route keep it for five minutes; `env CLAUDE_CODE_PROMPT_CACHE_TTL=1h` before `claude` in the launch command sets the hour on any route that supports it.
 
 ## Codex
 

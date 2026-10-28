@@ -36,6 +36,10 @@ Declare no effort setting. `/effort` saves each model's level under `modelSettin
 - `cleanupPeriodDays=99999` intentionally retains transcripts for a practically indefinite period.
 - `CLAUDE_CODE_RETRY_WATCHDOG=1` keeps unattended sessions waiting through retryable capacity errors. Keep `fallbackModel` unset while the watchdog is on: the watchdog exists to wait for the requested model, while a fallback would silently downgrade the runs it protects.
 
+## Terminal rendering
+
+Keep `tui` managed as `fullscreen` for clients with different terminal widths: classic rendering can leave hard-wrapped copies in scrollback after a resize. Leave `CLAUDE_CODE_DISABLE_MOUSE` unset so fullscreen receives wheel and touch scrolling.
+
 ## Privacy and feature delivery
 
 `DISABLE_TELEMETRY=1` also disables the client that evaluates server-side feature flags, and first-party event logging shares that gate, so no setting keeps flags while dropping events. Every gated feature therefore stays at its default, and each one wanted here needs its own explicit opt-in. Leave `CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF` unset: it only makes an existing flag cache in `~/.claude.json` readable while telemetry is off, and only sessions where the flag client runs write that cache, so on a machine that always has telemetry off it has nothing to read.
