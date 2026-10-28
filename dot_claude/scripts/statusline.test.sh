@@ -210,12 +210,12 @@ rm "$stubs/mkdir"
 [ ! -e "$fixture/fetched" ]
 printf 'statusline rate-limit sharing: passed\n'
 
-# Line 1 for a Bedrock model id holding 153000 context tokens; Context % is
+# Line 1 for a Vertex model id holding 153000 context tokens; Context % is
 # their share of CC's auto-compact threshold
 line1() { # window settings_json [env...]; prints line 1
   local window=$1 settings=$2; shift 2
   printf '%s' "$settings" > "$home/.claude/settings.json"
-  printf '{"cwd":"%s","model":{"id":"us.anthropic.claude-opus-5-5-20260101-v1:0","display_name":"M"},"context_window":{"context_window_size":%s,"current_usage":{"input_tokens":1000,"output_tokens":2000,"cache_creation_input_tokens":30000,"cache_read_input_tokens":120000}}}' \
+  printf '{"cwd":"%s","model":{"id":"claude-opus-5-5@20260101","display_name":"M"},"context_window":{"context_window_size":%s,"current_usage":{"input_tokens":1000,"output_tokens":2000,"cache_creation_input_tokens":30000,"cache_read_input_tokens":120000}}}' \
     "$fixture" "$window" |
     env -u CLAUDE_CODE_OAUTH_TOKEN -u DISABLE_COMPACT -u DISABLE_AUTO_COMPACT \
       -u CLAUDE_CODE_AUTO_COMPACT_WINDOW -u CLAUDE_CODE_MAX_OUTPUT_TOKENS \

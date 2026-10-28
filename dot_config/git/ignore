@@ -1,5 +1,3 @@
-# Global gitignore. Sections reference https://github.com/github/gitignore.
-
 ## Claude Code runtime directories
 **/.claude/.cc-writes/
 **/.claude/worktrees/

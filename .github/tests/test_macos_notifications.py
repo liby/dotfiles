@@ -182,7 +182,7 @@ class ApplyTest(unittest.TestCase):
                     with self.assertRaisesRegex(error, message):
                         notifications.main()
                 self.assertEqual(run.call_count, 1)
-        with patch.object(notifications.platform, "mac_ver", return_value=("28.0", (), "")):
+        with patch.object(notifications.platform, "mac_ver", return_value=("99.0", (), "")):
             with patch.object(notifications.subprocess, "run") as run:
                 with self.assertRaisesRegex(RuntimeError, "revalidate"):
                     notifications.main()

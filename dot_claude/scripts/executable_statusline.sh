@@ -133,24 +133,23 @@ settings_path="$HOME/.claude/settings.json"
   read -r claude_version
 } < <(jq -r --rawfile settings "$settings_path" '
   # Context % is measured against the token count where CC auto-compacts, which
-  # stdin does not carry. This mirrors CC 2.1.296 (E5/w5/aE) for the env and
+  # stdin does not carry. This mirrors CC 2.1.296 for the env and
   # user settings.json inputs below; with auto-compact off, CC measures against
   # the model window less the output reserve and ignores the settings window.
   # Not modeled: project and local settings, an autoCompactEnabled left in
   # ~/.claude.json by older CC versions, CLAUDE_AUTOCOMPACT_PCT_OVERRIDE, model
   # ids CC resolves through its model catalog rather than by spelling (an
-  # undated claude-opus-4, an inference-profile ARN), and the server and
-  # model-catalog defaults for the window and output budget, so a model with no
-  # autoCompactWindow configured may compact earlier than this shows.
+  # undated claude-opus-4), and the server and model-catalog defaults for the
+  # window and output budget, so a model with no autoCompactWindow configured
+  # may compact earlier than this shows.
   def env_on($name): $ENV[$name] // "" | ascii_downcase | sub("^\\s+|\\s+$"; ""; "g") | IN("1", "true", "yes", "on");
   # CC reads digit separators, as in 200_000, 200,000 or 200 000
   def env_tokens($name): $ENV[$name] // "" | gsub("[_, \u00a0\u202f]"; "") | tonumber? // null | if . and . > 0 then floor else null end;
   # CC drops a value outside its settings schema as if it were unset
   def window_setting: if . == "auto" or (type == "number" and . == floor and . >= 100000 and . <= 1000000) then . else null end;
   # CC matches modelSettings keys and the model id by canonical name, ignoring
-  # their [1m], dated, Bedrock and Vertex spellings
-  def model_key: ascii_downcase | sub("^([a-z]+\\.)?anthropic\\."; "")
-    | sub("(-[0-9]{8})?(-v[0-9]+:[0-9]+)?(@[0-9]{8})?(\\[1m\\])?$"; "");
+  # their [1m], dated, and Vertex spellings
+  def model_key: ascii_downcase | sub("(-[0-9]{8})?(@[0-9]{8})?(\\[1m\\])?$"; "");
   ($settings | fromjson? // {}) as $s
   | (.context_window.context_window_size // 200000) as $window
   | ((env_on("DISABLE_COMPACT") or env_on("DISABLE_AUTO_COMPACT") or $s.autoCompactEnabled == false) | not) as $auto

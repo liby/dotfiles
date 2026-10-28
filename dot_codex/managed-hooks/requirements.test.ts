@@ -50,4 +50,6 @@ test("managed requirements keep the sole mode and run every managed hook", async
     .toEqual([`${managedDir}/guard-bash`]);
   expect(events.SessionStart.filter((entry) => entry.matcher === "compact").flatMap((entry) => entry.hooks.map((h) => h.command)))
     .toEqual([`${managedDir}/compaction-reminder`]);
+  expect(events.UserPromptSubmit.flatMap((entry) => entry.hooks.map((h) => h.command)))
+    .toEqual([`${managedDir}/contextual-markdown-links`]);
 });

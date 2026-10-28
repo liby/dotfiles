@@ -20,11 +20,3 @@ test("injects link-placement context even when the prompt has no URLs", () => {
   expect(typeof context).toBe("string");
   expect(context.length).toBeGreaterThan(0);
 });
-
-test("managed requirements run the hook on the event it answers", async () => {
-  const { hooks } = Bun.TOML.parse(
-    await Bun.file(new URL("../../.chezmoitemplates/codex/requirements.toml", import.meta.url)).text(),
-  ) as { hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>> };
-  expect(hooks.UserPromptSubmit.flatMap((entry) => entry.hooks.map((h) => h.command)))
-    .toContain("{{ .chezmoi.homeDir }}/.codex/managed-hooks/contextual-markdown-links");
-});

@@ -8,6 +8,7 @@ set -euo pipefail
 source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
+# shellenv puts Homebrew first; the toolchain goes back in front, as in ~/.zprofile.
 path=($__BRYAN_TOOLCHAIN_PATH $path)
 npm_prefix="$NPM_CONFIG_PREFIX"
 

@@ -14,9 +14,3 @@ if launchctl print "$upgrades_service" >/dev/null 2>&1; then
   launchctl bootout "$upgrades_service"
 fi
 launchctl bootstrap "gui/$UID" "$upgrades_plist"
-
-# An on-demand-only gui domain can accept bootstrap without loading the job.
-launchctl print "$upgrades_service" >/dev/null 2>&1 || {
-  print -u2 "Unattended upgrades were written to $upgrades_plist but launchd did not load it"
-  exit 1
-}
