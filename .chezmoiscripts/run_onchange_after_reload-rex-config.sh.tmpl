@@ -1,6 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 # init.lua hash: {{ include "dot_config/rex/init.lua" | sha256sum }}
 # confirm_close.lua hash: {{ include "dot_config/rex/actions/confirm_close.lua" | sha256sum }}
 
@@ -10,5 +12,5 @@ if (( $+commands[rex] )) && rex --autostart=false server status >/dev/null 2>&1;
   # The plain output leads with the server's load count, which means nothing here, and `step` would
   # hide the warnings that Rex reports with exit status 0, so print only the diagnostics.
   rex --autostart=false config reload --json |
-    jq -r '.diagnostics[]? | [.severity, .source // empty, .message] | join(": ")'
+    jq -r --arg mark "$step_yellow!$step_reset" '.diagnostics[]? | "\($mark) " + ([.severity, .source // empty, .message] | join(": "))' >&2
 fi

@@ -121,7 +121,7 @@ class ApplyTest(unittest.TestCase):
     def test_reverted_write_is_an_error(self):
         replies = [self.exported(0), subprocess.CompletedProcess([], 0), self.exported(0)]
         with patch.object(notifications.subprocess, "run", side_effect=replies):
-            with self.assertRaisesRegex(RuntimeError, "did not persist"):
+            with self.assertRaisesRegex(SystemExit, "did not persist"):
                 notifications.main()
         self.assertTrue(self.pending_reload.exists())
 
@@ -139,7 +139,7 @@ class ApplyTest(unittest.TestCase):
                     with patch.object(notifications.subprocess, "run", side_effect=replies):
                         with patch("builtins.print") as output:
                             if target_lost:
-                                with self.assertRaisesRegex(RuntimeError, "did not persist"):
+                                with self.assertRaisesRegex(SystemExit, "did not persist"):
                                     notifications.main()
                             else:
                                 notifications.main()
@@ -173,8 +173,8 @@ class ApplyTest(unittest.TestCase):
 
     def test_malformed_store_and_unsupported_version_do_not_write(self):
         for preferences, error, message in [
-            ({"apps": {}}, TypeError, "must be an array"),
-            ({"apps": [{"bundle-id": "target", "flags": True}]}, TypeError, "invalid notification flags"),
+            ({"apps": {}}, SystemExit, "must be an array"),
+            ({"apps": [{"bundle-id": "target", "flags": True}]}, SystemExit, "Invalid notification flags"),
         ]:
             with self.subTest(preferences=preferences):
                 reply = subprocess.CompletedProcess([], 0, stdout=plistlib.dumps(preferences))
@@ -184,7 +184,7 @@ class ApplyTest(unittest.TestCase):
                 self.assertEqual(run.call_count, 1)
         with patch.object(notifications.platform, "mac_ver", return_value=("99.0", (), "")):
             with patch.object(notifications.subprocess, "run") as run:
-                with self.assertRaisesRegex(RuntimeError, "revalidate"):
+                with self.assertRaisesRegex(SystemExit, "revalidate"):
                     notifications.main()
             run.assert_not_called()
 
@@ -269,7 +269,7 @@ class RestartTest(unittest.TestCase):
                     notifications.restart_usernoted()
             with patch.object(notifications.subprocess, "run"):
                 with patch.object(notifications.time, "monotonic", side_effect=[0, 15]):
-                    with self.assertRaisesRegex(TimeoutError, "did not restart"):
+                    with self.assertRaisesRegex(SystemExit, "did not restart"):
                         notifications.restart_usernoted()
 
     def test_pgrep_scopes_real_uid_and_distinguishes_absence_from_error(self):

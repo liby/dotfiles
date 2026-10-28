@@ -14,8 +14,12 @@ NAME = "Code"
 MOUNT, FSTAB = Path.home() / NAME, Path("/etc/fstab")
 
 
+def style(text, sgr):
+    return f"\033[{sgr}m{text}\033[0m" if sys.stderr.isatty() else text
+
+
 def fail(message):
-    raise SystemExit(f"setup-case-sensitive-volume: {message}")
+    raise SystemExit(f"{style('✗', 31)} {message}")
 
 
 def plist(*args):
@@ -31,10 +35,10 @@ def find_volume():
     container = plist("info", "-plist", home_device)["APFSContainerReference"]
     containers = plist("apfs", "list", "-plist", container)["Containers"]
     if len(containers) != 1 or containers[0]["ContainerReference"] != container:
-        fail(f"could not isolate HOME container {container}")
+        fail(f"Could not isolate HOME container {container}")
     matches = [v for v in containers[0]["Volumes"] if v.get("Name") == NAME]
     if len(matches) > 1:
-        fail(f"multiple {NAME} volumes exist in {container}")
+        fail(f"Multiple {NAME} volumes exist in {container}")
     return container, matches[0]["DeviceIdentifier"] if matches else None
 
 
@@ -93,7 +97,7 @@ def install_fstab(spec):
     ]
     subprocess.run([SUDO, "/usr/bin/env", *env, VIFS], check=True)
     if fstab_state(FSTAB, spec) != "present":
-        fail("failed to install the fstab entry")
+        fail("Could not install the fstab entry")
 
 
 def target_device():
@@ -111,7 +115,7 @@ def require_empty_directory():
     try:
         nonempty = next(MOUNT.iterdir(), None) is not None
     except OSError as error:
-        fail(f"cannot inspect {MOUNT}: {error}")
+        fail(f"Cannot inspect {MOUNT}: {error}")
     if nonempty:
         fail(f"{MOUNT} must be empty")
 
@@ -155,7 +159,7 @@ def main():
         ], check=True)
         _, device = find_volume()
         if device is None:
-            fail(f"created {NAME} volume could not be found")
+            fail(f"The created {NAME} volume could not be found")
 
     info = volume_info(device, container)
     current_mount = info.get("MountPoint") or None
@@ -170,7 +174,7 @@ def main():
     spec = f"UUID={info['VolumeUUID']}"
     state = fstab_state(FSTAB, spec)
     if state == "conflict":
-        fail(f"conflicting fstab entry for {spec} or {MOUNT}")
+        fail(f"Conflicting fstab entry for {spec} or {MOUNT}")
     if state == "missing":
         install_fstab(spec)
     if not current_mount:
@@ -181,7 +185,7 @@ def main():
         fail(f"{device} did not mount at {MOUNT}")
     ensure_owner()
     verify_case_sensitive()
-    print(f"Case-sensitive {NAME} volume ready at {MOUNT}.")
+    print(f"{style('✓', 32)} Case-sensitive {NAME} volume ready at {MOUNT}", file=sys.stderr)
 
 
 if __name__ == "__main__":

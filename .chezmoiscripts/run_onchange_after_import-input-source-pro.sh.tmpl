@@ -1,6 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 # Settings hash: {{ include ".chezmoitemplates/input-source-pro/settings.json" | sha256sum }}
 
 # Input Source Pro keeps its app and website rules in a Core Data store and many preferences as
@@ -12,7 +14,7 @@ settings="{{ .chezmoi.sourceDir }}/.chezmoitemplates/input-source-pro/settings.j
 # LaunchServices only acknowledges URL dispatch; the app reports the import result.
 # Launch the app first and wait for its process so first-run Gatekeeper prompts do not
 # interrupt URL delivery.
-echo "Starting $app (answer its first-launch prompts)..."
+print -u2 -r -- "$step_yellow!$step_reset Answer any first-launch prompts from $app"
 open -a "$app"
 
 # Match on the bundle id: `lsappinfo info <name>` returns nothing while two copies of the app
@@ -20,11 +22,11 @@ open -a "$app"
 waited=0
 until [[ -n "$(lsappinfo find 'bundleid="com.runjuu.Input-Source-Pro"')" ]]; do
   if (( ++waited > 60 )); then
-    print -u2 "$app did not start, so its settings were not imported; rerun chezmoi apply"
+    print -u2 -r -- "$step_red✗$step_reset $app did not start, so its settings were not imported; rerun chezmoi apply"
     exit 1
   fi
   sleep 1
 done
 
-echo "Importing $app settings (check the app's result alert)..."
+print -u2 -r -- "$step_yellow!$step_reset Check $app's alert for the result of the settings import"
 open "inputsourcepro://import?path=$settings"

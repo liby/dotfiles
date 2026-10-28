@@ -1,20 +1,22 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 gpg_bin="/opt/homebrew/bin/gpg"
 
 git_config_dir="$HOME/.config/git"
 mkdir -p "$git_config_dir"
 
 card_status=$("$gpg_bin" --card-status) || {
-  print -u2 "Error: YubiKey not available; insert it and retry"
+  print -u2 -r -- "$step_red✗$step_reset YubiKey not available; insert it and rerun chezmoi apply"
   exit 1
 }
 gpg_key_id=$(/usr/bin/awk '
   /^sec/ { split($2, fields, "/"); print fields[2]; exit }
 ' <<< "$card_status")
 [[ -n "$gpg_key_id" ]] || {
-  print -u2 "Error: no secret key for the YubiKey; import its public key and retry"
+  print -u2 -r -- "$step_red✗$step_reset GnuPG has no key for the YubiKey; import its public key and rerun chezmoi apply"
   exit 1
 }
 

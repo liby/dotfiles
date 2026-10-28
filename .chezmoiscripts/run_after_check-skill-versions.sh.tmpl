@@ -1,8 +1,7 @@
 #!/bin/zsh
 set -euo pipefail
 
-yellow= bold= cyan= reset=
-[[ -t 2 ]] && yellow=$'\e[33m' bold=$'\e[1m' cyan=$'\e[36m' reset=$'\e[0m'
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 
 typeset -A tags
 for skill_file in "{{ .chezmoi.sourceDir }}"/dot_agents/skills/*/SKILL.md; do
@@ -16,7 +15,7 @@ while read -r name installed; do
   (( ${+tags[$name]} )) || continue
   version="${${installed##* }%_*}"
   [[ "$version" == "${tags[$name]}" ]] ||
-    print -u2 -r -- "$yellow!$reset skill $name records upstream ${tags[$name]}, but Homebrew installed $version; see Managed skill registry in .github/CONCEPTS.md"
+    print -u2 -r -- "$step_yellow!$step_reset The $name skill records upstream ${tags[$name]}, but Homebrew installed $version; see Managed skill registry in .github/CONCEPTS.md"
 done <<< "$versions"
 
 # Rex updates itself outside Homebrew, so the orc skill records a guide hash instead of a tag. Rex
@@ -30,9 +29,9 @@ if (( $+commands[rex] )); then
   # against. Versions are 0.0.<build time>-g<commit>.
   if (( ${${version#0.0.}%%-*} < ${${recorded_version#0.0.}%%-*} )); then
     print -u2 -rl -- \
-      "$yellow!$reset Rex Server runs $version, older than the $recorded_version that the orc skill was compared with." \
+      "$step_yellow!$step_reset Rex Server runs $version, older than the $recorded_version that the orc skill was compared with." \
       "  Agents read this server's older Rex guide until a newer server runs." \
-      "  If Rex shows that a newer server is available, click ${bold}Restart Server…$reset in Rex Settings > Server, which closes every session; otherwise update Rex first."
+      "  If Rex shows that a newer server is available, click ${step_bold}Restart Server…$step_reset in Rex Settings > Server, which closes every session; otherwise update Rex first."
   else
     recorded="$(sed -En 's/^[[:space:]]+rex-guide-sha256: //p' "$orc_skill")"
     guides="${XDG_CACHE_HOME:-$HOME/.cache}/rex-guide"
@@ -45,13 +44,13 @@ if (( $+commands[rex] )); then
       review=("  Review orc by following Rex integration in .github/CONCEPTS.md.")
       [[ -f "$guides/$recorded.md" ]] && review=(
         "  Review orc by following Rex integration in .github/CONCEPTS.md, starting with:"
-        "  ${cyan}diff ${(q-)guides}/$recorded.md ${(q-)guides}/$guide.md$reset"
+        "  ${step_cyan}diff ${(q-)guides}/$recorded.md ${(q-)guides}/$guide.md$step_reset"
       )
       print -u2 -rl -- \
-        "$yellow!$reset Rex $version prints a different guide from Rex $recorded_version, which the orc skill was compared with." \
+        "$step_yellow!$step_reset Rex $version prints a different guide from Rex $recorded_version, which the orc skill was compared with." \
         $review
     fi
-    rex --autostart=false skill status --json | jq -r --arg mark "$yellow!$reset" '
+    rex --autostart=false skill status --json | jq -r --arg mark "$step_yellow!$step_reset" '
       .harnesses[] | select(.detected) | .id as $agent | .items[]
       | select(.kind == "hook" and .state != "current" and .state != "unsupported")
       | "\($mark) Rex reports the \($agent) hook in \(.path) as \(.state); see Rex integration in .github/CONCEPTS.md"' >&2

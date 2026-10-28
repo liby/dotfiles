@@ -1,10 +1,11 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 # Brewfile hash: {{ include "Brewfile" | sha256sum }}
 
 if [[ ! -x /opt/homebrew/bin/brew ]]; then
-  echo "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   /opt/homebrew/bin/brew analytics off
 fi
@@ -12,10 +13,6 @@ fi
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 brewfile="{{ .chezmoi.sourceDir }}/Brewfile"
-if [[ ! -f "$brewfile" ]]; then
-  echo "No Brewfile found at $brewfile"
-  exit 1
-fi
 
 # mas derives its catalog region from macOS, which can differ from the signed-in US App Store.
 # Keep that catalog on the US store only while installing the Brewfile's apps.
@@ -35,14 +32,13 @@ if [[ -n "$current_locale" ]]; then
   defaults write NSGlobalDomain AppleLocale -string en_US
 fi
 
-echo "Installing brew packages..."
 # A transient brew bundle failure would abort the whole apply.
 attempt=1
 # Upgrades are left to the owners in CONCEPTS.md: a `mas upgrade` here would need sudo and
 # make the App Store ask to quit each running app it updates.
 until brew bundle --no-upgrade --file="$brewfile"; do
   (( attempt++ < 3 )) || exit 1
-  echo "brew bundle failed; retrying (attempt $attempt/3)..."
+  print -u2 -r -- "$step_yellow!$step_reset brew bundle failed; retrying in 10 seconds (attempt $attempt of 3)"
   sleep 10
 done
 

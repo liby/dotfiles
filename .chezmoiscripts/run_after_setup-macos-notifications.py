@@ -51,7 +51,7 @@ PENDING_RELOAD = Path.home() / "Library/Application Support/com.liby.macos-notif
 def reconcile(preferences):
     apps = preferences["apps"]
     if not isinstance(apps, list):
-        raise TypeError("notification preferences 'apps' must be an array")
+        fail("Notification preferences 'apps' must be an array")
     changed, missing = set(), set(POLICY)
     for app in apps:
         bundle_id = app.get("bundle-id")
@@ -60,7 +60,7 @@ def reconcile(preferences):
         missing.discard(bundle_id)
         flags = app["flags"]
         if type(flags) is not int:
-            raise TypeError(f"invalid notification flags for {bundle_id}")
+            fail(f"Invalid notification flags for {bundle_id}")
         settings = POLICY[bundle_id]
         for key, (bit, inverted) in BITS.items():
             if key in settings:
@@ -74,6 +74,14 @@ def reconcile(preferences):
             app["grouping"] = settings["grouping"]
             changed.add(bundle_id)
     return changed, missing
+
+
+def style(text, sgr):
+    return f"\033[{sgr}m{text}\033[0m" if sys.stderr.isatty() else text
+
+
+def fail(message):
+    raise SystemExit(f"{style('✗', 31)} {message}")
 
 
 def terminal_app():
@@ -106,9 +114,6 @@ def request_full_disk_access():
         ["/usr/bin/open", "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"],
         timeout=15,
     )
-
-    def style(text, sgr):
-        return f"\033[{sgr}m{text}\033[0m" if sys.stderr.isatty() else text
 
     app = terminal_app()
     message = [
@@ -164,13 +169,14 @@ def restart_usernoted():
         if current_pids and current_pids.isdisjoint(previous_pids):
             return
         if time.monotonic() >= deadline:
-            raise TimeoutError("usernoted did not restart within 15 seconds")
+            fail("usernoted did not restart within 15 seconds")
         time.sleep(0.1)
 
 
 def main():
-    if platform.mac_ver()[0].split(".")[0] not in {"26", "27"}:
-        raise RuntimeError("revalidate usernoted notification preferences for this macOS version")
+    version = platform.mac_ver()[0]
+    if version.split(".")[0] not in {"26", "27"}:
+        fail(f"macOS {version} is not validated for notification preferences; revalidate usernoted's flag layout against System Settings")
     domain = str(Path.home() / (
         "Library/Group Containers/group.com.apple.usernoted/Library/Preferences/"
         "group.com.apple.usernoted"
@@ -178,8 +184,8 @@ def main():
     preferences = read_preferences(domain)
     changed, missing = reconcile(preferences)
     if missing:
-        print("Notifications not registered yet; rerun apply after first launch: "
-              + ", ".join(sorted(missing)))
+        print(f"{style('!', 33)} Launch these apps so they register for notifications, then rerun chezmoi apply: "
+              + ", ".join(sorted(missing)), file=sys.stderr)
     if not changed and not PENDING_RELOAD.exists():
         return
     if changed:
@@ -193,9 +199,9 @@ def main():
     restart_usernoted()
     remaining, absent = reconcile(read_preferences(domain))
     if remaining or absent - missing:
-        raise RuntimeError("notification settings did not persist after reloading usernoted")
+        fail("Notification settings did not persist after reloading usernoted")
     PENDING_RELOAD.unlink()
-    print("Notification settings applied")
+    print(f"{style('✓', 32)} Notification settings applied", file=sys.stderr)
 
 
 if __name__ == "__main__":

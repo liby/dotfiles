@@ -1,6 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 # Apps are named by bundle id, which is also their defaults domain; LaunchServices resolves the
 # installed path, so nothing here assumes /Applications. AppleScript's `path to application id`
 # would launch a stopped app, so the lookup goes through NSWorkspace.
@@ -28,7 +30,7 @@ done
 waited=0
 until [[ -f "$bob_prefs" && "$(defaults read "$xnip_prefs" kXnipDidUserDefaultsMigrateToAppGroups 2>/dev/null)" == 1 ]]; do
   if (( ++waited > 60 )); then
-    print -u2 "Bob or Xnip did not create its settings, so nothing was written; rerun chezmoi apply"
+    print -u2 -r -- "$step_red✗$step_reset Bob or Xnip did not create its settings, so nothing was written; rerun chezmoi apply"
     exit 1
   fi
   sleep 1
@@ -73,5 +75,5 @@ done
 # The save location is not managed: Xnip can only write to a folder picked in its own dialog,
 # which stores a per-machine security-scoped bookmark next to the path.
 if ! defaults read "$xnip_prefs" kXnipScreenshotSavePathBookmark >/dev/null 2>&1; then
-  echo "Pick Xnip's screenshot save location in its preferences; it is the only setting not managed here."
+  print -u2 -r -- "$step_yellow!$step_reset Pick a screenshot save location in Xnip's preferences; chezmoi apply cannot set it"
 fi

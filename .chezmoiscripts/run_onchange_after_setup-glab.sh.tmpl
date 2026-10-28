@@ -4,12 +4,17 @@
 
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 host={{ .private.gitlabHost | quote }}
 
 # On a new Mac, seed-envchain fills this namespace earlier in the phase only because `seed-` sorts
 # before `setup-`. Read it before writing anything, so a rename that breaks that order fails here.
-client_id=$(/opt/homebrew/bin/envchain glab /bin/sh -c \
-  'printf %s "${GITLAB_CLIENT_ID:?not in the glab envchain namespace}"')
+client_id=$(/opt/homebrew/bin/envchain glab /bin/sh -c 'printf %s "${GITLAB_CLIENT_ID-}"')
+[[ -n "$client_id" ]] || {
+  print -u2 -r -- "$step_red✗$step_reset GITLAB_CLIENT_ID is not in the glab envchain namespace; add it to .secrets/seed.asc and rerun chezmoi apply"
+  exit 1
+}
 
 # Without the instance's OAuth application ID, web sign-in to a self-hosted GitLab asks for it, and
 # token refresh in later plain glab calls reads it from this config, not from envchain.

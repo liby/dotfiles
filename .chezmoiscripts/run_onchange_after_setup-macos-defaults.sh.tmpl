@@ -1,6 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 # List sort order is Universal exactly when no collation override is stored.
 defaults delete NSGlobalDomain AppleCollationOrder 2>/dev/null || true
 # -dict-add keeps the medium, long, and full slots; -dict would replace the whole dictionary.
@@ -131,4 +133,4 @@ set_hotkey 260 false 65535 53 1048576
 # values to the running session; the writes alone leave the old rate in place.
 killall ControlCenter Dock Finder
 /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-echo "Appearance, input source, and language changes take effect at next login."
+print -u2 -r -- "$step_yellow!$step_reset Log out and back in to apply the appearance, input source, and language changes"

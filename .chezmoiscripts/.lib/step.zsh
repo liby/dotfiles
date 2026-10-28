@@ -1,6 +1,6 @@
-step_tty=0 step_yellow= step_green= step_red= step_reset=
+step_tty=0 step_yellow= step_green= step_red= step_bold= step_cyan= step_reset=
 if [[ -t 2 ]]; then
-  step_tty=1 step_yellow=$'\e[33m' step_green=$'\e[32m' step_red=$'\e[31m' step_reset=$'\e[0m'
+  step_tty=1 step_yellow=$'\e[33m' step_green=$'\e[32m' step_red=$'\e[31m' step_bold=$'\e[1m' step_cyan=$'\e[36m' step_reset=$'\e[0m'
 fi
 
 # Pass one external command, never a shell function: zsh suspends `set -e` inside a function called

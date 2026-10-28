@@ -1,6 +1,8 @@
 #!/bin/zsh
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 # The app reads these at launch. They are written without quitting it, because chezmoi apply
 # usually runs in one of its panes.
 domain=com.superlogical.rex
@@ -36,5 +38,5 @@ defaults write $domain Workspace.usesStandardInactiveWindowPaneStyles -bool fals
 defaults write $domain rex.client.remoteControl -bool true
 
 if [[ -n $(lsappinfo find bundleid=$domain) ]]; then
-  print "Reopen the Rex app to apply its settings; leave Rex Server running."
+  print -u2 -r -- "$step_yellow!$step_reset Reopen the Rex app to apply its settings; leave Rex Server running"
 fi

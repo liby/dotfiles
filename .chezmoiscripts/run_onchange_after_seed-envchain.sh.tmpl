@@ -7,6 +7,8 @@
 
 set -euo pipefail
 
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
 seed="{{ .chezmoi.sourceDir }}/.secrets/seed.asc"
 
 brew_prefix="/opt/homebrew"
@@ -17,18 +19,12 @@ brew_prefix="/opt/homebrew"
 chezmoi_bin="$brew_prefix/bin/chezmoi"
 uv_bin="$brew_prefix/bin/uv"
 envchain_bin="$brew_prefix/bin/envchain"
-[[ -x "$chezmoi_bin" ]] || {
-  print -u2 "seed-envchain: chezmoi is not installed"
-  exit 1
-}
-[[ -x "$uv_bin" ]] || {
-  print -u2 "seed-envchain: uv is not installed"
-  exit 1
-}
-[[ -x "$envchain_bin" ]] || {
-  print -u2 "seed-envchain: envchain is not installed"
-  exit 1
-}
+for bin in "$chezmoi_bin" "$uv_bin" "$envchain_bin"; do
+  [[ -x "$bin" ]] || {
+    print -u2 -r -- "$step_red✗$step_reset Brewfile dependency not found: $bin"
+    exit 1
+  }
+done
 
 # tomllib sets the >=3.11 floor, so this script provisions its own interpreter.
 "$uv_bin" python install --no-bin '>=3.11'
@@ -39,23 +35,23 @@ import subprocess
 import sys
 import tomllib
 
-envchain = sys.argv[1]
+envchain, failed, succeeded = sys.argv[1:]
 
 try:
     namespaces = tomllib.load(sys.stdin.buffer)
 except tomllib.TOMLDecodeError as error:
-    sys.exit(f"seed-envchain: invalid TOML: {error}")
+    sys.exit(f"{failed} .secrets/seed.asc is not valid TOML: {error}")
 
 entries = []
 
 for namespace, variables in namespaces.items():
     if not isinstance(variables, dict):
-        sys.exit(f"seed-envchain: {namespace!r} must be a table")
+        sys.exit(f"{failed} {namespace!r} in .secrets/seed.asc must be a table")
     for variable, value in variables.items():
         if not isinstance(value, str):
-            sys.exit(f"seed-envchain: {namespace}.{variable} must be a quoted string")
+            sys.exit(f"{failed} {namespace}.{variable} in .secrets/seed.asc must be a quoted string")
         if "\n" in value or "\r" in value:
-            sys.exit(f"seed-envchain: {namespace}.{variable} must be a single line")
+            sys.exit(f"{failed} {namespace}.{variable} in .secrets/seed.asc must be a single line")
         entries.append((namespace, variable, value))
 
 for namespace, variable, value in entries:
@@ -66,5 +62,5 @@ for namespace, variable, value in entries:
         check=True,
         stdout=subprocess.DEVNULL,
     )
-    print(f"seed-envchain: seeded {namespace}.{variable}", file=sys.stderr)
-' "$envchain_bin"
+    print(f"{succeeded} envchain --set {namespace} {variable}", file=sys.stderr)
+' "$envchain_bin" "$step_red✗$step_reset" "$step_green✓$step_reset"
