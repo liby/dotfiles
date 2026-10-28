@@ -63,6 +63,10 @@ memories = true
 network_proxy = true
 prevent_idle_sleep = true
 
+[memories]
+consolidation_model = "gpt-6.1-sol"
+extract_model = "gpt-6.1-sol"
+
 [notice]
 # The answer here is always to keep the current model, and the prompt blocks the
 # session until someone answers it.
