@@ -17,7 +17,6 @@
     "DISABLE_EXTRA_USAGE_COMMAND": "1",
     "DISABLE_FEEDBACK_COMMAND": "1",
     "DISABLE_TELEMETRY": "1",
-    "ENABLE_TOOL_SEARCH": "1",
     "NODE_USE_ENV_PROXY": "1"
   },
   "attribution": {
@@ -274,7 +273,6 @@
   },
   "autoCompactWindow": 350000,
   "promptCacheTtl": "1h",
-  "promptSuggestionEnabled": false,
   "awaySummaryEnabled": false,
   "showThinkingSummaries": true,
   "showTurnDuration": false,

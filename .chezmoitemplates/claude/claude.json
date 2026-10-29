@@ -1,4 +1,5 @@
 {
+  "copyOnSelect": false,
   "externalEditorContext": true,
   "leftArrowOpensAgents": false,
   "mcpServers": {
