@@ -4,5 +4,6 @@
   "~/.gnupg/S.gpg-agent.ssh",
   "~/.gnupg/S.keyboxd",
   "~/.orbstack/run/docker.sock",
+  "~/Library/Application Support/io.github.entwining.maskey/keychain.sock",
   "~/Library/Application Support/rex/server.sock"
 ]
