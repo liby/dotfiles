@@ -104,6 +104,7 @@ allow_local_binding = true
 {{ range includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson -}}
 {{ joinPath $.chezmoi.homeDir (trimPrefix "~/" .) | quote }} = "allow"
 {{ end }}
+"{{ .chezmoi.homeDir }}/.cache/codex-tmp" = "allow"
 [shell_environment_policy]
 # `core` drops REX_*, which Rex needs to identify this agent's pane.
 inherit = "all"
@@ -115,6 +116,11 @@ ignore_default_excludes = false
 # emitted login URL while the original query waits. Undocumented connector flag
 # (connector auth/webbrowser.py); re-check after CLI upgrades.
 SNOWFLAKE_AUTH_FORCE_SERVER = "true"
+# Tools such as tsx and mbx bind randomly named sockets under TMPDIR. The system
+# temp directory also holds other apps' sockets (VS Code's Git askpass, Chrome),
+# so it cannot be opened to sandboxed commands; this directory and its socket
+# entry give commands their own.
+TMPDIR = "{{ .chezmoi.homeDir }}/.cache/codex-tmp"
 
 [tui]
 copy_on_select = "never"

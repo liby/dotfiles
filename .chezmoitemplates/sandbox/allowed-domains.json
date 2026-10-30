@@ -2,6 +2,7 @@
   "{{ .private.gitlabHost }}",
   "{{ .private.npmHost }}",
   "{{ (urlParse .private.rcGatewayBaseUrl).hostname }}",
+  "*.{{ .private.tailnetDomain }}",
   "api.anthropic.com",
   "developer.apple.com",
   "formulae.brew.sh",
@@ -36,6 +37,7 @@
   "o1.ingest.sentry.io",
   "*.snowflakecomputing.com",
   "storybook.js.org",
+  "www.superlogical.com",
   "api.typesafe.ai",
   "*.blob.core.windows.net"
 ]
