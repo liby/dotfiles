@@ -47,19 +47,23 @@ test("workflow path filters name existing paths", () => {
   }
 });
 
-// Rejects a documented seed key that no consumer its entry links names any
-// more, such as a gateway variable the Claude launcher does not unset, without
-// reading the encrypted seed. A name match is reference integrity: whether the
-// consumer reads the key from that namespace is its own behavior test's job.
-test("documented credential keys are named by their consumers", () => {
+// Rejects a documented credential entry that no consumer its namespace's item
+// links names any more, such as a gateway variable the Claude launcher does not
+// read. A name match is reference integrity: whether the consumer reads the
+// entry from that namespace is its own behavior test's job.
+test("documented credential entries are named by their consumers", () => {
   const markdown = read(CONCEPTS);
   const section = markdown.slice(markdown.indexOf("### Credential-backed features"));
-  const contract = Bun.TOML.parse(section.match(/```toml\n([\s\S]*?)\n```/)![1]) as Record<string, Record<string, string>>;
+  const contract: Record<string, string[]> = {};
+  for (const entry of section.match(/```text\n([\s\S]*?)\n```/)![1].split("\n")) {
+    const [namespace, name] = entry.split("/");
+    (contract[namespace] ??= []).push(name);
+  }
   const entries = [...section.matchAll(/^- (.+?): (.*)$/gm)].map(([, head, body]) => {
     const namespaces = [...head.matchAll(/`([^`]+)`/g)].map((m) => m[1]).filter((name) => name in contract);
     return {
       namespaces,
-      keys: namespaces.flatMap((name) => Object.keys(contract[name])),
+      keys: namespaces.flatMap((name) => contract[name]),
       consumers: [...body.matchAll(/\]\(\.\.\/([^)#]+)\)/g)].map((m) => read(m[1])),
     };
   });

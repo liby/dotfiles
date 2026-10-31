@@ -31,7 +31,7 @@
 
 ## 取用
 
-可以只复制需要的部分，也可以 fork 本仓库来调整整套配置。应用 fork 前，请先检查并调整 `.chezmoi.toml.tmpl`、`Brewfile` 和 `.chezmoiscripts/`。加密的 `*.asc` 文件只能用我的 YubiKey 解密，请把[密文和 GPG 接收者](CONCEPTS.md#identity-and-encrypted-data)换成你自己的，接收者在 `.chezmoi.toml.tmpl` 中声明；也可以连同用到它们的部分一起删除。下面的命令会应用我的整套配置；安装调整后的版本时，请换成你自己的 fork 仓库名。
+可以只复制需要的部分，也可以 fork 本仓库来调整整套配置。应用 fork 前，请先检查并调整 `.chezmoi.toml.tmpl`、`Brewfile` 和 `.chezmoiscripts/`。加密的 `*.asc` 文件只能用我的 YubiKey 解密，请把[密文和 GPG 接收者](CONCEPTS.md#identity-and-encrypted-data)换成你自己的，接收者在 `.chezmoi.toml.tmpl` 中声明；也可以连同用到它们的部分一起删除。部分功能从 [Maskey](https://github.com/Entwining/maskey) 读取凭据：请在你自己的 Maskey 里创建[它们用到的条目](CONCEPTS.md#credential-backed-features)，或让这些功能改用你在用的类似工具。下面的命令会应用我的整套配置；安装调整后的版本时，请换成你自己的 fork 仓库名。
 
 ## 初始化新 Mac
 
@@ -43,7 +43,7 @@ xcode-select --install
 
 等安装窗口结束，确认 `xcode-select -p` 和 `git --version` 都有输出。
 
-继续前请先登录 App Store，满足 [mas 的账户要求](https://github.com/mas-cli/mas#app-store-apple-account-requirements)，以便安装 `Brewfile` 中的应用。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 `sudo` 提示、在需要时使用 YubiKey，并在浏览器中完成 GitLab 登录。
+继续前请先登录 App Store，满足 [mas 的账户要求](https://github.com/mas-cli/mas#app-store-apple-account-requirements)，以便安装 `Brewfile` 中的应用。再用与其他 Mac 相同的 Apple 账户开启 iCloud 钥匙串，让 [Maskey 中的凭据](CONCEPTS.md#credential-backed-features)在安装读取前同步到这台 Mac。请保持 Terminal.app 打开，以便输入模板所需的私有参数、响应 `sudo` 提示、在需要时使用 YubiKey，并在浏览器中完成 GitLab 登录。
 
 运行下面的安装命令前，先在系统设置 > 隐私与安全性 > 完全磁盘访问权限中授权 Terminal.app，以便[自动同步通知偏好](CONCEPTS.md#configuration-ownership)。后续 apply 也需要运行它的终端获得同样授权；缺少授权时，apply 会在通知步骤停下，并指出要开启哪个应用。之后才注册通知的应用会在下次 apply 时配置。
 
@@ -65,7 +65,7 @@ chezmoi init --apply liby
 
 安装完成后运行 `gh auth login`：Git 通过 HTTPS 推送到 GitHub、拉取私有仓库时使用这个登录，后台升级任务也只有在登录 GitHub 后才能更新 gh 扩展。
 
-如果使用 Rex，请手动安装并打开它，再从普通 Rex pane 运行一次 `setup-rex`。`chezmoi apply` 写入的 Rex 设置在重新打开应用后生效。
+如果使用 [Rex](https://www.superlogical.com/rex)，请手动安装并打开它，再从普通 Rex pane 运行一次 `setup-rex`。`chezmoi apply` 写入的 Rex 设置在重新打开应用后生效。
 
 ## 常用操作
 

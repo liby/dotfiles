@@ -25,7 +25,6 @@ This repository is public. Unless the user says otherwise, its tracked paths, fi
 
 - Hand every operation that can expose or derive secret plaintext to the user, including add or re-encrypt from a real secret, decrypt, `chezmoi edit`, `chezmoi re-add`, and `chezmoi merge`. Never run `chezmoi merge` for any encrypted target.
 - Add a non-secret encrypted file with `chezmoi add --encrypt <file>`. Edit encrypted non-secret content through `chezmoi edit <dest-path>` or edit its deployed plaintext and run `chezmoi re-add`; never edit an `encrypted_*.asc` source directly. Decryption requires a YubiKey.
-- `.secrets/seed.asc` is secret-bearing, repository-only ciphertext for envchain namespaces. The user must edit it with `chezmoi edit-encrypted .secrets/seed.asc` and then run `chezmoi apply ~/.chezmoiscripts/seed-envchain.sh` to reseed the Keychain. The [Credential-backed features](.github/CONCEPTS.md#credential-backed-features) section owns the plaintext format and repository consumer contract.
 - A ciphertext source may share a commit with related non-secret changes; it does not require a commit of its own. Whatever the commit shape, describe the ciphertext generically, such as `update encrypted zshenv`: metadata and user-supplied change classification may justify the commit, but describing inferred plaintext changes defeats the encryption boundary.
 
 ## Maintenance map
@@ -63,4 +62,4 @@ Read its narrowest owner, then read the owner for the behavior under test.
 | Agent guard | `dot_codex/managed-hooks/executable_guard-bash`, `dot_ignore`, the guard entries in `Brewfile`, `.chezmoitemplates/claude/settings.json`, and `.chezmoitemplates/codex/requirements.toml` | [Agent guard](.github/CONCEPTS.md#agent-guard) |
 | Managed skills | `dot_agents/skills/**`, `~/.agents/skills/**` | `write-skill` and [Managed skill registry](.github/CONCEPTS.md#managed-skill-registry) |
 | Snowflake CLI | `dot_local/bin/executable_snow`, `dot_agents/skills/snow/**` | [Snowflake CLI execution](.github/CONCEPTS.md#snowflake-cli-execution) |
-| Credentials | `.chezmoi.toml.tmpl`, `.secrets/**`, `.chezmoiscripts/run_onchange_after_seed-envchain.sh.tmpl`, any source that invokes `envchain` | [Identity and encrypted data](.github/CONCEPTS.md#identity-and-encrypted-data) and the [Credential-backed features](.github/CONCEPTS.md#credential-backed-features) consumer contract. [Encrypted Files](#encrypted-files) remains authoritative for plaintext and ciphertext handling |
+| Credentials | `.chezmoi.toml.tmpl`, any source that invokes `mk` | [Identity and encrypted data](.github/CONCEPTS.md#identity-and-encrypted-data) and the [Credential-backed features](.github/CONCEPTS.md#credential-backed-features) consumer contract |

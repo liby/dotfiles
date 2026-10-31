@@ -12,8 +12,6 @@ brew "coreutils"
 brew "ctx7"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
-# Environment variables meet macOS Keychain and gnome-keyring
-brew "envchain"
 # Perl lib for reading and writing EXIF metadata
 brew "exiftool"
 # Modern, maintained replacement for ls
@@ -78,6 +76,8 @@ cask "google-chrome"
 cask "input-source-pro"
 # Menu bar calendar
 cask "itsycal"
+# Credentials in iCloud Keychain, passed to commands as masked variables
+cask "entwining/tap/maskey", trusted: true
 # Replacement for Docker Desktop
 cask "orbstack"
 # Control your tools with a few keystrokes

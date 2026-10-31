@@ -73,6 +73,6 @@ Test representative cases and the resulting application behavior. For failures, 
 
 ## Run live calls on this machine
 
-For a user-approved local experiment or integration test in this managed macOS environment, confirm the namespace name without reading a value: `envchain --list | grep -qx typesafe`. Launch the consumer with `envchain typesafe <command>` so the SDK receives `TYPESAFE_API_KEY` only inside its process. If envchain or the namespace is unavailable, report the missing prerequisite; do not reconstruct credentials. Use minimal, sanitized state and expose only the needed response.
+For a user-approved local experiment or integration test in this managed macOS environment, launch the consumer with `mk run typesafe/TYPESAFE_API_KEY -- <command>` so the SDK receives `TYPESAFE_API_KEY` only inside its process. If `mk` or the entry is unavailable, report the missing prerequisite; do not reconstruct credentials. Use minimal, sanitized state and expose only the needed response.
 
-Application code uses the SDK's normal environment or its existing secret store. Keep `envchain` as a local process launcher, not an application runtime dependency.
+Application code uses the SDK's normal environment or its existing secret store. Keep `mk` as a local process launcher, not an application runtime dependency.

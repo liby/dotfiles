@@ -46,3 +46,9 @@ done
 if [ -d /opt/homebrew/Caskroom/codex ]; then
   xattr -dr com.apple.quarantine /opt/homebrew/Caskroom/codex
 fi
+
+# Maskey is signed ad hoc and not notarized, so Gatekeeper blocks the copy Homebrew downloaded; the
+# app replaces itself with later releases. Its Keychain service serves sandboxed mk calls.
+xattr -dr com.apple.quarantine /Applications/Maskey.app
+step /opt/homebrew/bin/mk setup
+step /opt/homebrew/bin/mk skill install

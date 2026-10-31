@@ -108,7 +108,7 @@ allow_local_binding = true
 [shell_environment_policy]
 # `core` drops REX_*, which Rex needs to identify this agent's pane.
 inherit = "all"
-# Retain case-insensitive *KEY*, *SECRET*, and *TOKEN* filters on inherited names; other names can still carry secrets, so credentials belong in envchain.
+# Retain case-insensitive *KEY*, *SECRET*, and *TOKEN* filters on inherited names; other names can still carry secrets, so credentials belong in Maskey.
 ignore_default_excludes = false
 
 [shell_environment_policy.set]

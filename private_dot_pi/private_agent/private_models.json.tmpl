@@ -1,7 +1,7 @@
 {
   "providers": {
     "anthropic": {
-      "apiKey": "!envchain pi printenv ANTHROPIC_API_KEY",
+      "apiKey": "!mk get pi/ANTHROPIC_API_KEY",
       "modelOverrides": {{ (includeTemplate "pi/model-overrides.json" . | fromJson).anthropic | toPrettyJson | indent 6 | trim }}
     },
     "rc-gateway": {
@@ -10,7 +10,7 @@
       "compat": {
         "sendSessionAffinityHeaders": true
       },
-      "apiKey": "!envchain pi printenv RC_GATEWAY_API_KEY",
+      "apiKey": "!mk get pi/RC_GATEWAY_API_KEY",
       "models": [
         {
           "id": "deepseek/deepseek-v4.1-flash-1017",
@@ -62,7 +62,7 @@
       ]
     },
     "typesafe": {
-      "apiKey": "!envchain typesafe printenv TYPESAFE_API_KEY"
+      "apiKey": "!mk get typesafe/TYPESAFE_API_KEY"
     }
   }
 }

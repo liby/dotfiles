@@ -16,29 +16,22 @@ cp "$repo_root/dot_zshenv" "$test_home/.zshenv"
 cp "$repo_root/dot_zprofile" "$test_home/.zprofile"
 cp "$repo_root/dot_local/share/claude-launcher/bin/executable_claude" "$launcher"
 # The gateway contract's variables, which together select the gateway in Claude Code.
-gateway_vars=(ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID CLAUDE_CODE_SKIP_VERTEX_AUTH CLAUDE_CODE_USE_VERTEX)
+entry_vars=(ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID)
+gateway_vars=($entry_vars CLAUDE_CODE_SKIP_VERTEX_AUTH CLAUDE_CODE_USE_VERTEX)
 
 {
   print -r -- '#!/bin/zsh -f'
-  print -r -- 'local -a present; for name in ${=GATEWAY_VARS}; do [[ -n ${(P)name+x} ]] && present+=$name; done'
+  print -r -- 'local -a present; for name in ${=GATEWAY_VARS}; do [[ -n ${(P)name+x} ]] && present+=$name=${(P)name}; done'
   print -r -- 'print -r -- "claude ${(qqq)@}${present:+ with $present}" >> "$TRACE_FILE"'
 } > "$native"
-# Like the real envchain, run the named command; a bare `claude` would loop back into the launcher.
+# Exits 11, mk's status for an entry without program access, for UNGRANTED_ENTRY.
 {
   print -r -- '#!/bin/zsh -f'
-  print -r -- 'if [[ ${1-} == --list ]]; then'
-  # Listing one namespace decrypts its values, so the trace records it.
-  print -r -- '  (( $# == 2 )) && { print -r -- "envchain --list $2" >> "$TRACE_FILE"; print -l -- ${=GATEWAY_VARS}; exit 0 }'
-  print -r -- '  print -r -- "${NAMESPACE_LIST-}"'
-  print -r -- '  exit 0'
-  print -r -- 'fi'
-  print -r -- '[[ ${1-} == claude-gateway && ${2-} == "$NATIVE_CLAUDE" ]] || { print -u2 -- "FAIL: envchain got ${(qqq)@}"; exit 64 }'
-  print -r -- 'print -r -- "envchain ${(qqq)@}" >> "$TRACE_FILE"'
-  print -r -- 'shift'
-  print -r -- 'for name in ${=GATEWAY_VARS}; do export $name=synthetic; done'
-  print -r -- 'exec "$@"'
-} > "$test_bin/envchain"
-chmod +x "$launcher" "$native" "$test_bin/envchain"
+  print -r -- 'print -r -- "mk ${(qqq)@}" >> "$TRACE_FILE"'
+  print -r -- '[[ $2 == "${UNGRANTED_ENTRY-}" ]] && exit 11'
+  print -r -- 'print -rn -- "synthetic-${2#*/}"'
+} > "$test_bin/mk"
+chmod +x "$launcher" "$native" "$test_bin/mk"
 
 typeset -a isolated_env=(
   HOME="$test_home"
@@ -46,7 +39,6 @@ typeset -a isolated_env=(
   XDG_CONFIG_HOME="$test_home/.config"
   PATH="$test_bin:/usr/bin:/bin"
   TRACE_FILE="$trace_file"
-  NATIVE_CLAUDE="$native"
   GATEWAY_VARS="$gateway_vars"
 )
 
@@ -68,11 +60,10 @@ format_call() {
 
 run_claude() {
   local mode=$1
-  local namespace_list=$2
-  shift 2
+  shift
   : > "$trace_file"
   print -rn -- "$mode" > "$mode_file"
-  /usr/bin/env -i "${isolated_env[@]}" "${inherited_env[@]}" NAMESPACE_LIST="$namespace_list" /bin/zsh -c 'claude "$@"' synthetic "$@"
+  /usr/bin/env -i "${isolated_env[@]}" "${inherited_env[@]}" /bin/zsh -c 'claude "$@"' synthetic "$@"
 }
 typeset -a inherited_env=()
 
@@ -92,37 +83,34 @@ typeset -a claude_args=(
   '*'
 )
 expected_claude=$(format_call claude "${claude_args[@]}")
-typeset -a gateway_args=(claude-gateway "$native" "${claude_args[@]}")
-expected_gateway="$(format_call envchain "${gateway_args[@]}")"$'\n'"$expected_claude with $gateway_vars"
+expected_mk_gets=$(for name in $entry_vars; do format_call mk get claude-gateway/$name; done)
+expected_gateway="$expected_mk_gets"$'\n'"$expected_claude with ANTHROPIC_AUTH_TOKEN=synthetic-ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL=synthetic-ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID=synthetic-ANTHROPIC_VERTEX_PROJECT_ID CLAUDE_CODE_SKIP_VERTEX_AUTH=1 CLAUDE_CODE_USE_VERTEX=1"
 
-run_claude subscription claude-gateway "${claude_args[@]}"
+run_claude subscription "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_claude" "subscription mode did not call only the native Claude executable"
 
-run_claude gateway claude-gateway "${claude_args[@]}"
-assert_equal "$(< "$trace_file")" "$expected_gateway" "gateway mode did not route the native executable through the isolated envchain namespace"
+run_claude gateway "${claude_args[@]}"
+assert_equal "$(< "$trace_file")" "$expected_gateway" "gateway mode did not give the native executable the gateway entries from mk and the switches"
 
-run_claude subscription claude-gateway --gateway "${claude_args[@]}"
+run_claude subscription --gateway "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_gateway" "--gateway did not override the persisted subscription mode"
 
-run_claude gateway claude-gateway --subscription "${claude_args[@]}"
+run_claude gateway --subscription "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_claude" "--subscription did not override the persisted gateway mode"
 
-# A claude started from inside a gateway session inherits the namespace's variables. Clearing them
-# must not depend on envchain, which decrypts a namespace to list it and may be unavailable.
+# A claude started from inside a gateway session inherits its variables. Clearing them must not
+# depend on mk, which may be unavailable.
 inherited_env=(${^gateway_vars}=inherited)
-run_claude subscription claude-gateway "${claude_args[@]}"
-assert_equal "$(< "$trace_file")" "$expected_claude" "subscription mode passed an inherited gateway variable to Claude or asked envchain for it"
+run_claude subscription "${claude_args[@]}"
+assert_equal "$(< "$trace_file")" "$expected_claude" "subscription mode passed an inherited gateway variable to Claude or ran mk"
 inherited_env=()
 
-missing_error_file=$test_root/missing-namespace.err
-if run_claude gateway unavailable "${claude_args[@]}" 2> "$missing_error_file"; then
-  print -u2 -- "FAIL: gateway mode accepted a missing namespace"
-  exit 1
-fi
-assert_equal "$(< "$trace_file")" "" "missing namespace invoked a Claude executable"
-if [[ $(< "$missing_error_file") != *claude-gateway* ]]; then
-  print -u2 -- "FAIL: the missing namespace error did not name the namespace"
-  exit 1
-fi
+# An entry without program access must stop the launch with mk's status rather than start Claude
+# without that variable.
+inherited_env=(UNGRANTED_ENTRY=claude-gateway/ANTHROPIC_VERTEX_PROJECT_ID)
+launch_status=0
+run_claude gateway "${claude_args[@]}" || launch_status=$?
+assert_equal "$launch_status $(< "$trace_file")" "11 $expected_mk_gets" "a failed mk get did not stop the launch with its status"
+inherited_env=()
 
 print -r -- "claude launcher tests passed"

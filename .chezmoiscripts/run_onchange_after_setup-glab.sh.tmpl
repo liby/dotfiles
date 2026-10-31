@@ -1,24 +1,12 @@
 #!/bin/zsh
-# Re-runs when the ciphertext changes, so a new application ID reaches glab's config:
-# seed hash: {{ if stat (joinPath .chezmoi.sourceDir ".secrets/seed.asc") }}{{ include ".secrets/seed.asc" | sha256sum }}{{ else }}absent{{ end }}
-
 set -euo pipefail
-
-source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 
 host={{ .private.gitlabHost | quote }}
 
-# On a new Mac, seed-envchain fills this namespace earlier in the phase only because `seed-` sorts
-# before `setup-`. Read it before writing anything, so a rename that breaks that order fails here.
-client_id=$(/opt/homebrew/bin/envchain glab /bin/sh -c 'printf %s "${GITLAB_CLIENT_ID-}"')
-[[ -n "$client_id" ]] || {
-  print -u2 -r -- "$step_red✗$step_reset GITLAB_CLIENT_ID is not in the glab envchain namespace; add it to .secrets/seed.asc and rerun chezmoi apply"
-  exit 1
-}
-
 # Without the instance's OAuth application ID, web sign-in to a self-hosted GitLab asks for it, and
-# token refresh in later plain glab calls reads it from this config, not from envchain.
-/opt/homebrew/bin/glab config set client_id "$client_id" --host "$host"
+# token refresh in later plain glab calls reads it from this config, not from Maskey.
+/opt/homebrew/bin/mk run glab/GITLAB_CLIENT_ID -- /bin/sh -c \
+  '/opt/homebrew/bin/glab config set client_id "$GITLAB_CLIENT_ID" --host "$1"' sh "$host"
 
 # Sign-in opens a browser, so it runs here only for a host glab has never signed in to; glab
 # refreshes the token itself. If the sign-in is revoked, run the login line by hand with

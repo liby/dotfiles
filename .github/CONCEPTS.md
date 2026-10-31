@@ -131,7 +131,7 @@ The [Browser modifier](../dot_codex/browser/modify_config.toml) overlays [its te
 
 [openai/codex#40254](https://github.com/openai/codex/issues/40254) tracks the current macOS reproduction in which Chrome fails trusted RPC path validation without an explicit Browser cache read rule. Keep `~/.codex/plugins/cache/openai-bundled/browser` as the only extra read-only path so the trusted worker can load Desktop's runtime-owned Browser service; a chezmoi `private_` or `readonly_` source and `chmod` do not create a trusted permission root. Remove the exception only after deleting the source rule, applying the rendered configuration, fully restarting Desktop, confirming the effective permission table no longer contains the rule, and succeeding on the first Chrome initialization in a fresh task without a prior Browser attempt or retry.
 
-`features.network_proxy = true` enforces the `development` profile's domain and Unix socket rules for sandboxed commands. Claude Code and Codex render their shared domains and Unix socket paths from [`sandbox/allowed-domains.json`](../.chezmoitemplates/sandbox/allowed-domains.json) and [`sandbox/allowed-unix-sockets.json`](../.chezmoitemplates/sandbox/allowed-unix-sockets.json). `allow_local_binding` lets commands listen on local ports and reach loopback directly, as development servers and browser SSO callbacks need. It also turns off the proxy's private-address check: an allowlisted hostname that resolves to a private address is admitted, an unlisted private or link-local address such as a cloud metadata endpoint is refused only as off the allowlist, and Codex puts the private ranges in `NO_PROXY`, so a direct connection to a LAN address fails in the OS sandbox as a connection error rather than a policy denial. The socket entries permit GnuPG, OrbStack's Docker daemon, Rex, the ra broker, and the `~/.cache/codex-tmp` directory that Codex sets as commands' `TMPDIR`, where tools bind their own sockets. Web search, MCP, Browser, and Computer Use have separate network controls. Restart Desktop after changing the proxy feature so commands use the updated policy.
+`features.network_proxy = true` enforces the `development` profile's domain and Unix socket rules for sandboxed commands. Claude Code and Codex render their shared domains and Unix socket paths from [`sandbox/allowed-domains.json`](../.chezmoitemplates/sandbox/allowed-domains.json) and [`sandbox/allowed-unix-sockets.json`](../.chezmoitemplates/sandbox/allowed-unix-sockets.json). `allow_local_binding` lets commands listen on local ports and reach loopback directly, as development servers and browser SSO callbacks need. It also turns off the proxy's private-address check: an allowlisted hostname that resolves to a private address is admitted, an unlisted private or link-local address such as a cloud metadata endpoint is refused only as off the allowlist, and Codex puts the private ranges in `NO_PROXY`, so a direct connection to a LAN address fails in the OS sandbox as a connection error rather than a policy denial. The socket entries permit GnuPG, OrbStack's Docker daemon, Rex, the ra broker, Maskey's Keychain service, and the `~/.cache/codex-tmp` directory that Codex sets as commands' `TMPDIR`, where tools bind their own sockets. Web search, MCP, Browser, and Computer Use have separate network controls. Restart Desktop after changing the proxy feature so commands use the updated policy.
 
 The proxy ends the whole command at its first denied request and reports `Network access to "<host>" was blocked: <reason>`, while Claude Code's sandbox only lists the denial in `<sandbox_violations>` and lets the command continue. A host that Claude Code reports beside a command's real work therefore also fails that command under Codex. When a tool sends such a request on its own, as telemetry, an update check, or a platform probe, turn it off with the tool's switch in [`dot_zshenv`](../dot_zshenv), which every zsh reads, terminals and both agents' commands included. Only a request with no switch that zsh startup can set is a candidate for the shared allowlist under its [admission rules](../.claude/rules/claude-code-settings.md#sandbox), and a switch stays set when its host is allowed for another request.
 
@@ -141,7 +141,7 @@ Both `cli_auth_credentials_store` and `mcp_oauth_credentials_store` stay on expl
 
 ### GitLab CLI configuration
 
-glab reads its configuration from `~/.config/glab-cli`, which [`dot_zshenv`](../dot_zshenv) selects with `GLAB_CONFIG_DIR` instead of the macOS default under `~/Library/Application Support`, because Claude Code's sandbox can write `~/.config` but not `~/Library`. glab writes its sign-in state into that `config.yml`, so the [config modifier](../dot_config/private_glab-cli/modify_private_config.yml) sets only the top-level preferences in its [template](../.chezmoitemplates/glab/config.yml), on every apply, and leaves the rest to glab. The [glab setup script](../.chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl) copies the private host's OAuth application ID from envchain with `glab config set` and runs glab's web sign-in only when glab has never signed in to that host.
+glab reads its configuration from `~/.config/glab-cli`, which [`dot_zshenv`](../dot_zshenv) selects with `GLAB_CONFIG_DIR` instead of the macOS default under `~/Library/Application Support`, because Claude Code's sandbox can write `~/.config` but not `~/Library`. glab writes its sign-in state into that `config.yml`, so the [config modifier](../dot_config/private_glab-cli/modify_private_config.yml) sets only the top-level preferences in its [template](../.chezmoitemplates/glab/config.yml), on every apply, and leaves the rest to glab. The [glab setup script](../.chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl) copies the private host's OAuth application ID from Maskey with `glab config set` and runs glab's web sign-in only when glab has never signed in to that host. A changed ID reaches glab only after [rescheduling](#bootstrap) that script.
 
 Sign-in stores the tokens in that `config.yml` in plaintext instead of glab's default Keychain storage. glab must save new tokens at every refresh and refuses to refresh where it cannot, and Codex cannot run glab where the Keychain is writable: its sandbox denies the shared-memory write that a Keychain write makes, and while its profile denies `~/.ssh`, escalation cannot move a command out of that sandbox. Keychain storage would therefore cost the `~/.ssh` protection, yet it never kept the tokens from agents, which read them through glab inside their sandboxes; what plaintext gives up is the protection of copies of the file, such as backups. Each refresh invalidates the previous tokens, so a copy is useful only until the next refresh, unless a thief refreshes first and keeps the session; glab's next refresh then fails with `invalid_grant`. Sign in again with the setup script's login line: the bare `glab auth login` that `glab auth status` suggests puts the tokens back in the Keychain.
 
@@ -238,7 +238,7 @@ In Claude Code's `auto` mode, a skill's `allowed-tools` skips classifier review 
 
 [`.chezmoi.toml.tmpl`](../.chezmoi.toml.tmpl) defines prompts for account-specific template values. Each user supplies their own values during `init`; a fork should first review which fields still apply.
 
-Encrypted files use GPG, with private keys stored on a YubiKey. Repository-only encrypted data can seed envchain namespaces in the macOS Keychain instead of deploying credentials as ordinary dotfiles. Adapting the full repository therefore requires replacing or removing its GPG recipients and personal encrypted data.
+Encrypted files use GPG, with private keys stored on a YubiKey. Adapting the full repository therefore requires replacing or removing its GPG recipients and personal encrypted data.
 
 Agents may read the top-level `~/.ssh` client config (`config`, `config.*`), public keys, `allowed_signers`, and `known_hosts` files, and nothing else under that directory. The [agent guard](#agent-guard) and Claude's sandbox enforce that list by directory, so private keys deployed there need no naming convention and no per-key rule. The Codex sandbox reopens only the exact files ssh and Git signature verification need, so public keys stay unreadable inside that sandbox.
 
@@ -250,35 +250,26 @@ Both forges verify commits signed by the YubiKey, in different formats. GitHub v
 
 ### Credential-backed features
 
-The [seeding script](../.chezmoiscripts/run_onchange_after_seed-envchain.sh.tmpl) reads `.secrets/seed.asc` and stores each entry in the macOS Keychain through envchain. Its plaintext is TOML with one top-level table per namespace and one environment variable per single-line string value; numeric and boolean-looking values remain quoted. The template below is the machine-checked contract for entries consumed by files in this repository; other seed entries are not repository requirements.
+Credentials live in [Maskey](https://github.com/Entwining/maskey), which keeps them in iCloud Keychain, so they reach each Mac signed in to the same Apple Account without a copy in this repository. An entry is `<namespace>/<NAME>`, and NAME is the environment variable its consumer receives. The block below is the machine-checked list of entries that files in this repository consume; other entries are not repository requirements.
 
-```toml
-[claude-gateway]
-ANTHROPIC_AUTH_TOKEN = "replace-with-value"
-ANTHROPIC_VERTEX_BASE_URL = "replace-with-value"
-ANTHROPIC_VERTEX_PROJECT_ID = "replace-with-value"
-CLAUDE_CODE_SKIP_VERTEX_AUTH = "1"
-CLAUDE_CODE_USE_VERTEX = "1"
-
-[context7]
-CONTEXT7_API_KEY = "replace-with-value"
-
-[glab]
-GITLAB_CLIENT_ID = "replace-with-value"
-
-[pi]
-ANTHROPIC_API_KEY = "replace-with-value"
-RC_GATEWAY_API_KEY = "replace-with-value"
-
-[typesafe]
-TYPESAFE_API_KEY = "replace-with-value"
+```text
+claude-gateway/ANTHROPIC_AUTH_TOKEN
+claude-gateway/ANTHROPIC_VERTEX_BASE_URL
+claude-gateway/ANTHROPIC_VERTEX_PROJECT_ID
+context7/CONTEXT7_API_KEY
+glab/GITLAB_CLIENT_ID
+pi/ANTHROPIC_API_KEY
+pi/RC_GATEWAY_API_KEY
+typesafe/TYPESAFE_API_KEY
 ```
+
+`mk run` gives the selected entries to the command it starts and masks each exact selected value in that command's output; keep non-secret constants in the consumer, since a stored `1` would mask every 1. `mk get` returns one entry's value to the caller that captures it, only after the owner grants that entry program access in Maskey. Any program that can run `mk` can then read that entry, so grant it only to the entries the consumers below read with `mk get`.
 
 Each namespace's consumers:
 
-- `claude-gateway`: The [Claude launcher](../dot_local/share/claude-launcher/bin/executable_claude) injects the `claude-gateway` namespace only in gateway mode and otherwise unsets every variable the contract above declares for it, whatever set them, so a `claude` started inside a gateway session follows the persisted mode unless its own flag says otherwise. It is an executable on `PATH` ahead of the native install in `~/.local/bin`, rather than a shell function, so the persisted mode also applies when Pi's bash, a wrapper such as `timeout`, or a script's subprocess runs `claude`.
-- `context7`: Every Context7 consumer goes through the [Context7 skill](../dot_agents/skills/context7/SKILL.md), which runs the `ctx7` CLI in `envchain context7` so `CONTEXT7_API_KEY` reaches only the CLI child process. The namespace may also carry an optional `CONTEXT7_BASE_URL`, absent by default; point it, with no trailing slash, at a trusted reverse proxy that forwards the official `/api/v2` query API, and add that host to Claude Code's [sandbox `allowedDomains`](../.claude/rules/claude-code-settings.md#sandbox). The global `--base-url` reaches query-mode requests, but upstream supports custom deployments only for MCP HTTP setup and treats on-premise query mode as unsupported. Validate a Context7 change by running a resolve-and-query through the skill.
-- `glab`: The [glab setup script](../.chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl) copies `GITLAB_CLIENT_ID`, the private GitLab's OAuth application ID under the variable name glab itself reads, from the `glab` namespace into glab's configuration.
-- `pi` and `typesafe`: The [Pi model configuration](../private_dot_pi/private_agent/private_models.json.tmpl) reads `ANTHROPIC_API_KEY` and `RC_GATEWAY_API_KEY` from the `pi` namespace and `TYPESAFE_API_KEY` from the `typesafe` namespace. The [Jev skill](../dot_agents/skills/jev/SKILL.md) runs user-approved local TypeSafe experiments through `envchain typesafe`.
+- `claude-gateway`: The [Claude launcher](../dot_local/share/claude-launcher/bin/executable_claude) reads these entries with `mk get` only in gateway mode, sets the Vertex switches itself, and otherwise unsets those entries' variables and the switches, whatever set them, so a `claude` started inside a gateway session follows the persisted mode unless its own flag says otherwise. The launcher is an executable on `PATH` ahead of the native install in `~/.local/bin`, rather than a shell function, so the persisted mode also applies when Pi's bash, a wrapper such as `timeout`, or a script's subprocess runs `claude`.
+- `context7`: Every Context7 consumer goes through the [Context7 skill](../dot_agents/skills/context7/SKILL.md), which runs the `ctx7` CLI in `mk run context7` so `CONTEXT7_API_KEY` reaches only the CLI child process. The namespace may also carry an optional `CONTEXT7_BASE_URL`, absent by default; point it, with no trailing slash, at a trusted reverse proxy that forwards the official `/api/v2` query API, and add that host to Claude Code's [sandbox `allowedDomains`](../.claude/rules/claude-code-settings.md#sandbox). The global `--base-url` reaches query-mode requests, but upstream supports custom deployments only for MCP HTTP setup and treats on-premise query mode as unsupported. Validate a Context7 change by running a resolve-and-query through the skill.
+- `glab`: The [glab setup script](../.chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl) writes `GITLAB_CLIENT_ID`, the private GitLab's OAuth application ID under the variable name glab itself reads, into glab's configuration from a command under `mk run`.
+- `pi` and `typesafe`: The [Pi model configuration](../private_dot_pi/private_agent/private_models.json.tmpl) reads `ANTHROPIC_API_KEY` and `RC_GATEWAY_API_KEY` from the `pi` namespace and `TYPESAFE_API_KEY` from the `typesafe` namespace with `mk get`. The [Jev skill](../dot_agents/skills/jev/SKILL.md) runs user-approved local TypeSafe experiments through `mk run typesafe/TYPESAFE_API_KEY`.
 
-The [agent instruction contract test](tests/agent-instructions.test.ts) parses the TOML block and checks that each key is named by a consumer its entry above links and that each linked consumer names one of the entry's keys, without reading the encrypted seed.
+The [agent instruction contract test](tests/agent-instructions.test.ts) parses the entry block and checks that each entry is named by a consumer its namespace's item above links and that each linked consumer names one of that namespace's entries.
