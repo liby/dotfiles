@@ -16,7 +16,17 @@ Fetch web pages and docs with WebFetch and WebSearch, not Bash curl or wget. Whe
 {{ range (includeTemplate "claude/settings.json" . | fromJson).sandbox.excludedCommands -}}
 {{ $excluded = append $excluded (printf "`%s`" (trimSuffix ":*" .)) -}}
 {{ end -}}
-Sandboxed commands write only this session's working directories and the configured tool paths. A Bash call leaves the sandbox without the bypass only when every command in it is a plain invocation of {{ join ", " $excluded }}: its own arguments and at most a descriptor duplication such as `2>&1`. A `cd`, pipe, redirection, heredoc, command substitution, inline assignment, or a Git option that selects another repository or configuration (`-C`, `-c`, `--git-dir`, `--work-tree`) keeps the whole call sandboxed. Run these tools as separate plain calls, writing output through their own options, instead of adding the bypass: the classifier can deny the bypass flag and then ordinary commands for the rest of the session. A `cd` does not carry over to the next call, so Git reaches another repository only from inside the sandbox; when a write there fails outside the writable paths, ask the user to add the directory with `/add-dir`.
+Sandbox exclusions are configured for {{ join ", " $excluded }}. They match the whole Bash call, not tools invoked inside a script: every command must qualify. Built-in checks prevent automatic exclusion for shapes such as `cd`, redirects to files, heredocs, command substitutions, or Git repository/configuration options (`-C`, `-c`, `--git-dir`, `--work-tree`). Prefer a standalone plain call when it reaches the intended target; use the tool's own output options, when available, to preserve its exclusion.
+
+In the main session, Bash returns to the project directory after each call; use `git -C <checkout> ...` for another checkout. For writes, required paths include the actual Git metadata directories, including a linked worktree's shared Git directory, as well as the working tree.
+
+Choose the execution path for the exact Git call:
+
+- If the call qualifies for automatic exclusion, leave `dangerouslyDisableSandbox` unset; that call already runs outside the sandbox.
+- If the call does not qualify but the sandbox provides its required capabilities, leave `dangerouslyDisableSandbox` unset.
+- If the call does not qualify and an authorized operation is known to need capabilities the sandbox lacks, request the standalone call with `dangerouslyDisableSandbox: true` from the outset through the normal permission flow.
+
+Do not request `/add-dir` or run a predictably failing sandboxed write first. Run a Git write separately from output filtering and follow-up inspection, and inspect its own result before continuing.
 
 Before saving an auto-memory note about a tool or workflow that a skill covers, read that skill and its relevant references. Save nothing they already say, including a rule you broke this session; instead tell the user which rule was missing, wrong, or broken despite being loaded. The user's own directions, with their scope and any skill rule they override, and facts specific to this project or machine can still be saved. When a note you load repeats or contradicts a skill, delete that part rather than rewriting it to match, unless it records such a user direction that still applies.
 
