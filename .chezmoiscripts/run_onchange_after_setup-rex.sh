@@ -35,6 +35,7 @@ defaults write $domain Workspace.terminalPaddingColor -string background
 defaults write $domain Workspace.terminalSelectionRoundedCorners -bool false
 defaults write $domain Workspace.terminalUsesDisplayP3 -bool true
 defaults write $domain Workspace.usesStandardInactiveWindowPaneStyles -bool false
+defaults write $domain rex.agents.names-sessions -bool false
 defaults write $domain rex.client.remoteControl -bool true
 
 if [[ -n $(lsappinfo find bundleid=$domain) ]]; then

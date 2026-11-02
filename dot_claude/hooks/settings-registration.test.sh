@@ -58,7 +58,7 @@ section() {
 
 AGENT_GUARD="/opt/homebrew/bin/agent-guard --runtime claude"
 # `rex skill setup` recognizes only its own command; see CONCEPTS.md#rex-integration.
-REX_HOOK="/bin/sh -c 'rex __internal session-start --agent claude 2>/dev/null || true'"
+REX_HOOK="/bin/sh -c 'rex __internal session-start --agent claude --feature-session-naming=false 2>/dev/null || true'"
 # `rexume install` recognizes its hook by this command; see CONCEPTS.md#rex-integration.
 REXUME_HOOK="rexume report claude"
 
