@@ -21,11 +21,9 @@ This repository is public. Unless the user says otherwise, its tracked paths, fi
 
 ## Encrypted Files
 
-[Protected Inputs](.chezmoitemplates/agents/protected-inputs.md) owns the ciphertext rule: a tracked ciphertext source is an opaque artifact whose metadata may be inspected and that may be staged, committed, renamed, or deleted when the change intent comes from project documentation or the user, while its body is never read, inferred, or described. The operations below are this repository's.
+Treat ciphertext as opaque under [Protected Inputs](.chezmoitemplates/agents/protected-inputs.md): inspect metadata only, and hand operations that expose or derive plaintext to the user, including decrypt, `chezmoi edit`, `chezmoi re-add`, and `chezmoi merge`. Adding or re-encrypting a real secret also belongs to the user; add a non-secret file encrypted with `chezmoi add --encrypt <file>`. Never run `chezmoi merge` for an encrypted target or edit an `encrypted_*.asc` source directly.
 
-- Hand every operation that can expose or derive secret plaintext to the user, including add or re-encrypt from a real secret, decrypt, `chezmoi edit`, `chezmoi re-add`, and `chezmoi merge`. Never run `chezmoi merge` for any encrypted target.
-- Add a non-secret encrypted file with `chezmoi add --encrypt <file>`. Edit encrypted non-secret content through `chezmoi edit <dest-path>` or edit its deployed plaintext and run `chezmoi re-add`; never edit an `encrypted_*.asc` source directly. Decryption requires a YubiKey.
-- A ciphertext source may share a commit with related non-secret changes; it does not require a commit of its own. Whatever the commit shape, describe the ciphertext generically, such as `update encrypted zshenv`: metadata and user-supplied change classification may justify the commit, but describing inferred plaintext changes defeats the encryption boundary.
+A ciphertext source may share a commit with related non-secret changes. Describe it generically, such as `update encrypted zshenv`, using metadata and the user's change classification without inferring plaintext changes.
 
 ## Maintenance map
 
