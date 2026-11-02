@@ -71,7 +71,7 @@ expect_runs PostToolUse Bash "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_runs PostToolUseFailure Bash "~/.claude/hooks/post-bash-scan-secrets.sh"
 expect_runs PreCompact "" "~/.claude/hooks/pre-compact-instructions.sh"
 expect_runs SessionStart "" "$REX_HOOK"
-expect_runs SessionStart "" "$REXUME_HOOK"
+for event in SessionStart UserPromptSubmit Stop StopFailure; do expect_runs "$event" "" "$REXUME_HOOK"; done
 expect_runs SessionStart compact "~/.claude/hooks/post-compact-reminder.sh"
 check "event/matcher/command tuples are unique" "$(jq '
   [to_entries[] | .key as $event | .value[] | (.matcher // "") as $matcher

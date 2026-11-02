@@ -27,6 +27,7 @@
   "includeGitInstructions": false,
   "enableArtifact": false,
   "disableRemoteControl": true,
+  "crossSessionInbound": "accept",
   "disableClaudeAiConnectors": true,
   "disableBundledSkills": true,
   "syncClaudeAiSkills": false,
@@ -242,6 +243,39 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rexume report claude",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rexume report claude",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rexume report claude",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -251,6 +285,7 @@
   "enabledPlugins": {
     "preallow@entwining-mods": true,
     "pyright-lsp@claude-plugins-official": true,
+    "rexume@rexume": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
@@ -260,6 +295,12 @@
       "source": {
         "source": "github",
         "repo": "Entwining/mods"
+      }
+    },
+    "rexume": {
+      "source": {
+        "source": "directory",
+        "path": "{{ .chezmoi.homeDir }}/.local/share/rexume/claude-plugin"
       }
     }
   },
