@@ -121,6 +121,7 @@ settings_path="$HOME/.claude/settings.json"
 # ── Extract JSON data (single jq call) ──────────────────
 {
   read -r compact_at
+  read -r usage_known
   read -r input_tokens
   read -r output_tokens
   read -r cache_create
@@ -167,6 +168,10 @@ settings_path="$HOME/.claude/settings.json"
   | ([$window, $compact_window] | min)
       - ([env_tokens("CLAUDE_CODE_MAX_OUTPUT_TOKENS") // 20000, 20000] | min)
       - (if $auto then 13000 else 0 end),
+  # CC sends null until the first response after a start or a compaction. The
+  # postTokens of the compaction record leaves out the system prompt, tools, and
+  # re-attached files, so it cannot stand in for the real size.
+  (.context_window.current_usage != null),
   (.context_window.current_usage.input_tokens // 0),
   (.context_window.current_usage.output_tokens // 0),
   (.context_window.current_usage.cache_creation_input_tokens // 0),
@@ -196,8 +201,12 @@ git_branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null) && {
     git_dirty="*"
 }
 
-color_for_pct "$pct_used"
-line1="${sky}Context${reset} ${_pct_color}${pct_used}%${reset}"
+if [ "$usage_known" = true ]; then
+  color_for_pct "$pct_used"
+  line1="${sky}Context${reset} ${_pct_color}${pct_used}%${reset}"
+else
+  line1="${sky}Context${reset} ${muted}--${reset}"
+fi
 line1+="${sep}"
 line1+="${amber}${dir_name}${reset}"
 if [ -n "$git_branch" ]; then
