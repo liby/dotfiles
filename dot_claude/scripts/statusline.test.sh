@@ -5,17 +5,17 @@ SOURCE="$(cd "$(dirname "$0")" && pwd)/executable_statusline.sh"
 fixture=$(mktemp -d)
 trap 'rm -rf "$fixture"' EXIT
 
-# Every section runs the whole script. The stubs make any fetch fail and leave
-# a mark instead of reaching the real Keychain or endpoint. /usr/bin comes next
-# so the merge runs on macOS's own jq 1.7, the oldest one the script meets when
-# Claude Code starts without Homebrew on PATH. The date stub moves a tick's
-# clock to $at, and the ps stub starts its Claude Code process $age seconds
-# (default 5) earlier.
+# Every section runs the whole script. The stubs make any fetch fail instead of
+# reaching the real Keychain or endpoint. /usr/bin comes next so the merge runs
+# on macOS's own jq 1.7, the oldest one the script meets when Claude Code
+# starts without Homebrew on PATH. The date stub moves a tick's clock to $at,
+# and the ps stub starts its Claude Code process $age seconds (default 5)
+# earlier.
 home="$fixture/home"
 cache="$home/.cache/claude-statusline"
 stubs="$fixture/stubs"
 mkdir -p "$cache" "$stubs"
-printf '#!/bin/sh\ntouch "%s/fetched"\nexit 7\n' "$fixture" > "$stubs/curl"
+printf '#!/bin/sh\nexit 7\n' > "$stubs/curl"
 printf '#!/bin/sh\nexit 44\n' > "$stubs/security"
 cat > "$stubs/date" <<'EOF'
 #!/bin/sh
@@ -38,43 +38,59 @@ cat > "$fetch/curl" <<EOF
 printf '%s\n' "\$@" > "$fixture/argv"
 cat > "$fixture/headers"
 while [ \$# -gt 0 ]; do
-  [ "\$1" = -o ] && printf '{"five_hour":{"utilization":12}}' > "\$2"
+  [ "\$1" = -o ] && printf '%s' "\$FETCH_BODY" > "\$2"
   shift
 done
 printf 200
 EOF
 chmod +x "$fetch/curl"
-printf '{"cwd":"%s","session_id":"s","version":"test"}' "$fixture" |
-  env HOME="$home" XDG_CACHE_HOME="$home/.cache" CLAUDE_CODE_OAUTH_TOKEN=SYNTHETIC_AUDIT_SENTINEL \
-    PATH="$fetch:$stubs:/usr/bin:$PATH" /bin/bash "$SOURCE" > /dev/null
+fetch_tick() { # response body
+  printf '{"cwd":"%s","session_id":"s","version":"test"}' "$fixture" |
+    env HOME="$home" XDG_CACHE_HOME="$home/.cache" CLAUDE_CODE_OAUTH_TOKEN=SYNTHETIC_AUDIT_SENTINEL FETCH_BODY="$1" \
+      PATH="$fetch:$stubs:/usr/bin:$PATH" /bin/bash "$SOURCE" > /dev/null
+}
+# A plan without a 5h window answers with a null five_hour and no session meter
+fetch_tick '{"five_hour":null,"limits":[{"kind":"weekly_all","percent":12,"resets_at":null}]}'
 if grep -q 'SYNTHETIC_AUDIT_SENTINEL' "$fixture/argv"; then exit 1; fi
 grep -qx '@-' "$fixture/argv"
 [ "$(cat "$fixture/headers")" = 'Authorization: Bearer SYNTHETIC_AUDIT_SENTINEL' ]
-jq -e '.five_hour.utilization == 12' "$cache/usage.json" >/dev/null
+jq -e '.limits[0].percent == 12' "$cache/usage.json" >/dev/null
+[ ! -e "$cache/usage.retry" ]
 [ ! -e "$cache/refresh.lock" ]
-printf 'statusline credential transport: passed\n'
 
-# Rate-limit sharing: a fresh usage.json keeps the fetch off
+# A body without limits[] is a failure even with HTTP 200
+rm "$cache/usage.json"
+fetch_tick '{"error":{"type":"rate_limit_error"}}'
+[ ! -e "$cache/usage.json" ]
+[ "$(cat "$cache/usage.retry")" = 200 ]
+jq -e '.error' "$cache/usage-last-error.json" >/dev/null
+printf 'statusline fetch: passed\n'
+
+# Rate-limit sharing: ticks find no OAuth token, so usage.json holds whatever
+# snapshot a case writes
 now=$(date +%s)
 reset=$(( now + 3 * 3600 ))
 reset_iso=$(date -u -r "$reset" +%Y-%m-%dT%H:%M:%S)
 ended=$(( now - 90 ))
 ended_iso=$(date -u -r "$ended" +%Y-%m-%dT%H:%M:%S)
 week=$(( now + 4 * 86400 ))
+week_iso=$(date -u -r "$week" +%Y-%m-%dT%H:%M:%S)
 
-snapshot() { # five_utilization five_resets_at_iso [age in seconds, default 1h]
-  printf '{"five_hour":{"utilization":%s,"resets_at":"%s+00:00"},"seven_day":null,"extra_usage":{"is_enabled":false}}' \
-    "$1" "$2" > "$cache/usage.json"
-  touch -t "$(date -r $(( now - ${3:-3600} )) +%Y%m%d%H%M.%S)" "$cache/usage.json"
+snapshot_limits() { # limits_json [age in seconds, default 1h]
+  printf '{"limits":%s,"extra_usage":{"is_enabled":false}}' "$1" > "$cache/usage.json"
+  touch -t "$(date -r $(( now - ${2:-3600} )) +%Y%m%d%H%M.%S)" "$cache/usage.json"
+}
+snapshot() { # session_percent session_resets_at_iso [age in seconds, default 1h]
+  snapshot_limits "[{\"kind\":\"session\",\"percent\":$1,\"resets_at\":\"$2+00:00\"}]" "${3:-3600}"
 }
 # The script keys its record on its parent, the Claude Code process: ticks
 # run straight from this shell share one process, and each ( tick ) is a new one
-tick() { # rate_limits JSON or empty, [session id]; writes the 5h and 7d rows that rows prints
+tick() { # rate_limits JSON or empty, [session id]; writes the rate rows that rows prints
   local limits=${1:-null}
   printf '{"cwd":"%s","session_id":"%s","version":"test","rate_limits":%s}' "$fixture" "${2:-s}" "$limits" |
     env -u CLAUDE_CODE_OAUTH_TOKEN HOME="$home" XDG_CACHE_HOME="$home/.cache" TEST_NOW="${at:-}" TEST_PROCESS_AGE="${age:-}" \
       PATH="$stubs:/usr/bin:$PATH" COLUMNS=120 /bin/bash "$SOURCE" |
-    sed $'s/\033\\[[0-9;]*m//g' | grep -E '^(5h|7d) ' > "$fixture/rows" || true
+    sed $'s/\033\\[[0-9;]*m//g' | grep -E '^(5h|7d|Fable) ' > "$fixture/rows" || true
 }
 rows() { cat "$fixture/rows"; }
 five() { printf '{"five_hour":{"used_percentage":%s,"resets_at":%s}}' "$1" "$2"; }
@@ -143,16 +159,14 @@ expect 'another session follows the reset' "$(rows)" '^5h .* 1% ⟳ .*≈'
 # After a reset the endpoint can report no open window at all
 reset_state
 printf '{"five_hour":{"used_percentage":40,"resets_at":%s,"observed_at":%s}}\n' "$reset" $(( now - 120 )) > "$cache/rate-limits.json"
-printf '{"five_hour":{"utilization":0.0,"resets_at":null},"seven_day":null,"extra_usage":{"is_enabled":false}}' > "$cache/usage.json"
-touch -t "$(date -r $(( now - 60 )) +%Y%m%d%H%M.%S)" "$cache/usage.json"
+snapshot_limits '[{"kind":"session","percent":0,"resets_at":null}]' 60
 ( tick )
 expect 'a later snapshot without a window clears the old one' "$(rows)" '^5h .* 0% ⟳ +-- ≈'
 
 # Incident: a new session showed a 7h-old snapshot, refetch backing off after a
 # 401, with the same marker as a neighbour's fresh value
 reset_state
-printf '{"five_hour":{"utilization":0.0,"resets_at":null},"seven_day":null,"extra_usage":{"is_enabled":false}}' > "$cache/usage.json"
-touch -t "$(date -r $(( now - 7 * 3600 )) +%Y%m%d%H%M.%S)" "$cache/usage.json"
+snapshot_limits '[{"kind":"session","percent":0,"resets_at":null}]' $(( 7 * 3600 ))
 printf '401' > "$cache/usage.retry"
 printf '{"seven_day":{"used_percentage":30,"resets_at":%s,"observed_at":%s}}\n' "$week" $(( now - 9000 )) > "$cache/rate-limits.json"
 ( tick )
@@ -207,7 +221,38 @@ at=$(( now - 30 )) tick "{\"five_hour\":{\"used_percentage\":4,\"resets_at\":$re
 rm "$stubs/mkdir"
 [ "$(jq -c '[.five_hour.used_percentage, .seven_day.used_percentage]' "$cache/rate-limits.json")" = '[7,50]' ]
 
-[ ! -e "$fixture/fetched" ]
+# A plan without a 5h window: the snapshot lists no session meter, so older
+# 5h values in the shared file and in replays stop rendering
+no_session='[{"kind":"weekly_all","percent":45,"resets_at":null}]'
+reset_state; snapshot_limits "$no_session" 60
+printf '{"five_hour":{"used_percentage":40,"resets_at":%s,"observed_at":%s}}\n' "$reset" $(( now - 120 )) > "$cache/rate-limits.json"
+tick "$(seven 45)"
+expect 'a meter missing from the snapshot does not render' "$(rows)" '^7d '
+if grep -q '^5h' "$fixture/rows"; then exit 1; fi
+jq -e 'has("five_hour") | not' "$cache/rate-limits.json" >/dev/null
+( age=7200 tick "$(five 40 "$reset")" )
+if grep -q '^5h' "$fixture/rows"; then exit 1; fi
+( tick "$(five 40 "$ended")" )
+if grep -q '^5h' "$fixture/rows"; then exit 1; fi
+
+# An account still on a 5h window: stdin carries it after the snapshot
+( tick "$(five 20 "$reset")" )
+expect 'a 5h window newer than the snapshot renders' "$(rows)" '^5h .*20% ⟳'
+
+# Without any snapshot, stdin alone decides
+reset_state
+tick "$(five 20 "$reset")"
+expect 'no snapshot keeps the stdin window' "$(rows)" '^5h .*20% ⟳'
+
+# A scoped meter renders under its server label, marked as from the snapshot,
+# in the shared columns
+reset_state
+snapshot_limits "$(printf '[{"kind":"weekly_all","percent":45,"resets_at":"%s+00:00"},{"kind":"weekly_scoped","percent":37,"resets_at":"%s+00:00","scope":{"model":{"id":null,"display_name":"Fable"},"surface":null}}]' "$week_iso" "$week_iso")" 60
+tick "$(seven 45)"
+expect 'scoped row' "$(rows)" '^Fable .*37% ⟳ +[0-9-]+ [0-9:]+ ≈$'
+expect 'stdin rows sort first' "$(rows | head -1)" '^7d '
+[ "$(awk '{ print index($0, "⟳") }' "$fixture/rows" | sort -u | wc -l)" -eq 1 ]
+
 printf 'statusline rate-limit sharing: passed\n'
 
 # Line 1 for a Vertex model id holding 153000 context tokens; Context % is

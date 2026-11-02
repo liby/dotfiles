@@ -244,7 +244,7 @@ get_oauth_token() {
 # written only on verified success; failures back off via usage.retry; sessions
 # serialize fetches through refresh.lock. The cache lives outside /tmp so the
 # last snapshot survives reboots (startup renders before stdin has rate_limits).
-# rate-limits.json holds the latest 5h/7d observation merged from every
+# rate-limits.json holds the latest observation of each limit merged from every
 # session's stdin and the API snapshot, so a new session starts from its
 # neighbours' live values instead of a snapshot up to a TTL old; a tick that
 # advances it publishes under refresh.lock. processes/<pid> records when each
@@ -334,7 +334,9 @@ refresh_usage_cache() {
         -H "anthropic-beta: oauth-2025-04-20" \
         -H "User-Agent: claude-code/${claude_version}" \
         "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
-      if jq -e '.five_hour' < "$body_file" >/dev/null 2>&1 && mv "$body_file" "$usage_file"; then
+      # limits[] lists the meters that apply to the account, so a plan without
+      # a 5h window still answers with a valid body
+      if jq -e '.limits | type == "array"' < "$body_file" >/dev/null 2>&1 && mv "$body_file" "$usage_file"; then
         rm -f "$retry_file"
         # Re-derive the coupled usage_data, extra_active, and cache_max_age
         # tuple so the Ex row and cache policy match the fresh response.
@@ -356,13 +358,14 @@ refresh_usage_cache() {
 $needs_refresh && refresh_usage_cache
 
 # ── Rate limit lines ────────────────────────────────────
-# stdin rate_limits are process state in Claude Code (2.1.296): filled by the
-# first API response, replayed unchanged while idle and across /clear, and a
-# window is dropped once its reset passes. A window in stdin therefore counts
-# as observed when its value changed from what this process last carried, and
-# every tick merges it with the shared file and the API snapshot per window and
-# renders the result. Claude Code runs the statusline as its direct child, so
-# $PPID names the process.
+# stdin rate_limits are process state in Claude Code: filled by API responses,
+# replayed unchanged while idle and across /clear (observed on 2.1.296), and a
+# window is present only while the API reports it and its reset has not passed
+# (documented in 2.1.316). A window in stdin therefore counts as observed when
+# its value changed from what this process last carried, and every tick merges
+# it with the shared file and the API snapshot per limit and renders the
+# result. Claude Code runs the statusline as its direct child, so $PPID names
+# the process.
 process_file="${processes_dir}/${PPID}"
 process_seen=''
 changed_at=$_now
@@ -376,29 +379,26 @@ elif [ "$live_limits" != "{}" ]; then
     changed_at=0
 fi
 
-merge_rate_limits() { # shared_json; sets the row fields, process_record, and merged_limits
+merge_rate_limits() { # shared_json; sets process_record, merged_limits, and rate_rows
   {
-    read -r five_pct
-    read -r five_reset_epoch
-    read -r five_source
-    read -r seven_pct
-    read -r seven_reset_epoch
-    read -r seven_source
     read -r process_record
     read -r merged_limits
+    IFS= read -r -d '' rate_rows
   } < <(jq -rn --arg live "$live_limits" --arg seen "$process_seen" --argjson changed_at "$changed_at" \
       --arg shared "$1" --arg api "$usage_data" --argjson api_at "$usage_mtime" --argjson now "$_now" \
       --argjson stale_after "$cache_max_age_disabled" '
     def epoch: if . then sub("(\\.[0-9]+)?(Z|[+-][0-9:]+)?$"; "") | strptime("%Y-%m-%dT%H:%M:%S") | mktime else null end;
-    def win($at): if .used_percentage then {used_percentage: (.used_percentage | round), resets_at, observed_at: $at, fresh: (.fresh // false)} else null end;
-    def api_win($at): if .utilization then {used_percentage: (.utilization | round), resets_at: (.resets_at | epoch), observed_at: $at, fresh: false} else null end;
+    def win: if .used_percentage then {used_percentage: (.used_percentage | round), resets_at, observed_at: (.observed_at // 0), fresh: (.fresh // false)} else null end;
+    def open: .resets_at == null or .resets_at > $now;
     # The latest observation wins, because a limit reset can zero usage
     # without moving resets_at. An ended window ranks below an open one however
     # recent, so a long-idle replay cannot hide the current window; a null
     # reset (no window open) is current. Within one second a value that changed
     # on this tick beats the shared one, which beats a replay, so processes that
     # changed in the same second do not take turns overwriting each other.
-    def rank: [(.resets_at == null or .resets_at > $now), .observed_at, .fresh];
+    def rank: [open, .observed_at, .fresh];
+    def stdin_window: IN("five_hour", "seven_day");
+    def row_label: {five_hour: "5h", seven_day: "7d"}[.] // sub("^[^:]*:"; "");
     ($seen | fromjson? // {}) as $p
     | ($live | fromjson? // {}
         | with_entries(.key as $w | .value |= . + (
@@ -406,24 +406,36 @@ merge_rate_limits() { # shared_json; sets the row fields, process_record, and me
             else {observed_at: $changed_at, fresh: true} end))) as $l
     | ($l | map_values(del(.fresh))) as $record
     | ($shared | fromjson? // {}) as $s
-    | ($api | fromjson? // {}) as $a
+    # The snapshot keys its server meters by the stdin window they match, and
+    # any other meter, such as a per-model weekly limit, by kind and scope label
+    | ($api | fromjson? // {} | .limits // null
+        | if . then map({
+              key: ({session: "five_hour", weekly_all: "seven_day"}[.kind]
+                    // ([.kind, (.scope.model.display_name // .scope.surface.display_name)] | map(select(.)) | join(":"))),
+              value: {used_percentage: .percent, resets_at: (.resets_at | epoch), observed_at: $api_at}})
+            | from_entries
+          else null end) as $a
+    | ($l | with_entries(select(.key | stdin_window))) as $lw
+    # A limit the snapshot does not list does not apply to the account, as
+    # with the 5h window on plans without one, unless a later observation holds
+    # an open window of it; with no snapshot, every observation stands.
     # Parenthesized: jq 1.7 (macOS /usr/bin/jq) rejects `reduce ... as $x`
-    | (reduce ("five_hour", "seven_day") as $w ({};
+    | (reduce ([$a // {}, $lw, $s] | map(keys[]) | unique[]) as $k ({};
         # max_by keeps the last of equal ranks
-        ([($a[$w] | api_win($api_at)), ($l[$w] | win(.observed_at)), ($s[$w] | win(.observed_at // 0))]
-          | map(select(.)) | max_by(rank) | del(.fresh)) as $pick
-        | if $pick then .[$w] = $pick else . end)) as $merged
-    # observed_at dates the last change or fetch of a value. A tick refetches
-    # the snapshot by the time it is $stale_after old (its longest TTL), so an
-    # older value means the refetch failed or no session ticked, and a new
-    # window may have opened unseen, such as after a snapshot that showed none.
-    | (("five_hour", "seven_day") as $w
-        | ($merged[$w].used_percentage // ""), ($merged[$w].resets_at // ""),
-          (if $l[$w] then "live"
-           elif $now - ($merged[$w].observed_at // 0) < $stale_after then "shared"
-           else "stale" end)),
-      (if $seen != "" and $record == $p then "" else $record | tojson end),
-      (if $merged == $s then "" else $merged | tojson end)
+        ([$a[$k], $lw[$k], $s[$k]] | map(win) | map(select(.)) | max_by(rank) | del(.fresh)) as $pick
+        | if $pick and ($a == null or $a[$k] or ($pick.observed_at >= $api_at and ($pick | open)))
+          then .[$k] = $pick else . end)) as $merged
+    | (if $seen != "" and $record == $p then "" else $record | tojson end),
+      (if $merged == $s then "" else $merged | tojson end),
+      # observed_at dates the last change or fetch of a value. A tick refetches
+      # the snapshot by the time it is $stale_after old (its longest TTL), so an
+      # older value means the refetch failed or no session ticked, and a new
+      # window may have opened unseen, such as after a snapshot that showed none.
+      ($merged | keys | sort_by(stdin_window | not)[] as $k | $merged[$k]
+        | ($k | row_label), .used_percentage, (.resets_at // ""),
+          (if $l[$k] then "live"
+           elif $now - .observed_at >= $stale_after then "stale"
+           else "shared" end))
   ' 2>/dev/null)
 }
 
@@ -448,20 +460,20 @@ if [ -n "$merged_limits" ] && acquire_lock; then
   rmdir "$lock_dir" 2>/dev/null
 fi
 
-# Queue every row first, then pad the time column to the widest rendered time
-# string: mixed rows stay aligned, an all-expired display keeps its marker next
-# to "--" instead of floating at timestamp width, and the Ex row shares the column.
-row_labels=(); row_pcts=(); row_times=(); row_suffixes=(); _time_w=0
+# Queue every row first, then pad the label and time columns to their widest
+# entries: mixed rows stay aligned, an all-expired display keeps its marker next
+# to "--" instead of floating at timestamp width, and the Ex row shares the columns.
+row_labels=(); row_pcts=(); row_times=(); row_suffixes=(); _label_w=0; _time_w=0
 queue_row() { # label pct time suffix: single writer keeps the arrays aligned
   local t="${3:---}"
   row_labels+=("$1"); row_pcts+=("$2"); row_times+=("$t"); row_suffixes+=("$4")
+  (( ${#1} > _label_w )) && _label_w=${#1}
   (( ${#t} > _time_w )) && _time_w=${#t}
 }
 queue_rate_row() { # label pct reset_epoch source
   local label="$1" pct="$2" reset_epoch="$3" suffix=""
-  [ -n "$pct" ] || return
-  # ≈: this session's own stdin has not carried the window yet; ≋: and the
-  # value is past the snapshot's longest refetch interval
+  # ≈: the value did not come from this session's own stdin, which never
+  # carries scoped limits; ≋: it is past the snapshot's longest refetch interval
   case "$4" in
     shared) suffix=" ${cache}≈${reset}" ;;
     stale)  suffix=" ${cache}≋${reset}" ;;
@@ -479,14 +491,16 @@ queue_rate_row() { # label pct reset_epoch source
   [ -n "$reset_epoch" ] && reset_time=$(date -j -r $(( (reset_epoch + 150) / 300 * 300 )) +"%m-%d %H:%M")
   queue_row "$label" "$pct" "$reset_time" "$suffix"
 }
-queue_rate_row "5h" "$five_pct" "$five_reset_epoch" "$five_source"
-queue_rate_row "7d" "$seven_pct" "$seven_reset_epoch" "$seven_source"
+while IFS= read -r _label && IFS= read -r _pct && IFS= read -r _reset && IFS= read -r _source; do
+  queue_rate_row "$_label" "$_pct" "$_reset" "$_source"
+done <<< "$rate_rows"
 (( extra_active )) && queue_extra_rate_row
 
 rate_lines=""
 for _i in "${!row_labels[@]}"; do
+  printf -v _label_pad '%-*s' "$_label_w" "${row_labels[$_i]}"
   printf -v _time_pad '%-*s' "$_time_w" "${row_times[$_i]}"
-  render_rate_row "${row_labels[$_i]}" "${row_pcts[$_i]}" "$_time_pad" "${row_suffixes[$_i]}"
+  render_rate_row "$_label_pad" "${row_pcts[$_i]}" "$_time_pad" "${row_suffixes[$_i]}"
   rate_lines+="${rate_lines:+\n}${_row}"
 done
 
