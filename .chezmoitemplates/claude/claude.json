@@ -1,4 +1,7 @@
 {
+  "autoModeEnvSetup": {
+    "dismissed": true
+  },
   "copyOnSelect": false,
   "externalEditorContext": true,
   "leftArrowOpensAgents": false,
