@@ -9,8 +9,8 @@ allowed-tools:
     - mcp__chrome-devtools__*
 metadata:
     github-path: skills/oracle
-    github-pinned: v0.22.1
-    github-ref: refs/tags/v0.22.1
+    github-pinned: v0.22.2
+    github-ref: refs/tags/v0.22.2
     github-repo: https://github.com/steipete/oracle
     github-tree-sha: 258a7f4030bcc98df47a7146974b81240754865c
 name: oracle
@@ -26,7 +26,7 @@ Before recovering a submission, connection, upload, or capture failure, or accep
 
 Never attach secrets, credential files, private keys, shell history, browser storage, real environment files, or a broad home-directory tree. Use a follow-up when continuity matters.
 
-For non-secret inputs whose expansion or contents need checking, add `--dry-run json` to the intended command and inspect the full `composerText` and attachments. Inline file contents appear in `composerText`; uploaded or bundled attachments appear only as path and size, so the preview cannot verify their contents. A browser summary reports only a count for inline files, and `--files-report` does not list them. A dry run proves parsing and bundle construction, not browser selection or completion. Confirm every required file is selected and every included file is intentional; bracketed paths can be glob patterns even when shell-quoted. If expansion selects the wrong set, stage byte-identical non-secret inputs under unambiguous temporary names and preview again. Correct the inputs before submitting, rather than requesting an abstract substitute. Narrow oversized bundles; use explicit dotfile paths and `!` exclusions.
+For non-secret inputs whose expansion or contents need checking, add `--dry-run json` to the intended command and inspect the full `composerText` and attachments. Inline file contents appear in `composerText`; uploads show only path and size, so verify their contents at the original input paths. Generated preview bundles are deleted before the command exits. A browser summary reports only a count for inline files, and `--files-report` does not list them. A dry run proves parsing and bundle construction, not browser selection or completion. Confirm every required file is selected and every included file is intentional; bracketed paths can be glob patterns even when shell-quoted. If expansion selects the wrong set, stage byte-identical non-secret inputs under unambiguous temporary names and preview again. Correct the inputs before submitting, rather than requesting an abstract substitute. Narrow oversized bundles; use explicit dotfile paths and `!` exclusions.
 
 ## Run
 

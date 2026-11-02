@@ -9,7 +9,7 @@ allowed-tools:
 metadata:
     gitlab-path: internal/commands/skills/bundled/assets/glab
     gitlab-project: https://gitlab.com/gitlab-org/cli
-    gitlab-ref: refs/tags/v1.124.0
+    gitlab-ref: refs/tags/v1.126.0
     gitlab-tree-sha: 8a278019df57649e100e308bf248f906f8ed9b7f
 ---
 
@@ -19,7 +19,7 @@ Use `glab` for GitLab reads and writes. The rules below cover what `glab` does t
 
 Do not run `glab auth status` unless a `glab` command fails with an auth or host error. Report the failing host.
 
-`glab` sends each request, a `-R group/project` shorthand included, to the authenticated host of the current Git checkout, and otherwise to `gitlab.com`. A default host other than `gitlab.com`, set through `host` in glab's configuration or an environment variable such as `GITLAB_HOST`, receives all of them instead. A command that needs the checkout's project fails when no remote is on the host it would go to; with that default host in effect and remotes only on other hosts, the error names `GITLAB_HOST` even when glab's configuration set the default. For a project on another host or outside that checkout, pass `-R` with the full project URL to every command, `glab api` included, where the URL also fills `:id` and `:fullpath`; use `glab api --hostname` only for endpoints without a project. A request that reaches the wrong host need not name it: it answers 401, 403, or 404, or returns an unrelated project with the same path there; `glab config get host` prints the default host from whichever source set it, and nothing or `gitlab.com` when none is in effect.
+`glab` sends each request, a `-R group/project` shorthand included, to the GitLab host resolved from the current checkout; outside a checkout it uses the configured default or `gitlab.com`. A config-file `host` prefers a matching remote but falls back to another recognized GitLab remote when none matches. An environment override such as `GITLAB_HOST` wins; a command that needs the checkout's project fails if no remote matches that host. For a project on another host or outside that checkout, pass `-R` with the full project URL to every command, `glab api` included, where the URL also fills `:id` and `:fullpath`; use `glab api --hostname` only for endpoints without a project. A request that reaches the wrong host need not name it: it answers 401, 403, or 404, or returns an unrelated project with the same path there. `glab config get host` prints the configured or environment default, not necessarily the host resolved from the checkout.
 
 Check an unfamiliar flag in that subcommand's help filtered to the flag, such as `glab mr merge --help | rg -- --sha`; whole help pages are large.
 
@@ -29,7 +29,7 @@ These calls fail in ways that recur:
 - Quote every `glab api` path that contains `?`, `[`, or `*`; zsh otherwise aborts with `no matches found`.
 - `glab mr list` has no `--state`; it lists open MRs by default and takes `--all`, `--merged`, or `--closed`.
 - `glab api` paths take the placeholders its help lists, such as `:fullpath` for the current project. Put any other value that contains `/`, such as a ref or file path, in the path as `:<name>` with `--placeholder <name>=<value>`, which encodes it as one segment; a hand-written literal needs `%2F`.
-- `glab api -F` reads a value that starts with `@` as a file and parses one that starts with `[` or `{` as JSON, so send literal text, such as a body that starts with `@user`, with `-f`. Without `-X`, any field makes the request a `POST`; `-X GET` sends fields as query parameters. In a JSON body, bracketed field names such as `position[new_line]` are rejected; pass the object as JSON (`-F 'position={...}'`).
+- `glab api -F` reads a value that starts with `@` as a file's contents and parses one that starts with `[` or `{` as JSON, so send literal text, such as a body that starts with `@user`, with `-f`. For multipart file uploads, use `--form 'file=@<path>'`; it cannot be combined with `-F`, `-f`, or `--input`. Without `-X`, any field makes the request a `POST`; `-X GET` sends fields as query parameters. In a JSON body, bracketed field names such as `position[new_line]` are rejected; pass the object as JSON (`-F 'position={...}'`).
 - `glab ci view` is an interactive TUI, and `glab ci trace` without a job argument opens a picker and on a running job streams until the job ends.
 - `glab ci retry` takes a job ID or name, not a pipeline ID; retry a whole pipeline with `glab api -X POST projects/:id/pipelines/<id>/retry`.
 - In `glab mr note resolve`, `reopen`, `update`, `delete`, `draft update`, and `draft delete`, the MR comes first and the discussion or note ID last, although their usage lines show the reverse.
