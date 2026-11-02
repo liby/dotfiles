@@ -6,6 +6,7 @@ source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 # The app reads these at launch. They are written without quitting it, because chezmoi apply
 # usually runs in one of its panes.
 domain=com.superlogical.rex
+defaults write $domain RexAppUpdateAutomation -string install
 defaults write $domain Workspace.appIcon -string dark
 defaults write $domain Workspace.appIconVisibility -string dockOnly
 defaults write $domain Workspace.appearance -string dark
@@ -37,6 +38,7 @@ defaults write $domain Workspace.terminalUsesDisplayP3 -bool true
 defaults write $domain Workspace.usesStandardInactiveWindowPaneStyles -bool false
 defaults write $domain rex.agents.names-sessions -bool false
 defaults write $domain rex.client.remoteControl -bool true
+defaults write $domain rex.developer-mode-enabled -bool true
 
 if [[ -n $(lsappinfo find bundleid=$domain) ]]; then
   print -u2 -r -- "$step_yellow!$step_reset Reopen the Rex app to apply its settings; leave Rex Server running"
