@@ -7,14 +7,20 @@ source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 # usually runs in one of its panes.
 domain=com.superlogical.rex
 defaults write $domain RexAppUpdateAutomation -string install
+defaults write $domain Workspace.activePaneBorderColor -string accent
+defaults write $domain Workspace.activePaneBorderOpacity -float 0.15
+defaults write $domain Workspace.activePaneBorderTransition -string fade
 defaults write $domain Workspace.appIcon -string dark
 defaults write $domain Workspace.appIconVisibility -string dockOnly
 defaults write $domain Workspace.appearance -string dark
+defaults write $domain Workspace.cursorShader -string comet
+defaults write $domain Workspace.cursorShadersEnabled -bool true
 defaults write $domain Workspace.hiddenChromeButtons -array commandPalette newTab
 defaults write $domain Workspace.inactivePaneFadeMode -string text
 defaults write $domain Workspace.interfaceStyle -string useTheme
 defaults write $domain Workspace.paneDensity -string compact
 defaults write $domain Workspace.playsProgramActivitySounds -bool false
+defaults write $domain Workspace.showsActivePaneBorder -bool true
 defaults write $domain Workspace.showsPaneHeaders -bool true
 defaults write $domain Workspace.showsProcessesInActivity -bool true
 defaults write $domain Workspace.showsProgramActivityDockBadge -bool false
@@ -34,6 +40,7 @@ defaults write $domain Workspace.terminalImproveTextContrast -bool false
 defaults write $domain Workspace.terminalOptionKeyBehavior -string actsAsAlt
 defaults write $domain Workspace.terminalPaddingColor -string background
 defaults write $domain Workspace.terminalSelectionRoundedCorners -bool false
+defaults write $domain Workspace.terminalSmoothScrolling -bool true
 defaults write $domain Workspace.terminalUsesDisplayP3 -bool true
 defaults write $domain Workspace.usesStandardInactiveWindowPaneStyles -bool false
 defaults write $domain rex.agents.names-sessions -bool false
