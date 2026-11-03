@@ -15,3 +15,12 @@ type = "archive"
 url = "https://github.com/zdharma-continuum/fast-syntax-highlighting/archive/4672ad5dd9ad68a7effc1476d65afb7c584ce2b3.tar.gz"
 exact = true
 stripComponents = 1
+
+[".agents/skills/typesafe-ai"]
+type = "archive"
+# renovate: currentValue=main
+url = "https://github.com/typesafe-ai/skills/archive/302eea662c54bca6730873fe245bec1d69ebc23d.tar.gz"
+exact = true
+stripComponents = 3
+# The repository holds its skills side by side under skills/, and stripping that level would merge them.
+include = ["*/skills/typesafe-ai/**"]
