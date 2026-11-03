@@ -87,7 +87,7 @@ render_rate_row() { # sets _row
   printf -v pct "%.0f" "$pct_raw"
   build_bar "$pct" "$bar_width"
   printf -v pct_fmt "%3d" "$pct"
-  _row="${muted}${label}${reset} ${_bar}${_pct_color}${pct_fmt}%${reset} ${dim}⟳${reset}  ${sky}${reset_time}${reset}${suffix}"
+  _row="${muted}${label}${reset} ${_bar}${_pct_color}${pct_fmt}%${reset}${sep}${sky}${reset_time}${reset}${suffix}"
 }
 
 queue_extra_rate_row() {
@@ -205,7 +205,7 @@ if [ "$usage_known" = true ]; then
   color_for_pct "$pct_used"
   line1="${sky}Context${reset} ${_pct_color}${pct_used}%${reset}"
 else
-  line1="${sky}Context${reset} ${muted}--${reset}"
+  line1="${sky}Context${reset} ${muted}◌${reset}"
 fi
 line1+="${sep}"
 line1+="${amber}${dir_name}${reset}"

@@ -30,7 +30,9 @@ defaults write $domain Workspace.terminalCellHeightPercent -float 30
 defaults write $domain Workspace.terminalCopyAnimation -bool false
 defaults write $domain Workspace.terminalCursorBlinkIntervalMilliseconds -int 0
 defaults write $domain Workspace.terminalCursorBlinkUsesCustomInterval -bool false
-defaults write $domain Workspace.terminalFallbackFontNames -array "PingFang SC"
+# Noto Sans Nag Mundari supplies ◌ centered and sized like the terminal font's ●,
+# where the system fallback, Menlo, sets it low; it covers little else.
+defaults write $domain Workspace.terminalFallbackFontNames -array "PingFang SC" "Noto Sans Nag Mundari"
 defaults write $domain Workspace.terminalFontName -string "Inconsolata LGC Nerd Font Mono"
 defaults write $domain Workspace.terminalFontPointSize -float 12
 # Preserve the distinction between intentionally muted RGB text colors.

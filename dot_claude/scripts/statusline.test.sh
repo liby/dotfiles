@@ -112,7 +112,7 @@ at=$(( now - 120 )) tick "$(five 2.1 "$reset")"
 touch -t 202001010000 "$cache/rate-limits.json"
 before=$(stat -f %m "$cache/rate-limits.json")
 tick "$(five 2.1 "$reset")" cleared
-expect 'idle replay keeps the later value' "$(rows)" '^5h .* 5% ⟳'
+expect 'idle replay keeps the later value' "$(rows)" '^5h .* 5% ∙'
 [ "$(stat -f %m "$cache/rate-limits.json")" = "$before" ]
 
 # Claude Code drops an ended window from stdin; the windows left are still
@@ -121,15 +121,15 @@ reset_state; snapshot 0.0 "$ended_iso"
 at=$(( now - 120 )) tick "{\"five_hour\":{\"used_percentage\":2,\"resets_at\":$ended},\"seven_day\":{\"used_percentage\":40,\"resets_at\":$week}}"
 ( at=$(( now - 60 )) tick "$(seven 45)" )
 tick "$(seven 40)"
-expect 'a dropped window does not refresh the others' "$(rows)" '^7d .*45% ⟳'
-expect 'an ended window reads 0% with no reset time' "$(rows)" '^5h .* 0% ⟳ +-- '
+expect 'a dropped window does not refresh the others' "$(rows)" '^7d .*45% ∙'
+expect 'an ended window reads 0% with no reset time' "$(rows)" '^5h .* 0% ∙ +-- '
 
 # The tick before a process's first message leaves a record, so its first
 # values count from when they arrive, not from the process start
 reset_state; snapshot 0.0 "$reset_iso" 60
 at=$(( now - 300 )) tick
 age=600 tick "$(five 20 "$reset")"
-expect 'first values after an empty tick are new' "$(rows)" '^5h .* 20% ⟳'
+expect 'first values after an empty tick are new' "$(rows)" '^5h .* 20% ∙'
 
 # Two processes changed in the same second: neither one's replay undoes the other
 reset_state; snapshot 0.0 "$reset_iso"
@@ -137,7 +137,7 @@ at=$(( now - 120 )) tick
 at=$(( now - 60 )) tick "$(five 100 "$reset")"
 ( at=$(( now - 120 )) tick; at=$(( now - 60 )) tick "$(five 0 "$reset")" )
 tick "$(five 100 "$reset")"
-expect 'a same-second replay keeps the shared change' "$(rows)" '^5h .* 0% ⟳'
+expect 'a same-second replay keeps the shared change' "$(rows)" '^5h .* 0% ∙'
 [ "$(shared_five)" = 0 ]
 
 # A process first seen, such as one running before records existed, may replay
@@ -145,23 +145,23 @@ expect 'a same-second replay keeps the shared change' "$(rows)" '^5h .* 0% ⟳'
 reset_state; snapshot 0.0 "$reset_iso"
 printf '{"seven_day":{"used_percentage":0,"resets_at":%s,"observed_at":%s}}\n' "$week" $(( now - 60 )) > "$cache/rate-limits.json"
 age=86400 tick "$(seven 100)"
-expect 'a long-running process cannot replay over a newer value' "$(rows)" '^7d .* 0% ⟳'
+expect 'a long-running process cannot replay over a newer value' "$(rows)" '^7d .* 0% ∙'
 
 # Incident: a limit reset zeroed usage but kept the window's resets_at
 reset_state; snapshot 100.0 "$reset_iso"
 at=$(( now - 60 )) tick "$(five 100 "$reset")"
 tick "$(five 1 "$reset")"
-expect 'reset lowers usage within the window' "$(rows)" '^5h .* 1% ⟳'
+expect 'reset lowers usage within the window' "$(rows)" '^5h .* 1% ∙'
 [ "$(shared_five)" = 1 ]
 ( tick )
-expect 'another session follows the reset' "$(rows)" '^5h .* 1% ⟳ .*≈'
+expect 'another session follows the reset' "$(rows)" '^5h .* 1% ∙ .*≈'
 
 # After a reset the endpoint can report no open window at all
 reset_state
 printf '{"five_hour":{"used_percentage":40,"resets_at":%s,"observed_at":%s}}\n' "$reset" $(( now - 120 )) > "$cache/rate-limits.json"
 snapshot_limits '[{"kind":"session","percent":0,"resets_at":null}]' 60
 ( tick )
-expect 'a later snapshot without a window clears the old one' "$(rows)" '^5h .* 0% ⟳ +-- ≈'
+expect 'a later snapshot without a window clears the old one' "$(rows)" '^5h .* 0% ∙ +-- ≈'
 
 # Incident: a new session showed a 7h-old snapshot, refetch backing off after a
 # 401, with the same marker as a neighbour's fresh value
@@ -170,30 +170,30 @@ snapshot_limits '[{"kind":"session","percent":0,"resets_at":null}]' $(( 7 * 3600
 printf '401' > "$cache/usage.retry"
 printf '{"seven_day":{"used_percentage":30,"resets_at":%s,"observed_at":%s}}\n' "$week" $(( now - 9000 )) > "$cache/rate-limits.json"
 ( tick )
-expect 'a value past the 3h refetch interval is marked stale' "$(rows)" '^5h .* 0% ⟳ +-- +≋$'
-expect 'a younger one keeps the shared marker' "$(rows)" '^7d .*30% ⟳ .*≈$'
+expect 'a value past the 3h refetch interval is marked stale' "$(rows)" '^5h .* 0% ∙ +-- +≋$'
+expect 'a younger one keeps the shared marker' "$(rows)" '^7d .*30% ∙ .*≈$'
 
 # A snapshot fetched after the process's last change wins
 reset_state; snapshot 0.0 "$reset_iso"
 at=$(( now - 120 )) tick "$(five 3 "$reset")"
 snapshot 10.0 "$reset_iso" 60
 tick "$(five 3 "$reset")"
-expect 'later snapshot beats an older live value' "$(rows)" '^5h .* 10% ⟳ +[0-9-]+ [0-9:]+ *$'
+expect 'later snapshot beats an older live value' "$(rows)" '^5h .* 10% ∙ +[0-9-]+ [0-9:]+ *$'
 [ "$(shared_five)" = 10 ]
 
 # An ended window loses to an open one however recently it was observed
 reset_state; snapshot 0.0 "$ended_iso"
 printf '{"five_hour":{"used_percentage":97,"resets_at":%s,"observed_at":%s}}\n' "$ended" "$now" > "$cache/rate-limits.json"
 at=$(( now - 30 )) tick "$(five 1 "$reset")"
-expect 'rollover takes the new window' "$(rows)" '^5h .* 1% ⟳ +[0-9-]+ [0-9:]+ *$'
+expect 'rollover takes the new window' "$(rows)" '^5h .* 1% ∙ +[0-9-]+ [0-9:]+ *$'
 [ "$(shared_five)" = 1 ]
 
 # Windows merge independently, and ≈ marks only the one stdin lacks
 reset_state; snapshot 0.0 "$reset_iso"
 printf '{"five_hour":{"used_percentage":4,"resets_at":%s,"observed_at":%s}}\n' "$reset" $(( now - 60 )) > "$cache/rate-limits.json"
 tick "$(seven 30)"
-expect 'shared 5h row is marked' "$(rows)" '^5h .* 4% ⟳ .*≈'
-expect 'live 7d row is unmarked' "$(rows)" '^7d .*30% ⟳ +[0-9-]+ [0-9:]+ *$'
+expect 'shared 5h row is marked' "$(rows)" '^5h .* 4% ∙ .*≈'
+expect 'live 7d row is unmarked' "$(rows)" '^7d .*30% ∙ +[0-9-]+ [0-9:]+ *$'
 [ "$(jq -r '.seven_day.used_percentage' "$cache/rate-limits.json")" = 30 ]
 
 # Rendering never waits on a busy lock and never overwrites without it
@@ -201,7 +201,7 @@ reset_state; snapshot 0.0 "$reset_iso"
 printf '{"five_hour":{"used_percentage":3,"resets_at":%s,"observed_at":%s}}\n' "$reset" $(( now - 60 )) > "$cache/rate-limits.json"
 mkdir "$cache/refresh.lock"
 tick "$(five 4 "$reset")"
-expect 'busy lock still renders the merge' "$(rows)" '^5h .* 4% ⟳'
+expect 'busy lock still renders the merge' "$(rows)" '^5h .* 4% ∙'
 [ "$(shared_five)" = 3 ]
 rmdir "$cache/refresh.lock"
 tick "$(five 4 "$reset")"
@@ -237,21 +237,21 @@ if grep -q '^5h' "$fixture/rows"; then exit 1; fi
 
 # An account still on a 5h window: stdin carries it after the snapshot
 ( tick "$(five 20 "$reset")" )
-expect 'a 5h window newer than the snapshot renders' "$(rows)" '^5h .*20% ⟳'
+expect 'a 5h window newer than the snapshot renders' "$(rows)" '^5h .*20% ∙'
 
 # Without any snapshot, stdin alone decides
 reset_state
 tick "$(five 20 "$reset")"
-expect 'no snapshot keeps the stdin window' "$(rows)" '^5h .*20% ⟳'
+expect 'no snapshot keeps the stdin window' "$(rows)" '^5h .*20% ∙'
 
 # A scoped meter renders under its server label, marked as from the snapshot,
 # in the shared columns
 reset_state
 snapshot_limits "$(printf '[{"kind":"weekly_all","percent":45,"resets_at":"%s+00:00"},{"kind":"weekly_scoped","percent":37,"resets_at":"%s+00:00","scope":{"model":{"id":null,"display_name":"Fable"},"surface":null}}]' "$week_iso" "$week_iso")" 60
 tick "$(seven 45)"
-expect 'scoped row' "$(rows)" '^Fable .*37% ⟳ +[0-9-]+ [0-9:]+ ≈$'
+expect 'scoped row' "$(rows)" '^Fable .*37% ∙ +[0-9-]+ [0-9:]+ ≈$'
 expect 'stdin rows sort first' "$(rows | head -1)" '^7d '
-[ "$(awk '{ print index($0, "⟳") }' "$fixture/rows" | sort -u | wc -l)" -eq 1 ]
+[ "$(awk '{ print index($0, "∙") }' "$fixture/rows" | sort -u | wc -l)" -eq 1 ]
 
 printf 'statusline rate-limit sharing: passed\n'
 
@@ -286,7 +286,7 @@ expect 'auto-compact off in settings uses the bare window' "$(line1 200000 "$off
 expect 'auto-compact off in env uses the bare window' "$(line1 200000 "$top_150k" 'DISABLE_AUTO_COMPACT= TRUE ')" '^Context 85% '
 expect 'small output budget shrinks the reserve' "$(line1 1000000 "$opus_200k" CLAUDE_CODE_MAX_OUTPUT_TOKENS=1000)" '^Context 82% '
 expect 'no effort segment without effort.level' "$(line1 1000000 '{}')" '∙ M$'
-expect 'usage CC has not reported yet is unknown, not 0%' "$(usage=null line1 1000000 '{}')" '^Context -- '
+expect 'usage CC has not reported yet is unknown, not 0%' "$(usage=null line1 1000000 '{}')" '^Context ◌ '
 
 # settings.json can carry credentials in its env block; they stay out of argv
 cat > "$stubs/jq" <<EOF
