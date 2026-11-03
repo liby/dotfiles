@@ -1,0 +1,8 @@
+{
+  "env": {
+    "DISABLE_ERROR_REPORTING": "1",
+    "DISABLE_TELEMETRY": "1"
+  },
+  "disableDeepLinkRegistration": "disable",
+  "prependPlugins": []
+}

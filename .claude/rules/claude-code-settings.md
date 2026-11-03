@@ -2,6 +2,7 @@
 paths:
   - ".chezmoitemplates/claude/**/*"
   - ".chezmoitemplates/sandbox/**/*"
+  - ".chezmoiscripts/run_onchange_after_setup-claude-managed-settings.sh.tmpl"
   - "modify_private_dot_claude.json"
   - "dot_claude/modify_private_settings.json"
   - "dot_claude/CLAUDE.md.tmpl"
@@ -23,6 +24,8 @@ Only `model` is a seed, because `/model` changes it routinely and restoring it o
 
 Declare no effort setting. `/effort` saves per-model levels under `modelSettings`, which a managed subtree would erase on every apply; Opus 5.5 ignores a top-level `effortLevel`, so it cannot serve as a seed, and a new machine starts at `medium` until `/effort` saves a level. `CLAUDE_CODE_EFFORT_LEVEL` overrides every session and makes `/effort` report that its change was not applied.
 
+[`managed-settings.json`](../../.chezmoitemplates/claude/managed-settings.json) holds only keys that every session must honor, including runs started with `--setting-sources project,local`, which skip user settings: any interactive session without `disableDeepLinkRegistration` re-creates the `claude-cli://` URL handler app, and one without the privacy variables reports telemetry. Keep a key out of it when a harness or `--settings` must be able to change it, because no lower level overrides a managed key and only sudo edits the file; keep its keys out of the user fragment. Any managed settings file makes Claude Code seat its bundled `cc-plugin-sec-default@builtin` outermost unless managed `prependPlugins` is set, and that plugin routes every classic hook event past user-installed plugins, so preallow, which learns the permission mode only from those events, judges nothing in a session that starts with it seated; the empty `prependPlugins` list leaves it unseated, because this file holds no organization policy for it to protect. [Its setup script](../../.chezmoiscripts/run_onchange_after_setup-claude-managed-settings.sh.tmpl) installs it as root-owned `/Library/Application Support/ClaudeCode/managed-settings.json` and needs sudo, so apply it from an interactive terminal. Managed sources are first-wins: if a subscription account ever receives server-managed settings, they replace this file except for cross-source keys such as `env`, so confirm that `/status` lists `Enterprise managed settings (file)` in both launcher modes.
+
 `modify_private_dot_claude.json` replaces each source-declared MCP server whole, so a transport field removed in source also disappears from the live entry.
 
 ## Session behavior
@@ -36,9 +39,6 @@ Declare no effort setting. `/effort` saves per-model levels under `modelSettings
 `DISABLE_TELEMETRY=1` also disables the client that evaluates server-side feature flags, and no setting keeps flags while dropping events, so every flag-gated feature stays at its default. Before adding a setting, check whether the client reads it only behind a flag: `precomputeCompactionEnabled` (`tengu_sepia_moth`) and `autoDreamEnabled` (`tengu_onyx_plover`) are such settings and change nothing here. Leave `CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF` unset: it only reads a flag cache that sessions with telemetry off never write. Do not fold the privacy variables into `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, which also disables automatic updates.
 
 `skipWebFetchPreflight=true` is a user decision. The preflight sends each WebFetch hostname to Anthropic's blocklist lookup, and [lookup failures can block fetches on otherwise working networks](https://github.com/anthropics/claude-code/issues/6388). WebFetch permission rules still apply.
-
-`syncClaudeAiSkills=false` and `syncClaudeAiPlugins=false` matter only if a session re-enables flag evaluation: account sync is flag-driven and would pull claude.ai skills in beside the repository-managed registry.
-
 ## Permission rules
 
 Rules resolve before the auto-mode classifier sees an action: a deny match blocks, and an allow match skips review except for documented cases such as protected paths and commands that carry per-command allowed domains. `sandbox.excludedCommands` decides only where a command runs, so an excluded command without an allow rule still goes to the classifier; do not mirror one list into the other.

@@ -1,0 +1,11 @@
+#!/bin/zsh
+set -euo pipefail
+
+# --setting-sources can drop user settings but not managed settings, so keys
+# every session must honor are installed as the system managed settings file.
+settings=$(mktemp)
+trap 'rm -f "$settings"' EXIT
+print -r -- '{{ includeTemplate "claude/managed-settings.json" . | b64enc }}' |
+  base64 -D >"$settings"
+sudo install -d -o root -g wheel -m 0755 '/Library/Application Support/ClaudeCode'
+sudo install -o root -g wheel -m 0644 "$settings" '/Library/Application Support/ClaudeCode/managed-settings.json'
