@@ -6,11 +6,6 @@ allowed-tools:
   - Bash(git:*)
   - Bash(jq:*)
   - Read
-metadata:
-    gitlab-path: internal/commands/skills/bundled/assets/glab
-    gitlab-project: https://gitlab.com/gitlab-org/cli
-    gitlab-ref: refs/tags/v1.126.0
-    gitlab-tree-sha: 8a278019df57649e100e308bf248f906f8ed9b7f
 ---
 
 Use `glab` for GitLab reads and writes. The rules below cover what `glab` does that its help does not make obvious.
@@ -22,6 +17,8 @@ Do not run `glab auth status` unless a `glab` command fails with an auth or host
 `glab` sends each request, a `-R group/project` shorthand included, to the GitLab host resolved from the current checkout; outside a checkout it uses the configured default or `gitlab.com`. A config-file `host` prefers a matching remote but falls back to another recognized GitLab remote when none matches. An environment override such as `GITLAB_HOST` wins; a command that needs the checkout's project fails if no remote matches that host. For a project on another host or outside that checkout, pass `-R` with the full project URL to every command, `glab api` included, where the URL also fills `:id` and `:fullpath`; use `glab api --hostname` only for endpoints without a project. A request that reaches the wrong host need not name it: it answers 401, 403, or 404, or returns an unrelated project with the same path there. `glab config get host` prints the configured or environment default, not necessarily the host resolved from the checkout.
 
 Check an unfamiliar flag in that subcommand's help filtered to the flag, such as `glab mr merge --help | rg -- --sha`; whole help pages are large.
+
+For a workflow or behavior neither this skill nor the relevant subcommand's filtered help covers, `glab skills get glab` prints the guide bundled with the installed CLI. Use it as a syntax and capability reference; this skill governs conflicts, and the guide grants no authorization for pushes or other writes. Installed command help takes precedence over the guide on CLI behavior. If `glab skills get glab` fails, use command help instead.
 
 These calls fail in ways that recur:
 

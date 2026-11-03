@@ -28,6 +28,24 @@ fi
 pi update || status=$?
 pi update --extensions || status=$?
 gh extension upgrade --all || status=$?
+# Reinstalls a tool's own skill from the given tag of its repository whenever the deployed skill's
+# github-pinned tag differs, which also recovers a missing or unpinned SKILL.md. `gh skill update`
+# cannot do this: it skips pinned skills and exits 0 when it cannot reach the repository. The job's
+# run at load also installs these skills on a new machine. A link means the tool provides the skill
+# itself, and gh would write through it into the tool's own files.
+install_skill() {
+  [ -L "$HOME/.agents/skills/$2" ] && return 0
+  [ -n "$3" ] || { echo "No tag to install the $2 skill from" >&2; return 1; }
+  /usr/bin/grep -q "github-pinned: $3\$" "$HOME/.agents/skills/$2/SKILL.md" 2>/dev/null ||
+    gh skill install "$1" "$2" --pin "$3" --dir "$HOME/.agents/skills" --force
+}
+# Homebrew upgrades sessidx without its skill, so the skill follows the installed binary.
+sessidx_version=$(/opt/homebrew/bin/sessidx --version | /usr/bin/awk '{ print $2 }')
+install_skill Entwining/sessidx sessidx "${sessidx_version:+v$sessidx_version}" || status=$?
+# The TypeSafe skill documents a hosted API rather than a local binary, so it follows upstream's
+# newest version tag; that repository publishes no releases.
+typesafe_tag=$(git ls-remote --tags --refs --sort=-v:refname https://github.com/typesafe-ai/skills 'v*' | /usr/bin/awk -F/ 'NR == 1 { print $3 }')
+install_skill typesafe-ai/skills typesafe-ai "$typesafe_tag" || status=$?
 "$HOME/.cargo/bin/rustup" update || status=$?
 brew cleanup || status=$?
 # Each clear makes later installs re-download what it removed, so the block runs about once a week.

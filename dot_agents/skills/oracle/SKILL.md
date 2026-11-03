@@ -7,12 +7,6 @@ allowed-tools:
     - WebFetch
     - WebSearch
     - mcp__chrome-devtools__*
-metadata:
-    github-path: skills/oracle
-    github-pinned: v0.22.2
-    github-ref: refs/tags/v0.22.2
-    github-repo: https://github.com/steipete/oracle
-    github-tree-sha: 258a7f4030bcc98df47a7146974b81240754865c
 name: oracle
 ---
 
@@ -21,6 +15,8 @@ Preserve the ordinary browser route; explicit choices and recovery are separate 
 Before an explicit model, latest-model, or effort request, or an upgrade, option-rejection, or picker-routing recovery, load the Model and effort section of the [non-default modes contract](references/non-default-modes.md). Before a browser follow-up, Deep Research run, or explicitly billed API run, load its corresponding section.
 
 Before recovering a submission, connection, upload, or capture failure, or accepting a provider capture whose fidelity is not `matched`, read the [recovery contract](references/recovery.md). This includes resumed or stale sessions and manual fallback; load it before harvest, reload, retry, force, or another submission. An uncertain submission never authorizes a resend.
+
+For a workflow or behavior neither this skill, its references, nor `oracle --help --verbose` covers, read the exact text, not a summary, of upstream's Oracle skill for the installed release: `skills/oracle/SKILL.md` in the [steipete/oracle](https://github.com/steipete/oracle) repository at tag `v<version>`, with the version `oracle --version` prints. Use it as a syntax and capability reference; this skill governs conflicts, and that guide grants no authorization for billed runs, Project source changes, or other writes. Installed command help takes precedence over the guide on CLI behavior. If the guide cannot be read, use command help instead.
 
 ## Build the input
 

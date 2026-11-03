@@ -3,23 +3,8 @@ set -euo pipefail
 
 source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 
-typeset -A tags
-for skill_file in "{{ .chezmoi.sourceDir }}"/dot_agents/skills/*/SKILL.md; do
-  tag="$(sed -En 's#^[[:space:]]+(github|gitlab)-ref: refs/tags/v?##p' "$skill_file")"
-  [[ -n "$tag" ]] && tags[${skill_file:h:t}]="$tag"
-done
-
-# Piped straight into the loop, a failing brew would not stop the script under set -e.
-versions="$(/opt/homebrew/bin/brew list --formula --versions)"
-while read -r name installed; do
-  (( ${+tags[$name]} )) || continue
-  version="${${installed##* }%_*}"
-  [[ "$version" == "${tags[$name]}" ]] ||
-    print -u2 -r -- "$step_yellow!$step_reset The $name skill records upstream ${tags[$name]}, but Homebrew installed $version; see Managed skill registry in .github/CONCEPTS.md"
-done <<< "$versions"
-
-# Rex updates itself outside Homebrew, so the orc skill records a guide hash instead of a tag. Rex
-# cannot print an earlier version's guide, so the guide is kept under its hash for the review to diff.
+# The orc skill records the Rex version and guide hash it was checked against. Rex cannot print an
+# earlier version's guide, so the guide is kept under its hash for the review to diff.
 if (( $+commands[rex] )); then
   orc_skill="{{ .chezmoi.sourceDir }}/dot_agents/skills/orc/SKILL.md"
   recorded_version="$(sed -En 's/^[[:space:]]+rex-version: //p' "$orc_skill")"

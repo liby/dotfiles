@@ -16,6 +16,8 @@ Do not run `gh auth status` unless a `gh` command fails with an auth or host err
 
 Check an unfamiliar flag in that subcommand's help filtered to the flag, such as `gh pr merge --help | rg -- --match-head-commit`; whole help pages are large. `gh <command> --json` with no field list prints the fields that command accepts, so use it instead of guessing a field name.
 
+For a workflow or behavior neither this skill nor the relevant subcommand's filtered help covers, `gh repo read-file skills/gh/SKILL.md -R cli/cli --ref v<version>`, with the version number `gh --version` prints, returns GitHub CLI's own guide for the installed release. Use it as a syntax and capability reference; this skill governs conflicts, and the guide grants no authorization for writes. Installed command help takes precedence over the guide on CLI behavior. If that read fails, use command help instead.
+
 These calls fail in ways that recur:
 
 - `gh search issues` and `gh search prs` accept only `--state open|closed`; omit `--state` for both. Scope a search with `--repo owner/name` and pass each other qualifier as its own word. `gh` quotes a qualifier's value through the end of its argument and escapes quotes inside it: `'repo:cli/cli GH_HOST'` and `'repo:"cli/cli"'` become invalid queries, and `'GH_HOST in:title repo:cli/cli'` silently searches all of GitHub as `in:"title repo:cli/cli"`.
