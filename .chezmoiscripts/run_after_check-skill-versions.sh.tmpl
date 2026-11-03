@@ -29,9 +29,8 @@ if (( $+commands[rex] )); then
   # against. Versions are 0.0.<build time>-g<commit>.
   if (( ${${version#0.0.}%%-*} < ${${recorded_version#0.0.}%%-*} )); then
     print -u2 -rl -- \
-      "$step_yellow!$step_reset Rex Server runs $version, older than the $recorded_version that the orc skill was compared with." \
-      "  Agents read this server's older Rex guide until a newer server runs." \
-      "  If Rex shows that a newer server is available, click ${step_bold}Restart Server…$step_reset in Rex Settings > Server, which closes every session; otherwise update Rex first."
+      "$step_yellow!$step_reset Rex Server runs $version; orc was checked against newer $recorded_version." \
+      "  Save ongoing work, then update the server through Rex's server settings. Updating the app alone does not replace the running server."
   else
     recorded="$(sed -En 's/^[[:space:]]+rex-guide-sha256: //p' "$orc_skill")"
     guides="${XDG_CACHE_HOME:-$HOME/.cache}/rex-guide"

@@ -3,10 +3,8 @@ set -euo pipefail
 
 source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 
-# The app reads these at launch. They are written without quitting it, because chezmoi apply
-# usually runs in one of its panes.
+# The app reads these at launch; apply leaves relaunching it to the user.
 domain=com.superlogical.rex
-defaults write $domain RexAppUpdateAutomation -string install
 defaults write $domain Workspace.activePaneBorderColor -string accent
 defaults write $domain Workspace.activePaneBorderOpacity -float 0.15
 defaults write $domain Workspace.activePaneBorderTransition -string fade
@@ -22,12 +20,11 @@ defaults write $domain Workspace.paneDensity -string compact
 defaults write $domain Workspace.playsProgramActivitySounds -bool false
 defaults write $domain Workspace.showsActivePaneBorder -bool true
 defaults write $domain Workspace.showsPaneHeaders -bool true
-defaults write $domain Workspace.showsProcessesInActivity -bool true
 defaults write $domain Workspace.showsProgramActivityDockBadge -bool false
 defaults write $domain Workspace.sidebarPosition -string left
 defaults write $domain Workspace.tabIconColorMode -string activePanes
 defaults write $domain Workspace.tabStyle -string vertical
-# Keep the pre-3.201 35 px cell at 12 pt on 2x displays; re-tune for other fonts, sizes, or scales.
+# Keep a 35 px cell at 12 pt on 2x displays; re-tune for other fonts, sizes, or scales.
 defaults write $domain Workspace.terminalCellHeightPercent -float 30
 defaults write $domain Workspace.terminalCopyAnimation -bool false
 defaults write $domain Workspace.terminalCursorBlinkIntervalMilliseconds -int 0
@@ -39,6 +36,7 @@ defaults write $domain Workspace.terminalFontPointSize -float 12
 defaults write $domain Workspace.terminalImproveTextContrast -bool false
 defaults write $domain Workspace.terminalOptionKeyBehavior -string actsAsAlt
 defaults write $domain Workspace.terminalPaddingColor -string background
+defaults write $domain Workspace.terminalPaddingY -float 10
 defaults write $domain Workspace.terminalSelectionRoundedCorners -bool false
 defaults write $domain Workspace.terminalSmoothScrolling -bool true
 defaults write $domain Workspace.terminalUsesDisplayP3 -bool true
