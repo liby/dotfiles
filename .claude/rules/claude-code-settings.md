@@ -2,7 +2,7 @@
 paths:
   - ".chezmoitemplates/claude/**/*"
   - ".chezmoitemplates/sandbox/**/*"
-  - "modify_dot_claude.json"
+  - "modify_private_dot_claude.json"
   - "dot_claude/modify_private_settings.json"
   - "dot_claude/CLAUDE.md.tmpl"
   - "dot_claude/hooks/**/*"
@@ -23,7 +23,7 @@ Only `model` is a seed, because `/model` changes it routinely and restoring it o
 
 Declare no effort setting. `/effort` saves per-model levels under `modelSettings`, which a managed subtree would erase on every apply; Opus 5.5 ignores a top-level `effortLevel`, so it cannot serve as a seed, and a new machine starts at `medium` until `/effort` saves a level. `CLAUDE_CODE_EFFORT_LEVEL` overrides every session and makes `/effort` report that its change was not applied.
 
-`modify_dot_claude.json` replaces each source-declared MCP server whole, so a transport field removed in source also disappears from the live entry.
+`modify_private_dot_claude.json` replaces each source-declared MCP server whole, so a transport field removed in source also disappears from the live entry.
 
 ## Session behavior
 
