@@ -13,6 +13,7 @@ defaults write $domain Workspace.appIconVisibility -string dockOnly
 defaults write $domain Workspace.appearance -string dark
 defaults write $domain Workspace.cursorShader -string comet
 defaults write $domain Workspace.cursorShadersEnabled -bool true
+defaults write $domain Workspace.experiments.groupsActivityByPriority -bool true
 defaults write $domain Workspace.hiddenChromeButtons -array commandPalette newTab
 defaults write $domain Workspace.inactivePaneFadeMode -string text
 defaults write $domain Workspace.interfaceStyle -string useTheme
