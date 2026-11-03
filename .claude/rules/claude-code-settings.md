@@ -35,6 +35,8 @@ Declare no effort setting. `/effort` saves per-model levels under `modelSettings
 
 `DISABLE_TELEMETRY=1` also disables the client that evaluates server-side feature flags, and no setting keeps flags while dropping events, so every flag-gated feature stays at its default. Before adding a setting, check whether the client reads it only behind a flag: `precomputeCompactionEnabled` (`tengu_sepia_moth`) and `autoDreamEnabled` (`tengu_onyx_plover`) are such settings and change nothing here. Leave `CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF` unset: it only reads a flag cache that sessions with telemetry off never write. Do not fold the privacy variables into `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, which also disables automatic updates.
 
+`skipWebFetchPreflight=true` is a user decision. The preflight sends each WebFetch hostname to Anthropic's blocklist lookup, and [lookup failures can block fetches on otherwise working networks](https://github.com/anthropics/claude-code/issues/6388). WebFetch permission rules still apply.
+
 `syncClaudeAiSkills=false` and `syncClaudeAiPlugins=false` matter only if a session re-enables flag evaluation: account sync is flag-driven and would pull claude.ai skills in beside the repository-managed registry.
 
 ## Permission rules

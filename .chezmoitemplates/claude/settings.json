@@ -319,5 +319,6 @@
   "showTurnDuration": false,
   "timeFormat": "24-hour",
   "skipAutoPermissionPrompt": true,
+  "skipWebFetchPreflight": true,
   "skipWorkflowUsageWarning": true
 }
