@@ -11,7 +11,7 @@ local shells = { bash = true, fish = true, sh = true, zsh = true }
 local alert = [[
 ObjC.import("AppKit")
 function run(argv) {
-  const [message, cli, session, block] = argv
+  const [message, cli, session, block, server] = argv
   const app = $.NSApplication.sharedApplication
   const rex = $.NSRunningApplication.runningApplicationsWithBundleIdentifier("com.superlogical.rex").firstObject
   const alert = $.NSAlert.alloc.init
@@ -31,7 +31,7 @@ function run(argv) {
     // Close by ID the pane the key was pressed in, which need not have focus by now.
     const close = $.NSTask.alloc.init
     close.executableURL = $.NSURL.fileURLWithPath(cli)
-    close.arguments = $(["--autostart=false", "block", "close", "-s", session, block])
+    close.arguments = $(["--autostart=false", ...(server ? ["-S", server] : []), "block", "close", "-s", session, block])
     const stderr = $.NSPipe.pipe
     close.standardError = stderr
     let failure
@@ -92,9 +92,11 @@ rex.action{
     -- (`rex api describe client.action`), so waiting here would hold the clicks
     -- the app sends during the alert until the pane is gone, and they would then
     -- fail. The alert therefore runs detached and closes the pane itself, and
-    -- without a shell, so that killing its handle ends the alert.
+    -- without a shell, so that killing its handle ends the alert. Rex sends the
+    -- action's own calls to the server of a pane on another host but not the
+    -- alert's CLI, which therefore gets that server for `-S`.
     pending = assert(rex.exec.start({
-      "osascript", "-l", "JavaScript", "-e", alert, message, cli, ctx.session_id, ctx.block_id,
+      "osascript", "-l", "JavaScript", "-e", alert, message, cli, ctx.session_id, ctx.block_id, ctx.server,
     }, { detach = true }))
   end,
 }
