@@ -8,7 +8,7 @@ For a foreground `rex wait --for`, set Bash's timeout above that duration and wi
 
 ## Claude Code participant
 
-`claude -n '<participant>' '<task>'` starts an interactive session with the participant in its terminal title; `claude -p '<task>'` runs non-interactively and prints nothing until it finishes. Set effort with `--effort <level>`. A subscription within its plan usage keeps the conversation's cache for an hour by default, and usage credits, an API key, or a gateway route keep it for five minutes; `env CLAUDE_CODE_PROMPT_CACHE_TTL=1h` before `claude` in the launch command sets the hour on any route that supports it.
+`claude` on PATH is a launcher that runs Claude Code on the subscription or the gateway: `--subscription` or `--gateway` as its first argument picks the route for that launch, and without either it takes the saved mode, which can differ from the route the task calls for. `claude -n '<participant>' '<task>'` starts an interactive session with the participant in its terminal title; `claude -p '<task>'` runs non-interactively and prints nothing until it finishes. Set effort with `--effort <level>`. `env CLAUDE_CODE_PROMPT_CACHE_TTL=1h` before `claude` in the launch command requests an hour of cache retention for the conversation on any route that supports it.
 
 ## Codex
 
@@ -18,11 +18,11 @@ Use the profile selected by `default_permissions`; pass no `-s`/`--sandbox` unle
 
 ### Answer a question card
 
-A Codex model's question appears as a collapsed card under `Queued follow-up inputs` (`? N question · shift+← to answer`) while its turn keeps running, and shows no options until opened. Open it with `rex send-key ... shift+left`, then answer under the [dialog rules](agents.md#answer-a-dialog-inside-an-agent-you-started): choose with `up`/`down`, or paste free text into `Other`, and submit with `enter`; the reply is bound to that question. Enter pressed in the main composer instead removes the card and arrives as an unbound message, and Rex does not refuse that input. The card disappears when the asking turn ends; deliver an answer that arrives later, such as the user's, as next-turn input.
+A Codex model's question appears as a collapsed card while its turn keeps running, and shows no options until opened. Open it with the key the card names, sent through `rex send-key`, then answer under the [dialog rules](agents.md#answer-a-dialog-inside-an-agent-you-started): choose an option, or paste free text into its free-text option, and submit; the reply is bound to that question. Enter pressed in the main composer instead removes the card and arrives as an unbound message, and Rex does not refuse that input. The card disappears when the asking turn ends; deliver an answer that arrives later, such as the user's, as next-turn input.
 
 ### Queue or steer a busy agent
 
-While Codex is running a turn, choose between queueing for the next turn and steering the active one. To queue on this machine, including while a question card is pending, use `codex queue`, which writes to the queue database under `CODEX_HOME` without touching the composer. It needs the thread's exact native UUID from Codex itself; pane labels, block IDs, and titles are not thread IDs. To steer an unblocked running turn immediately, with no question card pending, paste the message into the composer and press `enter`.
+While Codex is running a turn, choose between queueing for the next turn and steering the active one. To queue on this machine, including while a question card is pending, use `codex queue`, which writes to the queue database under `CODEX_HOME` without touching the composer. Use the thread's verified native UUID from Codex itself; pane labels, block IDs, and titles are not thread IDs. To steer an unblocked running turn immediately, with no question card pending, paste the message into the composer and press `enter`.
 
 ```bash
 codex queue --thread <verified-session-uuid> --message '<follow-up>'
