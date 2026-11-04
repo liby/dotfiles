@@ -27,6 +27,9 @@ function run(argv) {
   app.performSelectorWithObjectAfterDelayInModes("abortModal", $(), 20, $([$.NSModalPanelRunLoopMode]))
   const response = alert.runModal
   $.NSObject.cancelPreviousPerformRequestsWithTarget(app)
+  // The dismissed alert leaves the screen only when the run loop turns, so
+  // turn it before blocking on the close or the alert outlives the pane.
+  $.NSRunLoop.currentRunLoop.runUntilDate($.NSDate.dateWithTimeIntervalSinceNow(0.1))
   if (response == $.NSAlertFirstButtonReturn) {
     // Close by ID the pane the key was pressed in, which need not have focus by now.
     const close = $.NSTask.alloc.init
