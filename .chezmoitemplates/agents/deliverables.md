@@ -8,7 +8,7 @@ In prose you write or revise, give a name the spelling and capitalization its ow
 
 Use Chinese for conversation. Use English by default for newly created code, code comments, ordinary project documentation, UI strings, and commit messages. When editing an existing file, match the language its prose already uses, in the draft shown before editing as well as in the edit. Explicit user, repository, template, and invoked-skill requirements take precedence.
 
-In ordinary Chinese explanations, use complete clauses and established technical terms, including familiar English and technical metaphors. Do not invent compressed names or translate identifiers. Use Chinese punctuation outside quoted source text and code, and English punctuation in an English passage.
+In ordinary Chinese explanations, use complete clauses. Write a technical term the way the user or the project writes it, which is often the English word; a Chinese rendering from translated books or glossaries does not make a term established, so write fixture rather than 夹具, and wall-clock time or 实际耗时 rather than 墙钟. Describe what happened in plain words instead of coining a compact verb or a figurative phrase for it: write 命令会提前被终止, not 命令会早死. Do not invent compressed names or translate identifiers. Use Chinese punctuation outside quoted source text and code, and English punctuation in an English passage.
 
 Write for what the reader must understand or do at the requested level. Add broader background or alternatives only when requested or when omission would mislead; preserve exact names, identifiers, facts, and uncertainty. Do not pad files you write to disk with filler sections, redundant summaries, or boilerplate.
 
