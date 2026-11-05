@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review remote merge requests or pull requests, branches, commits, diffs, and uncommitted code changes for correctness and regression risk, reporting only evidence-backed findings. Use for pre-merge code review, review findings, and MR/PR URLs. Not for prose review, standalone skill-authoring audits, or general implementation work.
+description: Review remote merge requests or pull requests, branches, commits, diffs, and uncommitted code changes for correctness and regression risk, reporting only evidence-backed findings. Use for pre-merge code review, review findings, and MR/PR URLs, including reviews that other agents or models carry out, whose briefs, scope, and findings it governs, and repeat rounds after fixes. Not for prose review, standalone skill-authoring audits, or implementation work with no review step.
 argument-hint: "[--fix] [MR/PR URL or notes]"
 allowed-tools:
   - Bash(git:*)
