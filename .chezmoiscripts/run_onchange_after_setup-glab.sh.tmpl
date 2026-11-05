@@ -4,16 +4,27 @@ set -euo pipefail
 host={{ .private.gitlabHost | quote }}
 
 # Without the instance's OAuth application ID, web sign-in to a self-hosted GitLab asks for it, and
-# token refresh in later plain glab calls reads it from this config, not from Maskey.
-/opt/homebrew/bin/mk run glab/GITLAB_CLIENT_ID -- /bin/sh -c \
-  '/opt/homebrew/bin/glab config set client_id "$GITLAB_CLIENT_ID" --host "$1"' sh "$host"
+# token refresh in later plain glab calls reads it from this config, not from Maskey. Docker gets
+# glab's credentials only for the registry domains saved for this host, and Docker's helper runs
+# without this environment. Sign-in otherwise saves glab's guess (the host, host:443, and
+# registry.<host>), which misses a registry served from another host, whose pulls then fail with 403.
+/opt/homebrew/bin/mk run glab/GITLAB_CLIENT_ID glab/GLAB_CONTAINER_REGISTRY_DOMAINS -- /bin/sh -c '
+  /opt/homebrew/bin/glab config set client_id "$GITLAB_CLIENT_ID" --host "$1" &&
+    /opt/homebrew/bin/glab config set container_registry_domains "$GLAB_CONTAINER_REGISTRY_DOMAINS" --host "$1"
+' sh "$host"
 
 # Sign-in opens a browser, so it runs here only for a host glab has never signed in to; glab
 # refreshes the token itself. If the sign-in is revoked, run the login line by hand with
 # host=$(glab config get host). --insecure-storage keeps the tokens in config.yml because, in the
 # Keychain, glab in Codex's sandbox cannot renew an expired token (CONCEPTS.md, GitLab CLI
-# configuration). The other flags skip glab's prompts for the sign-in method and SSH hostname, which
-# it pre-fills from the current repository's remote.
+# configuration). The other flags skip glab's prompts for the sign-in method, SSH hostname, and
+# registry domains, which it pre-fills from the current repository's remote and the saved
+# configuration.
 if [[ -z $(/opt/homebrew/bin/glab config get user --host "$host") ]]; then
-  /opt/homebrew/bin/glab auth login --web --hostname "$host" --api-host "$host" -p https -g ssh --ssh-hostname "$host" --insecure-storage
+  /opt/homebrew/bin/glab auth login --web --hostname "$host" --api-host "$host" -p https -g ssh --ssh-hostname "$host" --container-registry-domains "$(/opt/homebrew/bin/glab config get container_registry_domains --host "$host")" --insecure-storage
 fi
+
+# configure-docker finds glab on PATH to decide where to install Docker's helper, and fails without
+# it in the bootstrap shell, which has no Homebrew PATH yet.
+eval "$(/opt/homebrew/bin/brew shellenv)"
+/opt/homebrew/bin/glab auth configure-docker

@@ -22,12 +22,16 @@ gpg_key_id=$(/usr/bin/awk '
 
 gpg_ssh_public_key=$("$gpg_bin" --export-ssh-key "$gpg_key_id") || exit $?
 
+# Any arguments after the signing key form a command that finishes the temporary file, which it
+# receives as its last argument, before the file replaces the destination.
 install_config() {
   local destination=$1 signing_key=$2 temporary install_status=0
+  shift 2
   temporary=$(mktemp "$git_config_dir/.${destination:t}.XXXXXX") || return $?
   {
     cat > "$temporary" &&
       /usr/bin/git config --file "$temporary" user.signingkey "$signing_key" &&
+      { (( ! $# )) || "$@" "$temporary"; } &&
       mv "$temporary" "$destination"
   } || install_status=$?
   rm -f "$temporary"
@@ -39,6 +43,10 @@ install_config "$git_config_dir/github.config" "$gpg_key_id" <<'EOF'
 EOF
 
 # key:: keeps the public key inside the config, so signing reads nothing from ~/.ssh.
-install_config "$git_config_dir/gitlab.config" "key::$gpg_ssh_public_key" <<'EOF'
+install_config "$git_config_dir/gitlab.config" "key::$gpg_ssh_public_key" \
+  /opt/homebrew/bin/mk run git/GITLAB_USER_EMAIL git/GITLAB_USER_NAME -- /bin/sh -c '
+    /usr/bin/git config --file "$1" user.email "$GITLAB_USER_EMAIL" &&
+      /usr/bin/git config --file "$1" user.name "$GITLAB_USER_NAME"
+  ' sh <<'EOF'
 {{ includeTemplate "git/gitlab.config" . -}}
 EOF
