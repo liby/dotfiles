@@ -129,6 +129,13 @@ set_hotkey 65 false 32 49 1572864
 set_hotkey 164 false 65535 65535 0
 set_hotkey 260 false 65535 53 1048576
 
+# Idle sleep on AC power takes this Mac's Rex terminals and agents offline. Battery power and a
+# closed lid without an external display still sleep; ka covers the latter.
+ac_sleep=$(pmset -g custom | awk '/^[A-Za-z].*:$/ { ac = ($0 == "AC Power:") } ac && $1 == "sleep" { print $2 }')
+if [[ $ac_sleep != 0 ]]; then
+  sudo pmset -c sleep 0
+fi
+
 # Reload processes that cache the Apple UI defaults. activateSettings applies the key repeat
 # values to the running session; the writes alone leave the old rate in place.
 killall ControlCenter Dock Finder
