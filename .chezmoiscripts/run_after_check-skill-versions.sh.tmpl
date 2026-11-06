@@ -3,15 +3,13 @@ set -euo pipefail
 
 source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 
-# The orc skill records the Rex version and guide hash it was checked against. Rex cannot print an
-# earlier version's guide, so the guide is kept under its hash for the review to diff.
+# Cache guides by hash because Rex cannot print an earlier guide for comparison.
 if (( $+commands[rex] )); then
   orc_skill="{{ .chezmoi.sourceDir }}/dot_agents/skills/orc/SKILL.md"
   recorded_version="$(sed -En 's/^[[:space:]]+rex-version: //p' "$orc_skill")"
   version="$(rex --autostart=false version --json | jq -er .rex_version)"
-  # The rex on PATH is the running server's copy, which keeps its build after a Rex update until the
-  # server restarts, so an older one's guide and hook states predate what this repository was set up
-  # against. Versions are 0.0.<build time>-g<commit>.
+  # The running server keeps its CLI build after an app update. Compare build timestamps
+  # (0.0.<build time>-g<commit>) before treating its guide or hooks as drift.
   if (( ${${version#0.0.}%%-*} < ${${recorded_version#0.0.}%%-*} )); then
     print -u2 -rl -- \
       "$step_yellow!$step_reset Rex Server runs $version; orc was checked against newer $recorded_version." \

@@ -8,7 +8,11 @@ For a foreground `rex wait --for`, set Bash's timeout above that duration and wi
 
 ## Claude Code participant
 
-`claude` on PATH is a launcher that runs Claude Code on the subscription or the gateway: `--subscription` or `--gateway` as its first argument picks the route for that launch, and without either it takes the saved mode, which can differ from the route the task calls for. `claude -n '<participant>' '<task>'` starts an interactive session with the participant in its terminal title; `claude -p '<task>'` runs non-interactively and prints nothing until it finishes. Set effort with `--effort <level>`. `env CLAUDE_CODE_PROMPT_CACHE_TTL=1h` before `claude` in the launch command requests an hour of cache retention for the conversation on any route that supports it.
+`claude` on PATH is a launcher that runs Claude Code on the subscription or the gateway: `--subscription` or `--gateway` as its first argument picks the route for that launch, and without either it takes the saved mode, which can differ from the route the task calls for.
+
+`claude -n '<participant>' '<task>'` starts an interactive session with the participant in its terminal title; `claude -p '<task>'` runs non-interactively and prints nothing until it finishes. Set effort with `--effort <level>`.
+
+`env CLAUDE_CODE_PROMPT_CACHE_TTL=1h` before `claude` in the launch command requests an hour of cache retention for the conversation on any route that supports it.
 
 ## Codex
 
@@ -22,17 +26,23 @@ A Codex model's question appears as a collapsed card while its turn keeps runnin
 
 ### Queue or steer a busy agent
 
-While Codex is running a turn, choose between queueing for the next turn and steering the active one. To queue on this machine, including while a question card is pending, use `codex queue`, which writes to the queue database under `CODEX_HOME` without touching the composer. Use the thread's verified native UUID from Codex itself; pane labels, block IDs, and titles are not thread IDs. To steer an unblocked running turn immediately, with no question card pending, paste the message into the composer and press `enter`.
+While Codex is running a turn, choose between queueing for the next turn and steering the active one. To queue on this machine, including while a question card is pending, use `codex queue`, which writes to the queue database under `CODEX_HOME` without touching the composer. Use the thread's verified native UUID from Codex itself; pane labels, block IDs, and titles are not thread IDs.
 
 ```bash
 codex queue --thread <verified-session-uuid> --message '<follow-up>'
 ```
 
+To steer an unblocked running turn immediately, with no question card pending, paste the message into the composer and press `enter`.
+
 Retain thread and message receipt IDs. Queue acceptance proves enqueueing, not consumption: a required result needs the new message's response. For a recipient under another `CODEX_HOME` or on another machine, or after an explicit rejection before enqueueing, steer only when mid-turn delivery is acceptable and no card is pending; otherwise follow the turn until it settles and prompt then. An uncertain queue or submission result requires reconciliation before this fallback or any retry.
 
 ## Pi
 
-`pi --tui-mode fullscreen --name '<participant>' '<task>'` starts an interactive session on the alternate screen with the participant in its terminal title; `pi -p '<task>'` runs non-interactively and prints nothing until it finishes. Take both `--provider` and `--model` from the same `pi --list-models` row and pass both: a default provider does not prevent model-only resolution to an unauthenticated built-in provider. Set effort with `--thinking <level>`. `env PI_CACHE_RETENTION=long` before `pi` in the launch command lengthens the cache where the provider supports it, to an hour on Anthropic models; what it gives on other providers varies with their API.
+Take both `--provider` and `--model` from the same `pi --list-models` row and pass both: a default provider does not prevent model-only resolution to an unauthenticated built-in provider.
+
+`pi --tui-mode fullscreen --name '<participant>' '<task>'` starts an interactive session on the alternate screen with the participant in its terminal title; `pi -p '<task>'` runs non-interactively and prints nothing until it finishes. Set effort with `--thinking <level>`.
+
+`env PI_CACHE_RETENTION=long` before `pi` in the launch command lengthens the cache where the provider supports it, to an hour on Anthropic models; what it gives on other providers varies with their API.
 
 While Pi is working, a message entered and submitted with `enter` steers the active run after the current tool batch. To queue a follow-up for after the run instead, confirm on the screen that the editor is empty, paste the text, and submit it with `alt+enter`. Abort a running turn with `esc`; Ctrl+C clears the editor. Editor-only slash commands start no turn, so verify them on the screen.
 
