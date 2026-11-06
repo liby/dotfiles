@@ -79,3 +79,22 @@ Once results are collected and no further work needs the other terminals, close 
 - Otherwise, only the disposable helper block: `rex block close -s <session> <block>`.
 
 Cancel an owned helper's obsolete turn instead of waiting for it. CLI block and window closes can leave an empty session. A successful close at the chosen level completes cleanup; inspect that same level to reconcile an uncertain result before retrying.
+
+When the user asks you to close the pane, tab, or session you run in, the close ends your own program: run directly, it never returns a result and nothing you would say after it reaches the user. Schedule it instead with this waiter in a separate process session, so shell-tool cleanup does not kill it. It closes once your pane stops reporting `working` or after five minutes, then give your final reply, saying the terminal will close, and end the turn. For a tab or session, replace its last command with `rex window close` or `rex kill` for that target.
+
+```sh
+python3 - <<'PY'
+import os
+import subprocess
+
+subprocess.Popen(
+    ['sh', '-c', r'''for _ in $(seq 300); do
+  rex block call --autostart=false -s "$1" -b "$2" program_status | jq -e "any(.records[]; .state == \"working\")" >/dev/null || break
+  sleep 1
+done
+rex block close -s "$1" "$2"''', 'sh', os.environ['REX_SESSION'], os.environ['REX_BLOCK']],
+    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    start_new_session=True,
+)
+PY
+```
