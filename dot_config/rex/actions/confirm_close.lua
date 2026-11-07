@@ -2,14 +2,10 @@
 -- Retire this action and its binding when native confirmation covers them.
 local shells = { bash = true, fish = true, sh = true, zsh = true }
 
--- Use a system alert because Rex's Lua API has no confirmation dialog.
--- Accessory activation brings it in front. Restore Rex only while the alert
--- still owns focus, so another app the user selected stays active.
--- NSRunningApplication returns the bundle icon; load the user's choice from
--- Rex's preference and bundled assets. Time out after 20 seconds to avoid
--- closing a pane based on an old process snapshot.
-local alert = [[
+-- Rex's Lua API has no confirmation dialog, so osascript shows a system alert.
+local alert = [=[
 ObjC.import("AppKit")
+ObjC.import("QuartzCore")
 function run(argv) {
   const [message, cli, session, block, server] = argv
   const app = $.NSApplication.sharedApplication
@@ -17,15 +13,56 @@ function run(argv) {
   const alert = $.NSAlert.alloc.init
   alert.messageText = "Close Pane?"
   alert.informativeText = message + " Closing the pane will end its program."
+  // NSRunningApplication returns the bundle icon, so load the user's choice
+  // from Rex's preference and bundled assets.
   const choice = $.NSUserDefaults.alloc.initWithSuiteName("com.superlogical.rex").stringForKey("Workspace.appIcon").js
   const chosen = choice && $.NSBundle.bundleWithURL(rex.bundleURL).imageForResource("PlainAppIcon" + choice[0].toUpperCase() + choice.slice(1) + "Beta")
   alert.icon = chosen && !chosen.isNil() ? chosen : rex.icon
   alert.addButtonWithTitle("Close")
   alert.addButtonWithTitle("Cancel")
+  alert.window.animationBehavior = $.NSWindowAnimationBehaviorNone
+  // A newly ordered window shows its first frame opaque even with alphaValue
+  // already 0, so order it off-screen before placing it.
+  alert.layout
+  alert.window.setFrameOrigin($.NSMakePoint(-20000, -20000))
+  alert.window.orderFrontRegardless
+  alert.window.alphaValue = 0
+  // Center on Rex's frontmost window, where Cmd+W was pressed, a little high
+  // because a geometrically centered box looks low. Window-server bounds start
+  // at the top of the primary display; AppKit's at its bottom.
+  const size = alert.window.frame.size
+  const front = ObjC.deepUnwrap(ObjC.castRefToObject($.CGWindowListCopyWindowInfo($.kCGWindowListOptionOnScreenOnly, 0)))
+    .find(w => w.kCGWindowOwnerPID == rex.processIdentifier && w.kCGWindowLayer == 0)
+  if (front) {
+    const { X, Y, Width, Height } = front.kCGWindowBounds
+    alert.window.setFrameOrigin($.NSMakePoint(
+      X + (Width - size.width) / 2,
+      $.NSScreen.screens.firstObject.frame.size.height - Y - (Height - size.height) * 0.3 - size.height,
+    ))
+  } else {
+    alert.window.center
+  }
+  // Accessory activation brings the alert in front.
   app.setActivationPolicy($.NSApplicationActivationPolicyAccessory)
   app.activateIgnoringOtherApps(true)
+  // Escape has failed to reach the alert after it lost focus, even once it was
+  // clicked again, so losing focus cancels it.
+  ObjC.registerSubclass({
+    name: "ConfirmCloseAlert",
+    methods: { "resign:": { types: ["void", ["id"]], implementation: () => app.abortModal } },
+  })
+  const handler = $.ConfirmCloseAlert.alloc.init
+  $.NSNotificationCenter.defaultCenter.addObserverSelectorNameObject(handler, "resign:", $.NSApplicationDidResignActiveNotification, $())
+  // Keep the fade short, since a click during it already counts as leaving.
+  $.NSAnimationContext.beginGrouping
+  $.NSAnimationContext.currentContext.duration = 0.2
+  $.NSAnimationContext.currentContext.timingFunction = $.CAMediaTimingFunction.functionWithControlPoints(0.23, 1, 0.32, 1)
+  alert.window.animator.alphaValue = 1
+  $.NSAnimationContext.endGrouping
+  // Time out to avoid closing a pane based on an old process snapshot.
   app.performSelectorWithObjectAfterDelayInModes("abortModal", $(), 20, $([$.NSModalPanelRunLoopMode]))
   const response = alert.runModal
+  $.NSNotificationCenter.defaultCenter.removeObserver(handler)
   $.NSObject.cancelPreviousPerformRequestsWithTarget(app)
   // The dismissed alert leaves the screen only when the run loop turns, so
   // turn it before blocking on the close or the alert outlives the pane.
@@ -56,9 +93,8 @@ function run(argv) {
       error.runModal
     }
   }
-  if (app.isActive) rex.activateWithOptions(0)
 }
-]]
+]=]
 
 -- Commands the server starts get only the system PATH, so name the installed
 -- server's CLI.
