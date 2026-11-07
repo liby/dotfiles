@@ -83,8 +83,9 @@ When asked to review from a named person's perspective, predict that person's li
 
 - Answer first whether the requirement or approach is sound when the user asked that.
 - Lead each finding with its trigger or violated rule and the consequence in plain terms, using the code's own names rather than labels you coined, so a reader can follow it without the diff open; then give blocking or non-blocking, `path:line`, the decisive evidence, and the required outcome. Add provenance when the diff's contribution is not obvious.
+- Give each reviewed MR or PR its URL wherever the report names it; chat does not link a short reference such as `!456`, even with a project path before it.
 - Write `No blocking findings.` only when no open manual check remains.
-- For requested comments or replies, write from the verified finding; keep the evidence and the blocking decision in the review record, separate from the comment body.
+- For requested comments or replies, write from the verified finding; keep the evidence and the blocking decision in the review record, separate from the comment body, and in the body name a file by a link the reader can open where one exists, not by its `path:line`.
 - When condensing or restyling, keep every distinct finding with its decision, conditions, and citation.
 
 ## Fix mode
