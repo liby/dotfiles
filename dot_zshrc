@@ -48,6 +48,11 @@ FAST_HIGHLIGHT_STYLES[comment]='fg=248'
 # https://github.com/zsh-users/zsh-autosuggestions/issues/351
 ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(bracketed-paste)
 
+# Rex measures flag and VS16 emoji with legacy widths unless mode 2027 is on, while TUIs such as
+# Claude Code lay them out with Unicode grapheme widths, so their redraws land in the wrong cells.
+# The mode persists for the programs this shell starts. Drop this once Rex defaults to Unicode widths.
+[[ $TERM_PROGRAM == rex ]] && print -n '\e[?2027h'
+
 export GPG_TTY="$TTY"
 eval "$(proto activate zsh)"
 eval "$(starship init zsh)"
