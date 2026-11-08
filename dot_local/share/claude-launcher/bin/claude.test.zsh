@@ -18,10 +18,11 @@ cp "$repo_root/dot_local/share/claude-launcher/bin/executable_claude" "$launcher
 # The gateway contract's variables, which together select the gateway in Claude Code.
 entry_vars=(ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID)
 gateway_vars=($entry_vars CLAUDE_CODE_SKIP_VERTEX_AUTH CLAUDE_CODE_USE_VERTEX)
+traced_vars=($gateway_vars CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF)
 
 {
   print -r -- '#!/bin/zsh -f'
-  print -r -- 'local -a present; for name in ${=GATEWAY_VARS}; do [[ -n ${(P)name+x} ]] && present+=$name=${(P)name}; done'
+  print -r -- 'local -a present; for name in ${=TRACED_VARS}; do [[ -n ${(P)name+x} ]] && present+=$name=${(P)name}; done'
   print -r -- 'print -r -- "claude ${(qqq)@}${present:+ with $present}" >> "$TRACE_FILE"'
 } > "$native"
 # Exits 11, mk's status for an entry without program access, for UNGRANTED_ENTRY.
@@ -39,7 +40,7 @@ typeset -a isolated_env=(
   XDG_CONFIG_HOME="$test_home/.config"
   PATH="$test_bin:/usr/bin:/bin"
   TRACE_FILE="$trace_file"
-  GATEWAY_VARS="$gateway_vars"
+  TRACED_VARS="$traced_vars"
 )
 
 assert_equal() {
@@ -83,11 +84,12 @@ typeset -a claude_args=(
   '*'
 )
 expected_claude=$(format_call claude "${claude_args[@]}")
+expected_subscription="$expected_claude with CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF=1"
 expected_mk_gets=$(for name in $entry_vars; do format_call mk get claude-gateway/$name; done)
 expected_gateway="$expected_mk_gets"$'\n'"$expected_claude with ANTHROPIC_AUTH_TOKEN=synthetic-ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL=synthetic-ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID=synthetic-ANTHROPIC_VERTEX_PROJECT_ID CLAUDE_CODE_SKIP_VERTEX_AUTH=1 CLAUDE_CODE_USE_VERTEX=1"
 
 run_claude subscription "${claude_args[@]}"
-assert_equal "$(< "$trace_file")" "$expected_claude" "subscription mode did not call only the native Claude executable"
+assert_equal "$(< "$trace_file")" "$expected_subscription" "subscription mode did not call only the native Claude executable with the flag-cache switch"
 
 run_claude gateway "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_gateway" "gateway mode did not give the native executable the gateway entries from mk and the switches"
@@ -96,13 +98,13 @@ run_claude subscription --gateway "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_gateway" "--gateway did not override the persisted subscription mode"
 
 run_claude gateway --subscription "${claude_args[@]}"
-assert_equal "$(< "$trace_file")" "$expected_claude" "--subscription did not override the persisted gateway mode"
+assert_equal "$(< "$trace_file")" "$expected_subscription" "--subscription did not override the persisted gateway mode"
 
 # A claude started from inside a gateway session inherits its variables. Clearing them must not
 # depend on mk, which may be unavailable.
 inherited_env=(${^gateway_vars}=inherited)
 run_claude subscription "${claude_args[@]}"
-assert_equal "$(< "$trace_file")" "$expected_claude" "subscription mode passed an inherited gateway variable to Claude or ran mk"
+assert_equal "$(< "$trace_file")" "$expected_subscription" "subscription mode passed an inherited gateway variable to Claude or ran mk"
 inherited_env=()
 
 # An entry without program access must stop the launch with mk's status rather than start Claude

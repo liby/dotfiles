@@ -28,6 +28,8 @@
   "crossSessionInbound": "accept",
   "disableClaudeAiConnectors": true,
   "disableBundledSkills": true,
+  "syncClaudeAiSkills": false,
+  "syncClaudeAiPlugins": false,
   "skillOverrides": {
     "auto-mode-setup": "off"
   },

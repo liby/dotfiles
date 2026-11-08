@@ -102,4 +102,6 @@ fi
 # Children of a gateway session inherit its variables, which would still select the gateway.
 # Unset them by name so the cleanup holds when mk or its entries are unavailable.
 unset ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID CLAUDE_CODE_SKIP_VERTEX_AUTH CLAUDE_CODE_USE_VERTEX
+# Claude Code reads this flag-cache switch only from its own process environment, not settings `env`.
+export CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF=1
 exec "$native" "$@"

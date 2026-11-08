@@ -5,6 +5,14 @@
 {{- range $name, $server := $managed.mcpServers -}}
   {{- $out = setValueAtPath (list "mcpServers" $name) $server $out -}}
 {{- end -}}
+{{- /* The launcher's CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF lets subscription sessions apply this cache, which can activate unrelated flags; keep only auto-dream and the flags the client reads from it directly on macOS. */ -}}
+{{- $cached := $current.cachedGrowthBookFeatures | default dict -}}
+{{- $flags := dict -}}
+{{- range $name := list "tengu_org_config_required" "tengu_plugin_hooks_modules" -}}
+  {{- if hasKey $cached $name -}}{{- $flags = set $flags $name (index $cached $name) -}}{{- end -}}
+{{- end -}}
+{{- $flags = set $flags "tengu_onyx_plover" (dict "available" true "enabled" true) -}}
+{{- $out = set $out "cachedGrowthBookFeatures" $flags -}}
 {{- if deepEqual $current $out -}}
   {{- .chezmoi.stdin -}}
 {{- else -}}
