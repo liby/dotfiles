@@ -89,6 +89,10 @@ if (( pick )); then
   print -n "$mode" > "$mode_file" || exit 1
 fi
 
+# Rex renders OSC 8 links, but Claude Code detects support from a terminal list that omits it.
+# Remove once that list includes rex (https://github.com/anthropics/claude-code/issues/106261).
+[[ $TERM_PROGRAM == rex ]] && export FORCE_HYPERLINK=${FORCE_HYPERLINK-1}
+
 if [[ $mode == gateway ]]; then
   local name value
   for name in ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID; do

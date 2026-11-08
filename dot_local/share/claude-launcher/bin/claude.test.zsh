@@ -18,7 +18,7 @@ cp "$repo_root/dot_local/share/claude-launcher/bin/executable_claude" "$launcher
 # The gateway contract's variables, which together select the gateway in Claude Code.
 entry_vars=(ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID)
 gateway_vars=($entry_vars CLAUDE_CODE_SKIP_VERTEX_AUTH CLAUDE_CODE_USE_VERTEX)
-traced_vars=($gateway_vars CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF)
+traced_vars=($gateway_vars CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF FORCE_HYPERLINK)
 
 {
   print -r -- '#!/bin/zsh -f'
@@ -105,6 +105,16 @@ assert_equal "$(< "$trace_file")" "$expected_subscription" "--subscription did n
 inherited_env=(${^gateway_vars}=inherited)
 run_claude subscription "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_subscription" "subscription mode passed an inherited gateway variable to Claude or ran mk"
+inherited_env=()
+
+inherited_env=(TERM_PROGRAM=rex)
+run_claude subscription "${claude_args[@]}"
+assert_equal "$(< "$trace_file")" "$expected_subscription FORCE_HYPERLINK=1" "subscription mode in Rex did not turn on Claude Code's OSC 8 links"
+run_claude gateway "${claude_args[@]}"
+assert_equal "$(< "$trace_file")" "$expected_gateway FORCE_HYPERLINK=1" "gateway mode in Rex did not turn on Claude Code's OSC 8 links"
+inherited_env=(TERM_PROGRAM=rex FORCE_HYPERLINK=0)
+run_claude subscription "${claude_args[@]}"
+assert_equal "$(< "$trace_file")" "$expected_subscription FORCE_HYPERLINK=0" "the launcher overrode an explicit FORCE_HYPERLINK in Rex"
 inherited_env=()
 
 # An entry without program access must stop the launch with mk's status rather than start Claude
