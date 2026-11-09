@@ -32,6 +32,7 @@ Declare no effort setting. `/effort` saves per-model levels under `modelSettings
 
 - `CLAUDE_CODE_RETRY_WATCHDOG=1` keeps unattended sessions waiting through retryable capacity errors. Keep `fallbackModel` unset while it is on: a fallback would silently downgrade the runs the watchdog exists to keep on the requested model.
 - `tui` stays `fullscreen` because clients with different terminal widths attach to the same sessions, and classic rendering leaves hard-wrapped copies in scrollback after a resize. Leave `CLAUDE_CODE_DISABLE_MOUSE` unset: fullscreen does its own scrolling, and that override blocks wheel and touch scrolling.
+- `CLAUDE_CODE_SHELL` points the Bash tool at Homebrew bash, for the reason in [Shell startup](../../.github/CONCEPTS.md#shell-startup). macOS `/bin/bash` would not do: Claude Code refuses commands it judges too complex for bash 3 and makes the agent rewrite them. Claude Code silently falls back to zsh when the path stops being a working bash, and a project's own `CLAUDE_CODE_SHELL` overrides this one. Without a shell snapshot Claude Code runs a login bash, whose `path_helper` puts the system directories ahead of the toolchain and no bash startup file restores the order; add one only if snapshot failures show up in practice.
 - `CLAUDE_CODE_FORK_SUBAGENT=1` makes `claude -p` and the Agent SDK background subagents with the fork prompt, as interactive sessions already do, so headless replays and probes exercise the same subagent behavior as the terminal.
 
 ## Privacy and feature flags

@@ -68,12 +68,12 @@ run_claude() {
 }
 typeset -a inherited_env=()
 
-# Pi runs commands in bash, which inherits PATH but no zsh functions.
+# Claude Code and Pi run commands in bash, which inherits PATH but no zsh functions.
 for shell in /bin/zsh /bin/bash; do
   resolution=$(/usr/bin/env -i "${isolated_env[@]}" /bin/zsh -c '"$1" -c "command -v claude"' synthetic "$shell")
   assert_equal "$resolution" "$launcher" "$shell did not resolve claude to the launcher ahead of the native install"
 done
-# Without a shell snapshot, Codex and Claude Code run commands in a non-interactive login shell.
+# Without a shell snapshot, Codex runs commands in a non-interactive login shell.
 resolution=$(/usr/bin/env -i "${isolated_env[@]}" /bin/zsh -lc 'print -r -- $path[1] ${HOMEBREW_PREFIX-}')
 assert_equal "$resolution" "$test_home/.proto/shims /opt/homebrew" "a login shell did not load Homebrew's environment or put the zshenv toolchain back ahead of it"
 

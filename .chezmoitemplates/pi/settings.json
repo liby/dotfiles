@@ -15,6 +15,7 @@
   "modelThinkingLevels": {
     "rc-gateway/deepseek/deepseek-v4.1-flash-1017": "max"
   },
+  "shellPath": "/opt/homebrew/bin/bash",
   "npmCommand": [
     "npm",
     "--min-release-age-exclude=@earendil-works/*"

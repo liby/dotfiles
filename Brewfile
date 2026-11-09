@@ -2,8 +2,12 @@ tap "entwining/tap"
 tap "resend/cli"
 tap "steipete/tap"
 
+# Static checker for GitHub Actions workflow files
+brew "actionlint"
 # macOS pre-tool guard for coding agents
 brew "entwining/tap/agent-guard", trusted: true
+# Bourne-Again SHell, a UNIX command interpreter
+brew "bash"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
 # GNU File, Shell, and Text utilities
@@ -38,6 +42,8 @@ brew "jq"
 brew "lychee"
 # Mac App Store command-line interface
 brew "mas"
+# Simple tool to make locally trusted development certificates
+brew "mkcert"
 # Bundle prompts + files for second-model review
 brew "steipete/tap/oracle", trusted: true
 # Pinentry for GPG on Mac

@@ -1,6 +1,6 @@
 # Every interactive shell here is a login shell or its child, and non-interactive login shells, such
-# as the one Codex and Claude Code fall back to without a shell snapshot, skip zshrc, so setup they
-# also need lives here.
+# as the one Codex falls back to without a shell snapshot, skip zshrc, so setup they also need lives
+# here.
 
 # A shell started from a brew process inherits HOMEBREW_BREW_FILE and HOMEBREW_PATH with a PATH
 # brew stripped to the system dirs. If that HOMEBREW_PATH starts with Homebrew's bin and sbin,
