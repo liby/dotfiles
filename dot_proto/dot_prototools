@@ -13,3 +13,4 @@ shared-globals-dir = true
 [settings]
 auto-clean = true
 auto-install = true
+telemetry = false
