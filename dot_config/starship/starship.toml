@@ -30,6 +30,10 @@ symbol = "󰘬·"
 format = '\[[$symbol($version)]($style)\]'
 symbol = " "
 
+[helm]
+detect_files = ["Chart.yaml"]
+format = '\[[$symbol($version)]($style)\]'
+
 [memory_usage]
 disabled = false
 format = '\[$symbol[$ram( | $swap)]($style)\]'
