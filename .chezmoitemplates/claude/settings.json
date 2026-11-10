@@ -119,7 +119,8 @@
         "~/Code/.mbx",
         "~/Code/.pnpm",
         "~/Code/worktrees",
-        "~/Library/Caches"
+        "~/Library/Caches",
+        "~/go/pkg"
       ],
       "denyRead": [
         "~/.gnupg/private-keys-v1.d",
