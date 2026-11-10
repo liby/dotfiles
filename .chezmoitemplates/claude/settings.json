@@ -37,7 +37,7 @@
   "autoMode": {
     "environment": [
       "$defaults",
-      "**Secrets management**: Maskey (entries in the user's iCloud Keychain, used through `mk`) is the personal credential store; legitimate use is `mk run <namespace>|<namespace>/<NAME>... -- <command>` to give one command the selected entries, and `mk list` enumerates entry names without values; `mk get` serves helpers a program's configuration runs, not an agent's own commands; never print or echo values",
+      "**Secrets management**: Maskey stores credentials in the user's iCloud Keychain. `mk run` supplies selected credentials to one command, masking exact values in stdout/stderr; `mk list` lists names without values; `producer | mk set --stdin <namespace>/<NAME>` stores piped input, overwriting an existing value without prompting. `mk get` outputs raw values for configured consumers, never for the agent's own commands; never print or echo values",
       "**Scope**: the user's own non-public scope is this machine and the accounts and services whose content reaches only the user, the user's own tools, and the services the user chose for the task; a service that stores content at the user's direction is its custodian, not a reader; a user-installed tool that works inside the user's account, and the agent runtime or model route the user has set up on this machine for the task or as a standing choice, are the user's own; an application that sends the content elsewhere without the user choosing it is an outside reader"
     ]
   },
