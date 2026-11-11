@@ -32,7 +32,8 @@ Keep prose only when a realistic reader needs it to edit, operate, adopt, or und
 | Surface | Where | Owns |
 | --- | --- | --- |
 | Agent entrypoint | This file | Actions needed before choosing or reading a narrower owner |
-| Human setup and reuse | [`.github/README.md`](.github/README.md) and its Chinese translation | User-facing setup, operation, and adaptation guidance |
+| Visitor entry | [`.github/README.md`](.github/README.md) and its Chinese version | What the setup offers and why it is worth borrowing, for readers arriving from a link with no task yet: short sentences, each piece linked to its owner |
+| Setup and adoption | [`.github/SETUP.md`](.github/SETUP.md) | Adapting, installing, operating, and updating the setup |
 | Cross-file contract | [`.github/CONCEPTS.md`](.github/CONCEPTS.md) | Design, lifecycle, and operator rationale that spans sources |
 | Path or capability instruction | The narrowest path rule or skill | Instructions needed only when that path or capability is active |
 | Exact edit rationale | A comment at that line or block | A non-obvious reason or invalidation condition |

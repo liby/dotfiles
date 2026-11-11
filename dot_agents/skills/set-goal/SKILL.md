@@ -60,7 +60,7 @@ If the runtime exposes `create_goal` or an equivalent callable tool:
 - Call `get_goal` or the equivalent status tool first when available.
 - If status identifies an unfinished goal, regardless of its status label, never replace it. Complete it with `update_goal` or the equivalent only when fresh evidence in the current conversation satisfies its own Proof; if completion is unavailable, unjustified, or fails, report the conflict or non-sensitive failure once and stop.
 - Invoke creation once with exactly `Read <absolute-file-path>; the goal is met only when its entire contents are satisfied.` Pass the pointer, not the goal body.
-- If creation reports an unfinished goal, refresh status once. Continue without retrying creation only when that status identifies the same prior goal as completed; otherwise report the conflict once and stop.
+- If creation reports an unfinished goal, refresh status once. When that status identifies the same prior goal as completed, invoke creation once more; otherwise, or when that attempt fails, report the conflict once and stop.
 - Report any other non-sensitive creation or status failure once without blind retries. After success, execute the goal in the same thread.
 
 Otherwise, the skill cannot program the runtime, so treat the verified file as the completion contract and continue executing it in the current thread. `/goal` is a user-owned entry point: never emit a `/goal` command or a paste handoff, whether or not a goal is already active.

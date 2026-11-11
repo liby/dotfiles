@@ -42,4 +42,9 @@ test.each(skills)("%s frontmatter meets the runtimes' load rules", (dir) => {
   expect({ name: frontmatter.name, described: description.length > 0, unknown: Object.keys(frontmatter).filter((key) => !FIELDS.has(key)) })
     .toEqual({ name: dir, described: true, unknown: [] });
   expect(description.length).toBeLessThanOrEqual(1024);
+  // Codex ignores `disable-model-invocation`; a manual-only skill stays manual there only through its own policy file.
+  if (frontmatter["disable-model-invocation"] === true) {
+    const codex = Bun.YAML.parse(readFileSync(join(import.meta.dir, dir, "agents", "openai.yaml"), "utf8")) as { policy?: { allow_implicit_invocation?: unknown } };
+    expect(codex.policy?.allow_implicit_invocation).toBe(false);
+  }
 });
