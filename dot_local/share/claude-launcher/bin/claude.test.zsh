@@ -8,6 +8,7 @@ trap 'rm -rf -- "$test_root"' EXIT
 test_home=$test_root/home
 test_bin=$test_root/bin
 trace_file=$test_root/trace
+declaration_file=$test_root/declaration
 mode_file=$test_home/.config/claude-code/mode
 launcher=$test_home/.local/share/claude-launcher/bin/claude
 native=$test_home/.local/bin/claude
@@ -24,6 +25,7 @@ traced_vars=($gateway_vars CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF FORCE_HY
   print -r -- '#!/bin/zsh -f'
   print -r -- 'local -a present; for name in ${=TRACED_VARS}; do [[ -n ${(P)name+x} ]] && present+=$name=${(P)name}; done'
   print -r -- 'print -r -- "claude ${(qqq)@}${present:+ with $present}" >> "$TRACE_FILE"'
+  print -r -- 'print -r -- "$$ ${REXUME_LAUNCH_PID-} ${REXUME_LAUNCH-}" > "$DECLARATION_FILE"'
 } > "$native"
 # Exits 11, mk's status for an entry without program access, for UNGRANTED_ENTRY.
 {
@@ -40,6 +42,7 @@ typeset -a isolated_env=(
   XDG_CONFIG_HOME="$test_home/.config"
   PATH="$test_bin:/usr/bin:/bin"
   TRACE_FILE="$trace_file"
+  DECLARATION_FILE="$declaration_file"
   TRACED_VARS="$traced_vars"
 )
 
@@ -51,6 +54,14 @@ assert_equal() {
     print -u2 -- "actual:   ${(qqq)actual}"
     exit 1
   fi
+}
+
+# Rexume reopens the conversation with the declared command, so it must name the mode this launch
+# resolved, and the PID must be the process that became Claude Code.
+assert_declares() {
+  local mode=$1 label=$2 native_pid launch_pid launch
+  read -r native_pid launch_pid launch < "$declaration_file"
+  assert_equal "$launch_pid $launch" "$native_pid [\"claude\",\"--$mode\"]" "$label"
 }
 
 format_call() {
@@ -90,21 +101,26 @@ expected_gateway="$expected_mk_gets"$'\n'"$expected_claude with ANTHROPIC_AUTH_T
 
 run_claude subscription "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_subscription" "subscription mode did not call only the native Claude executable with the flag-cache switch"
+assert_declares subscription "subscription mode did not declare itself"
 
 run_claude gateway "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_gateway" "gateway mode did not give the native executable the gateway entries from mk and the switches"
+assert_declares gateway "gateway mode did not declare itself"
 
 run_claude subscription --gateway "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_gateway" "--gateway did not override the persisted subscription mode"
+assert_declares gateway "--gateway did not declare the mode it chose over the persisted one"
 
 run_claude gateway --subscription "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_subscription" "--subscription did not override the persisted gateway mode"
+assert_declares subscription "--subscription did not declare the mode it chose over the persisted one"
 
 # A claude started from inside a gateway session inherits its variables. Clearing them must not
 # depend on mk, which may be unavailable.
-inherited_env=(${^gateway_vars}=inherited)
+inherited_env=(${^gateway_vars}=inherited REXUME_LAUNCH_PID=1 'REXUME_LAUNCH=["claude","--gateway"]')
 run_claude subscription "${claude_args[@]}"
 assert_equal "$(< "$trace_file")" "$expected_subscription" "subscription mode passed an inherited gateway variable to Claude or ran mk"
+assert_declares subscription "a nested launch kept the declaration it inherited"
 inherited_env=()
 
 inherited_env=(TERM_PROGRAM=rex)
@@ -124,5 +140,10 @@ launch_status=0
 run_claude gateway "${claude_args[@]}" || launch_status=$?
 assert_equal "$launch_status $(< "$trace_file")" "11 $expected_mk_gets" "a failed mk get did not stop the launch with its status"
 inherited_env=()
+
+# A mode the launcher cannot pass back to itself must not start Claude or reach a declaration.
+launch_status=0
+run_claude bogus "${claude_args[@]}" 2>/dev/null || launch_status=$?
+assert_equal "$launch_status $(< "$trace_file")" "1 " "an unknown persisted mode did not stop the launch"
 
 print -r -- "claude launcher tests passed"

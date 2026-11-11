@@ -89,6 +89,13 @@ if (( pick )); then
   print -n "$mode" > "$mode_file" || exit 1
 fi
 
+[[ $mode == (gateway|subscription) ]] || { print -u2 "claude: unknown mode '$mode' in $mode_file"; exit 1 }
+
+# Rexume reopens this conversation with the declared command, so a restore keeps the mode
+# resolved here instead of rereading the persisted one. The PID is this process, which the
+# native binary replaces, so a child that inherits the declaration is not mistaken for it.
+export REXUME_LAUNCH_PID=$$ REXUME_LAUNCH="[\"claude\",\"--$mode\"]"
+
 # Rex renders OSC 8 links, but Claude Code detects support from a terminal list that omits it.
 # Remove once that list includes rex (https://github.com/anthropics/claude-code/issues/106261).
 [[ $TERM_PROGRAM == rex ]] && export FORCE_HYPERLINK=${FORCE_HYPERLINK-1}
