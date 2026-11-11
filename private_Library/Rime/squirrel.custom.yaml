@@ -1,0 +1,54 @@
+patch:
+  # Releases after 1.1.2 add an ascii_mode menu bar icon, shown by default beside the input source
+  # icon it cannot replace; 1.1.2 ignores this key.
+  status_icon/show: false
+  style/candidate_list_layout: linear
+  style/color_scheme: pill_light
+  style/color_scheme_dark: pill_dark
+  # The gap between candidates is a fixed two-space separator, so the leading space widens it and
+  # balances the highlight against the trailing space before the empty comment.
+  style/candidate_format: " [label] [candidate] [comment]"
+  # Squirrel pads the panel by border + corner_radius on each axis and insets the highlight by
+  # (hilited_corner_radius + min(border_height, border_width)) / 2, so these set the bar's height,
+  # side padding, and highlight inset together. The negative border_height takes back vertical
+  # padding that corner_radius adds, so the corner rounds without raising the bar.
+  style/corner_radius: 7
+  style/hilited_corner_radius: 7
+  style/line_spacing: 0
+  style/spacing: 0
+  style/border_height: -1.5
+  style/border_width: 1
+  # Squirrel reads "family-face"; a bare name is taken as a PostScript name.
+  style/font_face: PingFang SC-Regular
+  style/font_point: 16
+  style/label_font_point: 13
+  style/comment_font_point: 13
+  # Colors are sRGB 0xBBGGRR; pixels sampled from an image are in its embedded profile (the
+  # reference screenshots were Generic RGB). Squirrel strokes border_color only when
+  # min(border_height, border_width) > 0.
+  preset_color_schemes/pill_light:
+    name: Pill Light
+    back_color: 0xFFFFFF
+    text_color: 0x333333
+    candidate_text_color: 0x333333
+    label_color: 0x999999
+    comment_text_color: 0x999999
+    hilited_text_color: 0x333333
+    hilited_back_color: 0xFFFFFF
+    hilited_candidate_back_color: 0xFF834F
+    hilited_candidate_text_color: 0xFFFFFF
+    hilited_candidate_label_color: 0xFFFFFF
+    hilited_comment_text_color: 0xFFFFFF
+  preset_color_schemes/pill_dark:
+    name: Pill Dark
+    back_color: 0x151515
+    text_color: 0xC4C4C4
+    candidate_text_color: 0xC4C4C4
+    label_color: 0x7F7F7F
+    comment_text_color: 0x7F7F7F
+    hilited_text_color: 0xC4C4C4
+    hilited_back_color: 0x151515
+    hilited_candidate_back_color: 0xFF834F
+    hilited_candidate_text_color: 0xFFFFFF
+    hilited_candidate_label_color: 0xFFFFFF
+    hilited_comment_text_color: 0xFFFFFF

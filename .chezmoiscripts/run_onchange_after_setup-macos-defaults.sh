@@ -81,20 +81,16 @@ defaults write com.apple.menuextra.clock ShowDayOfWeek -bool false
 defaults delete com.apple.Spotlight "NSStatusItem VisibleCC Item-0" 2>/dev/null || true
 defaults -currentHost write com.apple.controlcenter Timer -int 8
 
-# Doubao's voice shortcut is Fn; its setup asks for Do Nothing so a Fn press does not also
-# change the input source.
-defaults write com.apple.HIToolbox AppleFnUsageType -int 0
-
 # Both input source lists are replaced on every run: ABC stays in HIToolbox, while third-party
-# input methods such as Doubao are enabled only from the inputsources list. The Emoji & Symbols
+# input methods such as Squirrel are enabled only from the inputsources list. The Emoji & Symbols
 # viewer and accent popup must survive the whole-array write too.
 defaults write com.apple.HIToolbox AppleEnabledInputSources -array \
   "<dict><key>InputSourceKind</key><string>Keyboard Layout</string><key>KeyboardLayout ID</key><integer>252</integer><key>KeyboardLayout Name</key><string>ABC</string></dict>" \
   "<dict><key>Bundle ID</key><string>com.apple.CharacterPaletteIM</string><key>InputSourceKind</key><string>Non Keyboard Input Method</string></dict>" \
   "<dict><key>Bundle ID</key><string>com.apple.PressAndHold</string><key>InputSourceKind</key><string>Non Keyboard Input Method</string></dict>"
 defaults write com.apple.inputsources AppleEnabledThirdPartyInputSources -array \
-  "<dict><key>Bundle ID</key><string>com.bytedance.inputmethod.doubaoime</string><key>Input Mode</key><string>com.bytedance.inputmethod.doubaoime.pinyin</string><key>InputSourceKind</key><string>Input Mode</string></dict>" \
-  "<dict><key>Bundle ID</key><string>com.bytedance.inputmethod.doubaoime</string><key>InputSourceKind</key><string>Keyboard Input Method</string></dict>"
+  "<dict><key>Bundle ID</key><string>im.rime.inputmethod.Squirrel</string><key>Input Mode</key><string>im.rime.inputmethod.Squirrel.Hans</string><key>InputSourceKind</key><string>Input Mode</string></dict>" \
+  "<dict><key>Bundle ID</key><string>im.rime.inputmethod.Squirrel</string><key>InputSourceKind</key><string>Keyboard Input Method</string></dict>"
 
 # System shortcuts by Apple's numeric identifier. 64 and 65 open Spotlight and its Finder
 # search window, freed for other launchers. 60 and 61 are the Ctrl+Space and Ctrl+Option+Space
@@ -117,9 +113,7 @@ set_hotkey() {
 for id in 15 16 17 18 19 20 21 22 23 24 25 26; do
   set_hotkey "$id" false
 done
-# Doubao's global voice input switches sources by posting the 60 shortcut and turns itself off
-# while 60 is disabled.
-set_hotkey 60 true 32 49 262144
+set_hotkey 60 false 32 49 262144
 # Caps Lock switches input source only on the Mac its keyboard is attached to, not on a Mac
 # driven through Universal Control. 61 is enabled so that Mac has an ordinary shortcut for the
 # switch.

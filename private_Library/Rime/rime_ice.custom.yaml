@@ -1,0 +1,30 @@
+patch:
+  # The spacer runs before the Caps Lock processor so its space is committed before the letter.
+  engine/processors/@before 0: lua_processor@*han_alnum_spacer*processor
+  engine/processors/@before 1: lua_processor@*caps_lock_passthrough
+  # The spacer filter comes after the guess filter so that guesses get their leading space too.
+  engine/filters/+:
+    - lua_filter@*cn_en_spacer
+    - lua_filter@*english_guess_filter
+    - lua_filter@*han_alnum_spacer*filter
+  pin_cand_filter/+: ["l\t了", "zai\t在", "shi\t是"]
+  'punctuator/half_shape/"': { pair: ["「", "」"] }
+  # > starts Markdown quotes and arrows often enough to stay ASCII, so < alternates 《 and 》.
+  punctuator/half_shape/<: { pair: ["《", "》"] }
+  punctuator/half_shape/>: { commit: ">" }
+  # Word completion fills the page with long entries that wrap the linear bar onto a second line;
+  # Squirrel derives the bar's maximum width from the screen and font size, with no setting for it.
+  translator/enable_word_completion: false
+  # rime-ice ships these swapped-letter rules (dna → dan) commented out because they misread full
+  # pinyin mixed with abbreviations (x'ai → xia); this setup types full pinyin only.
+  speller/algebra/+:
+    - derive/([qjx])ia$/$1ai/
+    - derive/([wrtypsdfghklzcbnm])an$/$1na/
+    - derive/([wrpsdfghklzcbnm])en$/$1ne/
+    - derive/([qypjlxbnm])in$/$1ni/
+    - derive/([qrtysdghjklzxc])un$/$1nu/
+    - derive/([qtpdjlxbnm])ian$/$1ain/
+    # Typo fix for an i typed before its initial (ixang → xiang). Syllables ending in that i (bi, di,
+    # li, ...) are left out so English such as index and intel survives; in and it still lose page
+    # one to completions of these spellings.
+    - derive/^([bpmdtnljqx])i([aeou]|ng?$)/i$1$2/

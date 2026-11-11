@@ -72,8 +72,6 @@ cask "appcleaner"
 cask "chatgpt"
 # OpenAI's coding agent that runs in your terminal
 cask "codex"
-# Chinese input method with voice input and intelligent suggestions
-cask "doubaoime"
 # Inconsolata LGC Nerd Font
 cask "font-inconsolata-lgc-nerd-font"
 # Web browser
@@ -88,6 +86,8 @@ cask "entwining/tap/maskey", trusted: true
 cask "orbstack"
 # Control your tools with a few keystrokes
 cask "raycast"
+# Rime input method engine
+cask "squirrel-app"
 # Network toolbox
 cask "surge"
 # Open-source code editor

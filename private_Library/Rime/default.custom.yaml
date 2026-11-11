@@ -1,0 +1,8 @@
+patch:
+  schema_list:
+    - schema: rime_ice
+  # English goes through ABC, which macOS selects on Caps Lock; any action other than noop on these
+  # keys also toggles Rime's own English mode.
+  ascii_composer/switch_key/Caps_Lock: noop
+  ascii_composer/switch_key/Shift_L: noop
+  menu/page_size: 7
