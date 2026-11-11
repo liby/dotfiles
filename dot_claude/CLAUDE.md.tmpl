@@ -10,6 +10,8 @@ When an enabled language server covers the file, use the `LSP` tool before claim
 
 Fetch web pages and docs with WebFetch and WebSearch, not Bash curl or wget. When the sandbox denies a command because a host is not in `allowedDomains`, do not change curl arguments, switch to a mirror, or take another workaround variant; the block names where the host goes.
 
+`SendMessage` takes a session's `ListAgents` name, not the session ID the user gives; send to the `name` in the `~/.claude/sessions/*.json` file whose `sessionId` matches, instead of guessing it from transcripts or titles.
+
 {{ $excluded := list -}}
 {{ range (includeTemplate "claude/settings.json" . | fromJson).sandbox.excludedCommands -}}
 {{ $excluded = append $excluded (printf "`%s`" (trimSuffix ":*" .)) -}}
