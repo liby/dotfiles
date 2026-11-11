@@ -2,39 +2,57 @@
 set -euo pipefail
 
 source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+autoload -Uz is-at-least
 
-# Cache guides by hash because Rex cannot print an earlier guide for comparison.
+# Succeeds when Rex version $1 is older than $2. Rex versions are semver, where a release follows
+# its prereleases, which is-at-least orders the other way. Builds before 0.1 reported
+# 0.0.<build time>-g<commit>, which sorts before them.
+rex_older() {
+  local a=${1%%-*} b=${2%%-*}
+  if [[ $a != "$b" ]]; then ! is-at-least "$b" "$a"; return; fi
+  [[ $1 == "$2" || $a == 0.0.* || $1 != *-* ]] && return 1
+  [[ $2 != *-* ]] && return 0
+  ! is-at-least "${2#*-}" "${1#*-}"
+}
+
 if (( $+commands[rex] )); then
-  orc_skill="{{ .chezmoi.sourceDir }}/dot_agents/skills/orc/SKILL.md"
-  recorded_version="$(sed -En 's/^[[:space:]]+rex-version: //p' "$orc_skill")"
   version="$(rex --autostart=false version --json | jq -er .rex_version)"
-  # The running server keeps its CLI build after an app update. Compare build timestamps
-  # (0.0.<build time>-g<commit>) before treating its guide or hooks as drift.
-  if (( ${${version#0.0.}%%-*} < ${${recorded_version#0.0.}%%-*} )); then
-    print -u2 -rl -- \
-      "$step_yellow!$step_reset Rex Server runs $version; orc was checked against newer $recorded_version." \
-      "  Save ongoing work, then update the server through Rex's server settings. Updating the app alone does not replace the running server."
-  else
-    recorded="$(sed -En 's/^[[:space:]]+rex-guide-sha256: //p' "$orc_skill")"
-    guides="${XDG_CACHE_HOME:-$HOME/.cache}/rex-guide"
-    mkdir -p "$guides"
-    guide="$(rex --autostart=false skill show | tee "$guides/current.md" | shasum -a 256)"
-    guide="${guide%% *}"
-    mv "$guides/current.md" "$guides/$guide.md"
-    find "$guides" -type f ! -name "$guide.md" ! -name "$recorded.md" -delete
-    if [[ "$guide" != "$recorded" ]]; then
-      review=("  Review orc by following Rex integration in .github/CONCEPTS.md.")
-      [[ -f "$guides/$recorded.md" ]] && review=(
-        "  Review orc by following Rex integration in .github/CONCEPTS.md, starting with:"
-        "  ${step_cyan}diff ${(q-)guides}/$recorded.md ${(q-)guides}/$guide.md$step_reset"
-      )
-      print -u2 -rl -- \
-        "$step_yellow!$step_reset Rex $version prints a different guide from Rex $recorded_version, which the orc skill was compared with." \
-        $review
+  if (( $+commands[rexume] )); then
+    if record="$(rexume skill status 2>/dev/null)" &&
+      recorded_version="$(jq -er .rex_version <<<"$record")" &&
+      recorded="$(jq -er .rex_guide_sha256 <<<"$record")"; then
+      rexume_version="$(rexume --version)"
+      # The running server keeps its CLI build after an app update, so check that it is not older
+      # than the recorded version before treating its guide as drift.
+      if rex_older "$version" "$recorded_version"; then
+        print -u2 -rl -- \
+          "$step_yellow!$step_reset Rex Server runs $version; $rexume_version was reviewed against newer $recorded_version." \
+          "  Save ongoing work, then update the server through Rex's server settings. Updating the app alone does not replace the running server."
+      else
+        # Cache guides by hash because Rex cannot print an earlier guide for comparison.
+        guides="${XDG_CACHE_HOME:-$HOME/.cache}/rex-guide"
+        mkdir -p "$guides"
+        guide="$(rex --autostart=false skill show | tee "$guides/current.md" | shasum -a 256)"
+        guide="${guide%% *}"
+        mv "$guides/current.md" "$guides/$guide.md"
+        find "$guides" -type f ! -name "$guide.md" ! -name "$recorded.md" -delete
+        if [[ "$guide" != "$recorded" ]]; then
+          review=("  Review Rexume's guide by following its AGENTS.md.")
+          [[ -f "$guides/$recorded.md" ]] && review=(
+            "  Review Rexume's guide by following its AGENTS.md, starting with:"
+            "  ${step_cyan}diff ${(q-)guides}/$recorded.md ${(q-)guides}/$guide.md$step_reset"
+          )
+          print -u2 -rl -- \
+            "$step_yellow!$step_reset Rex $version prints a different guide from Rex $recorded_version, which $rexume_version was reviewed against." \
+            $review
+        fi
+      fi
+    else
+      print -u2 -r -- "$step_yellow!$step_reset Skipped the Rex guide check: $(rexume --version) has no \`rexume skill status\`."
     fi
-    rex --autostart=false skill status --json | jq -r --arg mark "$step_yellow!$step_reset" '
-      .harnesses[] | select(.detected) | .id as $agent | .items[]
-      | select(.kind == "hook" and .state != "current" and .state != "unsupported")
-      | "\($mark) Rex reports the \($agent) hook in \(.path) as \(.state); see Rex integration in .github/CONCEPTS.md"' >&2
   fi
+  rex --autostart=false skill status --json | jq -r --arg mark "$step_yellow!$step_reset" '
+    .harnesses[] | select(.detected) | .id as $agent | .items[]
+    | select(.kind == "hook" and .state != "current" and .state != "unsupported")
+    | "\($mark) Rex reports the \($agent) hook in \(.path) as \(.state); see Rex integration in .github/CONCEPTS.md"' >&2
 fi
