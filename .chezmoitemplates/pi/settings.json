@@ -13,7 +13,8 @@
   },
   "fullscreenCopyOnSelect": false,
   "modelThinkingLevels": {
-    "rc-gateway/deepseek/deepseek-v4.1-flash-1017": "max"
+    "rc-gateway/deepseek/deepseek-v4.1-flash-1017": "max",
+    "rc-gateway/google/gemini-4-carbon": "medium"
   },
   "shellPath": "/opt/homebrew/bin/bash",
   "npmCommand": [
