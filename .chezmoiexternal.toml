@@ -28,7 +28,7 @@ include = ["*/skills/typesafe-ai/**"]
 ["Library/Rime"]
 type = "archive"
 # renovate: currentValue=main
-url = "https://github.com/iDvel/rime-ice/archive/99662ba01e3affa6a0f009174ca530b887bac3b6.tar.gz"
+url = "https://github.com/iDvel/rime-ice/archive/927e1cf1d3eeb9bf4be85e3f684dba4dd485b6f6.tar.gz"
 stripComponents = 1
 # Not exact: Squirrel keeps build/ and the learned user dictionaries in this directory, and this
 # repository's patches and Lua come from source beside the archive.
