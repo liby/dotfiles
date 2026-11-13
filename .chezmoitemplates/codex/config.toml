@@ -63,6 +63,9 @@ memories = true
 network_proxy = true
 prevent_idle_sleep = true
 
+[features.code_mode]
+enabled = true
+
 [memories]
 consolidation_model = "gpt-6.1-sol"
 extract_model = "gpt-6.1-sol"
@@ -127,11 +130,9 @@ copy_on_select = "never"
 status_line = ["model-with-reasoning", "current-dir", "git-branch", "thread-id"]
 
 [mcp_servers.openaiDeveloperDocs]
-enabled = true
 url = "https://developers.openai.com/mcp"
 
 [mcp_servers.superlogical]
-enabled = true
 url = "https://www.superlogical.com/rex/community-mcp"
 
 [mcp_servers.node_repl]
@@ -154,7 +155,7 @@ enabled = false
 enabled = false
 
 [apps.connector_openai_defense_factory]
-enabled = true
+enabled = false
 
 [apps.connector_openai_hotline]
 enabled = false
@@ -166,6 +167,9 @@ enabled = false
 enabled = false
 
 [apps.connector_openai_safety_settings]
+enabled = false
+
+[apps.connector_openai_write_like_me]
 enabled = false
 
 # Activate only explicitly enabled plugins that are installed and enabled by their source.

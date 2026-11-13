@@ -1,8 +1,6 @@
 {
   "electron-avatar-overlay-open": false,
   "electron-persisted-atom-state": {
-    "electron:onboarding-projectless-completed": true,
-    "home-composer-mode-v1": "work",
-    "last-explicit-review-diff-filter": "branch"
+    "electron:onboarding-projectless-completed": true
   }
 }
