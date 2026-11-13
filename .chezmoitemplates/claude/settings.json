@@ -70,7 +70,7 @@
       "NotebookEdit",
       "PushNotification",
       "Read(**/.env.*.local)",
-      "Read(**/.env.local*)",
+      "Read(**/.env.local)",
       "Read(**/.env)",
       "Read(~/.aws/credentials*)",
       "Read(~/.claude/.credentials.json*)",
