@@ -18,9 +18,9 @@ defaults write $domain Workspace.hiddenChromeButtons -array commandPalette newTa
 defaults write $domain Workspace.inactivePaneFadeMode -string text
 defaults write $domain Workspace.interfaceStyle -string useTheme
 defaults write $domain Workspace.paneDensity -string compact
+defaults write $domain Workspace.paneHeaderVisibility -string always
 defaults write $domain Workspace.playsProgramActivitySounds -bool false
 defaults write $domain Workspace.showsActivePaneBorder -bool true
-defaults write $domain Workspace.showsPaneHeaders -bool true
 defaults write $domain Workspace.showsProgramActivityDockBadge -bool false
 defaults write $domain Workspace.sidebarPosition -string left
 defaults write $domain Workspace.tabIconColorMode -string activePanes
