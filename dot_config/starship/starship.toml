@@ -9,6 +9,8 @@ format = "([\\[$all_status$ahead_behind\\]]($style))"
 ahead = "⇡${count}"
 behind = "⇣${count}"
 diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+# gitoxide's status takes about twice as long as `git status` in a repository with tens of thousands of files.
+use_git_executable = true
 
 [bun]
 format = '\[[$symbol($version)]($style)\]'
