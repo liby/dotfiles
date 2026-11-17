@@ -57,6 +57,7 @@ jobs:
           home_dir="$RUNNER_TEMP/home"
           mkdir -p "$source_dir" "$home_dir/.zsh/plugins"
           cp .chezmoiexternal.toml "$source_dir/"
+          # Other externals sit under directories that only the full source state creates.
           for attempt in 1 2 3; do
             if chezmoi apply \
               --config /dev/null \
@@ -66,7 +67,8 @@ jobs:
               --destination "$home_dir" \
               --include externals \
               --refresh-externals=always \
-              --no-tty; then
+              --no-tty \
+              "$home_dir/.zsh/plugins"; then
               break
             fi
             if ((attempt == 3)); then
