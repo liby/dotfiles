@@ -8,9 +8,7 @@ set -euo pipefail
 # caps_lock_passthrough.lua hash: {{ include "private_Library/Rime/lua/caps_lock_passthrough.lua" | sha256sum }}
 # han_alnum_spacer.lua hash: {{ include "private_Library/Rime/lua/han_alnum_spacer.lua" | sha256sum }}
 # english_guess_filter.lua hash: {{ include "private_Library/Rime/lua/english_guess_filter.lua" | sha256sum }}
+# swapped_initial_filter.lua hash: {{ include "private_Library/Rime/lua/swapped_initial_filter.lua" | sha256sum }}
 
-# Not `Squirrel --reload`: a running Squirrel keeps the Lua modules it loaded first. It redeploys
-# changed configuration on start, and macOS relaunches it when text input next needs it.
-if pgrep -qx Squirrel; then
-  killall Squirrel
-fi
+# Squirrel caches Lua across reloads. On the next input, macOS starts it fresh and it redeploys changed configuration.
+pkill -u "$UID" -x Squirrel || [[ $? == 1 ]]

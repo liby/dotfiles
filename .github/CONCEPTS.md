@@ -60,7 +60,9 @@ mbx is the machine's Cargo build cache. [`dot_zshenv`](../dot_zshenv) places its
 
 Changing mbx's [cache directory](https://mr-boxington.jdx.dev/configuration) on an existing machine requires explicit migration of the old store; changing the setting alone leaves the old data outside collection. For suspect build outputs, run [mbx verification](https://mr-boxington.jdx.dev/troubleshooting) with `MBX_VERIFY=1` in a fresh target directory so Cargo actually compiles the units being checked.
 
-[`.chezmoiexternal.toml`](../.chezmoiexternal.toml) pins the zsh plugin archives and the TypeSafe skill at fixed commits. The GitHub archive manager in [`.github/renovate.json`](renovate.json) updates those commits from each declared branch.
+[`.chezmoiexternal.toml`](../.chezmoiexternal.toml) pins the zsh plugins, the TypeSafe skill, and rime-ice at fixed commits. The GitHub archive manager in [`.github/renovate.json`](renovate.json) updates those commits from each declared branch.
+
+Squirrel keeps learned words alongside the rime-ice files in `~/Library/Rime`. To test [the local Rime patches](../private_Library/Rime), copy the schemas, dictionaries, Lua modules, OpenCC data, and patches into a temporary user data directory. Use Squirrel's bundled `Contents/SharedSupport` as the shared data directory. Using `~/Library/Rime` for either directory can trigger LevelDB repair on a personal dictionary that Squirrel still has open.
 
 ## Repository validation
 

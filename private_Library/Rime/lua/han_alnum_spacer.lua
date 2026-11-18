@@ -26,11 +26,8 @@ local function needs_space(before, after)
 end
 
 local function last_code(text)
-  local last
-  for _, code in utf8.codes(text) do
-    last = code
-  end
-  return last
+  local last = utf8.offset(text, -1)
+  return last and utf8.codepoint(text, last)
 end
 
 -- Keys that move the caret or act on the host's text end the run the history describes, with any
@@ -103,7 +100,8 @@ function filter.func(translation, env)
   local previous = last_code(env.engine.context.commit_history:latest_text())
   for cand in translation:iter() do
     if cand.start == 0 and needs_space(previous, utf8.codepoint(cand.text)) then
-      yield(cand:to_shadow_candidate(cand.type, " " .. cand.text, cand.comment))
+      -- Learning unwraps one shadow, including when traditionalization already wrapped the phrase.
+      yield(cand:get_genuine():to_shadow_candidate(cand.type, " " .. cand.text, cand.comment, false))
     else
       yield(cand)
     end

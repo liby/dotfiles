@@ -22,7 +22,7 @@ local function load_words()
           local text, code = line:match("^([^\t#][^\t]*)\t([^\t]+)")
           if text then
             code = code:lower():gsub("[^a-z]", "")
-            if #code >= 2 and not seen[code] then
+            if #code >= min_length - 1 and not seen[code] then
               seen[code] = true
               local first = code:sub(1, 1)
               words[first] = words[first] or {}
@@ -115,10 +115,10 @@ function filter.init(env)
   end
 end
 
-local function yield_guesses(input, start, _end, guessed)
+local function yield_guesses(input, guessed)
   for _, text in ipairs(guesses_for(input)) do
     guessed[text] = true
-    yield(Candidate("english_guess", start, _end, text, ""))
+    yield(Candidate("english_guess", 0, #input, text, ""))
   end
 end
 
@@ -134,15 +134,15 @@ function filter.func(translation, env)
       first_done = true
       yield(cand)
       if guessable and (cand.type == "sentence" or cand._end < #input) then
-        yield_guesses(input, 0, #input, guessed)
+        yield_guesses(input, guessed)
       end
     elseif not guessed[cand.text] then
       yield(cand)
     end
   end
-  -- Input that no pinyin syllable can start, such as `vesrion`, translates to nothing.
+  -- Inputs such as vesrion have no pinyin candidate to trigger the loop.
   if not first_done and guessable then
-    yield_guesses(input, 0, #input, guessed)
+    yield_guesses(input, guessed)
   end
 end
 

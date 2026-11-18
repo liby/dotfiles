@@ -2,10 +2,11 @@ patch:
   # The spacer runs before the Caps Lock processor so its space is committed before the letter.
   engine/processors/@before 0: lua_processor@*han_alnum_spacer*processor
   engine/processors/@before 1: lua_processor@*caps_lock_passthrough
-  # The spacer filter comes after the guess filter so that guesses get their leading space too.
+  # Try the pinyin swap only after English guesses. Space the resulting candidates last.
   engine/filters/+:
     - lua_filter@*cn_en_spacer
     - lua_filter@*english_guess_filter
+    - lua_filter@*swapped_initial_filter
     - lua_filter@*han_alnum_spacer*filter
   pin_cand_filter/+: ["l\t了", "zai\t在", "shi\t是"]
   'punctuator/half_shape/"': { pair: ["「", "」"] }
@@ -15,8 +16,15 @@ patch:
   # Word completion fills the page with long entries that wrap the linear bar onto a second line;
   # Squirrel derives the bar's maximum width from the screen and font size, with no setting for it.
   translator/enable_word_completion: false
-  # rime-ice ships these swapped-letter rules (dna → dan) commented out because they misread full
-  # pinyin mixed with abbreviations (x'ai → xia); this setup types full pinyin only.
+  swapped_initial:
+    __include: rime_ice.schema:/translator
+    # The main translator already learns selected phrases from this dictionary.
+    enable_user_dict: false
+    # Use the maximum signed int so the filter can compare full readings for phrases of any length.
+    spelling_hints: 2147483647
+    comment_format: []
+  # Enable rime-ice's optional letter swaps for full pinyin. They can outrank abbreviations when
+  # typed together (xai → 下), while an explicit separator still works (x'ai → 喜爱).
   speller/algebra/+:
     - derive/([qjx])ia$/$1ai/
     - derive/([wrtypsdfghklzcbnm])an$/$1na/
