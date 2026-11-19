@@ -46,15 +46,17 @@ function processor.init(env)
   -- When the client ends the input session (focus moves to another field or app, or another input
   -- source is selected), Squirrel sends the raw input to the app itself and clears the composition,
   -- so only update_notifier fires and the history no longer describes the text before the caret.
-  -- Escape or BackSpace emptying the input also clears without a commit; forgetting the history
-  -- there costs at most one space.
+  -- Escape or BackSpace emptying the input, and a Lua processor that commits through
+  -- engine:commit_text and then clears the input (select_character's [ and ]), look the same;
+  -- forgetting the history there costs at most one space.
+  -- librime also empties and refills the input within one key (the punctuator does so after a digit
+  -- separator) and segments the refilled input against the history, so the history is forgotten only
+  -- when the input is still empty at the next key.
   env.commit_connection = context.commit_notifier:connect(function()
     committed = true
   end)
   env.update_connection = context.update_notifier:connect(function(ctx)
-    if ctx.input == "" and not committed then
-      ctx.commit_history:clear()
-    end
+    env.session_ended = ctx.input == "" and not committed
     committed = false
   end)
 end
@@ -70,6 +72,10 @@ function processor.func(key, env)
   end
   local context = env.engine.context
   local history = context.commit_history
+  if env.session_ended then
+    history:clear()
+    env.session_ended = false
+  end
   local previous = last_code(history:latest_text())
 
   if context:is_composing() then
