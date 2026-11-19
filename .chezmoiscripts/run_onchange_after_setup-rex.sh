@@ -5,9 +5,10 @@ source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 
 # The app reads these at launch; apply leaves relaunching it to the user.
 domain=com.superlogical.rex
-defaults write $domain Workspace.activePaneBorderColor -string accent
 defaults write $domain Workspace.activePaneBorderOpacity -float 0.15
-defaults write $domain Workspace.activePaneBorderTransition -string fade
+# Without the migration marker, Rex replaces the saved grouping with priority at launch.
+defaults write $domain Workspace.activityGroupingResetToPriority -bool true
+defaults write $domain Workspace.activityGrouping -string session
 defaults write $domain Workspace.appIcon -string dark
 defaults write $domain Workspace.appIconVisibility -string dockOnly
 defaults write $domain Workspace.appearance -string dark
@@ -22,14 +23,13 @@ defaults write $domain Workspace.paneHeaderVisibility -string always
 defaults write $domain Workspace.playsProgramActivitySounds -bool false
 defaults write $domain Workspace.showsActivePaneBorder -bool true
 defaults write $domain Workspace.showsProgramActivityDockBadge -bool false
-defaults write $domain Workspace.sidebarPosition -string left
+defaults write $domain Workspace.sidebarShowsActivity -bool true
 defaults write $domain Workspace.tabIconColorMode -string activePanes
 defaults write $domain Workspace.tabStyle -string vertical
 # Keep a 35 px cell at 12 pt on 2x displays; re-tune for other fonts, sizes, or scales.
 defaults write $domain Workspace.terminalCellHeightPercent -float 30
 defaults write $domain Workspace.terminalCopyAnimation -bool false
 defaults write $domain Workspace.terminalCursorBlinkIntervalMilliseconds -int 0
-defaults write $domain Workspace.terminalCursorBlinkUsesCustomInterval -bool false
 # Noto Sans Nag Mundari supplies ◌ centered and sized like the terminal font's ●,
 # where the system fallback, Menlo, sets it low; it covers little else.
 defaults write $domain Workspace.terminalFallbackFontNames -array "PingFang SC" "Noto Sans Nag Mundari"
@@ -46,7 +46,7 @@ defaults write $domain Workspace.terminalUsesDisplayP3 -bool true
 defaults write $domain Workspace.usesStandardInactiveWindowPaneStyles -bool false
 defaults write $domain rex.agents.names-sessions -bool false
 defaults write $domain rex.client.remoteControl -bool true
-# The Workspace.experiments.* and cursor shader settings need Developer Mode.
+# The experimental quick switcher needs Developer Mode.
 defaults write $domain rex.developer-mode-enabled -bool true
 
 if [[ -n $(lsappinfo find bundleid=$domain) ]]; then
