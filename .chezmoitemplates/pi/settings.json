@@ -1,7 +1,7 @@
 {
   "defaultProjectTrust": "always",
   "defaultProvider": "rc-gateway",
-  "defaultModel": "deepseek/deepseek-v4.1-flash-1017",
+  "defaultModel": "google/gemini-4-neon",
   "defaultThinkingLevel": "high",
   "defaultTools": ["+codemode"],
   "enabledModels": [
@@ -13,8 +13,7 @@
   },
   "fullscreenCopyOnSelect": false,
   "modelThinkingLevels": {
-    "rc-gateway/deepseek/deepseek-v4.1-flash-1017": "max",
-    "rc-gateway/google/gemini-4-carbon": "medium"
+    "rc-gateway/deepseek/deepseek-v4.1-flash-1017": "max"
   },
   "shellPath": "/opt/homebrew/bin/bash",
   "npmCommand": [
