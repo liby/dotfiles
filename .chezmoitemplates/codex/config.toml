@@ -16,6 +16,7 @@ enabled = false
 [desktop]
 ambient-suggestions-enabled = false
 appshotSoundEnabled = false
+code-review-github-link-target = "github"
 composerPlainTextMode = true
 enabled-reasoning-efforts = ["medium", "xhigh", "max", "ultra"]
 # Keep the selected UI behavior when the desktop default writes queue.
