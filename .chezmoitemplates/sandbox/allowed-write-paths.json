@@ -12,6 +12,7 @@
   "~/.pnpm-store",
   "~/.proto",
   "~/.rustup",
+  "~/.snowflake/logs",
   "~/Code/.mbx",
   "~/Code/.pnpm",
   "~/Code/worktrees",

@@ -94,7 +94,7 @@
       "snow:*"
     ],
     "filesystem": {
-      "allowWrite": {{ concat (includeTemplate "sandbox/allowed-write-paths.json" . | fromJson) (list "~/.claude" "~/.codex" "~/.config" "~/.local/bin" "~/.local/state/rexume" "~/.oracle/sessions" "~/.pi" "~/.snowflake/logs") | toPrettyJson | indent 6 | trim }},
+      "allowWrite": {{ concat (includeTemplate "sandbox/allowed-write-paths.json" . | fromJson) (list "~/.claude" "~/.codex" "~/.config" "~/.local/bin" "~/.local/state/rexume" "~/.oracle/sessions" "~/.pi") | toPrettyJson | indent 6 | trim }},
       "denyRead": {{ includeTemplate "sandbox/denied-read-paths.json" . }},
       "allowRead": {{ includeTemplate "sandbox/allowed-read-paths.json" . }}
     },
