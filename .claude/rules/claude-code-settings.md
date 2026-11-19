@@ -69,7 +69,7 @@ The classifier reads `autoMode` only from user, managed, and `--settings` flag s
 
 ### Write paths
 
-`allowWrite` lists places sandboxed work writes whatever project the session started in. A repository outside the working directory is task-specific and does not belong here. Add a path only after an observed denial, never a whole home or source tree.
+`allowWrite` lists places sandboxed work writes whatever project the session started in. A repository outside the working directory is task-specific and does not belong here. Add a path only after an observed denial, never a whole home or source tree. Paths that Pi's command sandbox needs as well go in the shared [`sandbox/allowed-write-paths.json`](../../.chezmoitemplates/sandbox/allowed-write-paths.json); the fragment appends the agent-state paths that only Claude Code gets.
 
 - `~/.codex` serves sandboxed tools that manage Codex state, such as `gh skill update --agent codex`; codex itself runs excluded. Sandboxed writes to the chezmoi-managed `~/.codex/config.toml` become possible as a side effect, so treat unexplained drift there as suspect.
 - `~/.claude`, `~/.pi`, `~/.config`, `~/.local/bin`, and `~/.local/state/rexume` were added by user decision: agent session stores (such as renaming a Pi session directory after a project moves), tool configuration and entrypoints, and the Rexume state that `rexume task` writes from a sandboxed shell. Claude's built-in write denies inside `~/.claude` still apply, and credential files such as `~/.pi/agent/auth.json` are protected by the guard, not the sandbox.

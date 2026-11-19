@@ -94,53 +94,15 @@
       "snow:*"
     ],
     "filesystem": {
-      "allowWrite": [
-        "{{ output "getconf" "DARWIN_USER_TEMP_DIR" | trim | trimSuffix "/" }}",
-        "/private/tmp/.pnpm-store",
-        "/private/tmp/diff.*",
-        "/private/tmp/pnpm-store-operation-locks-{{ .chezmoi.uid }}",
-        "~/.bun",
-        "~/.cache",
-        "~/.cargo",
-        "~/.claude",
-        "~/.codex",
-        "~/.config",
-        "~/.gnupg/trustdb.gpg",
-        "~/.local/bin",
-        "~/.local/share/uv",
-        "~/.local/state/rexume",
-        "~/.npm",
-        "~/.oracle/sessions",
-        "~/.pi",
-        "~/.pnpm-store",
-        "~/.proto",
-        "~/.rustup",
-        "~/.snowflake/logs",
-        "~/Code/.mbx",
-        "~/Code/.pnpm",
-        "~/Code/worktrees",
-        "~/Library/Caches",
-        "~/go/pkg"
-      ],
-      "denyRead": [
-        "~/.gnupg/private-keys-v1.d",
-        "~/.ssh"
-      ],
-      "allowRead": [
-        "~/.ssh/config",
-        "~/.ssh/config.*",
-        "~/.ssh/*.pub",
-        "~/.ssh/allowed_signers",
-        "~/.ssh/known_hosts*"
-      ]
+      "allowWrite": {{ concat (includeTemplate "sandbox/allowed-write-paths.json" . | fromJson) (list "~/.claude" "~/.codex" "~/.config" "~/.local/bin" "~/.local/state/rexume" "~/.oracle/sessions" "~/.pi" "~/.snowflake/logs") | toPrettyJson | indent 6 | trim }},
+      "denyRead": {{ includeTemplate "sandbox/denied-read-paths.json" . }},
+      "allowRead": {{ includeTemplate "sandbox/allowed-read-paths.json" . }}
     },
     "network": {
       "allowedDomains": {{ includeTemplate "sandbox/allowed-domains.json" . }},
       "allowLocalBinding": true,
-      "allowMachLookup": [
-        "com.apple.trustd.agent"
-      ],
-      "allowUnixSockets": {{ prepend (includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson) (printf "/private/tmp/claude-%v" .chezmoi.uid) | toPrettyJson | indent 6 | trim }}
+      "allowMachLookup": {{ includeTemplate "sandbox/allowed-mach-lookups.json" . }},
+      "allowUnixSockets": {{ concat (list (printf "/private/tmp/claude-%v" .chezmoi.uid)) (includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson) (includeTemplate "sandbox/allowed-host-service-sockets.json" . | fromJson) | toPrettyJson | indent 6 | trim }}
     }
   },
   "hooks": {

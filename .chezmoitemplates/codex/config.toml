@@ -104,7 +104,7 @@ allow_local_binding = true
 
 # Socket rules require absolute paths; `~` prevents the proxy from starting.
 [permissions.development.network.unix_sockets]
-{{ range includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson -}}
+{{ range concat (includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson) (includeTemplate "sandbox/allowed-host-service-sockets.json" . | fromJson) -}}
 {{ joinPath $.chezmoi.homeDir (trimPrefix "~/" .) | quote }} = "allow"
 {{ end }}
 "{{ .chezmoi.homeDir }}/.cache/codex-tmp" = "allow"

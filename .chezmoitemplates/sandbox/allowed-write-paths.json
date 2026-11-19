@@ -1,0 +1,20 @@
+[
+  "{{ output "getconf" "DARWIN_USER_TEMP_DIR" | trim | trimSuffix "/" }}",
+  "/private/tmp/.pnpm-store",
+  "/private/tmp/diff.*",
+  "/private/tmp/pnpm-store-operation-locks-{{ .chezmoi.uid }}",
+  "~/.bun",
+  "~/.cache",
+  "~/.cargo",
+  "~/.gnupg/trustdb.gpg",
+  "~/.local/share/uv",
+  "~/.npm",
+  "~/.pnpm-store",
+  "~/.proto",
+  "~/.rustup",
+  "~/Code/.mbx",
+  "~/Code/.pnpm",
+  "~/Code/worktrees",
+  "~/Library/Caches",
+  "~/go/pkg"
+]

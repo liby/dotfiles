@@ -1,0 +1,7 @@
+[
+  "~/.ssh/config",
+  "~/.ssh/config.*",
+  "~/.ssh/*.pub",
+  "~/.ssh/allowed_signers",
+  "~/.ssh/known_hosts*"
+]
