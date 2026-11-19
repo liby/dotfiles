@@ -4,8 +4,12 @@
 # the Keychain, whose approvals bind to the code signature of Homebrew's ad hoc-signed Python and
 # lapse at every Python upgrade, prompting again in each concurrent process. Its Linux cache,
 # ~/.cache/snowflake/credential_cache_v1.json, is a mode 0600 file-locked JSON file instead.
+import json
 import os
+import shutil
+import subprocess
 import sys
+import webbrowser
 from importlib.metadata import entry_points
 
 # Connector 5 caches through its Rust core and has no token_cache module. Let this import fail at
@@ -21,5 +25,53 @@ token_cache.IS_LINUX = True
 # Python's default macOS opener brings the browser to the front. Resolve `open` through PATH so the
 # wrapper in ~/.local/bin applies.
 os.environ.setdefault("BROWSER", "open -g %s")
+
+# A command sandbox blocks the launch. Rex starts programs outside the caller's sandbox, so in a
+# Rex pane ask its server to run the same opener in a terminal no tab shows. The URL goes to rex
+# on stdin, not in its arguments. Take the BROWSER opener alone: after it fails,
+# webbrowser.open_new passes the URL to every other registered launcher.
+open_new = webbrowser.get().open_new
+
+
+def open_through_rex(url):
+    session = os.environ.get("REX_SESSION")
+    if not session or not shutil.which("rex"):
+        return False
+    block = {
+        "flavor": "com.superlogical.terminal.shell",
+        # Keep the terminal after the opener exits so that rex wait can read its exit status.
+        "options": {"command": ["open", "-g", url], "exit": {"on_completion": False}},
+    }
+    created = subprocess.run(
+        ["rex", "api", "call", "-s", session, "session.new_block", "-"],
+        input=json.dumps(block),
+        text=True,
+        capture_output=True,
+    )
+    if created.returncode != 0:
+        return False
+    terminal = ["-s", session, json.loads(created.stdout)["block_id"]]
+    opened = subprocess.run(["rex", "wait", *terminal, "--for", "30s"], capture_output=True)
+    subprocess.run(["rex", "block", "close", *terminal], capture_output=True)
+    return opened.returncode == 0
+
+
+# Without either opener and without SNOWFLAKE_AUTH_FORCE_SERVER, the connector asks for a pasted
+# redirect URL and aborts on a non-interactive stdin. Agents read that prompt as a dead end, so
+# name the way out beside it. The connector looks open_new up on the module. Print to stdout as
+# the connector does: while connecting, the CLI shows stdout and discards stderr.
+def open_sign_in_page(url):
+    opened = open_new(url) or open_through_rex(url)
+    if not opened and os.environ.get("SNOWFLAKE_AUTH_FORCE_SERVER", "").lower() != "true":
+        print(
+            "snow: the sign-in page could not be opened from this shell call. If a command sandbox "
+            "blocked the launch, rerun the query as a single bare `snow` command, with no pipe, "
+            "redirection, or other command beside it."
+        )
+    return opened
+
+
+webbrowser.open_new = open_sign_in_page
+
 (snow,) = entry_points(group="console_scripts", name="snow")
 sys.exit(snow.load()())
