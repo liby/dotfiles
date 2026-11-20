@@ -173,7 +173,7 @@ enabled = false
 [apps.connector_openai_write_like_me]
 enabled = false
 
-# Activate only explicitly enabled plugins that are installed and enabled by their source.
+# Desktop reinstalls missing primary-runtime plugins as enabled, so keep their disabled entries.
 [plugins._default]
 enabled = false
 
@@ -192,17 +192,11 @@ enabled = true
 [plugins."unified-computer-use@openai-bundled"]
 enabled = true
 
-[plugins."code-review@openai-bundled"]
-enabled = false
-
 [plugins."documents@openai-primary-runtime"]
 enabled = true
 
 [plugins."pdf@openai-primary-runtime"]
 enabled = true
-
-[plugins."pages@openai-curated-remote"]
-enabled = false
 
 [plugins."presentations@openai-primary-runtime"]
 enabled = false
@@ -213,5 +207,5 @@ enabled = true
 [plugins."template-creator@openai-primary-runtime"]
 enabled = false
 
-[plugins."visualize@openai-bundled"]
+[plugins."visualize@openai-curated-remote"]
 enabled = true
