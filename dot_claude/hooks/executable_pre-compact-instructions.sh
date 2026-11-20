@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# PreCompact hook.
-# Injects compaction priorities as additional instructions to the summarizer.
-
 cat <<'EOF'
 <compaction-instructions>
 

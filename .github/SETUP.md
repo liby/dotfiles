@@ -2,7 +2,7 @@
 
 The full setup targets Apple Silicon Macs. Before installing, compare your macOS major version with [the version set checked at the start of `main()` in the notification script](../.chezmoiscripts/run_after_setup-macos-notifications.py).
 
-Some settings depend on my accounts, GPG keys, and filesystem layout. Adjust them for a different environment.
+Some settings depend on my accounts, GPG keys, and filesystem layout: a `run_once` script creates a case-sensitive APFS volume mounted at `~/Code`, and Git uses a separate identity for repositories under `~/Code/GitLab/`. Adjust them for a different environment.
 
 ## Adapt it
 

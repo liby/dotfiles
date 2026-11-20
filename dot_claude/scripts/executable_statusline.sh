@@ -1,7 +1,4 @@
 #!/bin/bash
-# Claude Code statusline — renders context usage, git info, rate limits.
-# Reads JSON from stdin (statusLine hook), outputs ANSI-colored text.
-
 set -f
 
 input=$(</dev/stdin)

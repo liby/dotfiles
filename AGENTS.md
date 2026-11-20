@@ -7,7 +7,7 @@ This repository is public. Unless the user says otherwise, its tracked paths, fi
 ## Workflow
 
 - After editing `.chezmoi.toml.tmpl`, run `chezmoi init` to regenerate `~/.config/chezmoi/chezmoi.toml`; never edit that generated file directly.
-- On a fresh `chezmoi init`, `R` status for every `run_once` script is expected; `check-skill-versions.sh` shows `R` on every run.
+- On a fresh `chezmoi init`, `R` status is expected for every script; the `run_after_` scripts without `once_` or `onchange_` show `R` on every run.
 - Claude Code loads this file natively only while the repository has no `CLAUDE.md`, `.claude/CLAUDE.md`, or `CLAUDE.local.md`, so do not add one; put Claude-only project rules in `.claude/rules/`, which loads beside this file.
 - Before committing, run `chezmoi status --exclude=encrypted <dest-path>` and `chezmoi diff --recursive --exclude=encrypted <dest-path>` for each changed non-secret managed target in scope (unlike `status`, `diff` does not recurse by default and prints nothing for a directory target); never run bare `chezmoi status` or `chezmoi diff`, which can generate decrypted target content. Reserve repository-wide status checks for requested drift audits, and report inaccessible targets as gaps in those audits without widening permissions. Read `-` as destination-only and `+` as rendered-target-only. Re-add destination-only drift only when it belongs to the requested change; report unrelated drift without modifying it. When both destination and target changed, show the scoped diff.
 - Use `chezmoi merge <dest-path>` only for an explicitly selected non-encrypted, non-`modify_` target; a templated target requires manual review to preserve template directives.
@@ -23,7 +23,7 @@ This repository is public. Unless the user says otherwise, its tracked paths, fi
 
 Treat ciphertext as opaque under [Protected Inputs](.chezmoitemplates/agents/protected-inputs.md): inspect metadata only, and hand operations that expose or derive plaintext to the user, including decrypt, `chezmoi edit`, `chezmoi re-add`, and `chezmoi merge`. Adding or re-encrypting a real secret also belongs to the user; add a non-secret file encrypted with `chezmoi add --encrypt <file>`. Never run `chezmoi merge` for an encrypted target or edit an `encrypted_*.asc` source directly.
 
-A ciphertext source may share a commit with related non-secret changes. Describe it generically, such as `update encrypted zshenv`, using metadata and the user's change classification without inferring plaintext changes.
+A ciphertext source may share a commit with related non-secret changes. Describe it generically, such as `update encrypted allowed_signers`, using metadata and the user's change classification without inferring plaintext changes.
 
 ## Maintenance map
 
@@ -48,7 +48,7 @@ Read its narrowest owner, then read the owner for the behavior under test.
 | Area | Trigger | Read |
 | --- | --- | --- |
 | Repository validation | `.github/workflows/**`, `.github/tests/**` | [Repository validation](.github/CONCEPTS.md#repository-validation) |
-| Bootstrap and packages | `Brewfile`, `.chezmoiexternal.toml`, `.chezmoiscripts/**`, `.chezmoitemplates/input-source-pro/**`, `.github/dev-tools/**`, `.github/renovate.json`, `dot_config/uv/uv.toml`, `dot_proto/dot_prototools`, the unattended-upgrades LaunchAgent and helper under `private_Library/` | [Bootstrap](.github/CONCEPTS.md#bootstrap), [Package and tool ownership](.github/CONCEPTS.md#package-and-tool-ownership); for a script that writes preferences, also [Configuration ownership](.github/CONCEPTS.md#configuration-ownership) |
+| Bootstrap and packages | `Brewfile`, `.chezmoiexternal.toml`, `.chezmoiscripts/**`, `.chezmoitemplates/input-source-pro/**`, `.github/dev-tools/**`, `.github/renovate.json`, `dot_config/uv/uv.toml`, `dot_homebrew/brew.env`, `dot_proto/dot_prototools`, `private_Library/Rime/**`, the unattended-upgrades LaunchAgent and helper under `private_Library/` | [Bootstrap](.github/CONCEPTS.md#bootstrap), [Package and tool ownership](.github/CONCEPTS.md#package-and-tool-ownership); for a script that writes preferences, also [Configuration ownership](.github/CONCEPTS.md#configuration-ownership) |
 | Shell startup | `dot_zshenv`, `dot_zprofile`, `dot_zshrc` | [Shell startup](.github/CONCEPTS.md#shell-startup) |
 | Git signing | `dot_config/git/config.tmpl`, `dot_config/git/executable_git-ssh-gpg-agent`, `.chezmoitemplates/git/**`, `private_dot_ssh/private_config`, `.chezmoiscripts/run_onchange_after_setup-gitconfig.sh.tmpl` | [Git identity and signing](.github/CONCEPTS.md#git-identity-and-signing) |
 | GitLab CLI | `.chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl`, `.chezmoitemplates/glab/**`, `dot_config/private_glab-cli/**`, glab's live configuration | [GitLab CLI configuration](.github/CONCEPTS.md#gitlab-cli-configuration). Treat the deployed `config.yml` as credential-bearing: inspect the modifier and its template, and do not read, diff, or re-add the destination |

@@ -147,7 +147,7 @@ printf '{"seven_day":{"used_percentage":0,"resets_at":%s,"observed_at":%s}}\n' "
 age=86400 tick "$(seven 100)"
 expect 'a long-running process cannot replay over a newer value' "$(rows)" '^7d .* 0% ∙'
 
-# Incident: a limit reset zeroed usage but kept the window's resets_at
+# A limit reset can zero usage without moving the window's resets_at
 reset_state; snapshot 100.0 "$reset_iso"
 at=$(( now - 60 )) tick "$(five 100 "$reset")"
 tick "$(five 1 "$reset")"
@@ -163,8 +163,8 @@ snapshot_limits '[{"kind":"session","percent":0,"resets_at":null}]' 60
 ( tick )
 expect 'a later snapshot without a window clears the old one' "$(rows)" '^5h .* 0% ∙ +-- ≈'
 
-# Incident: a new session showed a 7h-old snapshot, refetch backing off after a
-# 401, with the same marker as a neighbour's fresh value
+# A snapshot can outlive the refetch interval, as when refetch backs off after a
+# 401, and must not carry the same marker as a neighbour's fresh value
 reset_state
 snapshot_limits '[{"kind":"session","percent":0,"resets_at":null}]' $(( 7 * 3600 ))
 printf '401' > "$cache/usage.retry"

@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# PostToolUse and PostToolUseFailure hook for Bash.
-# Scans command output with gitleaks and warns the model not to repeat what it finds.
-
 set -o pipefail
 
 INPUT=$(cat)

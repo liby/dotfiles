@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# Test harness for post-bash-scan-secrets.sh.
-# Pipes successful and failed Bash payloads into the hook and checks which ones
-# draw a warning. gitleaks owns the default detection rules, so these cases
-# cover the hook's own contract: which payload fields reach the scanner, the
+# gitleaks owns the default detection rules, so these cases cover the hook's
+# own contract: which payload fields reach the scanner, the
 # rules its config adds, the event it answers, that a warning names rules
 # without echoing the value, and that a failed scan is not reported as clean.
 # Secrets are generated per run, because the scanner treats low-entropy
 # fixtures as fake and a committed realistic token would trip secret scanning.
-# Run: bash post-bash-scan-secrets.test.sh
 
 set -u
 HOOK="$(cd "$(dirname "$0")" && pwd)/executable_post-bash-scan-secrets.sh"

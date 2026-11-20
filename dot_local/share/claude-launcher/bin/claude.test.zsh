@@ -16,7 +16,7 @@ mkdir -p "${launcher:h}" "${native:h}" "${mode_file:h}" "$test_bin"
 cp "$repo_root/dot_zshenv" "$test_home/.zshenv"
 cp "$repo_root/dot_zprofile" "$test_home/.zprofile"
 cp "$repo_root/dot_local/share/claude-launcher/bin/executable_claude" "$launcher"
-# The gateway contract's variables, which together select the gateway in Claude Code.
+# The mk entries gateway mode exports; with the two Vertex switches they select the gateway in Claude Code.
 entry_vars=(ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID)
 gateway_vars=($entry_vars CLAUDE_CODE_SKIP_VERTEX_AUTH CLAUDE_CODE_USE_VERTEX)
 traced_vars=($gateway_vars CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF FORCE_HYPERLINK)

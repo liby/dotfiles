@@ -22,7 +22,7 @@ The skills cover commits, code review, cleanup, PR descriptions and review comme
 
 ### Credentials stay out of the repository
 
-API keys live in [Maskey](https://github.com/Entwining/maskey), which keeps them in iCloud Keychain. A command receives its key as an environment variable when it runs. Files such as the SSH config are committed [encrypted](CONCEPTS.md#identity-and-encrypted-data), and only my YubiKey can decrypt them.
+API keys live in [Maskey](https://github.com/Entwining/maskey), which keeps them in iCloud Keychain. A command receives its key as an environment variable when it runs. Files with private details, such as part of the SSH config, are committed [encrypted](CONCEPTS.md#identity-and-encrypted-data), and only my YubiKey can decrypt them.
 
 ### Agent orchestration in Rex
 

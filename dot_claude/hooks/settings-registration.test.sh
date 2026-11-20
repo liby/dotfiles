@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
-# Registration test for the Claude hooks subtree in
-# .chezmoitemplates/claude/settings.json.
 # The script tests in this directory prove hook behavior; this test proves the
 # managed settings still run each hook on the events and tools it handles. The modify
 # template replaces the whole top-level "hooks" key with the template value, so
 # the template subtree is the deployed end state. The test blanks {{...}} spans
 # and parses the rest as JSON.
-# Run: bash settings-registration.test.sh
-# CLAUDE_SETTINGS_TEMPLATE overrides the template path for fixture tests.
 
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-TEMPLATE="${CLAUDE_SETTINGS_TEMPLATE:-$HERE/../../.chezmoitemplates/claude/settings.json}"
+TEMPLATE="$HERE/../../.chezmoitemplates/claude/settings.json"
 
 if [ ! -r "$TEMPLATE" ]; then
   echo "cannot find settings template at $TEMPLATE" >&2

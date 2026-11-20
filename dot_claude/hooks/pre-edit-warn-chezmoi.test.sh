@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Isolated behavior tests for pre-edit-warn-chezmoi.sh.
 
 set -u
 HOOK="$(cd "$(dirname "$0")" && pwd)/executable_pre-edit-warn-chezmoi.sh"
