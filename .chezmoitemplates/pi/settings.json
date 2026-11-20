@@ -11,7 +11,7 @@
   "compaction": {
     "reserveTokens": 50000
   },
-  "fullscreenCopyOnSelect": false,
+  "tuiMode": "regular",
   "modelThinkingLevels": {
     "rc-gateway/deepseek/deepseek-v4.1-flash-1017": "max"
   },
