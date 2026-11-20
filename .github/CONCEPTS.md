@@ -187,7 +187,7 @@ With exactly one local Rex app open, run [`setup-rex`](../dot_local/bin/executab
 
 The [preference script](../.chezmoiscripts/run_onchange_after_setup-rex.sh) writes portable Rex settings; reopen the app to activate them, leaving the server and its programs running. Changes to the [Lua configuration](../dot_config/rex/init.lua) take effect through the [reload script](../.chezmoiscripts/run_onchange_after_reload-rex-config.sh.tmpl), which reloads configuration without restarting the server. Remote Control stays on so setup and agent actions work; this adds no reach beyond the server's existing command execution. Themes and session state remain app-owned.
 
-`Cmd+W` uses a [foreground-process confirmation](../dot_config/rex/actions/confirm_close.lua), including for programs that report no activity to Rex. Native close buttons and menus bypass the action and use Rex's own activity-based confirmation, so they can close those programs without asking. The action runs on the server of the Mac where the key is pressed, so closing a pane hosted on the other Mac follows the configuration applied on the pressing Mac, not on the pane's host.
+`Cmd+W` and `Option+Cmd+W` close a pane or a tab through a [foreground-process confirmation](../dot_config/rex/actions/confirm_close.lua), including for programs that report no activity to Rex. Native close buttons and menus bypass the actions and use Rex's own activity-based confirmation, so they can close those programs without asking. An action runs on the server of the Mac where the key is pressed, so closing a pane hosted on the other Mac follows the configuration applied on the pressing Mac, not on the pane's host.
 
 ### Agent integration
 
