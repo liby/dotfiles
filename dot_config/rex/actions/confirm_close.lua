@@ -1,10 +1,9 @@
--- Confirm foreground programs even when they do not report activity to Rex.
--- Retire these actions and their bindings when native confirmation covers them.
+-- Rex's own confirmation skips programs that report no activity to it. Retire
+-- these actions and their bindings when it covers them.
 local shells = { bash = true, fish = true, sh = true, zsh = true }
 
--- osascript shows a system alert on the Mac where the key was pressed. Rex's
--- own prompt, `rex.ui.pick`, would ask every app connected to the server,
--- including one on another device.
+-- `rex.ui.pick` would ask every app connected to the server, including one on
+-- another device, so osascript shows the alert on the Mac that pressed the key.
 local alert = [=[
 ObjC.import("AppKit")
 ObjC.import("QuartzCore")
@@ -15,8 +14,7 @@ function run(argv) {
   const alert = $.NSAlert.alloc.init
   alert.messageText = "Close " + kind + "?"
   alert.informativeText = message
-  // NSRunningApplication returns the bundle icon, so load the user's choice
-  // from Rex's preference and bundled assets.
+  // `rex.icon` is the bundle icon, not the one the user chose.
   const choice = $.NSUserDefaults.alloc.initWithSuiteName("com.superlogical.rex").stringForKey("Workspace.appIcon").js
   const chosen = choice && $.NSBundle.bundleWithURL(rex.bundleURL).imageForResource("PlainAppIcon" + choice[0].toUpperCase() + choice.slice(1))
   alert.icon = chosen && !chosen.isNil() ? chosen : rex.icon
@@ -29,9 +27,8 @@ function run(argv) {
   alert.window.setFrameOrigin($.NSMakePoint(-20000, -20000))
   alert.window.orderFrontRegardless
   alert.window.alphaValue = 0
-  // Center on Rex's frontmost window, where the key was pressed, a little high
-  // because a geometrically centered box looks low. Window-server bounds start
-  // at the top of the primary display; AppKit's at its bottom.
+  // Window-server bounds start at the top of the primary display, AppKit's at
+  // its bottom. A geometrically centered box looks low, hence 0.3.
   const size = alert.window.frame.size
   const front = ObjC.deepUnwrap(ObjC.castRefToObject($.CGWindowListCopyWindowInfo($.kCGWindowListOptionOnScreenOnly, 0)))
     .find(w => w.kCGWindowOwnerPID == rex.processIdentifier && w.kCGWindowLayer == 0)
@@ -97,15 +94,12 @@ function run(argv) {
 }
 ]=]
 
--- Commands the server starts get only the system PATH, so name the installed
--- server's CLI.
+-- Commands the server starts get only the system PATH.
 local cli = os.getenv("HOME") .. "/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"
 
--- A close key ends an open alert first, so at most one alert is open and it
--- asks about the latest request.
+-- A superseded alert could still close its target, so a close key ends it.
 local pending
 
--- What a pane's foreground program is called, or nil when the pane is idle.
 local function running(block_id)
   local info = rex.block.call("com.superlogical.terminal", "process", { block_id = block_id })
   local foreground = info and info.foreground
@@ -118,17 +112,35 @@ local function running(block_id)
   return foreground and (foreground.script or foreground.argv0 or foreground.name):match("[^/]+$") or "a program of unknown status"
 end
 
+local function warning(programs, target)
+  local last = #programs
+  local sentence
+  if last == 1 then
+    sentence = programs[1] .. " is still running. Closing the " .. target .. " will end it."
+  else
+    local names = last > 3 and programs[1] .. ", " .. programs[2] .. ", and " .. last - 2 .. " others"
+      or table.concat(programs, ", ", 1, last - 1) .. (last > 2 and "," or "") .. " and " .. programs[last]
+    sentence = names .. " are still running. Closing the " .. target .. " will end them."
+  end
+  -- Program names keep their case; only the unknown-status wording starts a sentence.
+  return (sentence:gsub("^a program", "A program"))
+end
+
 -- The server runs a client's keys, actions, and focus changes one at a time
--- (`rex api describe client.action`), so waiting here would hold the clicks
--- the app sends during the alert until the target is gone, and they would then
--- fail. The alert therefore runs detached and closes the target itself, by ID
--- because focus can move meanwhile, and without a shell, so that killing its
--- handle ends the alert. Rex sends the action's own calls to the server of a
--- pane on another host but not the alert's CLI, which therefore gets that
--- server for `-S`.
-local function ask(ctx, kind, message, ...)
+-- (`rex api describe client.action`), so waiting for the alert here would hold
+-- the app's clicks until the target is gone, and they would then fail. The
+-- alert therefore runs detached and makes the same call through the CLI: by ID,
+-- because focus can move meanwhile; without a shell, so that killing its handle
+-- ends it; and with `-S`, because Rex sends an action's calls to the server of
+-- a pane on another host but not the CLI's.
+local function confirm(ctx, kind, programs, method, params)
+  if #programs == 0 then
+    assert(rex.call(method, params))
+    return
+  end
   pending = assert(rex.exec.start({
-    "osascript", "-l", "JavaScript", "-e", alert, kind, message, cli, ctx.server or "", ...
+    "osascript", "-l", "JavaScript", "-e", alert, kind, warning(programs, kind:lower()), cli, ctx.server or "",
+    "api", "call", method, rex.json.encode(params),
   }, { detach = true }))
 end
 
@@ -141,13 +153,8 @@ rex.action{
       rex.client.queue("client.close")
       return
     end
-    local program = running(ctx.block_id)
-    if not program then
-      assert(rex.call("block.close", { session_id = ctx.session_id, block_id = ctx.block_id }))
-      return
-    end
-    ask(ctx, "Pane", "Still running: " .. program .. ". Closing the pane will end it.",
-      "block", "close", "-s", ctx.session_id, ctx.block_id)
+    confirm(ctx, "Pane", { running(ctx.block_id) },
+      "block.close", { session_id = ctx.session_id, block_id = ctx.block_id })
   end,
 }
 
@@ -160,22 +167,14 @@ rex.action{
       rex.client.queue("client.tab.close")
       return
     end
-    local blocks = assert(rex.call("session.list_blocks", { session_id = ctx.session_id })).blocks
-    local window_id
-    for _, block in ipairs(blocks) do
-      if block.block_id == ctx.block_id then window_id = block.window_id end
-    end
+    local window_id = assert(rex.call("session.describe_block", { session_id = ctx.session_id, block_id = ctx.block_id })).block.window_id
     local programs = {}
-    for _, block in ipairs(blocks) do
+    for _, block in ipairs(assert(rex.call("session.list_blocks", { session_id = ctx.session_id })).blocks) do
       if block.window_id == window_id then
         programs[#programs + 1] = running(block.block_id)
       end
     end
-    if #programs == 0 then
-      assert(rex.call("session.close_window", { session_id = ctx.session_id, window_id = window_id }))
-      return
-    end
-    ask(ctx, "Tab", "Still running: " .. table.concat(programs, ", ") .. ". Closing the tab will end " .. (#programs == 1 and "it." or "them."),
-      "window", "close", "-s", ctx.session_id, window_id)
+    confirm(ctx, "Tab", programs,
+      "session.close_window", { session_id = ctx.session_id, window_id = window_id })
   end,
 }
