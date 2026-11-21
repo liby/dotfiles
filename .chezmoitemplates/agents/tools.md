@@ -6,8 +6,6 @@ Before following a skill's workflow, calling a tool it covers (including a CLI u
 - Read an absent or truncated body in full before the governed action, a long one in consecutive parts through its last line; an earlier invocation, a catalog entry, or a summary does not supply it.
 - Treat the sections a skill requires from a reference for that action the same way.
 
-Restore only what the continuing task needs; reading instructions does not repeat initialization or completed actions. If a required source cannot be read, stop the dependent action and report the missing source.
+Restore only instructions needed to continue, without repeating initialization or completed work. If a required source is unreadable, stop the dependent action and name the missing source.
 
-Search file contents recursively with `rg` without `--hidden`, and pass a hidden project directory such as `.github` as an operand when it must be searched; recursive searches that include hidden files, such as `grep -r` or `find | xargs grep`, are refused because they can reach credential files.
-
-Edit from the file's current state: re-read after your own shell command rewrites it (git switch or checkout, formatters, codemods), after compaction or resume, and before retrying any read-state failure.
+Edit from current file state. Re-read after your shell command rewrites the file (git switch or checkout, formatters, codemods), after compaction or resume, and before retrying a read-state failure.

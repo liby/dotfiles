@@ -1,34 +1,33 @@
 {{ includeTemplate "agents/authority.md" . }}
 
-An auto-mode classifier block is not a written rule, and is never worked around with variants either. When the blocked action was explicitly user-requested this turn, a subagent stops and reports, the main session reruns it identically once, and on a second block stops and surfaces the classifier's reason.
+An auto-mode classifier block differs from a written rule but also forbids variants. When the classifier blocks an action the user explicitly requested this turn, a subagent stops and reports, and the main session retries the identical action once. On a second block, stop and report the classifier's reason.
 
 {{ includeTemplate "agents/protected-inputs.md" . }}
 {{ includeTemplate "agents/evidence.md" . }}
 
 {{ includeTemplate "agents/tools.md" . }}
-When an enabled language server covers the file, use the `LSP` tool before claiming its diagnostics are clean, unrelated, or limited to a specific item. Confirm a diagnostic against the file's actual specification before calling it irrelevant, and omit confirmed wrong-spec warnings and spelling noise on established technical names from the user-facing response.
+When an enabled language server covers a file, use `LSP` before claiming that file's diagnostics are clean, unrelated, or limited to a specific item. Confirm a diagnostic against the file's actual specification before calling it irrelevant. Omit confirmed wrong-spec warnings and spelling noise on established technical names from the response.
 
-Fetch web pages and docs with WebFetch and WebSearch, not Bash curl or wget. When the sandbox denies a command because a host is not in `allowedDomains`, do not change curl arguments, switch to a mirror, or take another workaround variant; the block names where the host goes.
+Fetch web pages and docs with WebFetch and WebSearch in place of Bash curl or wget. When the sandbox denies a command because a host is missing from `allowedDomains`, the denial identifies where the host belongs. Do not vary curl arguments, switch mirrors, or otherwise work around that denial.
 
-`SendMessage` takes a session's `ListAgents` name, not the session ID the user gives; send to the `name` in the `~/.claude/sessions/*.json` file whose `sessionId` matches, instead of guessing it from transcripts or titles.
+For `SendMessage`, match the user's session ID to `sessionId` in `~/.claude/sessions/*.json` and send to that file's `name`, the `ListAgents` name. Never infer it from transcripts or titles.
 
 {{ $excluded := list -}}
 {{ range (includeTemplate "claude/settings.json" . | fromJson).sandbox.excludedCommands -}}
 {{ $excluded = append $excluded (printf "`%s`" (trimSuffix ":*" .)) -}}
 {{ end -}}
-Sandbox exclusions are configured for {{ join ", " $excluded }}. They match the whole Bash call, not tools invoked inside a script: every command must qualify. Built-in checks prevent automatic exclusion for shapes such as `cd`, redirects to files, heredocs, command substitutions, Git repository/configuration options (`-C`, `-c`, `--git-dir`, `--work-tree`), options that name a file (`git config --file`, `git archive -o`), or a `git clone`, `init`, `worktree add`, `worktree move`, or `bundle create` whose path is absolute, starts with `~`, or contains `..`. Prefer a standalone plain call when it reaches the intended target; use the tool's own output options, when available, to preserve its exclusion.
+Sandbox exclusions ({{ join ", " $excluded }}) match whole Bash calls. Every command must qualify. Calling an excluded tool inside a script does not exempt the script. Built-in checks prevent automatic exclusion for shapes such as `cd`, file redirects, heredocs, command substitutions, Git repository/configuration options (`-C`, `-c`, `--git-dir`, `--work-tree`), file options (`git config --file`, `git archive -o`), or `git clone`, `init`, `worktree add`, `worktree move`, or `bundle create` with a path that is absolute, starts with `~`, or contains `..`. Prefer a plain standalone call when it reaches the target. Use the tool's own output options when available to preserve exclusion.
 
-In the main session, Bash returns to the project directory after each call; use `git -C <checkout> ...` for another checkout. For writes, required paths include the actual Git metadata directories, including a linked worktree's shared Git directory, as well as the working tree.
+Main-session Bash returns to the project directory after each call. Use `git -C <checkout> ...` for another checkout. Writes need paths to both the working tree and actual Git metadata, including a linked worktree's shared Git directory.
 
-Choose the execution path for the exact Git call:
+For the exact Git call, choose as follows.
 
-- If the call qualifies for automatic exclusion, leave `dangerouslyDisableSandbox` unset; that call already runs outside the sandbox.
-- If the call does not qualify but the sandbox provides its required capabilities, leave `dangerouslyDisableSandbox` unset.
-- If the call does not qualify and an authorized operation is known to need capabilities the sandbox lacks, request the standalone call with `dangerouslyDisableSandbox: true` from the outset through the normal permission flow.
+- Leave `dangerouslyDisableSandbox` unset if the call qualifies for automatic exclusion (it already runs outside the sandbox) or the sandbox provides the capabilities it needs.
+- Otherwise, if the call is authorized and known to need a capability the sandbox lacks, request it standalone with `dangerouslyDisableSandbox: true` from the outset through the normal permission flow.
 
-Do not request `/add-dir` or run a predictably failing sandboxed write first. Run a Git write separately from output filtering and follow-up inspection, and inspect its own result before continuing.
+Request no `/add-dir` and do not first try a predictably failing sandboxed write. Separate a Git write from output filtering and follow-up inspection. Inspect its own result before continuing.
 
-Before saving an auto-memory note about a tool or workflow that a skill covers, read that skill and its relevant references. Save nothing they already say, including a rule you broke this session; instead tell the user which rule was missing, wrong, or broken despite being loaded. The user's own directions, with their scope and any skill rule they override, and facts specific to this project or machine can still be saved. When a note you load repeats or contradicts a skill, delete that part rather than rewriting it to match, unless it records such a user direction that still applies.
+Before saving auto-memory on a skill-covered tool or workflow, read the skill and relevant references. Save nothing they already say, even a rule you broke this session. Tell the user instead which rule was missing, wrong, or broken despite being loaded. You may save facts specific to this project or machine and the user's directions with their scope and any skill rule they override. Delete any part of a loaded note that repeats or contradicts a skill, without rewriting it to match, unless it records such a user direction that still applies.
 
 {{ includeTemplate "agents/coding-principles.md" . }}
 {{ includeTemplate "agents/execution-host.md" . }}
