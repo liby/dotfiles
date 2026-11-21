@@ -21,6 +21,15 @@
     },
     {
       "customType": "regex",
+      "description": "Update fixed-commit GitHub archives from their declared release tags, whose dates the release-age window needs",
+      "managerFilePatterns": ["/^\\.chezmoiexternal\\.toml$/"],
+      "matchStrings": [
+        "# renovate: tag=(?<currentValue>\\S+)\\s+url\\s*=\\s*\"https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+)/archive/(?<currentDigest>[a-f0-9]{40})\\.tar\\.gz\""
+      ],
+      "datasourceTemplate": "github-tags"
+    },
+    {
+      "customType": "regex",
       "description": "Update standalone tools pinned in GitHub Actions workflows and the dev-tools installer",
       "managerFilePatterns": [
         "/^\\.github\\/workflows\\/.*\\.ya?ml$/",
@@ -48,6 +57,16 @@
     {
       "description": "uv only resolves PyPI artifacts older than the exclude-newer window in dot_config/uv/uv.toml, so a pin newer than that window cannot be installed at all. Keep this value at least as long as that window.",
       "matchDatasources": ["pypi"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "The Go module proxy has no release-age window, so this rule is the only one for the Go tools in .github/dev-tools.",
+      "matchDatasources": ["go"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Agents load this skill's text as instructions, so it waits out the same window as executable tools.",
+      "matchPackageNames": ["typesafe-ai/skills"],
       "minimumReleaseAge": "3 days"
     },
     {

@@ -50,6 +50,16 @@ jobs:
             --python "$RUNNER_TEMP/dev-tools-venv" \
             --config-file dot_config/uv/uv.toml \
             --requirement .github/dev-tools/requirements.txt
+      - name: Set up Go
+        uses: actions/setup-go@v7.1.0
+        with:
+          go-version-file: .github/dev-tools/go.mod
+          cache: false
+      - name: Install Go tools
+        working-directory: .github/dev-tools
+        run: |
+          GOBIN="$RUNNER_TEMP/go-bin" go install tool
+          "$RUNNER_TEMP/go-bin/gopls" version
       - name: Install mbx release
         run: |
           sh .github/dev-tools/install-mbx.sh "$RUNNER_TEMP/mbx-bin"

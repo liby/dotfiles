@@ -1,0 +1,2 @@
+# Minutes; the same 3-day release-age window as npm, uv, Bun, and Cargo.
+minimumReleaseAge: 4320

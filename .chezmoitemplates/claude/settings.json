@@ -233,6 +233,7 @@
     "command": "~/.claude/scripts/statusline.sh"
   },
   "enabledPlugins": {
+    "gopls-lsp@claude-plugins-official": true,
     "preallow@entwining-mods": true,
     "pyright-lsp@claude-plugins-official": true,
     "rexume@rexume": true,

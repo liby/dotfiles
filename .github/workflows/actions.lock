@@ -7,6 +7,7 @@ workflows:
         - 'actions/checkout@v7.0.1'
     '.github/workflows/validate-dev-tools.yml':
         - 'actions/checkout@v7.0.1'
+        - 'actions/setup-go@v7.1.0'
         - 'actions/setup-node@v7.1.0'
         - 'astral-sh/setup-uv@v10.3.3'
     '.github/workflows/validate-hooks.yml':
@@ -24,6 +25,11 @@ dependencies:
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
+    'actions/setup-go@v7.1.0':
+        ref: 'v7.1.0'
+        commit: 'sha1-d8cbb8045d7f43706b9177cceb36c1f91a6644d5'
+        owner_id: 44036562
+        repo_id: 192624594
     'actions/setup-node@v7.1.0':
         ref: 'v7.1.0'
         commit: 'sha1-949feb2413d6458794dcd2491c4babbbce0c15c1'

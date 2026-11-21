@@ -1,2 +1,16 @@
 [net]
 git-fetch-with-cli = true
+
+# Panics keep file and line; full debug info only slows builds and grows targets. These keys
+# override the same keys in a project's Cargo.toml; for a debugger, build with
+# CARGO_PROFILE_DEV_DEBUG=true.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
+# The same 3-day release-age window as npm, uv, pnpm, and Bun. Versions already in Cargo.lock
+# stay usable.
+[registry]
+global-min-publish-age = "3 days"

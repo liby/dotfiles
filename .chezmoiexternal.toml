@@ -18,7 +18,7 @@ stripComponents = 1
 
 [".agents/skills/typesafe-ai"]
 type = "archive"
-# renovate: currentValue=main
+# renovate: tag=v0.6.2
 url = "https://github.com/typesafe-ai/skills/archive/302eea662c54bca6730873fe245bec1d69ebc23d.tar.gz"
 exact = true
 stripComponents = 3

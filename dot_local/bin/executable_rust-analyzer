@@ -1,0 +1,8 @@
+#!/bin/sh
+# Run the stable toolchain's rust-analyzer in every project. rustup's proxy in ~/.cargo/bin follows
+# a project's rust-toolchain.toml, and pinned toolchains rarely list the rust-analyzer component,
+# so the proxy fails there with "Unknown binary". rust-analyzer still analyzes with the project's
+# toolchain and installs that toolchain's rust-src itself. `rustup which` sets no
+# RUSTUP_TOOLCHAIN, which `rustup run` would pass on to the project's cargo and rustc. This runs
+# only while ~/.local/bin precedes ~/.cargo/bin, as zshenv arranges.
+exec "$(rustup which --toolchain stable rust-analyzer)" "$@"

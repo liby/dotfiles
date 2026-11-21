@@ -1,0 +1,3 @@
+[install]
+# Seconds; the same 3-day release-age window as npm, uv, pnpm, and Cargo.
+minimumReleaseAge = 259200

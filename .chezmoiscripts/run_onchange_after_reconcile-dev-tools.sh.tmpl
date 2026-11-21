@@ -3,6 +3,7 @@ set -euo pipefail
 
 # prototools hash: {{ include "dot_proto/dot_prototools" | sha256sum }}
 # mbx installer hash: {{ include ".github/dev-tools/install-mbx.sh" | sha256sum }}
+# Go tools hash: {{ include ".github/dev-tools/go.mod" | sha256sum }}
 {{- $tools := (include ".github/dev-tools/package.json" | fromJson).devDependencies }}
 
 source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
@@ -21,6 +22,8 @@ step /opt/homebrew/bin/proto install --config-mode global
 # Keep this at most as long as the npm rule in .github/renovate.json, or the pins below
 # become unreachable.
 npm config set min-release-age 3
+# A git dependency has no publish time, so it would bypass the window above.
+npm config set allow-git none
 
 npm_tools=(
 {{ range $name, $version := $tools -}}
@@ -54,6 +57,9 @@ fi
 step uv tool install \
   --exclude-newer '{{ index (include "dot_config/uv/uv.toml" | fromToml) "exclude-newer" }}' \
   '{{ include ".github/dev-tools/requirements.txt" | trim }}'
+
+# Builds the module's `tool` declarations, verified against its go.sum, into ~/go/bin.
+step go -C "{{ .chezmoi.sourceDir }}/.github/dev-tools" install tool
 
 sh "{{ .chezmoi.sourceDir }}/.github/dev-tools/install-mbx.sh" "$HOME/.local/bin"
 # The store shares the Code volume with the checkouts, so mbx adopts an existing `target/` by
