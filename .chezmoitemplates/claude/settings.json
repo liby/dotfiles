@@ -102,7 +102,7 @@
       "allowedDomains": {{ includeTemplate "sandbox/allowed-domains.json" . }},
       "allowLocalBinding": true,
       "allowMachLookup": {{ includeTemplate "sandbox/allowed-mach-lookups.json" . }},
-      "allowUnixSockets": {{ concat (list (printf "/private/tmp/claude-%v" .chezmoi.uid)) (includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson) (includeTemplate "sandbox/allowed-host-service-sockets.json" . | fromJson) | toPrettyJson | indent 6 | trim }}
+      "allowUnixSockets": {{ concat (list (printf "/private/tmp/claude-%v" .chezmoi.uid)) (includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson) | toPrettyJson | indent 6 | trim }}
     }
   },
   "hooks": {

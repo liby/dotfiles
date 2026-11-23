@@ -93,6 +93,10 @@ hide_rate_limit_model_nudge = true
 [permissions.development.filesystem.":workspace_roots"]
 ".env" = "read"
 ".env.local" = "read"
+# Git run later outside the sandbox executes these hooks and honors settings
+# such as core.fsmonitor.
+".git/config" = "read"
+".git/hooks" = "read"
 
 [permissions.development.network]
 enabled = true
@@ -105,7 +109,7 @@ allow_local_binding = true
 
 # Socket rules require absolute paths; `~` prevents the proxy from starting.
 [permissions.development.network.unix_sockets]
-{{ range concat (includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson) (includeTemplate "sandbox/allowed-host-service-sockets.json" . | fromJson) -}}
+{{ range includeTemplate "sandbox/allowed-unix-sockets.json" . | fromJson -}}
 {{ joinPath $.chezmoi.homeDir (trimPrefix "~/" .) | quote }} = "allow"
 {{ end }}
 "{{ .chezmoi.homeDir }}/.cache/codex-tmp" = "allow"

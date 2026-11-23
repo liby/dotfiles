@@ -1,6 +1,9 @@
 [
+  "~/.cache/ra-cli/browser.sock",
   "~/.gnupg/S.gpg-agent",
   "~/.gnupg/S.gpg-agent.ssh",
   "~/.gnupg/S.keyboxd",
-  "~/Library/Application Support/io.github.entwining.maskey/keychain.sock"
+  "~/.orbstack/run/docker.sock",
+  "~/Library/Application Support/io.github.entwining.maskey/keychain.sock",
+  "~/Library/Application Support/rex/server.sock"
 ]

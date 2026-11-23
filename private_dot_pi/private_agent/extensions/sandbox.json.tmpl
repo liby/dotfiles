@@ -1,9 +1,8 @@
 {{- /*
   Read by the sandbox extension in the Pi extensions package for the bash tool
-  and ! commands. Claude Code and Codex also allow the host service sockets and
-  Claude Code adds agent-state write paths; both stay out here because the
-  services start work outside the sandbox, and the paths hold agent and tool
-  configuration and executables that run outside it.
+  and ! commands. Claude Code adds agent-state write paths, which stay out here
+  because they hold agent and tool configuration and executables that run
+  outside the sandbox.
 */ -}}
 {
   "network": {
