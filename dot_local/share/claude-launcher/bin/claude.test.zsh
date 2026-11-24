@@ -31,8 +31,8 @@ traced_vars=($gateway_vars CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF FORCE_HY
 {
   print -r -- '#!/bin/zsh -f'
   print -r -- 'print -r -- "mk ${(qqq)@}" >> "$TRACE_FILE"'
-  print -r -- '[[ $2 == "${UNGRANTED_ENTRY-}" ]] && exit 11'
-  print -r -- 'print -rn -- "synthetic-${2#*/}"'
+  print -r -- '[[ $@[-1] == "${UNGRANTED_ENTRY-}" ]] && exit 11'
+  print -r -- 'print -rn -- "synthetic-${@[-1]#*/}"'
 } > "$test_bin/mk"
 chmod +x "$launcher" "$native" "$test_bin/mk"
 
@@ -96,7 +96,7 @@ typeset -a claude_args=(
 )
 expected_claude=$(format_call claude "${claude_args[@]}")
 expected_subscription="$expected_claude with CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF=1"
-expected_mk_gets=$(for name in $entry_vars; do format_call mk get claude-gateway/$name; done)
+expected_mk_gets=$(for name in $entry_vars; do format_call mk get --store icloud claude-gateway/$name; done)
 expected_gateway="$expected_mk_gets"$'\n'"$expected_claude with ANTHROPIC_AUTH_TOKEN=synthetic-ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL=synthetic-ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID=synthetic-ANTHROPIC_VERTEX_PROJECT_ID CLAUDE_CODE_SKIP_VERTEX_AUTH=1 CLAUDE_CODE_USE_VERTEX=1"
 
 run_claude subscription "${claude_args[@]}"

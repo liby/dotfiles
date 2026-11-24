@@ -8,7 +8,7 @@ host={{ .private.gitlabHost | quote }}
 # glab's credentials only for the registry domains saved for this host, and Docker's helper runs
 # without this environment. Sign-in otherwise saves glab's guess (the host, host:443, and
 # registry.<host>), which misses a registry served from another host, whose pulls then fail with 403.
-/opt/homebrew/bin/mk run glab/GITLAB_CLIENT_ID glab/GLAB_CONTAINER_REGISTRY_DOMAINS -- /bin/sh -c '
+/opt/homebrew/bin/mk run --store icloud glab/GITLAB_CLIENT_ID glab/GLAB_CONTAINER_REGISTRY_DOMAINS -- /bin/sh -c '
   /opt/homebrew/bin/glab config set client_id "$GITLAB_CLIENT_ID" --host "$1" &&
     /opt/homebrew/bin/glab config set container_registry_domains "$GLAB_CONTAINER_REGISTRY_DOMAINS" --host "$1"
 ' sh "$host"

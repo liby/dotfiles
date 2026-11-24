@@ -6,7 +6,7 @@ Some settings depend on my accounts, GPG keys, and filesystem layout: a `run_onc
 
 ## Adapt it
 
-Copy only the parts you need, or fork this repository to adapt the full setup. Before applying a fork, review and adjust `.chezmoi.toml.tmpl`, `Brewfile`, and `.chezmoiscripts/`. The encrypted `*.asc` files decrypt only with my YubiKey, so [replace the ciphertext and the GPG recipients](CONCEPTS.md#identity-and-encrypted-data) with your own, or remove them along with the parts that use them; the recipients are declared in `.chezmoi.toml.tmpl`. Some features read credentials from [Maskey](https://github.com/Entwining/maskey): create [the entries they use](CONCEPTS.md#credential-backed-features) in your own Maskey, or switch those features to a similar tool you use. The commands below apply my complete setup; use your fork's repository name when installing your adapted version.
+Copy only the parts you need, or fork this repository to adapt the full setup. Before applying a fork, review and adjust `.chezmoi.toml.tmpl`, `Brewfile`, and `.chezmoiscripts/`. The encrypted `*.asc` files decrypt only with my YubiKey, so [replace the ciphertext and the GPG recipients](CONCEPTS.md#identity-and-encrypted-data) with your own, or remove them along with the parts that use them; the recipients are declared in `.chezmoi.toml.tmpl`. Some features read credentials from [Maskey](https://github.com/Entwining/maskey): create [the entries they use](CONCEPTS.md#credential-backed-features) in the `icloud` store of your own Maskey, or switch those features to a similar tool you use. The commands below apply my complete setup; use your fork's repository name when installing your adapted version.
 
 ## Set up a new Mac
 

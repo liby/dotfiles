@@ -1,7 +1,7 @@
 {
   "providers": {
     "anthropic": {
-      "apiKey": "!mk get pi/ANTHROPIC_API_KEY",
+      "apiKey": "!mk get --store icloud pi/ANTHROPIC_API_KEY",
       "modelOverrides": {{ (includeTemplate "pi/model-overrides.json" . | fromJson).anthropic | toPrettyJson | indent 6 | trim }}
     },
     "rc-gateway": {
@@ -10,7 +10,7 @@
       "compat": {
         "sendSessionAffinityHeaders": true
       },
-      "apiKey": "!mk get pi/RC_GATEWAY_API_KEY",
+      "apiKey": "!mk get --store icloud pi/RC_GATEWAY_API_KEY",
       "models": [
         {
           "id": "deepseek/deepseek-v4.1-flash-1017",
@@ -47,7 +47,7 @@
       ]
     },
     "typesafe": {
-      "apiKey": "!mk get typesafe/TYPESAFE_API_KEY"
+      "apiKey": "!mk get --store icloud typesafe/TYPESAFE_API_KEY"
     }
   }
 }

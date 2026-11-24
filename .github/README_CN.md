@@ -22,7 +22,7 @@ skill 覆盖 commit、code review、code cleanup、PR 描述、review comment �
 
 ### Credentials 不进仓库
 
-API key 存在 [Maskey](https://github.com/Entwining/maskey) 里，底层是 iCloud Keychain。命令运行时才通过环境变量拿到 key。带有私人信息的文件（比如 SSH config 的一部分）[加密](CONCEPTS.md#identity-and-encrypted-data)后提交，只有我的 YubiKey 能解密。
+API key 存在 [Maskey](https://github.com/Entwining/maskey) 的 `icloud` store 里，底层是 iCloud Keychain。命令运行时才通过环境变量拿到 key。带有私人信息的文件（比如 SSH config 的一部分）[加密](CONCEPTS.md#identity-and-encrypted-data)后提交，只有我的 YubiKey 能解密。
 
 ### 在 Rex 里做 agent orchestration
 

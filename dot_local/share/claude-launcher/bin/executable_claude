@@ -103,7 +103,7 @@ export REXUME_LAUNCH_PID=$$ REXUME_LAUNCH="[\"claude\",\"--$mode\"]"
 if [[ $mode == gateway ]]; then
   local name value
   for name in ANTHROPIC_AUTH_TOKEN ANTHROPIC_VERTEX_BASE_URL ANTHROPIC_VERTEX_PROJECT_ID; do
-    value=$(mk get claude-gateway/$name) || exit
+    value=$(mk get --store icloud claude-gateway/$name) || exit
     export $name=$value
   done
   export CLAUDE_CODE_USE_VERTEX=1 CLAUDE_CODE_SKIP_VERTEX_AUTH=1
