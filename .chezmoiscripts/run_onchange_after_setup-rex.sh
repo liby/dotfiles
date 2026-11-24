@@ -49,6 +49,7 @@ defaults write $domain rex.agents.names-sessions -bool false
 defaults write $domain rex.client.remoteControl -bool true
 # The experimental quick switcher needs Developer Mode.
 defaults write $domain rex.developer-mode-enabled -bool true
+defaults write $domain rex.server.version-channel -string snapshot
 
 if [[ -n $(lsappinfo find bundleid=$domain) ]]; then
   print -u2 -r -- "$step_yellow!$step_reset Reopen the Rex app to apply its settings; leave Rex Server running"
