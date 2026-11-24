@@ -34,8 +34,15 @@ open_new = webbrowser.get().open_new
 
 
 def open_through_rex(url):
-    session = os.environ.get("REX_SESSION")
-    if not session or not shutil.which("rex"):
+    if not shutil.which("rex"):
+        return False
+    # Rex terminals from 0.1.0-preview.23 on set only REX_BLOCK. whoami finds the pane's session
+    # from it and reports none outside a Rex terminal or for a block the server does not know.
+    whoami = subprocess.run(
+        ["rex", "--autostart=false", "whoami", "--json"], text=True, capture_output=True
+    )
+    session = whoami.returncode == 0 and json.loads(whoami.stdout).get("session_id")
+    if not session:
         return False
     block = {
         "flavor": "com.superlogical.terminal.shell",
