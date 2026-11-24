@@ -260,6 +260,7 @@ git/GITLAB_USER_EMAIL
 git/GITLAB_USER_NAME
 glab/GITLAB_CLIENT_ID
 glab/GLAB_CONTAINER_REGISTRY_DOMAINS
+npm/NPM_PRIVATE_SCOPES
 pi/ANTHROPIC_API_KEY
 pi/RC_GATEWAY_API_KEY
 typesafe/TYPESAFE_API_KEY
@@ -273,6 +274,7 @@ Each namespace's consumers:
 - `context7`: Every Context7 consumer goes through the [Context7 skill](../dot_agents/skills/context7/SKILL.md), which runs the `ctx7` CLI in `mk run --store icloud context7` so `CONTEXT7_API_KEY` reaches only the CLI child process. The namespace may also carry an optional `CONTEXT7_BASE_URL`, absent by default; point it, with no trailing slash, at a trusted reverse proxy that forwards the official `/api/v2` query API, and add that host to Claude Code's [sandbox `allowedDomains`](../.claude/rules/claude-code-settings.md#sandbox). The global `--base-url` reaches query-mode requests, but upstream supports custom deployments only for MCP HTTP setup and treats on-premise query mode as unsupported. Validate a Context7 change by running a resolve-and-query through the skill.
 - `git`: The [Git configuration script](../.chezmoiscripts/run_onchange_after_setup-gitconfig.sh.tmpl) writes `GITLAB_USER_EMAIL` and `GITLAB_USER_NAME`, the commit identity for repositories under `~/Code/GitLab/`, into `gitlab.config` from a command under `mk run`.
 - `glab`: The [glab setup script](../.chezmoiscripts/run_onchange_after_setup-glab.sh.tmpl) writes `GITLAB_CLIENT_ID`, the private GitLab's OAuth application ID, and `GLAB_CONTAINER_REGISTRY_DOMAINS`, its comma-separated container registry domains, under the variable names glab itself reads, into glab's configuration from a command under `mk run`.
+- `npm`: The [npm registry setup script](../.chezmoiscripts/run_after_setup-npm-registry.sh.tmpl) routes each scope in the comma-separated `NPM_PRIVATE_SCOPES` to the registry host from the `private.npmHost` prompt in `~/.npmrc`, and signs in through the browser when that registry rejects the saved token. Dropping a scope from the list leaves its route in `~/.npmrc` until `npm config delete <scope>:registry`.
 - `pi` and `typesafe`: The [Pi model configuration](../private_dot_pi/private_agent/private_models.json.tmpl) reads `ANTHROPIC_API_KEY` and `RC_GATEWAY_API_KEY` from the `pi` namespace and `TYPESAFE_API_KEY` from the `typesafe` namespace with `mk get`.
 
 The [agent instruction contract test](tests/agent-instructions.test.ts) parses the entry block and checks that each entry is named by a consumer its namespace's item above links and that each linked consumer names one of that namespace's entries.

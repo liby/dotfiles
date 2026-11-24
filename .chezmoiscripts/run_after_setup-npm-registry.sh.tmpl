@@ -1,0 +1,29 @@
+#!/bin/zsh
+set -euo pipefail
+
+source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
+
+# Runs on every apply because npm keeps no refresh token, so the registry's tokens expire. Signing
+# in needs a terminal, which an agent's apply lacks, and no outcome here may fail the apply. npm's
+# default retries and five-minute fetch timeout would stall an apply on an unreachable or unresponsive
+# registry.
+result=0
+/opt/homebrew/bin/mk run --store icloud npm/NPM_PRIVATE_SCOPES -- /bin/zsh -c '
+  npm config set ${^${(s:,:)NPM_PRIVATE_SCOPES}}:registry=$1
+  if whoami=$(npm whoami --fetch-retries 0 --fetch-timeout 10000 --registry "$1" 2>&1); then
+    exit 0
+  elif [[ $whoami != *(E401|ENEEDAUTH)* ]]; then
+    print -ru2 -- "$whoami"
+    exit 1
+  elif [[ -t 0 && -t 1 ]]; then
+    exec npm login --registry "$1"
+  else
+    exit 10
+  fi
+' zsh {{ printf "https://%s" .private.npmHost | quote }} || result=$?
+
+case $result in
+  0) ;;
+  10) print -u2 -r -- "$step_yellow!$step_reset The private npm registry rejects this Mac's token; run chezmoi apply in a terminal to sign in." ;;
+  *) print -u2 -r -- "$step_yellow!$step_reset Private npm registry setup failed (exit $result); see the output above." ;;
+esac
