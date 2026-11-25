@@ -6,6 +6,7 @@ source "$CHEZMOI_SOURCE_DIR/.chezmoiscripts/.lib/step.zsh"
 # The app reads these at launch; apply leaves relaunching it to the user.
 domain=com.superlogical.rex
 defaults write $domain RexAppUpdateChannel -string snapshot
+defaults write $domain Shortcuts.newSessionSwapPrompt -string asked
 defaults write $domain Workspace.activePaneBorderOpacity -float 0.15
 # Without the migration marker, Rex replaces the saved grouping with priority at launch.
 defaults write $domain Workspace.activityGroupingResetToPriority -bool true
