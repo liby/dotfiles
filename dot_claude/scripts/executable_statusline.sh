@@ -12,10 +12,11 @@ coral='\033[38;2;255;127;100m'
 rose='\033[38;2;245;180;190m'
 ruby='\033[38;2;230;100;160m'
 claude='\033[38;2;215;119;87m' # CLI theme "claude" brand orange
+green='\033[38;2;152;195;121m'
 dim='\033[2m'
 muted='\033[38;2;120;130;150m'
 faint='\033[38;2;60;65;75m'
-# Cache-marker slate violet: the only hue unused by data colors, so it stays
+# Cache-marker slate violet: a hue no other color here uses, so it stays
 # recognizable as "from snapshot" next to the shifting pct ramp and sky time
 cache='\033[38;2;130;125;160m'
 reset='\033[0m'
@@ -129,6 +130,8 @@ settings_path="$HOME/.claude/settings.json"
   read -r effort
   read -r model_name
   read -r claude_version
+  read -r vertex
+  read -r session_cost
 } < <(jq -r --rawfile settings "$settings_path" '
   # Context % is measured against the token count where CC auto-compacts, which
   # stdin does not carry. This mirrors CC 2.1.296 for the env and
@@ -178,7 +181,9 @@ settings_path="$HOME/.claude/settings.json"
   (.session_id // ""),
   (.effort.level // ""),
   (.model.display_name // ""),
-  .version
+  .version,
+  env_on("CLAUDE_CODE_USE_VERTEX"),
+  (.cost.total_cost_usd | if . > 0 then . * 1000 | round | "$\(. / 1000 | floor).\(. % 1000 + 1000 | tostring | .[1:])" else "" end)
 ' <<< "$input")
 
 current=$(( input_tokens + output_tokens + cache_create + cache_read ))
@@ -228,6 +233,18 @@ if [ -n "$effort" ]; then
     low)    line1+="${muted}○ ${effort}${reset}" ;;
     *)      line1+="${dim}◌ ${effort}${reset}" ;;
   esac
+fi
+
+# Print the full id because `claude --resume` and transcript lookups accept
+# only that (the 8-character short id resolves background sessions alone);
+# fading the tail keeps the prefix scannable
+line2="${muted}${session_id:0:8}${faint}${session_id:8}${reset}"
+
+# The rate rows meter the subscription, which a Vertex (gateway) session does not use
+if [ "$vertex" = true ]; then
+  [ -n "$session_cost" ] && line2+="${sep}${green}${session_cost}${reset}"
+  printf "%b\n%b" "$line1" "$line2"
+  exit 0
 fi
 
 # ── OAuth token resolution ──────────────────────────────
@@ -511,10 +528,7 @@ for _i in "${!row_labels[@]}"; do
 done
 
 # ── Output ──────────────────────────────────────────────
-# Print the full id because `claude --resume` and transcript lookups accept
-# only that (the 8-character short id resolves background sessions alone);
-# fading the tail keeps the prefix scannable
-printf "%b\n%b" "$line1" "${muted}${session_id:0:8}${faint}${session_id:8}${reset}"
+printf "%b\n%b" "$line1" "$line2"
 [ -n "$rate_lines" ] && printf "\n%b" "$rate_lines"
 
 exit 0

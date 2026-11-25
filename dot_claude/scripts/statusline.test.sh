@@ -46,7 +46,7 @@ EOF
 chmod +x "$fetch/curl"
 fetch_tick() { # response body
   printf '{"cwd":"%s","session_id":"s","version":"test"}' "$fixture" |
-    env HOME="$home" XDG_CACHE_HOME="$home/.cache" CLAUDE_CODE_OAUTH_TOKEN=SYNTHETIC_AUDIT_SENTINEL FETCH_BODY="$1" \
+    env -u CLAUDE_CODE_USE_VERTEX HOME="$home" XDG_CACHE_HOME="$home/.cache" CLAUDE_CODE_OAUTH_TOKEN=SYNTHETIC_AUDIT_SENTINEL FETCH_BODY="$1" \
       PATH="$fetch:$stubs:/usr/bin:$PATH" /bin/bash "$SOURCE" > /dev/null
 }
 # A plan without a 5h window answers with a null five_hour and no session meter
@@ -88,7 +88,7 @@ snapshot() { # session_percent session_resets_at_iso [age in seconds, default 1h
 tick() { # rate_limits JSON or empty, [session id]; writes the rate rows that rows prints
   local limits=${1:-null}
   printf '{"cwd":"%s","session_id":"%s","version":"test","rate_limits":%s}' "$fixture" "${2:-s}" "$limits" |
-    env -u CLAUDE_CODE_OAUTH_TOKEN HOME="$home" XDG_CACHE_HOME="$home/.cache" TEST_NOW="${at:-}" TEST_PROCESS_AGE="${age:-}" \
+    env -u CLAUDE_CODE_OAUTH_TOKEN -u CLAUDE_CODE_USE_VERTEX HOME="$home" XDG_CACHE_HOME="$home/.cache" TEST_NOW="${at:-}" TEST_PROCESS_AGE="${age:-}" \
       PATH="$stubs:/usr/bin:$PATH" COLUMNS=120 /bin/bash "$SOURCE" |
     sed $'s/\033\\[[0-9;]*m//g' | grep -E '^(5h|7d|Fable) ' > "$fixture/rows" || true
 }
@@ -255,6 +255,25 @@ expect 'stdin rows sort first' "$(rows | head -1)" '^7d '
 
 printf 'statusline rate-limit sharing: passed\n'
 
+# Gateway (Vertex) session: the stale snapshot and the token would otherwise
+# make it fetch, publish, and show the rows
+reset_state; rm -f "$fixture/argv"
+weekly="[{\"kind\":\"weekly_all\",\"percent\":45,\"resets_at\":\"$week_iso+00:00\"}]"
+snapshot_limits "$weekly" 14400
+gateway_out=$(printf '{"cwd":"%s","session_id":"s","version":"test","cost":{"total_cost_usd":1.2367}}' "$fixture" |
+  env HOME="$home" XDG_CACHE_HOME="$home/.cache" CLAUDE_CODE_OAUTH_TOKEN=SYNTHETIC_AUDIT_SENTINEL \
+    CLAUDE_CODE_USE_VERTEX=1 LC_ALL=de_DE.UTF-8 FETCH_BODY="{\"limits\":$weekly}" PATH="$fetch:$stubs:/usr/bin:$PATH" COLUMNS=120 /bin/bash "$SOURCE" |
+  sed $'s/\033\\[[0-9;]*m//g')
+[ "$(wc -l <<< "$gateway_out")" -eq 2 ]
+expect 'gateway session cost' "$(tail -1 <<< "$gateway_out")" '^s ∙ \$1\.237$'
+gateway_free=$(printf '{"cwd":"%s","session_id":"s","version":"test","cost":{"total_cost_usd":0}}' "$fixture" |
+  env HOME="$home" XDG_CACHE_HOME="$home/.cache" CLAUDE_CODE_USE_VERTEX=1 PATH="$stubs:/usr/bin:$PATH" /bin/bash "$SOURCE" |
+  sed $'s/\033\\[[0-9;]*m//g')
+expect 'gateway zero cost hidden' "$(tail -1 <<< "$gateway_free")" '^s$'
+[ ! -e "$fixture/argv" ]
+[ ! -e "$cache/rate-limits.json" ]
+printf 'statusline gateway: passed\n'
+
 # Line 1 for a Vertex model id holding 153000 context tokens; Context % is
 # their share of CC's auto-compact threshold
 line1() { # window settings_json [env...]; prints line 1
@@ -262,7 +281,7 @@ line1() { # window settings_json [env...]; prints line 1
   printf '%s' "$settings" > "$home/.claude/settings.json"
   printf '{"cwd":"%s","model":{"id":"claude-opus-5-5@20260101","display_name":"M"},"context_window":{"context_window_size":%s,"current_usage":%s}}' \
     "$fixture" "$window" "$usage" |
-    env -u CLAUDE_CODE_OAUTH_TOKEN -u DISABLE_COMPACT -u DISABLE_AUTO_COMPACT \
+    env -u CLAUDE_CODE_OAUTH_TOKEN -u CLAUDE_CODE_USE_VERTEX -u DISABLE_COMPACT -u DISABLE_AUTO_COMPACT \
       -u CLAUDE_CODE_AUTO_COMPACT_WINDOW -u CLAUDE_CODE_MAX_OUTPUT_TOKENS \
       HOME="$home" XDG_CACHE_HOME="$home/.cache" PATH="$stubs:/usr/bin:$PATH" "$@" /bin/bash "$SOURCE" |
     sed $'s/\033\\[[0-9;]*m//g' | head -1
