@@ -8,7 +8,7 @@ local alert = [=[
 ObjC.import("AppKit")
 ObjC.import("QuartzCore")
 function run(argv) {
-  const [kind, message, cli, server, ...close] = argv
+  const [kind, message] = argv
   const app = $.NSApplication.sharedApplication
   const rex = $.NSRunningApplication.runningApplicationsWithBundleIdentifier("com.superlogical.rex").firstObject
   const alert = $.NSAlert.alloc.init
@@ -63,39 +63,9 @@ function run(argv) {
   const response = alert.runModal
   $.NSNotificationCenter.defaultCenter.removeObserver(handler)
   $.NSObject.cancelPreviousPerformRequestsWithTarget(app)
-  // The dismissed alert leaves the screen only when the run loop turns, so
-  // turn it before blocking on the close or the alert outlives its target.
-  $.NSRunLoop.currentRunLoop.runUntilDate($.NSDate.dateWithTimeIntervalSinceNow(0.1))
-  if (response == $.NSAlertFirstButtonReturn) {
-    const task = $.NSTask.alloc.init
-    task.executableURL = $.NSURL.fileURLWithPath(cli)
-    task.arguments = $(["--autostart=false", ...(server ? ["-S", server] : []), ...close])
-    const stderr = $.NSPipe.pipe
-    task.standardError = stderr
-    let failure
-    if (task.launchAndReturnError(null)) {
-      const output = stderr.fileHandleForReading.readDataToEndOfFile
-      task.waitUntilExit
-      if (task.terminationStatus != 0) {
-        failure = $.NSString.alloc.initWithDataEncoding(output, $.NSUTF8StringEncoding).js || "Rex exited with status " + task.terminationStatus + "."
-      }
-    } else {
-      failure = "The Rex command could not be started."
-    }
-    if (failure) {
-      const error = $.NSAlert.alloc.init
-      error.messageText = "Could Not Close " + kind
-      error.informativeText = failure
-      error.icon = alert.icon
-      error.addButtonWithTitle("OK")
-      error.runModal
-    }
-  }
+  return response == $.NSAlertFirstButtonReturn ? "close" : "cancel"
 }
 ]=]
-
--- Commands the server starts get only the system PATH.
-local cli = os.getenv("HOME") .. "/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"
 
 -- A superseded alert could still close its target, so a close key ends it.
 local pending
@@ -126,22 +96,22 @@ local function warning(programs, target)
   return (sentence:gsub("^a program", "A program"))
 end
 
--- The server runs a client's keys, actions, and focus changes one at a time
--- (`rex api describe client.action`), so waiting for the alert here would hold
--- the app's clicks until the target is gone, and they would then fail. The
--- alert therefore runs detached and makes the same call through the CLI: by ID,
--- because focus can move meanwhile; without a shell, so that killing its handle
--- ends it; and with `-S`, because Rex sends an action's calls to the server of
--- a pane on another host but not the CLI's.
-local function confirm(ctx, kind, programs, method, params)
-  if #programs == 0 then
-    assert(rex.call(method, params))
-    return
+-- The server keeps handling keys and other actions while an action waits for a
+-- command (`rex.exec` in Rex's Lua reference), so waiting for the alert here
+-- leaves the app usable and lets a close key end it. Focus can move meanwhile,
+-- so the action closes its target by ID, and it closes the target itself rather
+-- than through the alert, because only the client that requested a close can
+-- undo it.
+local function confirm(kind, programs, method, params)
+  if #programs > 0 then
+    local dialog = assert(rex.exec.start({
+      "osascript", "-l", "JavaScript", "-e", alert, kind, warning(programs, kind:lower()),
+    }))
+    pending = dialog
+    local result = assert(dialog:wait())
+    if pending ~= dialog or not result.ok or result.stdout:match("^%s*(.-)%s*$") ~= "close" then return end
   end
-  pending = assert(rex.exec.start({
-    "osascript", "-l", "JavaScript", "-e", alert, kind, warning(programs, kind:lower()), cli, ctx.server or "",
-    "api", "call", method, rex.json.encode(params),
-  }, { detach = true }))
+  assert(rex.call(method, params))
 end
 
 rex.action{
@@ -153,8 +123,8 @@ rex.action{
       rex.client.queue("client.close")
       return
     end
-    confirm(ctx, "Pane", { running(ctx.block_id) },
-      "block.close", { session_id = ctx.session_id, block_id = ctx.block_id })
+    confirm("Pane", { running(ctx.block_id) },
+      "block.close", { session_id = ctx.session_id, block_id = ctx.block_id, undoable = true })
   end,
 }
 
@@ -174,7 +144,7 @@ rex.action{
         programs[#programs + 1] = running(block.block_id)
       end
     end
-    confirm(ctx, "Tab", programs,
-      "session.close_window", { session_id = ctx.session_id, window_id = window_id })
+    confirm("Tab", programs,
+      "session.close_window", { session_id = ctx.session_id, window_id = window_id, undoable = true })
   end,
 }
