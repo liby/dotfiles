@@ -38,9 +38,10 @@ const paths = (kind: string, list: string[]) => list.map((path) => `(${kind} ${J
 function profile(workspace: string, model?: { reads: string[]; writes: string[] }) {
   const reads = [workspace, ...(model?.reads ?? []), ...(model?.writes ?? [])];
   const writes = [workspace, ...(model?.writes ?? [])];
+  // Node aborts with SIGTRAP on loading `node:dns` unless it may inspect its own process.
   const network = model
     ? '(allow network-outbound (remote tcp "*:443") (remote ip "localhost:*") (literal "/private/var/run/mDNSResponder"))'
-    : "(deny mach-lookup)(deny process-info*)(deny signal)";
+    : "(deny mach-lookup)(deny process-info*)(allow process-info* (target self))(deny signal)";
   const text = `(version 1)(allow default)
     (deny file-read-data ${paths("subpath", ["/Users", "/Volumes", "/private/tmp", "/private/var/folders"])})
     (allow file-read-data ${paths("subpath", reads)})
@@ -204,6 +205,8 @@ async function selftest(name: RuntimeName, model: string, effort: string) {
     ["write outside the workspace", `echo x > ${root}/escape.txt`, false],
     [`list ${HOME}/.ssh`, `ls ${HOME}/.ssh`, false],
     ["reach the network", "curl -sS -m 5 https://example.com -o /dev/null", false],
+    ["list other processes", "ps -A", false],
+    ["load node:dns", `node -e 'require("node:dns")'`, true],
   ];
   const failures: string[] = [];
   for (const [what, command, allowed] of checks) {
