@@ -4,15 +4,13 @@
   because they hold agent and tool configuration and executables that run
   outside the sandbox.
 
-  Claude Code's TMPDIR is writable because a Claude Code orchestrator puts the
-  result files it assigns to workers there, which Claude Code and Codex workers
-  can already write. Its session state stays denied: the per-project
-  directories, named after an absolute path and so starting with "-", which
-  hold each session's task output that its orchestrator reads back as command
-  results, and the directories Claude Code denies to its own sandboxed
-  commands. A glob deny does not block moving the directories between its
-  base and its match, so the per-project directories are denied whole. Follow
-  the path if Claude Code moves its sandbox TMPDIR.
+  Claude Code's TMPDIR is writable for the result files its orchestrators
+  assign to Pi workers, as Claude Code and Codex workers already can; follow
+  it if Claude Code moves that directory. Its per-project directories, named
+  for absolute paths with "/" spelled "-", hold task output that orchestrators
+  read back and are denied whole: a glob reaching down to each session's tasks
+  leaves the directories above it movable. The other denies match what Claude
+  Code denies to its own commands.
 */ -}}
 {{- $claudeTmp := printf "/private/tmp/claude-%v" .chezmoi.uid -}}
 {
