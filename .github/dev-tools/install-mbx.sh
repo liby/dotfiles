@@ -2,7 +2,7 @@
 set -eu
 
 # renovate: datasource=github-releases depName=jdx/mr-boxington
-mbx_version=v1.30.0
+mbx_version=v1.31.0
 destination=$1
 archive=mbx-aarch64-apple-darwin.tar.gz
 
